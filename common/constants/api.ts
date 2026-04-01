@@ -1,10 +1,11 @@
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
+import { getProductionApiBaseUrl } from '@/config/appConfig';
 
 const isDev = __DEV__;
 
-/** Production backend URL (used when not in __DEV__) */
-const PROD_URL = process.env.EXPO_PUBLIC_BACKEND_URL ?? '';
+/** Production backend URL (release builds: from Expo extra via app.config; fallback env). */
+const PROD_URL = getProductionApiBaseUrl();
 
 /** Development backend URL - from env or built from IP+port */
 const getDevUrl = (): string => {

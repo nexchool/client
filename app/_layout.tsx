@@ -4,6 +4,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/modules/auth/context/AuthContext";
+import { checkAndFetchUpdateInBackground } from "@/common/utils/checkForAppUpdate";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,11 @@ export default function RootLayout() {
     if (fontsLoaded || fontError) {
       SplashScreen.hideAsync();
     }
+  }, [fontsLoaded, fontError]);
+
+  useEffect(() => {
+    if (!fontsLoaded && !fontError) return;
+    void checkAndFetchUpdateInBackground();
   }, [fontsLoaded, fontError]);
 
   if (!fontsLoaded && !fontError) {
