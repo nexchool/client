@@ -24,6 +24,7 @@ import {
   type DocumentTypeValue,
 } from "../types";
 import type { UseMutationResult } from "@tanstack/react-query";
+import { prepareFileForUpload } from "@/common/utils/prepareUploadFile";
 
 interface UploadDocumentModalProps {
   visible: boolean;
@@ -51,6 +52,7 @@ export function UploadDocumentModal({
     mimeType?: string;
   } | null>(null);
   const [showTypePicker, setShowTypePicker] = useState(false);
+  const [isPreparing, setIsPreparing] = useState(false);
 
   const { mutate: upload, isPending, error, reset } = uploadMutation;
 
@@ -89,28 +91,40 @@ export function UploadDocumentModal({
     }
   };
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
+    if (isPreparing || isPending) return;
     if (!documentType || !selectedFile) {
       Alert.alert(
         "Validation",
-        documentType ? "Please select a file" : "Please select a document type"
+        documentType ? "Please select a file" : "Please select a document type",
       );
       return;
     }
 
-    upload(
-      { documentType: documentType as DocumentTypeValue, file: selectedFile },
-      {
-        onSuccess: () => {
-          handleClose();
-          onSuccess();
+    setIsPreparing(true);
+    try {
+      const file = await prepareFileForUpload(selectedFile);
+      upload(
+        { documentType: documentType as DocumentTypeValue, file },
+        {
+          onSuccess: () => {
+            handleClose();
+            onSuccess();
+          },
+          onError: () => {},
         },
-        onError: () => {},
-      }
-    );
+      );
+    } catch (e: unknown) {
+      Alert.alert(
+        "Cannot upload",
+        e instanceof Error ? e.message : "Something went wrong preparing the file.",
+      );
+    } finally {
+      setIsPreparing(false);
+    }
   };
 
-  const isValid = documentType && selectedFile && !isPending;
+  const isValid = Boolean(documentType && selectedFile && !isPending && !isPreparing);
 
   return (
     <Modal
@@ -183,11 +197,11 @@ export function UploadDocumentModal({
                       (typeof (error as Error).message === 'string' &&
                       (error as Error).message !== 'true'
                         ? (error as Error).message
-                        : 'Upload failed. Please check your file (PDF, JPG, PNG, max 10 MB) and try again.')
+                        : 'Upload failed. Use PDF or images under about 5 MB (large images are compressed automatically).')
                     : typeof (error as Error).message === 'string' &&
                       (error as Error).message !== 'true'
                     ? (error as Error).message
-                    : 'Upload failed. Please check your file (PDF, JPG, PNG, max 10 MB) and try again.'}
+                    : 'Upload failed. Use PDF or images under about 5 MB (large images are compressed automatically).'}
                 </Text>
               </View>
             )}
@@ -199,10 +213,10 @@ export function UploadDocumentModal({
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.uploadButton, !isValid && styles.uploadButtonDisabled]}
-              onPress={handleUpload}
+              onPress={() => void handleUpload()}
               disabled={!isValid}
             >
-              {isPending ? (
+              {isPending || isPreparing ? (
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
                 <Text style={styles.uploadButtonText}>Upload</Text>
