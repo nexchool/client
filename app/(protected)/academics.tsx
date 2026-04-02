@@ -359,60 +359,6 @@ export default function AcademicsScreen() {
           </View>
         </Protected>
 
-        {/* Lectures/Schedule Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Lectures & Schedule</Text>
-
-          <TouchableOpacity
-            style={styles.actionCard}
-            onPress={() => router.push("/(protected)/schedule/today" as any)}
-          >
-            <View style={styles.cardContent}>
-              <View style={styles.cardIcon}>
-                <Ionicons
-                  name="time-outline"
-                  size={24}
-                  color={Colors.primary}
-                />
-              </View>
-              <View style={styles.cardText}>
-                <Text style={styles.cardTitle}>Today&apos;s Schedule</Text>
-                <Text style={styles.cardSubtitle}>
-                  View lectures and timings
-                </Text>
-              </View>
-            </View>
-            <Ionicons
-              name="chevron-forward"
-              size={20}
-              color={Colors.textSecondary}
-            />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionCard}
-            onPress={() => router.push("/(protected)/timetable" as any)}
-          >
-            <View style={styles.cardContent}>
-              <View style={styles.cardIcon}>
-                <Ionicons
-                  name="calendar-outline"
-                  size={24}
-                  color={Colors.primary}
-                />
-              </View>
-              <View style={styles.cardText}>
-                <Text style={styles.cardTitle}>Weekly Timetable</Text>
-                <Text style={styles.cardSubtitle}>Full week schedule</Text>
-              </View>
-            </View>
-            <Ionicons
-              name="chevron-forward"
-              size={20}
-              color={Colors.textSecondary}
-            />
-          </TouchableOpacity>
-        </View>
       </View>
     </ScrollView>
   );

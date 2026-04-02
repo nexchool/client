@@ -71,6 +71,35 @@ export default function ProtectedHomeScreen() {
         </View>
       </View>
 
+      {/* Lectures & Schedule — admin & teacher; same timetable RBAC as timetable menus */}
+      {(adminUser || teacherUser) && (
+        <Protected anyPermissions={[PERMS.TIMETABLE_READ, PERMS.TIMETABLE_MANAGE]}>
+          {(isFeatureEnabled("timetable") || isFeatureEnabled("class_management")) && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Lectures & Schedule</Text>
+              <View style={styles.actionsGrid}>
+                {isFeatureEnabled("timetable") && (
+                  <ActionCard
+                    icon="time-outline"
+                    label="Today's Schedule"
+                    onPress={() => router.push("/(protected)/schedule/today" as any)}
+                    color="#6366f1"
+                  />
+                )}
+                {isFeatureEnabled("class_management") && (
+                  <ActionCard
+                    icon="calendar-outline"
+                    label="Weekly Timetable"
+                    onPress={() => router.push("/(protected)/timetable" as any)}
+                    color="#8b5cf6"
+                  />
+                )}
+              </View>
+            </View>
+          )}
+        </Protected>
+      )}
+
       {/* ── ADMIN QUICK ACTIONS ── */}
       {adminUser && (
         <View style={styles.section}>
@@ -159,8 +188,6 @@ export default function ProtectedHomeScreen() {
             )}
             <ActionCard icon="book-outline" label="Academics"
               onPress={() => router.push("/(protected)/academics" as any)} color="#10b981" />
-            <ActionCard icon="calendar-outline" label="Schedule"
-              onPress={() => router.push("/(protected)/schedule/today" as any)} color="#6366f1" />
           </View>
         </View>
       )}

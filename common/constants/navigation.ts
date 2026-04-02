@@ -71,19 +71,19 @@ export const ALL_TABS: TabConfig[] = [
     ],
     requiredPlanFeature: 'class_management',
   },
-  {
-    name: 'academics',
-    title: 'Academics',
-    icon: 'book',
-    iconOutline: 'book-outline',
-    requiredPermissions: [
-      PERMS.STUDENT_READ,
-      PERMS.GRADE_READ_SELF,
-      PERMS.ATTENDANCE_READ_SELF,
-      PERMS.ATTENDANCE_MARK,
-      PERMS.GRADE_CREATE,
-    ],
-  },
+  // {
+  //   name: 'academics',
+  //   title: 'Academics',
+  //   icon: 'book',
+  //   iconOutline: 'book-outline',
+  //   requiredPermissions: [
+  //     PERMS.STUDENT_READ,
+  //     PERMS.GRADE_READ_SELF,
+  //     PERMS.ATTENDANCE_READ_SELF,
+  //     PERMS.ATTENDANCE_MARK,
+  //     PERMS.GRADE_CREATE,
+  //   ],
+  // },
   // {
   //   name: 'activities',
   //   title: 'Activities',
