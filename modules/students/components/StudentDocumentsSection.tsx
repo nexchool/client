@@ -1,15 +1,14 @@
 /**
  * StudentDocumentsSection
  * Renders document list, empty state, Add Document button, and document cards.
- * Tapping a card opens the URL in the browser.
+ * Opens documents in-app via authenticated API (no public URLs).
  */
-import React, { useState } from "react";
+import React, { Fragment, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  Linking,
   ActivityIndicator,
   Alert,
 } from "react-native";
@@ -25,6 +24,7 @@ import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
 import { StudentDocument, DOCUMENT_TYPE_LABELS } from "../types";
 import { UploadDocumentModal } from "./UploadDocumentModal";
+import { StudentDocumentViewerModal } from "./StudentDocumentViewerModal";
 
 interface StudentDocumentsSectionProps {
   studentId: string;
@@ -41,6 +41,7 @@ export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionPr
   const deleteMutation = useDeleteStudentDocument(studentId);
   const { hasPermission } = usePermissions();
   const [uploadModalVisible, setUploadModalVisible] = useState(false);
+  const [viewerDoc, setViewerDoc] = useState<StudentDocument | null>(null);
 
   const canManage = hasPermission(PERMS.STUDENT_MANAGE);
 
@@ -66,8 +67,10 @@ export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionPr
   };
 
   const handleOpenDocument = (doc: StudentDocument) => {
-    if (doc.cloudinary_url) {
-      Linking.openURL(doc.cloudinary_url);
+    if (doc.id && doc.student_id) {
+      setViewerDoc(doc);
+    } else {
+      Alert.alert("Unavailable", "This document cannot be opened. Try uploading again.");
     }
   };
 
@@ -91,6 +94,7 @@ export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionPr
 
   if (isError) {
     return (
+      <Fragment>
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Documents</Text>
         <View style={styles.errorContainer}>
@@ -122,10 +126,17 @@ export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionPr
           uploadMutation={uploadMutation}
         />
       </View>
+      <StudentDocumentViewerModal
+        visible={viewerDoc !== null}
+        onClose={() => setViewerDoc(null)}
+        document={viewerDoc}
+      />
+      </Fragment>
     );
   }
 
   return (
+    <Fragment>
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Documents</Text>
@@ -210,6 +221,12 @@ export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionPr
         uploadMutation={uploadMutation}
       />
     </View>
+    <StudentDocumentViewerModal
+      visible={viewerDoc !== null}
+      onClose={() => setViewerDoc(null)}
+      document={viewerDoc}
+    />
+    </Fragment>
   );
 }
 

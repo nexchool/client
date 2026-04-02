@@ -105,7 +105,10 @@ export interface StudentDocument {
   document_type: string;
   document_type_label: string;
   original_filename: string;
-  cloudinary_url: string;
+  /** @deprecated No longer populated — use view_url with authenticated fetch. */
+  cloudinary_url?: string | null;
+  /** API path for GET with Bearer + tenant headers (e.g. /api/students/.../file). */
+  view_url?: string;
   mime_type: string;
   file_size_bytes: number;
   uploaded_by?: { id: string; name: string } | null;

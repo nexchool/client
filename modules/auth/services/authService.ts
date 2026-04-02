@@ -12,6 +12,8 @@ export interface LoginResponse {
   refresh_token?: string;
   tenant_id?: string;
   subdomain?: string;
+  /** School / organization display name for the current tenant */
+  tenant_name?: string | null;
   user?: {
     id: number;
     email: string;

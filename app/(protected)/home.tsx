@@ -6,28 +6,28 @@ import {
   ScrollView,
   TouchableOpacity,
 } from "react-native";
+import { ProfileAvatar } from "@/common/components/ProfileAvatar";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/modules/auth/hooks/useAuth";
-import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
 import { Protected } from "@/modules/permissions/components/Protected";
+import { useUiRole, UI_ROLE, type UiRole } from "@/modules/permissions/hooks/useUiRole";
 import { useRouter } from "expo-router";
 import * as PERMS from "@/modules/permissions/constants/permissions";
-import { isAdmin, isTeacher, getUserRole } from "@/common/constants/navigation";
 
-const ROLE_COLORS: Record<string, string> = {
-  Admin: "#6366f1",
-  Teacher: "#0ea5e9",
-  Student: "#10b981",
-  Parent: "#f59e0b",
+const ROLE_COLORS: Record<UiRole, string> = {
+  [UI_ROLE.ADMIN]: "#6366f1",
+  [UI_ROLE.TEACHER]: "#0ea5e9",
+  [UI_ROLE.STUDENT]: "#10b981",
+  [UI_ROLE.PARENT]: "#f59e0b",
 };
 
-const ROLE_ICONS: Record<string, keyof typeof import("@expo/vector-icons").Ionicons.glyphMap> = {
-  Admin: "shield-checkmark-outline",
-  Teacher: "school-outline",
-  Student: "person-outline",
-  Parent: "people-outline",
+const ROLE_ICONS: Record<UiRole, keyof typeof import("@expo/vector-icons").Ionicons.glyphMap> = {
+  [UI_ROLE.ADMIN]: "shield-checkmark-outline",
+  [UI_ROLE.TEACHER]: "school-outline",
+  [UI_ROLE.STUDENT]: "person-outline",
+  [UI_ROLE.PARENT]: "people-outline",
 };
 
 interface ActionCardProps {
@@ -50,14 +50,11 @@ function ActionCard({ icon, label, onPress, color }: ActionCardProps) {
 
 export default function ProtectedHomeScreen() {
   const { user, logout, isFeatureEnabled } = useAuth();
-  const { permissions } = usePermissions();
   const router = useRouter();
+  const { role, isAdmin: adminUser, isTeacher: teacherUser } = useUiRole();
 
-  const role = getUserRole(permissions);
   const roleColor = ROLE_COLORS[role] ?? Colors.primary;
   const roleIcon = ROLE_ICONS[role] ?? "person-outline";
-  const adminUser = isAdmin(permissions);
-  const teacherUser = isTeacher(permissions);
 
   return (
     <ScrollView
@@ -67,9 +64,6 @@ export default function ProtectedHomeScreen() {
     >
       {/* Welcome header */}
       <View style={styles.header}>
-        <View style={[styles.avatarRing, { borderColor: roleColor }]}>
-          <Ionicons name={roleIcon} size={40} color={roleColor} />
-        </View>
         <Text style={styles.welcomeText}>Welcome back</Text>
         <Text style={styles.nameText}>{user?.name ?? user?.email}</Text>
         <View style={[styles.roleBadge, { backgroundColor: roleColor + "18", borderColor: roleColor + "40" }]}>
@@ -197,10 +191,10 @@ export default function ProtectedHomeScreen() {
       )}
 
       {/* Logout */}
-      <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+      {/* <TouchableOpacity style={styles.logoutButton} onPress={logout}>
         <Ionicons name="log-out-outline" size={20} color={Colors.error} />
         <Text style={styles.logoutText}>Logout</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </ScrollView>
   );
 }

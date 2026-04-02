@@ -22,6 +22,7 @@ import { useTeacherLeaves } from "@/modules/teachers/hooks/useTeacherLeaves";
 import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
 import * as PERMS from "@/modules/permissions/constants/permissions";
 import { TeacherLeave, LeaveBalance, LeavePolicy, LEAVE_TYPES } from "@/modules/teachers/types";
+import { ProfileAvatar } from "@/common/components/ProfileAvatar";
 
 const STATUS_FILTERS: { label: string; value: string }[] = [
   { label: "All", value: "" },
@@ -529,11 +530,14 @@ export default function TeacherLeavesScreen() {
     <View style={styles.card}>
       <View style={styles.cardHeader}>
         <View style={styles.teacherInfo}>
-          <View style={styles.avatarCircle}>
-            <Text style={styles.avatarText}>
-              {(item.teacher_name ?? "?").charAt(0).toUpperCase()}
-            </Text>
-          </View>
+          <ProfileAvatar
+            uri={item.teacher_profile_picture}
+            size={36}
+            name={item.teacher_name}
+            iconColor={Colors.primary}
+            placeholderBg={Colors.primary + "25"}
+            style={{ marginRight: Spacing.sm }}
+          />
           <View>
             <Text style={styles.teacherName}>{item.teacher_name ?? "—"}</Text>
             {item.teacher_employee_id ? (
@@ -1001,15 +1005,6 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   teacherInfo: { flexDirection: "row", alignItems: "center", gap: Spacing.sm, flex: 1 },
-  avatarCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: Colors.primary + "25",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  avatarText: { fontSize: 16, fontWeight: "700", color: Colors.primary },
   teacherName: { fontSize: 15, fontWeight: "600", color: Colors.text },
   employeeId: { fontSize: 12, color: Colors.textSecondary, marginTop: 1 },
 

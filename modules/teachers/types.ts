@@ -61,6 +61,8 @@ export interface TeacherLeave {
   teacher_id: string;
   teacher_name?: string;
   teacher_employee_id?: string;
+  /** Presigned or public URL when the teacher has a profile photo */
+  teacher_profile_picture?: string | null;
   start_date: string;
   end_date: string;
   leave_type: string;

@@ -45,6 +45,17 @@ export const API_ENDPOINTS = {
   ENABLED_FEATURES: '/api/auth/enabled-features',
 } as const;
 
+/**
+ * Join API base URL with an endpoint path.
+ * If the base already ends with `/api` and the path starts with `/api/`, the duplicate
+ * `/api` segment is dropped so we never request `/api/api/...` (Flask returns 404 "Resource not found").
+ */
 export const getApiUrl = (endpoint: string): string => {
-  return `${API_BASE_URL}${endpoint}`;
+  const base = API_BASE_URL.replace(/\/+$/, "");
+  const path = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  if (base.endsWith("/api") && path.startsWith("/api")) {
+    const rest = path.replace(/^\/api/, "") || "/";
+    return `${base}${rest}`;
+  }
+  return `${base}${path}`;
 };

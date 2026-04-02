@@ -11,28 +11,17 @@ import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
 import { Ionicons } from "@expo/vector-icons";
 import { Protected } from "@/modules/permissions/components/Protected";
-import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
+import { useUiRole } from "@/modules/permissions/hooks/useUiRole";
 import { useAuth } from "@/modules/auth/hooks/useAuth";
 import { useRouter } from "expo-router";
 import * as PERMS from "@/modules/permissions/constants/permissions";
 import { useAcademicsOverview } from "@/modules/academics/hooks/useAcademicsOverview";
 
 export default function AcademicsScreen() {
-  const { hasAnyPermission } = usePermissions();
+  const { isAdmin, isTeacher, isStudent, isParent } = useUiRole();
   const { isFeatureEnabled } = useAuth();
   const router = useRouter();
-  const isAdmin = hasAnyPermission([PERMS.SYSTEM_MANAGE, PERMS.USER_MANAGE]);
   const { data: overview, isLoading: overviewLoading } = useAcademicsOverview(isAdmin);
-
-  const isTeacher = hasAnyPermission([
-    PERMS.ATTENDANCE_MARK,
-    PERMS.GRADE_CREATE,
-  ]);
-  const isStudent = hasAnyPermission([
-    PERMS.GRADE_READ_SELF,
-    PERMS.ATTENDANCE_READ_SELF,
-  ]);
-  const isParent = hasAnyPermission([PERMS.GRADE_READ_CHILD]);
 
   return (
     <ScrollView

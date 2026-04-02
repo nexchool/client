@@ -120,6 +120,34 @@ export const apiGet = async <T>(endpoint: string): Promise<T> => {
   return handleResponse<T>(response);
 };
 
+/** Binary GET (e.g. authenticated document stream). Does not parse JSON. */
+export const apiGetBlob = async (endpoint: string): Promise<Blob> => {
+  const response = await apiRequest(endpoint, { method: "GET" }, true);
+  if (!response.ok) {
+    const text = await response.text();
+    throw new ApiException(
+      text || `Request failed (${response.status})`,
+      response.status
+    );
+  }
+  const ct =
+    response.headers.get("content-type")?.split(";")[0]?.trim() ||
+    "application/octet-stream";
+  const ab = await response.arrayBuffer();
+  if (ab.byteLength === 0) {
+    return new Blob([], { type: ct });
+  }
+  return new Blob([ab], { type: ct });
+};
+
+/** Raw Response (e.g. for WebView headers debugging). */
+export const apiFetchRaw = async (
+  endpoint: string,
+  init: RequestInit = {}
+): Promise<Response> => {
+  return apiRequest(endpoint, { method: "GET", ...init }, true);
+};
+
 export const apiPost = async <T>(endpoint: string, body?: any): Promise<T> => {
   const response = await apiRequest(endpoint, {
     method: "POST",

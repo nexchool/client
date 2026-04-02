@@ -13,7 +13,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
 import { useAuth } from "@/modules/auth/hooks/useAuth";
-import { getVisibleTabs, getUserRole } from "@/common/constants/navigation";
+import { getVisibleTabs } from "@/common/constants/navigation";
+import { useUiRole } from "@/modules/permissions/hooks/useUiRole";
 
 const { width } = Dimensions.get("window");
 const SIDEBAR_WIDTH = width * 0.75;
@@ -36,16 +37,14 @@ export default function Sidebar({
   onClose,
   currentRoute,
 }: SidebarProps) {
-  const { logout, permissions, enabledFeatures, user } = useAuth();
+  const { logout, permissions, enabledFeatures, user, tenantName } = useAuth();
+  const { role: userRole } = useUiRole();
 
   // Get visible tabs based on user permissions and plan-enabled features
   const visibleTabs = useMemo(
     () => getVisibleTabs(permissions, enabledFeatures),
     [permissions, enabledFeatures]
   );
-
-  // Get user role for display
-  const userRole = useMemo(() => getUserRole(permissions), [permissions]);
 
   // Convert tabs to menu items
   const menuItems: MenuItem[] = useMemo(() => {
@@ -155,12 +154,13 @@ export default function Sidebar({
           showsVerticalScrollIndicator={false}
           bounces={false}
         >
-          {/* User Info Header */}
+          {/* School + account */}
           <View style={styles.userHeader}>
-            <View style={styles.userAvatar}>
-              <Ionicons name="person" size={32} color={Colors.primary} />
-            </View>
-            <Text style={styles.userName} numberOfLines={1}>
+            <Ionicons name="school" size={26} color={Colors.primary} style={styles.schoolIcon} />
+            <Text style={styles.schoolName} numberOfLines={3}>
+              {tenantName || "School"}
+            </Text>
+            <Text style={styles.userEmail} numberOfLines={1}>
               {user?.email}
             </Text>
             <View style={styles.roleBadge}>
@@ -247,19 +247,20 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.borderLight,
     marginBottom: Spacing.md,
   },
-  userAvatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: Colors.backgroundSecondary,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: Spacing.md,
+  schoolIcon: {
+    marginBottom: Spacing.sm,
   },
-  userName: {
-    fontSize: 16,
-    fontWeight: "600",
+  schoolName: {
+    fontSize: 17,
+    fontWeight: "700",
     color: Colors.text,
+    textAlign: "center",
+    marginBottom: Spacing.sm,
+    fontFamily: "System",
+  },
+  userEmail: {
+    fontSize: 13,
+    color: Colors.textSecondary,
     marginBottom: Spacing.sm,
     fontFamily: "System",
   },

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Image, Modal, ScrollView } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView } from "react-native";
+import { ProfileAvatar } from "@/common/components/ProfileAvatar";
 import { router, usePathname, Slot } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
@@ -10,7 +11,16 @@ import { Spacing, Layout } from "@/common/constants/spacing";
 import { useAuth } from "@/modules/auth/hooks/useAuth";
 import { useAcademicYearContext } from "@/modules/academics/context/AcademicYearContext";
 import { CreateAcademicYearModal } from "@/modules/academics/components/CreateAcademicYearModal";
-import { isAdmin } from "@/common/constants/navigation";
+import { useUiRole } from "@/modules/permissions/hooks/useUiRole";
+
+/** Hide header profile shortcut when already on Profile or My profile screens. */
+function shouldHideHeaderProfile(pathname: string | undefined): boolean {
+  if (!pathname) return false;
+  if (pathname.includes("my-profile")) return true;
+  const segments = pathname.split("/").filter(Boolean);
+  const last = segments[segments.length - 1] ?? "";
+  return last === "profile";
+}
 
 export default function MainLayout() {
   const [sidebarVisible, setSidebarVisible] = useState(false);
@@ -18,14 +28,16 @@ export default function MainLayout() {
   const [createYearModalVisible, setCreateYearModalVisible] = useState(false);
   const pathname = usePathname();
   const queryClient = useQueryClient();
-  const { user, permissions } = useAuth();
+  const { user } = useAuth();
+  const { isAdmin } = useUiRole();
+  const hideHeaderProfile = shouldHideHeaderProfile(pathname);
   const {
     selectedAcademicYearId,
     setSelectedAcademicYearId,
     academicYears,
     isLoading,
   } = useAcademicYearContext();
-  const showYearPicker = isAdmin(permissions);
+  const showYearPicker = isAdmin;
 
   const handleProfilePress = () => {
     setSidebarVisible(false);
@@ -68,22 +80,24 @@ export default function MainLayout() {
             <View style={styles.yearSelectorPlaceholder} />
           )}
 
-          <TouchableOpacity
-            style={styles.profileButton}
-            onPress={handleProfilePress}
-            activeOpacity={0.7}
-          >
-            {user?.profile_picture_url ? (
-              <Image
-                source={{ uri: user.profile_picture_url }}
-                style={styles.profileImage}
+          {hideHeaderProfile ? (
+            <View style={styles.headerProfilePlaceholder} />
+          ) : (
+            <TouchableOpacity
+              style={styles.profileButton}
+              onPress={handleProfilePress}
+              activeOpacity={0.7}
+            >
+              <ProfileAvatar
+                uri={user?.profile_picture_url}
+                size={36}
+                name={user?.name ?? user?.email ?? undefined}
+                iconName="person"
+                iconColor={Colors.text}
+                placeholderBg={Colors.backgroundSecondary}
               />
-            ) : (
-              <View style={styles.profilePlaceholder}>
-                <Ionicons name="person" size={20} color={Colors.text} />
-              </View>
-            )}
-          </TouchableOpacity>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Main Content */}
@@ -191,18 +205,10 @@ const styles = StyleSheet.create({
   profileButton: {
     padding: Spacing.xs,
   },
-  profileImage: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-  },
-  profilePlaceholder: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: Colors.backgroundSecondary,
-    alignItems: "center",
-    justifyContent: "center",
+  /** Keeps header balance when profile avatar is hidden. */
+  headerProfilePlaceholder: {
+    width: 44,
+    height: 44,
   },
   content: {
     flex: 1,

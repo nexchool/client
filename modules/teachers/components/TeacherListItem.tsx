@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
+import { ProfileAvatar } from "@/common/components/ProfileAvatar";
 import { Teacher } from "../types";
 
 interface Props {
@@ -17,9 +18,14 @@ export const TeacherListItem: React.FC<Props> = ({ teacher, onPress }) => {
       onPress={() => onPress(teacher)}
       activeOpacity={0.7}
     >
-      <View style={styles.avatar}>
-        <Ionicons name="person" size={24} color={Colors.textSecondary} />
-      </View>
+      <ProfileAvatar
+        uri={teacher.profile_picture}
+        size={44}
+        name={teacher.name}
+        iconColor={Colors.textSecondary}
+        placeholderBg={Colors.backgroundSecondary}
+        style={{ marginRight: Spacing.md }}
+      />
       <View style={styles.info}>
         <Text style={styles.name}>{teacher.name}</Text>
         <Text style={styles.detail}>{teacher.employee_id}</Text>
@@ -59,15 +65,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.borderLight,
     marginBottom: Spacing.sm,
-  },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Colors.backgroundSecondary,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: Spacing.md,
   },
   info: {
     flex: 1,

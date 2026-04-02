@@ -20,6 +20,9 @@ import {
   setEnabledFeatures,
   setTenantId,
   clearAuth,
+  getTenantName,
+  setTenantName,
+  deleteTenantName,
 } from "@/common/utils/storage";
 import {
   login as loginService,
@@ -33,7 +36,7 @@ import { API_ENDPOINTS } from "@/common/constants/api";
 const ENABLED_FEATURES_REFRESH_THROTTLE_MS = 60_000;
 
 interface User {
-  id: number;
+  id: number | string;
   email: string;
   name?: string;
   email_verified?: boolean;
@@ -42,6 +45,8 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
+  /** Current school / tenant display name (from login). */
+  tenantName: string | null;
   permissions: string[];
   /** Plan-enabled feature keys (e.g. ['attendance', 'fees_management']). Use isFeatureEnabled(key) to gate UI. */
   enabledFeatures: string[];
@@ -60,6 +65,8 @@ interface AuthContextType {
   hasAllPermissions: (permissions: string[]) => boolean;
   /** True if the tenant's plan has this feature enabled. Gate nav/screens with this. */
   isFeatureEnabled: (featureKey: string) => boolean;
+  /** Merge fields into the current user and persist to storage (e.g. after profile photo upload). */
+  updateLocalUser: (partial: Partial<User>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -83,6 +90,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     email: string;
     password: string;
   } | null>(null);
+  const [tenantName, setTenantNameState] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const lastEnabledFeaturesRefreshRef = useRef(0);
 
@@ -131,19 +139,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const [accessToken, refreshToken, userData, userPermissions, storedEnabledFeatures] =
+        const [accessToken, refreshToken, userData, userPermissions, storedEnabledFeatures, storedTenantName] =
           await Promise.all([
             getAccessToken(),
             getRefreshToken(),
             getUserData(),
             getPermissions(),
             getEnabledFeatures(),
+            getTenantName(),
           ]);
 
         if (accessToken && refreshToken && userData) {
           setUser(userData);
           setPermissionsState(userPermissions || []);
           setEnabledFeaturesState(storedEnabledFeatures || []);
+          setTenantNameState(storedTenantName);
         }
       } catch (error) {
         console.error("Error checking auth:", error);
@@ -168,8 +178,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     if (data.tenant_id) {
       tasks.push(setTenantId(data.tenant_id));
     }
+    if (data.tenant_name) {
+      tasks.push(setTenantName(data.tenant_name));
+    } else {
+      tasks.push(deleteTenantName());
+    }
     await Promise.all(tasks);
     setUser(data.user);
+    setTenantNameState(data.tenant_name ?? null);
     setPermissionsState(data.permissions || []);
     setEnabledFeaturesState(features);
     // Avoid redundant enabled-features fetch right after login (we already have fresh data)
@@ -200,9 +216,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
   const clearPendingTenantChoice = () => setPendingTenantChoice(null);
 
+  const updateLocalUser = async (partial: Partial<User>) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const merged = { ...prev, ...partial };
+      void setUserData(merged);
+      return merged;
+    });
+  };
+
   const logout = async () => {
     await clearAuth();
     setUser(null);
+    setTenantNameState(null);
     setPermissionsState([]);
     setEnabledFeaturesState([]);
   };
@@ -245,6 +271,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     <AuthContext.Provider
       value={{
         user,
+        tenantName,
         permissions,
         enabledFeatures,
         isAuthenticated: !!user,
@@ -259,6 +286,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         hasAnyPermission,
         hasAllPermissions,
         isFeatureEnabled,
+        updateLocalUser,
       }}
     >
       {children}

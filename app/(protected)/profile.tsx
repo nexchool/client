@@ -5,19 +5,25 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Linking,
 } from "react-native";
+import { ProfileAvatar } from "@/common/components/ProfileAvatar";
+import { useRouter } from "expo-router";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
 import { Ionicons } from "@expo/vector-icons";
 import { Protected } from "@/modules/permissions/components/Protected";
 import { useAuth } from "@/modules/auth/hooks/useAuth";
-import { getUserRole } from "@/common/constants/navigation";
+import { useUiRole } from "@/modules/permissions/hooks/useUiRole";
 import * as PERMS from "@/modules/permissions/constants/permissions";
 
-export default function ProfileScreen() {
-  const { user, logout, permissions } = useAuth();
+const TERMS_URL = "https://nexchool.in/terms";
+const PRIVACY_URL = "https://nexchool.in/privacy";
 
-  const userRole = getUserRole(permissions);
+export default function ProfileScreen() {
+  const router = useRouter();
+  const { user, logout } = useAuth();
+  const { role: userRole } = useUiRole();
 
   const handleLogout = async () => {
     await logout();
@@ -33,7 +39,14 @@ export default function ProfileScreen() {
       <View style={styles.header}>
         <View style={styles.avatarContainer}>
           <View style={styles.avatar}>
-            <Ionicons name="person" size={48} color={Colors.primary} />
+            <ProfileAvatar
+              uri={user?.profile_picture_url}
+              size={88}
+              name={user?.name ?? user?.email ?? undefined}
+              iconName="person"
+              iconColor={Colors.primary}
+              placeholderBg={Colors.background}
+            />
           </View>
           <View style={styles.roleBadge}>
             <Text style={styles.roleText}>{userRole}</Text>
@@ -47,7 +60,11 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Profile Information</Text>
 
-          <TouchableOpacity style={styles.infoCard}>
+          <TouchableOpacity
+            style={styles.infoCard}
+            onPress={() => router.push("/(protected)/my-profile" as never)}
+            activeOpacity={0.7}
+          >
             <View style={styles.cardContent}>
               <View style={styles.cardIcon}>
                 <Ionicons
@@ -57,9 +74,9 @@ export default function ProfileScreen() {
                 />
               </View>
               <View style={styles.cardText}>
-                <Text style={styles.cardTitle}>Edit Profile</Text>
+                <Text style={styles.cardTitle}>My profile</Text>
                 <Text style={styles.cardSubtitle}>
-                  Update personal information
+                  View school record and profile photo
                 </Text>
               </View>
             </View>
@@ -131,82 +148,6 @@ export default function ProfileScreen() {
           </View>
         </Protected>
 
-        {/* Permissions & Roles - Admin View */}
-        <Protected anyPermissions={[PERMS.SYSTEM_MANAGE, PERMS.ROLE_READ]}>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>System</Text>
-
-            <TouchableOpacity style={styles.infoCard}>
-              <View style={styles.cardContent}>
-                <View style={styles.cardIcon}>
-                  <Ionicons
-                    name="people-outline"
-                    size={24}
-                    color={Colors.primary}
-                  />
-                </View>
-                <View style={styles.cardText}>
-                  <Text style={styles.cardTitle}>Roles & Permissions</Text>
-                  <Text style={styles.cardSubtitle}>
-                    View system roles (read-only)
-                  </Text>
-                </View>
-              </View>
-              <Ionicons
-                name="chevron-forward"
-                size={20}
-                color={Colors.textSecondary}
-              />
-            </TouchableOpacity>
-
-            <View style={styles.infoCard}>
-              <View style={styles.cardContent}>
-                <View style={styles.cardIcon}>
-                  <Ionicons
-                    name="information-circle-outline"
-                    size={24}
-                    color={Colors.primary}
-                  />
-                </View>
-                <View style={styles.cardText}>
-                  <Text style={styles.cardTitle}>System Info</Text>
-                  <Text style={styles.cardSubtitle}>
-                    App version and details
-                  </Text>
-                </View>
-              </View>
-              <Text style={styles.versionText}>v1.0.0</Text>
-            </View>
-          </View>
-        </Protected>
-
-        {/* My Permissions */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            My Permissions ({permissions.length})
-          </Text>
-
-          <View style={styles.permissionsCard}>
-            {permissions.slice(0, 8).map((perm, index) => (
-              <View key={index} style={styles.permissionChip}>
-                <Ionicons
-                  name="checkmark-circle"
-                  size={14}
-                  color={Colors.success}
-                />
-                <Text style={styles.permissionText}>{perm}</Text>
-              </View>
-            ))}
-            {permissions.length > 8 && (
-              <TouchableOpacity style={styles.permissionChip}>
-                <Text style={[styles.permissionText, styles.moreText]}>
-                  +{permissions.length - 8} more
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-
         {/* Settings */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Settings</Text>
@@ -234,7 +175,11 @@ export default function ProfileScreen() {
             />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.infoCard}>
+          <TouchableOpacity
+            style={styles.infoCard}
+            onPress={() => router.push("/(protected)/help-support" as never)}
+            activeOpacity={0.7}
+          >
             <View style={styles.cardContent}>
               <View style={styles.cardIcon}>
                 <Ionicons
@@ -257,24 +202,55 @@ export default function ProfileScreen() {
             />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.infoCard}>
+          <TouchableOpacity
+            style={styles.infoCard}
+            onPress={() => void Linking.openURL(TERMS_URL)}
+            activeOpacity={0.7}
+          >
             <View style={styles.cardContent}>
               <View style={styles.cardIcon}>
                 <Ionicons
-                  name="document-outline"
+                  name="document-text-outline"
                   size={24}
                   color={Colors.primary}
                 />
               </View>
               <View style={styles.cardText}>
-                <Text style={styles.cardTitle}>Terms & Privacy</Text>
+                <Text style={styles.cardTitle}>Terms of Service</Text>
                 <Text style={styles.cardSubtitle}>
-                  View terms and privacy policy
+                  Read our terms and conditions
                 </Text>
               </View>
             </View>
             <Ionicons
-              name="chevron-forward"
+              name="open-outline"
+              size={20}
+              color={Colors.textSecondary}
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.infoCard}
+            onPress={() => void Linking.openURL(PRIVACY_URL)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.cardContent}>
+              <View style={styles.cardIcon}>
+                <Ionicons
+                  name="shield-checkmark-outline"
+                  size={24}
+                  color={Colors.primary}
+                />
+              </View>
+              <View style={styles.cardText}>
+                <Text style={styles.cardTitle}>Privacy Policy</Text>
+                <Text style={styles.cardSubtitle}>
+                  How we handle your information
+                </Text>
+              </View>
+            </View>
+            <Ionicons
+              name="open-outline"
               size={20}
               color={Colors.textSecondary}
             />
@@ -399,37 +375,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textSecondary,
     fontFamily: "System",
-  },
-  versionText: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    fontFamily: "System",
-  },
-  permissionsCard: {
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.lg,
-    padding: Spacing.md,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: Spacing.sm,
-  },
-  permissionChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Colors.background,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: Layout.borderRadius.lg,
-    gap: Spacing.xs,
-  },
-  permissionText: {
-    fontSize: 12,
-    color: Colors.text,
-    fontFamily: "System",
-  },
-  moreText: {
-    color: Colors.primary,
-    fontWeight: "600",
   },
   logoutButton: {
     flexDirection: "row",

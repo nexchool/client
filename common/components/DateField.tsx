@@ -6,8 +6,7 @@ import {
   TouchableOpacity,
   Modal,
   Platform,
-  TouchableWithoutFeedback,
-  Dimensions,
+  Pressable,
 } from "react-native";
 import DateTimePicker, {
   DateTimePickerEvent,
@@ -25,7 +24,7 @@ export interface DateFieldProps {
   maximumDate?: Date;
   error?: string;
   disabled?: boolean;
-  /** Use when this field is inside another Modal to avoid nested modals (picker shown as overlay instead). */
+  /** @deprecated No longer used — Android uses the system dialog; iOS uses a nested modal. Safe to remove from call sites. */
   useOverlayInsideModal?: boolean;
 }
 
@@ -55,7 +54,8 @@ function formatDisplay(value?: string | null): string {
   }
 }
 
-function PickerContent({
+/** iOS only: sheet with spinner + Done/Cancel */
+function IosDatePickerSheet({
   label,
   tempDate,
   minimumDate,
@@ -87,25 +87,23 @@ function PickerContent({
           onChange={onChange}
           minimumDate={minimumDate}
           maximumDate={maximumDate}
-          display={Platform.OS === "ios" ? "spinner" : "calendar"}
+          display="spinner"
         />
       </View>
-      {Platform.OS === "ios" && (
-        <View style={styles.modalFooter}>
-          <TouchableOpacity
-            style={styles.footerBtnSecondary}
-            onPress={onClose}
-          >
-            <Text style={styles.footerBtnSecondaryText}>Cancel</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.footerBtnPrimary}
-            onPress={onConfirm}
-          >
-            <Text style={styles.footerBtnPrimaryText}>Done</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+      <View style={styles.modalFooter}>
+        <TouchableOpacity
+          style={styles.footerBtnSecondary}
+          onPress={onClose}
+        >
+          <Text style={styles.footerBtnSecondaryText}>Cancel</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.footerBtnPrimary}
+          onPress={onConfirm}
+        >
+          <Text style={styles.footerBtnPrimaryText}>Done</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -119,7 +117,6 @@ export function DateField({
   maximumDate,
   error,
   disabled,
-  useOverlayInsideModal = false,
 }: DateFieldProps) {
   const [open, setOpen] = useState(false);
   const [tempDate, setTempDate] = useState<Date>(parseIsoDate(value));
@@ -132,13 +129,19 @@ export function DateField({
 
   const handleClose = () => setOpen(false);
 
-  const handleChange = (_event: DateTimePickerEvent, date?: Date) => {
-    if (!date) return;
-    if (Platform.OS === "android") {
+  const handleIosChange = (_event: DateTimePickerEvent, date?: Date) => {
+    if (date) setTempDate(date);
+  };
+
+  /** Android: system dialog — no custom Modal; handle dismiss vs confirm via event.type */
+  const handleAndroidChange = (event: DateTimePickerEvent, date?: Date) => {
+    if (event.type === "dismissed" || event.type === "neutralButtonPressed") {
       setOpen(false);
+      return;
+    }
+    setOpen(false);
+    if (event.type === "set" && date) {
       onChange(toIsoDate(date));
-    } else {
-      setTempDate(date);
     }
   };
 
@@ -148,18 +151,6 @@ export function DateField({
   };
 
   const displayText = formatDisplay(value);
-
-  const pickerContent = (
-    <PickerContent
-      label={label}
-      tempDate={tempDate}
-      minimumDate={minimumDate}
-      maximumDate={maximumDate}
-      onChange={handleChange}
-      onClose={handleClose}
-      onConfirm={handleConfirm}
-    />
-  );
 
   return (
     <View style={styles.container}>
@@ -191,27 +182,47 @@ export function DateField({
       </TouchableOpacity>
       {error && <Text style={styles.errorText}>{error}</Text>}
 
-      {useOverlayInsideModal ? (
-        open ? (
-          <View style={styles.overlayContainer} pointerEvents="box-none">
-            <TouchableWithoutFeedback onPress={handleClose}>
-              <View style={styles.overlayBackdrop} />
-            </TouchableWithoutFeedback>
-            <View style={styles.overlayCenter}>{pickerContent}</View>
-          </View>
-        ) : null
-      ) : (
+      {Platform.OS === "android" && open ? (
+        <DateTimePicker
+          mode="date"
+          value={tempDate}
+          display="calendar"
+          onChange={handleAndroidChange}
+          minimumDate={minimumDate}
+          maximumDate={maximumDate}
+          style={styles.androidPickerAnchor}
+        />
+      ) : null}
+
+      {Platform.OS === "ios" ? (
         <Modal
           visible={open}
           transparent
           animationType="fade"
+          presentationStyle="overFullScreen"
           onRequestClose={handleClose}
         >
           <View style={styles.modalOverlay}>
-            {pickerContent}
+            <Pressable
+              style={[StyleSheet.absoluteFill, styles.modalBackdrop]}
+              onPress={handleClose}
+              accessibilityRole="button"
+              accessibilityLabel="Dismiss date picker"
+            />
+            <View style={styles.modalSheetCenter} pointerEvents="box-none">
+              <IosDatePickerSheet
+                label={label}
+                tempDate={tempDate}
+                minimumDate={minimumDate}
+                maximumDate={maximumDate}
+                onChange={handleIosChange}
+                onClose={handleClose}
+                onConfirm={handleConfirm}
+              />
+            </View>
           </View>
         </Modal>
-      )}
+      ) : null}
     </View>
   );
 }
@@ -260,29 +271,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.error,
   },
-  overlayContainer: {
+  /** Host view for the Android system date dialog — kept off-screen so layout is unchanged. */
+  androidPickerAnchor: {
     position: "absolute",
-    left: 0,
+    left: -9999,
     top: 0,
-    right: 0,
-    bottom: 0,
-    width: Dimensions.get("window").width,
-    height: Dimensions.get("window").height,
-    zIndex: 9999,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: Spacing.lg,
-  },
-  overlayBackdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: Colors.overlay,
-  },
-  overlayCenter: {
-    alignSelf: "center",
+    width: 1,
+    height: 1,
   },
   modalOverlay: {
     flex: 1,
+  },
+  modalBackdrop: {
     backgroundColor: Colors.overlay,
+  },
+  modalSheetCenter: {
+    ...StyleSheet.absoluteFillObject,
     justifyContent: "center",
     alignItems: "center",
     padding: Spacing.lg,
@@ -350,4 +354,3 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
 });
-

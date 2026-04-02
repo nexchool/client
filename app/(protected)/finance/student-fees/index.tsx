@@ -22,6 +22,7 @@ import { useAcademicYearContext } from "@/modules/academics/context/AcademicYear
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
 import { ClassSelect } from "@/common/components/ClassSelect";
+import { ProfileAvatar } from "@/common/components/ProfileAvatar";
 
 function formatCurrency(n: number) {
   return `₹${n.toLocaleString("en-IN")}`;
@@ -125,9 +126,14 @@ export default function StudentFeesPage() {
       onPress={() => router.push(`/(protected)/finance/student-fees/${sf.id}` as any)}
       activeOpacity={0.7}
     >
-      <View style={styles.avatar}>
-        <Ionicons name="person" size={24} color={Colors.primary} />
-      </View>
+      <ProfileAvatar
+        uri={sf.student_profile_picture}
+        size={48}
+        name={sf.student_name ?? undefined}
+        iconColor={Colors.primary}
+        placeholderBg={Colors.backgroundSecondary}
+        style={{ marginRight: Spacing.md }}
+      />
       <View style={styles.content}>
         <Text style={styles.name}>{sf.student_name ?? "—"}</Text>
         <Text style={styles.info}>
@@ -354,15 +360,6 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
     borderWidth: 1,
     borderColor: Colors.borderLight,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: Colors.backgroundSecondary,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: Spacing.md,
   },
   content: { flex: 1 },
   name: { fontSize: 16, fontWeight: "600", color: Colors.text, marginBottom: 2 },

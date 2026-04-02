@@ -62,6 +62,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   plugins: [
     "expo-router",
+    "@config-plugins/react-native-blob-util",
+    "@config-plugins/react-native-pdf",
     [
       "expo-splash-screen",
       {

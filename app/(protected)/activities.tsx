@@ -10,17 +10,11 @@ import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
 import { Ionicons } from "@expo/vector-icons";
 import { Protected } from "@/modules/permissions/components/Protected";
-import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
+import { useUiRole } from "@/modules/permissions/hooks/useUiRole";
 import * as PERMS from "@/modules/permissions/constants/permissions";
 
 export default function ActivitiesScreen() {
-  const { hasAnyPermission } = usePermissions();
-
-  const isAdmin = hasAnyPermission([PERMS.SYSTEM_MANAGE, PERMS.USER_MANAGE]);
-  const isTeacher = hasAnyPermission([
-    PERMS.ATTENDANCE_MARK,
-    PERMS.GRADE_CREATE,
-  ]);
+  const { isAdmin, isTeacher } = useUiRole();
 
   return (
     <ScrollView

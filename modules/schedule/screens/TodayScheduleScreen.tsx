@@ -20,7 +20,7 @@ import { Spacing, Layout } from "@/common/constants/spacing";
 import { useSchedule } from "../hooks/useSchedule";
 import { ScheduleSlot } from "../types";
 import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
-import { isTeacher, isStudent } from "@/common/constants/navigation";
+import { useUiRole } from "@/modules/permissions/hooks/useUiRole";
 import { teacherService } from "@/modules/teachers/services/teacherService";
 import { Teacher } from "@/modules/teachers/types";
 import * as PERMS from "@/modules/permissions/constants/permissions";
@@ -39,10 +39,8 @@ const ACTIVITY_PRESETS = [
 export default function TodayScheduleScreen() {
   const router = useRouter();
   const { slots, loading, error, fetchTodaysSchedule, upsertOverride, removeOverride } = useSchedule();
-  const { permissions, hasPermission } = usePermissions();
-
-  const teacherView = isTeacher(permissions);
-  const studentView = isStudent(permissions);
+  const { hasPermission } = usePermissions();
+  const { isTeacher: teacherView, isStudent: studentView } = useUiRole();
   const canManage = hasPermission(PERMS.TIMETABLE_MANAGE);
 
   // Override modal state

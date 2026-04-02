@@ -56,6 +56,8 @@ export interface StudentFee {
   class_id?: string;
   academic_year_id?: string;
   student_name?: string | null;
+  /** Presigned or public URL when the student user has a profile photo */
+  student_profile_picture?: string | null;
   admission_number?: string | null;
   fee_structure_name?: string | null;
   items?: StudentFeeItem[];

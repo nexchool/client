@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
+  TextInput,
   StyleSheet,
   Modal,
   TouchableOpacity,
@@ -104,17 +105,14 @@ export function CreateAcademicYearModal({
           )}
 
           <Text style={styles.label}>Name *</Text>
-          <View style={styles.input}>
-            <Text
-              style={{
-                fontSize: 16,
-                color: name ? Colors.text : Colors.textTertiary,
-              }}
-              numberOfLines={1}
-            >
-              {name || "e.g. 2025-2026"}
-            </Text>
-          </View>
+          <TextInput
+            style={styles.input}
+            value={name}
+            onChangeText={setName}
+            placeholder="e.g. 2025-2026"
+            placeholderTextColor={Colors.textTertiary}
+            editable={!loading}
+          />
 
           <DateField
             label="Start Date *"

@@ -2,19 +2,18 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
-import { usePermissions } from '@/modules/permissions/hooks/usePermissions';
 import { Protected } from '@/modules/permissions/components/Protected';
 import * as PERMS from '@/modules/permissions/constants/permissions';
-import { isAdmin, isTeacher, getUserRole } from '@/common/constants/navigation';
+import { useUiRole, UI_ROLE, type UiRole } from '@/modules/permissions/hooks/useUiRole';
 import { ScreenContainer } from '@/src/components/ui/ScreenContainer';
 import { theme } from '@/src/design-system/theme';
 import { Icons } from '@/src/design-system/icons';
 
-const ROLE_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  Admin:   { bg: theme.colors.primary[50],  text: theme.colors.primary[600],  border: theme.colors.primary[200] },
-  Teacher: { bg: '#e0f2fe',                 text: '#0369a1',                   border: '#bae6fd' },
-  Student: { bg: '#dcfce7',                 text: '#15803d',                   border: '#bbf7d0' },
-  Parent:  { bg: theme.colors.warningLight, text: '#92400e',                   border: '#fde68a' },
+const ROLE_COLORS: Record<UiRole, { bg: string; text: string; border: string }> = {
+  [UI_ROLE.ADMIN]:   { bg: theme.colors.primary[50],  text: theme.colors.primary[600],  border: theme.colors.primary[200] },
+  [UI_ROLE.TEACHER]: { bg: '#e0f2fe',                 text: '#0369a1',                   border: '#bae6fd' },
+  [UI_ROLE.STUDENT]: { bg: '#dcfce7',                 text: '#15803d',                   border: '#bbf7d0' },
+  [UI_ROLE.PARENT]:  { bg: theme.colors.warningLight, text: '#92400e',                   border: '#fde68a' },
 };
 
 interface QuickAction {
@@ -45,13 +44,10 @@ function SectionTitle({ children }: { children: string }) {
 
 export const DashboardScreen = () => {
   const { user, isFeatureEnabled } = useAuth();
-  const { permissions } = usePermissions();
   const router = useRouter();
+  const { role, isAdmin: adminUser, isTeacher: teacherUser } = useUiRole();
 
-  const role = getUserRole(permissions);
-  const roleStyle = ROLE_COLORS[role] ?? ROLE_COLORS.Admin;
-  const adminUser = isAdmin(permissions);
-  const teacherUser = isTeacher(permissions);
+  const roleStyle = ROLE_COLORS[role] ?? ROLE_COLORS[UI_ROLE.ADMIN];
 
   const push = (path: string) => router.push(path as any);
 
