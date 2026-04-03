@@ -1,3 +1,8 @@
+/**
+ * @deprecated Legacy TimetableSlot / TimetableConfig API (`/api/timetable/...`).
+ * Use `classAcademicApi` + TimetableVersion / TimetableEntry (`/api/classes/:id/timetable/...`) instead.
+ * Kept only for reference or any unmigrated callers.
+ */
 import { apiDelete, apiGet, apiPatch, apiPost, apiPut } from "@/common/services/api";
 import { TimetableSlot, CreateSlotDTO, UpdateSlotDTO, MoveSlotResult, SwapSlotsResult } from "../types";
 

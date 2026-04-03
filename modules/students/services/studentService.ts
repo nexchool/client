@@ -1,4 +1,5 @@
 import { apiDelete, apiGet, apiPost, apiPut } from '@/common/services/api';
+import type { StudentDashboardResponse } from '@/modules/academics/types';
 import { Student, CreateStudentDTO, UpdateStudentDTO, CreateStudentResponse } from '../types';
 
 export const studentService = {
@@ -31,6 +32,10 @@ export const studentService = {
   // Get current user's student profile
   getMyProfile: async () => {
     return await apiGet<Student>('/api/students/me');
+  },
+
+  getMyDashboard: async () => {
+    return await apiGet<StudentDashboardResponse>('/api/students/me/dashboard');
   },
 
   // Create student (may return credentials if email provided)

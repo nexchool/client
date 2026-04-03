@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -11,47 +11,34 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useAttendance } from "../hooks/useAttendance";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
-import { MyClassItem } from "../types";
+import { useEligibleAttendanceClasses } from "@/modules/academics/hooks/useAcademicQueries";
+import type { EligibleClassItem } from "@/modules/academics/types";
 
 export default function MyClassesScreen() {
   const router = useRouter();
-  const { myClasses, loading, fetchMyClasses } = useAttendance();
+  const today = new Date().toISOString().slice(0, 10);
+  const { data: items = [], isLoading, refetch, isRefetching } = useEligibleAttendanceClasses(today);
 
-  useEffect(() => {
-    fetchMyClasses();
-  }, []);
-
-  const handleClassPress = (cls: MyClassItem) => {
+  const handleClassPress = (cls: EligibleClassItem) => {
     router.push({
-      pathname: "/(protected)/attendance/mark" as any,
-      params: { classId: cls.id, className: `${cls.name}-${cls.section}` },
-    });
+      pathname: "/(protected)/attendance/session",
+      params: { classId: cls.class_id, className: cls.class_name, date: today },
+    } as any);
   };
 
-  const renderClassItem = ({ item }: { item: MyClassItem }) => (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => handleClassPress(item)}
-      activeOpacity={0.7}
-    >
+  const renderClassItem = ({ item }: { item: EligibleClassItem }) => (
+    <TouchableOpacity style={styles.card} onPress={() => handleClassPress(item)} activeOpacity={0.7}>
       <View style={styles.cardIcon}>
         <Ionicons name="school" size={28} color={Colors.primary} />
       </View>
       <View style={styles.cardInfo}>
-        <Text style={styles.cardTitle}>
-          {item.name} - {item.section}
-        </Text>
-        <Text style={styles.cardDetail}>{item.academic_year}</Text>
-        <View style={styles.cardStats}>
-          <Ionicons name="people-outline" size={14} color={Colors.textSecondary} />
-          <Text style={styles.cardStatText}>{item.student_count} students</Text>
-        </View>
+        <Text style={styles.cardTitle}>{item.class_name}</Text>
+        <Text style={styles.cardDetail}>{item.reason.replace(/_/g, " ")}</Text>
       </View>
       <View style={styles.markButton}>
-        <Text style={styles.markButtonText}>Mark</Text>
+        <Text style={styles.markButtonText}>Open</Text>
         <Ionicons name="chevron-forward" size={16} color={Colors.primary} />
       </View>
     </TouchableOpacity>
@@ -63,28 +50,29 @@ export default function MyClassesScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backIcon}>
           <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Classes</Text>
+        <Text style={styles.headerTitle}>Attendance classes</Text>
       </View>
 
-      {loading && myClasses.length === 0 ? (
+      {isLoading && items.length === 0 ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color={Colors.primary} />
         </View>
       ) : (
         <FlatList
-          data={myClasses}
-          keyExtractor={(item) => item.id}
+          data={items}
+          keyExtractor={(item) => item.class_id}
           renderItem={renderClassItem}
           contentContainerStyle={styles.listContent}
           refreshControl={
-            <RefreshControl refreshing={loading} onRefresh={fetchMyClasses} />
+            <RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} />
           }
           ListEmptyComponent={
             <View style={styles.center}>
               <Ionicons name="school-outline" size={48} color={Colors.textTertiary} />
-              <Text style={styles.emptyText}>No classes assigned to you yet.</Text>
+              <Text style={styles.emptyText}>No eligible classes for attendance today.</Text>
               <Text style={styles.emptySubtext}>
-                Contact the admin to get assigned to classes.
+                You need to be assigned as a class teacher with attendance authority, or receive a delegated
+                session.
               </Text>
             </View>
           }
@@ -128,9 +116,7 @@ const styles = StyleSheet.create({
   },
   cardInfo: { flex: 1 },
   cardTitle: { fontSize: 17, fontWeight: "600", color: Colors.text },
-  cardDetail: { fontSize: 14, color: Colors.textSecondary, marginTop: 2 },
-  cardStats: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: Spacing.xs },
-  cardStatText: { fontSize: 13, color: Colors.textSecondary },
+  cardDetail: { fontSize: 13, color: Colors.textSecondary, marginTop: 4, textTransform: "capitalize" },
   markButton: {
     flexDirection: "row",
     alignItems: "center",

@@ -5,6 +5,8 @@ export interface ClassItem {
   id: string;
   name: string;
   section: string;
+  /** Standard / grade number when using standard-based naming (e.g. 10 → Grade 10) */
+  grade_level?: number | null;
   academic_year: string;
   academic_year_id?: string;
   start_date?: string;
@@ -35,9 +37,11 @@ export interface ClassDetail extends ClassItem {
 }
 
 export interface CreateClassDTO {
-  name: string;
+  /** Set when not using grade_level — server derives name as `Grade {grade_level}` when grade_level is set */
+  name?: string;
   section: string;
   academic_year_id: string;
+  grade_level?: number;
   teacher_id?: string;
   start_date?: string;
   end_date?: string;

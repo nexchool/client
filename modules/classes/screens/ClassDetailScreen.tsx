@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -15,9 +15,10 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useClasses } from "../hooks/useClasses";
-import { useSubjectLoad } from "../hooks/useSubjectLoad";
 import { CreateClassModal } from "../components/CreateClassModal";
+import { CreateClassDTO } from "../types";
 import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
+import { useAuth } from "@/modules/auth/hooks/useAuth";
 import * as PERMS from "@/modules/permissions/constants/permissions";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
@@ -25,11 +26,35 @@ import { Student } from "@/modules/students/types";
 import { Teacher } from "@/modules/teachers/types";
 import { subjectService } from "@/modules/subjects/services/subjectService";
 import { Subject } from "@/modules/subjects/types";
-import { SubjectLoad } from "../types";
+import { ClassSubjectsPanel } from "@/modules/academics/components/class/ClassSubjectsPanel";
+import { SubjectTeachersPanel } from "@/modules/academics/components/class/SubjectTeachersPanel";
+import { ClassTeachersPanel } from "@/modules/academics/components/class/ClassTeachersPanel";
+import { ClassTimetableV2Panel } from "@/modules/academics/components/class/ClassTimetableV2Panel";
+import { ClassAttendancePanel } from "@/modules/academics/components/class/ClassAttendancePanel";
+
+type HubTab =
+  | "students"
+  // | "teachers"
+  | "subjects"
+  | "subjectTeachers"
+  | "classTeachers"
+  | "timetable"
+  | "attendance";
+
+const TAB_DEF: { key: HubTab; label: string }[] = [
+  { key: "students", label: "Students" },
+  // { key: "teachers", label: "Teachers" },
+  { key: "subjects", label: "Subjects" },
+  { key: "subjectTeachers", label: "Subj. teachers" },
+  { key: "classTeachers", label: "Class teachers" },
+  { key: "timetable", label: "Timetable" },
+  { key: "attendance", label: "Attendance" },
+];
 
 export default function ClassDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { isFeatureEnabled } = useAuth();
   const {
     currentClass,
     loading,
@@ -48,7 +73,34 @@ export default function ClassDetailScreen() {
 
   const canUpdate = hasPermission(PERMS.CLASS_UPDATE);
   const canManage = hasPermission(PERMS.CLASS_MANAGE);
-  const canViewTimetable = hasPermission(PERMS.TIMETABLE_READ) || hasPermission(PERMS.TIMETABLE_MANAGE);
+  const canManageSubjects = canManage || hasPermission(PERMS.CLASS_SUBJECT_MANAGE);
+  const canViewSubjects =
+    hasPermission(PERMS.CLASS_SUBJECT_READ) || hasPermission(PERMS.CLASS_SUBJECT_MANAGE) || canManage;
+  const canSubjectTeachers =
+    isFeatureEnabled("timetable") && (hasPermission(PERMS.CLASS_SUBJECT_MANAGE) || canManage);
+  const canClassTeacherTab = hasPermission(PERMS.CLASS_READ) || hasPermission(PERMS.CLASS_TEACHER_MANAGE);
+  const canManageClassTeachers = hasPermission(PERMS.CLASS_TEACHER_MANAGE) || canManage;
+  const canTimetable = isFeatureEnabled("timetable") && (hasPermission(PERMS.TIMETABLE_READ) || hasPermission(PERMS.TIMETABLE_MANAGE));
+  const canManageTimetable = hasPermission(PERMS.TIMETABLE_MANAGE);
+  const canAttendanceMark = isFeatureEnabled("attendance") && hasPermission(PERMS.ATTENDANCE_MARK);
+  const canAttendanceView =
+    isFeatureEnabled("attendance") &&
+    (hasPermission(PERMS.ATTENDANCE_READ_CLASS) ||
+      hasPermission(PERMS.ATTENDANCE_READ_ALL) ||
+      canAttendanceMark);
+
+  const visibleTabs = useMemo(() => {
+    return TAB_DEF.filter((t) => {
+      if (t.key === "subjects") return canViewSubjects;
+      if (t.key === "subjectTeachers") return canSubjectTeachers;
+      if (t.key === "classTeachers") return canClassTeacherTab;
+      if (t.key === "timetable") return canTimetable;
+      if (t.key === "attendance") return canAttendanceView;
+      return true;
+    });
+  }, [canViewSubjects, canSubjectTeachers, canClassTeacherTab, canTimetable, canAttendanceView]);
+
+  const [tab, setTab] = useState<HubTab>("students");
   const [showStudentPicker, setShowStudentPicker] = useState(false);
   const [showTeacherPicker, setShowTeacherPicker] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -56,29 +108,15 @@ export default function ClassDetailScreen() {
   const [subjectsLoading, setSubjectsLoading] = useState(false);
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>("");
 
-  // --- Subject Load ---
-  const classId = id || "";
-  const {
-    subjectLoads,
-    loading: loadLoading,
-    fetchSubjectLoads,
-    createSubjectLoad,
-    updateSubjectLoad,
-    deleteSubjectLoad,
-  } = useSubjectLoad(classId);
-  const [showLoadModal, setShowLoadModal] = useState(false);
-  const [loadSubjectId, setLoadSubjectId] = useState("");
-  const [loadPeriods, setLoadPeriods] = useState("4");
-  const [loadSubmitting, setLoadSubmitting] = useState(false);
-  const [editingLoad, setEditingLoad] = useState<SubjectLoad | null>(null);
-  const [editPeriods, setEditPeriods] = useState("4");
+  useEffect(() => {
+    if (id) fetchClassDetail(id);
+  }, [id]);
 
   useEffect(() => {
-    if (id) {
-      fetchClassDetail(id);
-      fetchSubjectLoads();
+    if (!visibleTabs.some((t) => t.key === tab)) {
+      setTab(visibleTabs[0]?.key ?? "students");
     }
-  }, [id]);
+  }, [visibleTabs, tab]);
 
   const handleAssignStudent = async (student: Student) => {
     if (!id) return;
@@ -149,7 +187,7 @@ export default function ClassDetailScreen() {
     setShowStudentPicker(true);
   };
 
-  const handleUpdateClass = async (data: { name: string; section: string; academic_year_id: string; teacher_id?: string; start_date?: string; end_date?: string }) => {
+  const handleUpdateClass = async (data: CreateClassDTO) => {
     if (!id) return;
     try {
       await updateClass(id, data);
@@ -177,77 +215,6 @@ export default function ClassDetailScreen() {
     setShowTeacherPicker(true);
   };
 
-  // --- Subject Load helpers ---
-  const openLoadModal = async () => {
-    setLoadSubjectId("");
-    setLoadPeriods("4");
-    setSubjectsLoading(true);
-    try {
-      const subs = await subjectService.getSubjects();
-      const assigned = new Set(subjectLoads.map((l) => l.subject_id));
-      setSubjects(subs.filter((s) => !assigned.has(s.id)));
-    } catch {
-      setSubjects([]);
-    } finally {
-      setSubjectsLoading(false);
-    }
-    setShowLoadModal(true);
-  };
-
-  const handleCreateLoad = async () => {
-    if (!loadSubjectId) {
-      Alert.alert("Validation", "Select a subject");
-      return;
-    }
-    const periods = parseInt(loadPeriods);
-    if (!periods || periods < 1) {
-      Alert.alert("Validation", "Enter a valid period count (≥ 1)");
-      return;
-    }
-    try {
-      setLoadSubmitting(true);
-      await createSubjectLoad({ subject_id: loadSubjectId, weekly_periods: periods });
-      setShowLoadModal(false);
-    } catch (e: any) {
-      Alert.alert("Error", e.message || "Failed to save");
-    } finally {
-      setLoadSubmitting(false);
-    }
-  };
-
-  const openEditLoad = (load: SubjectLoad) => {
-    setEditingLoad(load);
-    setEditPeriods(load.weekly_periods.toString());
-  };
-
-  const handleUpdateLoad = async () => {
-    if (!editingLoad) return;
-    const periods = parseInt(editPeriods);
-    if (!periods || periods < 1) {
-      Alert.alert("Validation", "Enter a valid period count");
-      return;
-    }
-    try {
-      await updateSubjectLoad(editingLoad.id, periods);
-      setEditingLoad(null);
-    } catch (e: any) {
-      Alert.alert("Error", e.message);
-    }
-  };
-
-  const handleDeleteLoad = (load: SubjectLoad) => {
-    Alert.alert("Delete", `Remove ${load.subject_name} from weekly load?`, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          try { await deleteSubjectLoad(load.id); } catch (e: any) { Alert.alert("Error", e.message); }
-        },
-      },
-    ]);
-  };
-
   if (loading && !currentClass) {
     return (
       <SafeAreaView style={styles.container}>
@@ -271,48 +238,32 @@ export default function ClassDetailScreen() {
     );
   }
 
+  const classLabel = `${currentClass.name}-${currentClass.section}`;
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backIcon}>
           <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {currentClass.name} - {currentClass.section}
-        </Text>
+        <Text style={styles.headerTitle}>{classLabel}</Text>
         {canUpdate && (
-          <TouchableOpacity
-            style={styles.editIcon}
-            onPress={() => setShowEditModal(true)}
-          >
+          <TouchableOpacity style={styles.editIcon} onPress={() => setShowEditModal(true)}>
             <Ionicons name="create-outline" size={24} color={Colors.primary} />
           </TouchableOpacity>
         )}
       </View>
 
-      <ScrollView style={styles.content}>
-        {/* Class Info */}
+      <ScrollView style={styles.content} nestedScrollEnabled>
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Class Information</Text>
-            {canViewTimetable && (
-              <TouchableOpacity
-                style={styles.addSmallBtn}
-                onPress={() => router.push(`/(protected)/timetable/${id}` as any)}
-              >
-                <Ionicons name="calendar-outline" size={18} color={Colors.primary} />
-                <Text style={styles.addSmallBtnText}>Timetable</Text>
-              </TouchableOpacity>
-            )}
-          </View>
+          <Text style={styles.sectionTitle}>Class information</Text>
           <View style={styles.infoRow}>
             <Text style={styles.label}>Academic Year</Text>
             <Text style={styles.value}>{currentClass.academic_year}</Text>
           </View>
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Class Teacher</Text>
-            <Text style={styles.value}>{currentClass.teacher_name || "Not assigned"}</Text>
+            <Text style={styles.label}>Legacy class teacher</Text>
+            <Text style={styles.value}>{currentClass.teacher_name || "—"}</Text>
           </View>
           <View style={styles.statsRow}>
             <View style={styles.statCard}>
@@ -326,185 +277,111 @@ export default function ClassDetailScreen() {
           </View>
         </View>
 
-        {/* Students Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Students</Text>
-            {canUpdate && (
-              <TouchableOpacity style={styles.addSmallBtn} onPress={openStudentPicker}>
-                <Ionicons name="add" size={20} color={Colors.primary} />
-                <Text style={styles.addSmallBtnText}>Add</Text>
+        <View style={styles.tabBar}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {visibleTabs.map((t) => (
+              <TouchableOpacity
+                key={t.key}
+                style={[styles.tabChip, tab === t.key && styles.tabChipActive]}
+                onPress={() => setTab(t.key)}
+              >
+                <Text style={[styles.tabChipTxt, tab === t.key && styles.tabChipTxtActive]}>{t.label}</Text>
               </TouchableOpacity>
-            )}
-          </View>
-          {currentClass.students && currentClass.students.length > 0 ? (
-            currentClass.students.map((student) => (
-              <View key={student.id} style={styles.listItem}>
-                <View style={styles.listItemInfo}>
-                  <Text style={styles.listItemName}>{student.name}</Text>
-                  <Text style={styles.listItemDetail}>{student.admission_number}</Text>
-                </View>
+            ))}
+          </ScrollView>
+        </View>
+
+        <View style={styles.tabBody}>
+          {tab === "students" && (
+            <View>
+              <View style={styles.rowHeader}>
+                <Text style={styles.panelTitle}>Students</Text>
                 {canUpdate && (
-                  <TouchableOpacity onPress={() => handleRemoveStudent(student)}>
-                    <Ionicons name="close-circle-outline" size={22} color={Colors.error} />
+                  <TouchableOpacity style={styles.addSmallBtn} onPress={openStudentPicker}>
+                    <Ionicons name="add" size={20} color={Colors.primary} />
+                    <Text style={styles.addSmallBtnText}>Add</Text>
                   </TouchableOpacity>
                 )}
               </View>
-            ))
-          ) : (
-            <Text style={styles.emptyText}>No students assigned</Text>
-          )}
-        </View>
-
-        {/* Teachers Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Teachers</Text>
-            {canUpdate && (
-              <TouchableOpacity style={styles.addSmallBtn} onPress={openTeacherPicker}>
-                <Ionicons name="add" size={20} color={Colors.primary} />
-                <Text style={styles.addSmallBtnText}>Add</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-          {currentClass.teachers && currentClass.teachers.length > 0 ? (
-            currentClass.teachers.map((ct) => (
-              <View key={ct.id} style={styles.listItem}>
-                <View style={styles.listItemInfo}>
-                  <Text style={styles.listItemName}>{ct.teacher_name}</Text>
-                  <Text style={styles.listItemDetail}>
-                    {ct.teacher_employee_id}
-                    {(ct.subject_name || ct.subject) ? ` - ${ct.subject_name || ct.subject}` : ""}
-                  </Text>
-                </View>
-                {canUpdate && (
-                  <TouchableOpacity onPress={() => handleRemoveTeacher(ct.teacher_id, ct.teacher_name)}>
-                    <Ionicons name="close-circle-outline" size={22} color={Colors.error} />
-                  </TouchableOpacity>
-                )}
-              </View>
-            ))
-          ) : (
-            <Text style={styles.emptyText}>No teachers assigned</Text>
-          )}
-        </View>
-
-        {/* Subject Weekly Load Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Subject Weekly Load</Text>
-            {canManage && (
-              <TouchableOpacity style={styles.addSmallBtn} onPress={openLoadModal}>
-                <Ionicons name="add" size={20} color={Colors.primary} />
-                <Text style={styles.addSmallBtnText}>Add</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-          <Text style={styles.helperText}>Periods per week per subject for timetable generation.</Text>
-          {loadLoading ? (
-            <ActivityIndicator size="small" color={Colors.primary} style={{ marginVertical: Spacing.md }} />
-          ) : subjectLoads.length === 0 ? (
-            <Text style={styles.emptyText}>No subject loads configured.</Text>
-          ) : (
-            subjectLoads.map((load) => (
-              <View key={load.id} style={styles.loadRow}>
-                <View style={styles.listItemInfo}>
-                  <Text style={styles.listItemName}>{load.subject_name}</Text>
-                  {load.subject_code ? <Text style={styles.listItemDetail}>{load.subject_code}</Text> : null}
-                </View>
-                <View style={styles.loadPeriodBadge}>
-                  <Text style={styles.loadPeriodText}>{load.weekly_periods} / wk</Text>
-                </View>
-                {canManage && (
-                  <View style={styles.loadActions}>
-                    <TouchableOpacity onPress={() => openEditLoad(load)} style={styles.loadActionBtn}>
-                      <Ionicons name="create-outline" size={18} color={Colors.primary} />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => handleDeleteLoad(load)} style={styles.loadActionBtn}>
-                      <Ionicons name="close-circle-outline" size={18} color={Colors.error} />
-                    </TouchableOpacity>
+              {currentClass.students && currentClass.students.length > 0 ? (
+                currentClass.students.map((student) => (
+                  <View key={student.id} style={styles.listItem}>
+                    <View style={styles.listItemInfo}>
+                      <Text style={styles.listItemName}>{student.name}</Text>
+                      <Text style={styles.listItemDetail}>{student.admission_number}</Text>
+                    </View>
+                    {canUpdate && (
+                      <TouchableOpacity onPress={() => handleRemoveStudent(student)}>
+                        <Ionicons name="close-circle-outline" size={22} color={Colors.error} />
+                      </TouchableOpacity>
+                    )}
                   </View>
+                ))
+              ) : (
+                <Text style={styles.emptyText}>No students assigned</Text>
+              )}
+            </View>
+          )}
+
+          {/* {tab === "teachers" && (
+            <View>
+              <View style={styles.rowHeader}>
+                <Text style={styles.panelTitle}>Teachers</Text>
+                {canUpdate && (
+                  <TouchableOpacity style={styles.addSmallBtn} onPress={openTeacherPicker}>
+                    <Ionicons name="add" size={20} color={Colors.primary} />
+                    <Text style={styles.addSmallBtnText}>Add</Text>
+                  </TouchableOpacity>
                 )}
               </View>
-            ))
+              {currentClass.teachers && currentClass.teachers.length > 0 ? (
+                currentClass.teachers.map((ct) => (
+                  <View key={ct.id} style={styles.listItem}>
+                    <View style={styles.listItemInfo}>
+                      <Text style={styles.listItemName}>{ct.teacher_name}</Text>
+                      <Text style={styles.listItemDetail}>
+                        {ct.teacher_employee_id}
+                        {ct.subject_name || ct.subject ? ` — ${ct.subject_name || ct.subject}` : ""}
+                      </Text>
+                    </View>
+                    {canUpdate && (
+                      <TouchableOpacity onPress={() => handleRemoveTeacher(ct.teacher_id, ct.teacher_name)}>
+                        <Ionicons name="close-circle-outline" size={22} color={Colors.error} />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                ))
+              ) : (
+                <Text style={styles.emptyText}>No teachers assigned</Text>
+              )}
+            </View>
+          )} */}
+
+          {tab === "subjects" && id && (
+            <ClassSubjectsPanel classId={id} canManage={canManageSubjects} />
+          )}
+
+          {tab === "subjectTeachers" && id && (
+            <SubjectTeachersPanel classId={id} canManage={canSubjectTeachers} />
+          )}
+
+          {tab === "classTeachers" && id && (
+            <ClassTeachersPanel classId={id} canManage={canManageClassTeachers} />
+          )}
+
+          {tab === "timetable" && id && <ClassTimetableV2Panel classId={id} canManage={canManageTimetable} />}
+
+          {tab === "attendance" && id && (
+            <ClassAttendancePanel
+              classId={id}
+              classLabel={classLabel}
+              canMark={canAttendanceMark}
+              canViewHistory={canAttendanceView}
+            />
           )}
         </View>
       </ScrollView>
 
-      {/* Subject Load Create Modal */}
-      <Modal visible={showLoadModal} animationType="slide" presentationStyle="formSheet">
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Add Subject Load</Text>
-            <TouchableOpacity onPress={() => setShowLoadModal(false)}>
-              <Ionicons name="close" size={24} color={Colors.text} />
-            </TouchableOpacity>
-          </View>
-          <ScrollView style={{ padding: Spacing.lg }}>
-            <Text style={styles.fieldLabel}>Select Subject *</Text>
-            {subjectsLoading ? (
-              <ActivityIndicator size="small" color={Colors.primary} style={{ marginVertical: Spacing.md }} />
-            ) : (
-              <View style={styles.subjectGrid}>
-                {subjects.map((s) => (
-                  <TouchableOpacity
-                    key={s.id}
-                    style={[styles.subjectChip, loadSubjectId === s.id && styles.subjectChipActive]}
-                    onPress={() => setLoadSubjectId(s.id)}
-                  >
-                    <Text style={[styles.subjectChipText, loadSubjectId === s.id && styles.subjectChipTextActive]}>
-                      {s.name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-                {!subjectsLoading && subjects.length === 0 && (
-                  <Text style={styles.emptyText}>All subjects already have loads set.</Text>
-                )}
-              </View>
-            )}
-            <Text style={styles.fieldLabel}>Weekly Periods *</Text>
-            <TextInput
-              style={styles.input}
-              value={loadPeriods}
-              onChangeText={setLoadPeriods}
-              keyboardType="number-pad"
-              placeholder="e.g. 5"
-            />
-            <TouchableOpacity style={styles.submitBtn} onPress={handleCreateLoad} disabled={loadSubmitting}>
-              <Text style={styles.submitBtnText}>{loadSubmitting ? "Saving..." : "Save"}</Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </SafeAreaView>
-      </Modal>
-
-      {/* Subject Load Edit Modal */}
-      <Modal visible={!!editingLoad} animationType="slide" presentationStyle="formSheet">
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Edit Weekly Periods</Text>
-            <TouchableOpacity onPress={() => setEditingLoad(null)}>
-              <Ionicons name="close" size={24} color={Colors.text} />
-            </TouchableOpacity>
-          </View>
-          <View style={{ padding: Spacing.lg }}>
-            {editingLoad && (
-              <Text style={styles.fieldLabel}>{editingLoad.subject_name} — Weekly Periods</Text>
-            )}
-            <TextInput
-              style={styles.input}
-              value={editPeriods}
-              onChangeText={setEditPeriods}
-              keyboardType="number-pad"
-              placeholder="e.g. 5"
-            />
-            <TouchableOpacity style={styles.submitBtn} onPress={handleUpdateLoad}>
-              <Text style={styles.submitBtnText}>Update</Text>
-            </TouchableOpacity>
-          </View>
-        </SafeAreaView>
-      </Modal>
-
-      {/* Student Picker Modal */}
       <Modal visible={showStudentPicker} animationType="slide" presentationStyle="pageSheet">
         <SafeAreaView style={styles.modalContainer}>
           <View style={styles.modalHeader}>
@@ -518,10 +395,7 @@ export default function ClassDetailScreen() {
             keyExtractor={(item) => item.id}
             contentContainerStyle={{ padding: Spacing.md }}
             renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.pickerItem}
-                onPress={() => handleAssignStudent(item)}
-              >
+              <TouchableOpacity style={styles.pickerItem} onPress={() => handleAssignStudent(item)}>
                 <Text style={styles.pickerName}>{item.name}</Text>
                 <Text style={styles.pickerDetail}>{item.admission_number}</Text>
               </TouchableOpacity>
@@ -535,7 +409,6 @@ export default function ClassDetailScreen() {
         </SafeAreaView>
       </Modal>
 
-      {/* Edit Class Modal */}
       {canUpdate && (
         <CreateClassModal
           visible={showEditModal}
@@ -548,17 +421,22 @@ export default function ClassDetailScreen() {
             teacher_id: currentClass.teacher_id,
             start_date: currentClass.start_date,
             end_date: currentClass.end_date,
+            grade_level: currentClass.grade_level ?? null,
           }}
           classId={id}
         />
       )}
 
-      {/* Teacher Picker Modal */}
       <Modal visible={showTeacherPicker} animationType="slide" presentationStyle="pageSheet">
         <SafeAreaView style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Add Teacher</Text>
-            <TouchableOpacity onPress={() => { setShowTeacherPicker(false); setSelectedSubjectId(""); }}>
+            <TouchableOpacity
+              onPress={() => {
+                setShowTeacherPicker(false);
+                setSelectedSubjectId("");
+              }}
+            >
               <Ionicons name="close" size={24} color={Colors.text} />
             </TouchableOpacity>
           </View>
@@ -574,7 +452,9 @@ export default function ClassDetailScreen() {
                     style={[styles.subjectChip, selectedSubjectId === s.id && styles.subjectChipActive]}
                     onPress={() => setSelectedSubjectId(s.id)}
                   >
-                    <Text style={[styles.subjectChipText, selectedSubjectId === s.id && styles.subjectChipTextActive]}>
+                    <Text
+                      style={[styles.subjectChipText, selectedSubjectId === s.id && styles.subjectChipTextActive]}
+                    >
                       {s.name}
                     </Text>
                   </TouchableOpacity>
@@ -593,10 +473,7 @@ export default function ClassDetailScreen() {
             keyExtractor={(item) => item.id}
             contentContainerStyle={{ padding: Spacing.md }}
             renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.pickerItem}
-                onPress={() => handleAssignTeacher(item)}
-              >
+              <TouchableOpacity style={styles.pickerItem} onPress={() => handleAssignTeacher(item)}>
                 <Text style={styles.pickerName}>{item.name}</Text>
                 <Text style={styles.pickerDetail}>
                   {item.employee_id}
@@ -631,38 +508,15 @@ const styles = StyleSheet.create({
   editIcon: { padding: Spacing.sm },
   content: { flex: 1, padding: Spacing.lg },
   section: {
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
     backgroundColor: Colors.background,
     borderRadius: Layout.borderRadius.md,
     borderWidth: 1,
     borderColor: Colors.borderLight,
     padding: Spacing.lg,
   },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-    paddingBottom: Spacing.sm,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: Colors.text,
-  },
-  addSmallBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Colors.backgroundSecondary,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    borderRadius: Layout.borderRadius.sm,
-    gap: 4,
-  },
-  addSmallBtnText: { fontSize: 14, color: Colors.primary, fontWeight: "500" },
-  infoRow: { marginBottom: Spacing.md },
+  sectionTitle: { fontSize: 16, fontWeight: "700", marginBottom: Spacing.md, color: Colors.text },
+  infoRow: { marginBottom: Spacing.sm },
   label: { fontSize: 14, color: Colors.textSecondary, marginBottom: 4 },
   value: { fontSize: 16, fontWeight: "500", color: Colors.text },
   statsRow: { flexDirection: "row", gap: Spacing.md, marginTop: Spacing.sm },
@@ -675,6 +529,44 @@ const styles = StyleSheet.create({
   },
   statNumber: { fontSize: 24, fontWeight: "700", color: Colors.text },
   statLabel: { fontSize: 13, color: Colors.textSecondary, marginTop: 4 },
+  tabBar: { marginBottom: Spacing.md },
+  tabChip: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    marginRight: Spacing.sm,
+    backgroundColor: Colors.backgroundSecondary,
+  },
+  tabChipActive: { borderColor: Colors.primary, backgroundColor: Colors.primary + "18" },
+  tabChipTxt: { fontSize: 13, fontWeight: "600", color: Colors.textSecondary },
+  tabChipTxtActive: { color: Colors.primary },
+  tabBody: {
+    minHeight: 420,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    borderRadius: Layout.borderRadius.md,
+    padding: Spacing.lg,
+    marginBottom: Spacing.xl,
+  },
+  rowHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.md,
+  },
+  panelTitle: { fontSize: 16, fontWeight: "700" },
+  addSmallBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.backgroundSecondary,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: Layout.borderRadius.sm,
+    gap: 4,
+  },
+  addSmallBtnText: { fontSize: 14, color: Colors.primary, fontWeight: "500" },
   listItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -694,7 +586,6 @@ const styles = StyleSheet.create({
     borderRadius: Layout.borderRadius.md,
   },
   backBtnText: { color: "#FFFFFF", fontSize: 16, fontWeight: "600" },
-  // Modal styles
   modalContainer: { flex: 1, backgroundColor: Colors.background },
   modalHeader: {
     flexDirection: "row",
@@ -705,7 +596,12 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.borderLight,
   },
   modalTitle: { fontSize: 18, fontWeight: "600", color: Colors.text },
-  subjectSection: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md, borderBottomWidth: 1, borderBottomColor: Colors.borderLight },
+  subjectSection: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+  },
   subjectLabel: { fontSize: 14, fontWeight: "500", color: Colors.text, marginBottom: Spacing.sm },
   subjectChips: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.sm },
   subjectChip: {
@@ -728,44 +624,4 @@ const styles = StyleSheet.create({
   },
   pickerName: { fontSize: 16, fontWeight: "500", color: Colors.text },
   pickerDetail: { fontSize: 13, color: Colors.textSecondary, marginTop: 2 },
-  // Subject Load styles
-  helperText: { fontSize: 13, color: Colors.textTertiary, marginBottom: Spacing.sm, fontStyle: "italic" },
-  loadRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  loadPeriodBadge: {
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.sm,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    marginRight: Spacing.sm,
-  },
-  loadPeriodText: { fontSize: 13, fontWeight: "600", color: Colors.primary },
-  loadActions: { flexDirection: "row", gap: 4 },
-  loadActionBtn: { padding: 4 },
-  subjectGrid: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.sm, marginBottom: Spacing.md },
-  fieldLabel: { fontSize: 14, fontWeight: "500", color: Colors.text, marginBottom: Spacing.xs, marginTop: Spacing.md },
-  input: {
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: Layout.borderRadius.sm,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    fontSize: 15,
-    color: Colors.text,
-    backgroundColor: Colors.backgroundSecondary,
-  },
-  submitBtn: {
-    backgroundColor: Colors.primary,
-    paddingVertical: Spacing.md,
-    borderRadius: Layout.borderRadius.md,
-    alignItems: "center",
-    marginTop: Spacing.xl,
-    marginBottom: Spacing.lg,
-  },
-  submitBtnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
 });

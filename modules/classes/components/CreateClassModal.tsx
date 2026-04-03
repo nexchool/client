@@ -14,7 +14,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
-import { CreateClassDTO } from "../types";
+import type { CreateClassDTO } from "../types";
 import { DateField } from "@/common/components/DateField";
 import { useAcademicYears } from "@/modules/academics/hooks/useAcademicYears";
 import { useAcademicYearContext } from "@/modules/academics/context/AcademicYearContext";
@@ -28,6 +28,7 @@ interface EditInitialData {
   teacher_id?: string;
   start_date?: string;
   end_date?: string;
+  grade_level?: number | null;
 }
 
 interface Props {
@@ -51,6 +52,8 @@ export const CreateClassModal: React.FC<Props> = ({
   const [error, setError] = useState<string | null>(null);
 
   const [name, setName] = useState("");
+  /** Standard / grade (e.g. 10) — class display name becomes Grade {standard} when creating */
+  const [standardNum, setStandardNum] = useState("");
   const [section, setSection] = useState("");
   const [academicYearId, setAcademicYearId] = useState("");
   const [classTeacherId, setClassTeacherId] = useState<string>("");
@@ -66,6 +69,11 @@ export const CreateClassModal: React.FC<Props> = ({
     if (visible) {
       if (initialData) {
         setName(initialData.name);
+        setStandardNum(
+          initialData.grade_level != null && initialData.grade_level !== undefined
+            ? String(initialData.grade_level)
+            : ""
+        );
         setSection(initialData.section);
         setAcademicYearId(initialData.academic_year_id);
         setClassTeacherId(initialData.teacher_id || "");
@@ -86,6 +94,11 @@ export const CreateClassModal: React.FC<Props> = ({
   const resetForm = () => {
     if (initialData) {
       setName(initialData.name);
+      setStandardNum(
+        initialData.grade_level != null && initialData.grade_level !== undefined
+          ? String(initialData.grade_level)
+          : ""
+      );
       setSection(initialData.section);
       setAcademicYearId(initialData.academic_year_id);
       setClassTeacherId(initialData.teacher_id || "");
@@ -93,6 +106,7 @@ export const CreateClassModal: React.FC<Props> = ({
       setEndDate(initialData.end_date || "");
     } else {
       setName("");
+      setStandardNum("");
       setSection("");
       setAcademicYearId(contextYearId || "");
       setClassTeacherId("");
@@ -103,23 +117,53 @@ export const CreateClassModal: React.FC<Props> = ({
   };
 
   const handleSubmit = async () => {
-    if (!name.trim() || !section.trim() || !academicYearId) {
-      setError("Class name, section, and academic year are required");
+    if (!section.trim() || !academicYearId) {
+      setError("Section and academic year are required");
       return;
+    }
+
+    if (isEditMode) {
+      if (!name.trim()) {
+        setError("Class name is required");
+        return;
+      }
+    } else {
+      const sn = parseInt(standardNum.trim(), 10);
+      if (!standardNum.trim() || Number.isNaN(sn) || sn < 1 || sn > 20) {
+        setError("Enter a valid standard (1–20), e.g. 10 for Grade 10");
+        return;
+      }
     }
 
     setLoading(true);
     setError(null);
 
     try {
-      await onSubmit({
-        name: name.trim(),
-        section: section.trim(),
-        academic_year_id: academicYearId,
-        teacher_id: classTeacherId || undefined,
-        start_date: startDate.trim() || undefined,
-        end_date: endDate.trim() || undefined,
-      });
+      if (isEditMode) {
+        const payload: CreateClassDTO = {
+          name: name.trim(),
+          section: section.trim(),
+          academic_year_id: academicYearId,
+          teacher_id: classTeacherId || undefined,
+          start_date: startDate.trim() || undefined,
+          end_date: endDate.trim() || undefined,
+        };
+        if (standardNum.trim()) {
+          const sn = parseInt(standardNum.trim(), 10);
+          if (!Number.isNaN(sn)) payload.grade_level = sn;
+        }
+        await onSubmit(payload);
+      } else {
+        const sn = parseInt(standardNum.trim(), 10);
+        await onSubmit({
+          section: section.trim(),
+          academic_year_id: academicYearId,
+          grade_level: sn,
+          teacher_id: classTeacherId || undefined,
+          start_date: startDate.trim() || undefined,
+          end_date: endDate.trim() || undefined,
+        });
+      }
       resetForm();
     } catch (err: any) {
       setError(err.message || (isEditMode ? "Failed to update class" : "Failed to create class"));
@@ -150,16 +194,50 @@ export const CreateClassModal: React.FC<Props> = ({
             </View>
           )}
 
-          <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>Class Name *</Text>
-            <TextInput
-              style={styles.input}
-              value={name}
-              onChangeText={setName}
-              placeholder="e.g. Grade 10"
-              placeholderTextColor={Colors.textTertiary}
-            />
-          </View>
+          {isEditMode ? (
+            <>
+              <View style={styles.fieldContainer}>
+                <Text style={styles.fieldLabel}>Standard (grade) number</Text>
+                <Text style={styles.fieldHint}>Used to share subjects across sections (e.g. 10-A and 10-B).</Text>
+                <TextInput
+                  style={styles.input}
+                  value={standardNum}
+                  onChangeText={setStandardNum}
+                  placeholder="e.g. 10"
+                  keyboardType="number-pad"
+                  placeholderTextColor={Colors.textTertiary}
+                />
+              </View>
+              <View style={styles.fieldContainer}>
+                <Text style={styles.fieldLabel}>Class name *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="e.g. Grade 10"
+                  placeholderTextColor={Colors.textTertiary}
+                />
+              </View>
+            </>
+          ) : (
+            <>
+              <View style={styles.fieldContainer}>
+                <Text style={styles.fieldLabel}>Standard (grade) *</Text>
+                <Text style={styles.fieldHint}>Only the number (e.g. 10). Class name will be Grade 10.</Text>
+                <TextInput
+                  style={styles.input}
+                  value={standardNum}
+                  onChangeText={setStandardNum}
+                  placeholder="e.g. 10"
+                  keyboardType="number-pad"
+                  placeholderTextColor={Colors.textTertiary}
+                />
+                {standardNum.trim() && !Number.isNaN(parseInt(standardNum, 10)) ? (
+                  <Text style={styles.previewLabel}>Class name: Grade {parseInt(standardNum, 10)}</Text>
+                ) : null}
+              </View>
+            </>
+          )}
 
           <View style={styles.fieldContainer}>
             <Text style={styles.fieldLabel}>Section *</Text>
@@ -361,4 +439,10 @@ const styles = StyleSheet.create({
   chipText: { fontSize: 14, color: Colors.text },
   chipTextActive: { color: Colors.primary, fontWeight: "600" },
   placeholderText: { fontSize: 14, color: Colors.textTertiary, paddingVertical: Spacing.sm },
+  previewLabel: {
+    marginTop: Spacing.sm,
+    fontSize: 14,
+    fontWeight: "600",
+    color: Colors.primary,
+  },
 });

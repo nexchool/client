@@ -10,6 +10,8 @@ import {
   TouchableOpacity,
   Alert,
   TextInput,
+  Modal,
+  ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSubjects } from "../hooks/useSubjects";
@@ -19,6 +21,9 @@ import * as PERMS from "@/modules/permissions/constants/permissions";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
 import { Subject, CreateSubjectDTO } from "../types";
+import { classService } from "@/modules/classes/services/classService";
+import { useAcademicYears } from "@/modules/academics/hooks/useAcademicYears";
+import { useAcademicYearContext } from "@/modules/academics/context/AcademicYearContext";
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -42,6 +47,21 @@ export default function SubjectsScreen() {
   const canCreate = hasPermission(PERMS.SUBJECT_CREATE);
   const canUpdate = hasPermission(PERMS.SUBJECT_UPDATE);
   const canDelete = hasPermission(PERMS.SUBJECT_DELETE);
+  const canApplyToGrade =
+    hasPermission(PERMS.CLASS_SUBJECT_MANAGE) || hasPermission(PERMS.CLASS_MANAGE);
+
+  const { selectedAcademicYearId } = useAcademicYearContext();
+  const { data: academicYears = [] } = useAcademicYears(false);
+  const [gradeApplyYear, setGradeApplyYear] = useState("");
+  const [gradeLevel, setGradeLevel] = useState("");
+  const [gradeWeekly, setGradeWeekly] = useState("5");
+  const [gradeSubjectId, setGradeSubjectId] = useState<string | null>(null);
+  const [subjectPickerOpen, setSubjectPickerOpen] = useState(false);
+  const [gradeApplyBusy, setGradeApplyBusy] = useState(false);
+
+  useEffect(() => {
+    if (selectedAcademicYearId) setGradeApplyYear(selectedAcademicYearId);
+  }, [selectedAcademicYearId]);
 
   useEffect(() => {
     fetchSubjects();
@@ -97,6 +117,44 @@ export default function SubjectsScreen() {
   };
 
   const handleSubmit = editingSubject ? handleUpdateSubject : handleCreateSubject;
+
+  const handleApplyToGrade = async () => {
+    if (!gradeApplyYear || !gradeLevel.trim() || !gradeSubjectId) {
+      Alert.alert("Missing fields", "Choose academic year, standard (grade), and a subject from the catalog.");
+      return;
+    }
+    const gl = parseInt(gradeLevel.trim(), 10);
+    const wk = parseInt(gradeWeekly.trim(), 10);
+    if (Number.isNaN(gl) || gl < 1 || gl > 20) {
+      Alert.alert("Invalid grade", "Enter a standard between 1 and 20 (e.g. 10).");
+      return;
+    }
+    if (Number.isNaN(wk) || wk < 1) {
+      Alert.alert("Invalid periods", "Weekly periods must be a positive number.");
+      return;
+    }
+    try {
+      setGradeApplyBusy(true);
+      const r = await classService.applySubjectToGrade({
+        academic_year_id: gradeApplyYear,
+        grade_level: gl,
+        subject_id: gradeSubjectId,
+        weekly_periods: wk,
+      });
+      const skipNote =
+        r.skipped?.length > 0
+          ? `\n\nSkipped ${r.skipped.length} (often already assigned for that class).`
+          : "";
+      Alert.alert(
+        "Applied",
+        `Added to ${r.applied_count} class section(s).${skipNote}`
+      );
+    } catch (e: any) {
+      Alert.alert("Error", e.message || "Could not apply subject to grade");
+    } finally {
+      setGradeApplyBusy(false);
+    }
+  };
 
   const handleDelete = (subject: Subject) => {
     Alert.alert(
@@ -171,6 +229,72 @@ export default function SubjectsScreen() {
         )}
       </View>
 
+      {canApplyToGrade ? (
+        <View style={styles.gradeCard}>
+          <Text style={styles.gradeCardTitle}>Apply to all sections of a standard</Text>
+          <Text style={styles.gradeCardHint}>
+            Creates the same subject offering on every class with this standard (grade) and academic year — e.g. all
+            Grade 10 sections (10-A, 10-B). Classes must be created with the standard number set.
+          </Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
+            {academicYears.map((ay) => (
+              <TouchableOpacity
+                key={ay.id}
+                style={[styles.chip, gradeApplyYear === ay.id && styles.chipActive]}
+                onPress={() => setGradeApplyYear(ay.id)}
+              >
+                <Text style={[styles.chipText, gradeApplyYear === ay.id && styles.chipTextActive]}>{ay.name}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          <View style={styles.gradeRow}>
+            <View style={styles.gradeField}>
+              <Text style={styles.gradeLabel}>Standard</Text>
+              <TextInput
+                style={styles.gradeInput}
+                value={gradeLevel}
+                onChangeText={setGradeLevel}
+                placeholder="10"
+                keyboardType="number-pad"
+                placeholderTextColor={Colors.textTertiary}
+              />
+            </View>
+            <View style={styles.gradeField}>
+              <Text style={styles.gradeLabel}>Periods / week</Text>
+              <TextInput
+                style={styles.gradeInput}
+                value={gradeWeekly}
+                onChangeText={setGradeWeekly}
+                placeholder="5"
+                keyboardType="number-pad"
+                placeholderTextColor={Colors.textTertiary}
+              />
+            </View>
+          </View>
+          <TouchableOpacity style={styles.subjectPick} onPress={() => setSubjectPickerOpen(true)}>
+            <Text style={styles.subjectPickTxt}>
+              {gradeSubjectId
+                ? subjects.find((s) => s.id === gradeSubjectId)?.name ?? "Selected subject"
+                : "Select subject from catalog →"}
+            </Text>
+            <Ionicons name="chevron-down" size={18} color={Colors.textSecondary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.applyBtn, gradeApplyBusy && styles.applyBtnDisabled]}
+            onPress={handleApplyToGrade}
+            disabled={gradeApplyBusy}
+          >
+            {gradeApplyBusy ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.applyBtnTxt}>Apply to all sections of this grade</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      ) : null}
+
+      <Text style={styles.sectionLabel}>Subject catalog</Text>
+
       {/* Search */}
       <View style={styles.searchContainer}>
         <Ionicons name="search" size={20} color={Colors.textSecondary} style={styles.searchIcon} />
@@ -220,6 +344,36 @@ export default function SubjectsScreen() {
           mode={editingSubject ? "edit" : "create"}
         />
       )}
+
+      <Modal visible={subjectPickerOpen} animationType="slide" presentationStyle="pageSheet">
+        <SafeAreaView style={styles.pickerModal}>
+          <View style={styles.pickerHeader}>
+            <TouchableOpacity onPress={() => setSubjectPickerOpen(false)}>
+              <Text style={styles.pickerCancel}>Cancel</Text>
+            </TouchableOpacity>
+            <Text style={styles.pickerTitle}>Choose subject</Text>
+            <View style={{ width: 56 }} />
+          </View>
+          <FlatList
+            data={subjects}
+            keyExtractor={(s) => s.id}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.pickerRow}
+                onPress={() => {
+                  setGradeSubjectId(item.id);
+                  setSubjectPickerOpen(false);
+                }}
+              >
+                <Text style={styles.pickerRowTxt}>{item.name}</Text>
+              </TouchableOpacity>
+            )}
+            ListEmptyComponent={
+              <Text style={styles.emptyText}>No subjects in catalog yet. Create one first.</Text>
+            }
+          />
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -283,4 +437,80 @@ const styles = StyleSheet.create({
   cardActions: { flexDirection: "row", gap: Spacing.sm },
   actionButton: { padding: Spacing.sm },
   emptyText: { fontSize: 16, color: Colors.textSecondary },
+  gradeCard: {
+    marginHorizontal: Spacing.md,
+    marginBottom: Spacing.md,
+    padding: Spacing.md,
+    backgroundColor: Colors.backgroundSecondary,
+    borderRadius: Layout.borderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+  },
+  gradeCardTitle: { fontSize: 16, fontWeight: "600", color: Colors.text, marginBottom: Spacing.xs },
+  gradeCardHint: { fontSize: 12, color: Colors.textSecondary, marginBottom: Spacing.sm, lineHeight: 18 },
+  chipRow: { marginBottom: Spacing.sm },
+  chip: {
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    marginRight: Spacing.sm,
+    borderRadius: Layout.borderRadius.sm,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    backgroundColor: Colors.background,
+  },
+  chipActive: { borderColor: Colors.primary, backgroundColor: Colors.primary + "18" },
+  chipText: { fontSize: 13, color: Colors.text },
+  chipTextActive: { color: Colors.primary, fontWeight: "600" },
+  gradeRow: { flexDirection: "row", gap: Spacing.md, marginBottom: Spacing.sm },
+  gradeField: { flex: 1 },
+  gradeLabel: { fontSize: 12, color: Colors.textSecondary, marginBottom: 4 },
+  gradeInput: {
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    borderRadius: Layout.borderRadius.sm,
+    padding: Spacing.sm,
+    fontSize: 16,
+    color: Colors.text,
+    backgroundColor: Colors.background,
+  },
+  subjectPick: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    borderRadius: Layout.borderRadius.sm,
+    marginBottom: Spacing.sm,
+    backgroundColor: Colors.background,
+  },
+  subjectPickTxt: { fontSize: 15, color: Colors.text, flex: 1 },
+  applyBtn: {
+    backgroundColor: Colors.primary,
+    paddingVertical: Spacing.md,
+    borderRadius: Layout.borderRadius.md,
+    alignItems: "center",
+  },
+  applyBtnDisabled: { opacity: 0.6 },
+  applyBtnTxt: { color: "#fff", fontWeight: "600", fontSize: 15 },
+  sectionLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: Colors.textSecondary,
+    marginHorizontal: Spacing.lg,
+    marginBottom: Spacing.sm,
+  },
+  pickerModal: { flex: 1, backgroundColor: Colors.background },
+  pickerHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+  },
+  pickerCancel: { fontSize: 16, color: Colors.primary },
+  pickerTitle: { fontSize: 17, fontWeight: "600", color: Colors.text },
+  pickerRow: { padding: Spacing.lg, borderBottomWidth: 1, borderBottomColor: Colors.borderLight },
+  pickerRowTxt: { fontSize: 16, color: Colors.text },
 });
