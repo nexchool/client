@@ -239,6 +239,345 @@ export default function StudentDetailScreen() {
           )}
         </View>
 
+        {/* Parent / Family */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t("detail.parentFamilyInfo")}</Text>
+          {currentStudent.father_name && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.fatherName")}</Text>
+              <Text style={styles.value}>{currentStudent.father_name}</Text>
+            </View>
+          )}
+          {currentStudent.father_phone && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.fatherPhone")}</Text>
+              <Text style={styles.value}>{currentStudent.father_phone}</Text>
+            </View>
+          )}
+          {currentStudent.father_email && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.fatherEmail")}</Text>
+              <Text style={styles.value}>{currentStudent.father_email}</Text>
+            </View>
+          )}
+          {currentStudent.father_occupation && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.fatherOccupation")}</Text>
+              <Text style={styles.value}>{currentStudent.father_occupation}</Text>
+            </View>
+          )}
+          {(currentStudent.father_annual_income ?? null) !== null && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.fatherAnnualIncome")}</Text>
+              <Text style={styles.value}>{String(currentStudent.father_annual_income)}</Text>
+            </View>
+          )}
+
+          {currentStudent.mother_name && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.motherName")}</Text>
+              <Text style={styles.value}>{currentStudent.mother_name}</Text>
+            </View>
+          )}
+          {currentStudent.mother_phone && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.motherPhone")}</Text>
+              <Text style={styles.value}>{currentStudent.mother_phone}</Text>
+            </View>
+          )}
+          {currentStudent.mother_email && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.motherEmail")}</Text>
+              <Text style={styles.value}>{currentStudent.mother_email}</Text>
+            </View>
+          )}
+          {currentStudent.mother_occupation && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.motherOccupation")}</Text>
+              <Text style={styles.value}>{currentStudent.mother_occupation}</Text>
+            </View>
+          )}
+          {(currentStudent.mother_annual_income ?? null) !== null && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.motherAnnualIncome")}</Text>
+              <Text style={styles.value}>{String(currentStudent.mother_annual_income)}</Text>
+            </View>
+          )}
+        </View>
+
+        {/* Health */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t("detail.healthInfo")}</Text>
+          {currentStudent.blood_group && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.bloodGroup")}</Text>
+              <Text style={styles.value}>{currentStudent.blood_group}</Text>
+            </View>
+          )}
+          {(currentStudent.height_cm ?? null) !== null && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.heightCm")}</Text>
+              <Text style={styles.value}>{String(currentStudent.height_cm)}</Text>
+            </View>
+          )}
+          {(currentStudent.weight_kg ?? null) !== null && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.weightKg")}</Text>
+              <Text style={styles.value}>{String(currentStudent.weight_kg)}</Text>
+            </View>
+          )}
+          {currentStudent.medical_allergies && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.medicalAllergies")}</Text>
+              <Text style={styles.value}>{currentStudent.medical_allergies}</Text>
+            </View>
+          )}
+          {currentStudent.medical_conditions && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.medicalConditions")}</Text>
+              <Text style={styles.value}>{currentStudent.medical_conditions}</Text>
+            </View>
+          )}
+          {currentStudent.disability_details && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.disabilityDetails")}</Text>
+              <Text style={styles.value}>{currentStudent.disability_details}</Text>
+            </View>
+          )}
+          {currentStudent.identification_marks && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.identificationMarks")}</Text>
+              <Text style={styles.value}>{currentStudent.identification_marks}</Text>
+            </View>
+          )}
+        </View>
+
+        {/* Identity */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t("detail.identityInfo")}</Text>
+          {currentStudent.aadhar_number && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.aadharNumber")}</Text>
+              <Text style={styles.value}>{currentStudent.aadhar_number}</Text>
+            </View>
+          )}
+          {currentStudent.apaar_id && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.apaarId")}</Text>
+              <Text style={styles.value}>{currentStudent.apaar_id}</Text>
+            </View>
+          )}
+          {currentStudent.emis_number && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.emisNumber")}</Text>
+              <Text style={styles.value}>{currentStudent.emis_number}</Text>
+            </View>
+          )}
+          {currentStudent.udise_student_id && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.udiseStudentId")}</Text>
+              <Text style={styles.value}>{currentStudent.udise_student_id}</Text>
+            </View>
+          )}
+          {currentStudent.religion && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.religion")}</Text>
+              <Text style={styles.value}>{currentStudent.religion}</Text>
+            </View>
+          )}
+          {currentStudent.category && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.category")}</Text>
+              <Text style={styles.value}>{currentStudent.category}</Text>
+            </View>
+          )}
+          {currentStudent.caste && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.caste")}</Text>
+              <Text style={styles.value}>{currentStudent.caste}</Text>
+            </View>
+          )}
+          {currentStudent.nationality && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.nationality")}</Text>
+              <Text style={styles.value}>{currentStudent.nationality}</Text>
+            </View>
+          )}
+          {currentStudent.mother_tongue && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.motherTongue")}</Text>
+              <Text style={styles.value}>{currentStudent.mother_tongue}</Text>
+            </View>
+          )}
+          {currentStudent.place_of_birth && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.placeOfBirth")}</Text>
+              <Text style={styles.value}>{currentStudent.place_of_birth}</Text>
+            </View>
+          )}
+        </View>
+
+        {/* Residence */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t("detail.residenceInfo")}</Text>
+          {(currentStudent.is_same_as_permanent_address ?? null) !== null && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.sameAsPermanent")}</Text>
+              <Text style={styles.value}>
+                {currentStudent.is_same_as_permanent_address
+                  ? t("detail.yes")
+                  : t("detail.no")}
+              </Text>
+            </View>
+          )}
+          {currentStudent.current_address && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.currentAddress")}</Text>
+              <Text style={styles.value}>{currentStudent.current_address}</Text>
+            </View>
+          )}
+          {currentStudent.current_city && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.currentCity")}</Text>
+              <Text style={styles.value}>{currentStudent.current_city}</Text>
+            </View>
+          )}
+          {currentStudent.current_state && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.currentState")}</Text>
+              <Text style={styles.value}>{currentStudent.current_state}</Text>
+            </View>
+          )}
+          {currentStudent.current_pincode && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.currentPincode")}</Text>
+              <Text style={styles.value}>{currentStudent.current_pincode}</Text>
+            </View>
+          )}
+          {currentStudent.permanent_address && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.permanentAddress")}</Text>
+              <Text style={styles.value}>{currentStudent.permanent_address}</Text>
+            </View>
+          )}
+          {currentStudent.permanent_city && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.permanentCity")}</Text>
+              <Text style={styles.value}>{currentStudent.permanent_city}</Text>
+            </View>
+          )}
+          {currentStudent.permanent_state && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.permanentState")}</Text>
+              <Text style={styles.value}>{currentStudent.permanent_state}</Text>
+            </View>
+          )}
+          {currentStudent.permanent_pincode && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.permanentPincode")}</Text>
+              <Text style={styles.value}>{currentStudent.permanent_pincode}</Text>
+            </View>
+          )}
+          {(currentStudent.is_commuting_from_outstation ?? null) !== null && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.outstationCommute")}</Text>
+              <Text style={styles.value}>
+                {currentStudent.is_commuting_from_outstation
+                  ? t("detail.yes")
+                  : t("detail.no")}
+              </Text>
+            </View>
+          )}
+          {currentStudent.commute_location && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.commuteLocation")}</Text>
+              <Text style={styles.value}>{currentStudent.commute_location}</Text>
+            </View>
+          )}
+          {currentStudent.commute_notes && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.commuteNotes")}</Text>
+              <Text style={styles.value}>{currentStudent.commute_notes}</Text>
+            </View>
+          )}
+        </View>
+
+        {/* Emergency */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t("detail.emergencyInfo")}</Text>
+          {currentStudent.emergency_contact_name && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.emergencyName")}</Text>
+              <Text style={styles.value}>{currentStudent.emergency_contact_name}</Text>
+            </View>
+          )}
+          {currentStudent.emergency_contact_relationship && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.emergencyRelationship")}</Text>
+              <Text style={styles.value}>{currentStudent.emergency_contact_relationship}</Text>
+            </View>
+          )}
+          {currentStudent.emergency_contact_phone && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.emergencyPhone")}</Text>
+              <Text style={styles.value}>{currentStudent.emergency_contact_phone}</Text>
+            </View>
+          )}
+          {currentStudent.emergency_contact_alt_phone && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.emergencyAltPhone")}</Text>
+              <Text style={styles.value}>{currentStudent.emergency_contact_alt_phone}</Text>
+            </View>
+          )}
+        </View>
+
+        {/* Academic */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t("detail.academicInfo")}</Text>
+          {currentStudent.admission_date && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.admissionDate")}</Text>
+              <Text style={styles.value}>{currentStudent.admission_date}</Text>
+            </View>
+          )}
+          {currentStudent.previous_school_name && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.previousSchoolName")}</Text>
+              <Text style={styles.value}>{currentStudent.previous_school_name}</Text>
+            </View>
+          )}
+          {currentStudent.previous_school_class && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.previousSchoolClass")}</Text>
+              <Text style={styles.value}>{currentStudent.previous_school_class}</Text>
+            </View>
+          )}
+          {currentStudent.last_school_board && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.lastSchoolBoard")}</Text>
+              <Text style={styles.value}>{currentStudent.last_school_board}</Text>
+            </View>
+          )}
+          {currentStudent.tc_number && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.tcNumber")}</Text>
+              <Text style={styles.value}>{currentStudent.tc_number}</Text>
+            </View>
+          )}
+          {currentStudent.house_name && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.houseName")}</Text>
+              <Text style={styles.value}>{currentStudent.house_name}</Text>
+            </View>
+          )}
+          {currentStudent.student_status && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t("detail.studentStatus")}</Text>
+              <Text style={styles.value}>{currentStudent.student_status}</Text>
+            </View>
+          )}
+        </View>
+
         {/* Documents */}
         <StudentDocumentsSection studentId={currentStudent.id} />
       </ScrollView>
