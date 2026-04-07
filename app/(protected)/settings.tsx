@@ -16,15 +16,16 @@ import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
 import { setAppLanguage, getAppLanguage, type SupportedLanguage } from "@/i18n";
 
-/** Compact control width (fits EN/GU labels without spanning the row) */
-const DROPDOWN_WIDTH = 148;
+/** Compact control width (fits EN/GU/HI labels without spanning the row) */
+const DROPDOWN_WIDTH = 168;
 
 const LANGUAGE_OPTIONS: {
   code: SupportedLanguage;
-  labelKey: "language.english" | "language.gujarati";
+  labelKey: "language.english" | "language.gujarati" | "language.hindi";
 }[] = [
   { code: "en", labelKey: "language.english" },
   { code: "gu", labelKey: "language.gujarati" },
+  { code: "hi", labelKey: "language.hindi" },
 ];
 
 export default function SettingsScreen() {

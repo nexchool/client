@@ -19,6 +19,7 @@ import {
   useSendReminder,
 } from "@/modules/fees/hooks/useFees";
 import { feesService } from "@/modules/fees/services/feesService";
+import { calendarLocaleForLanguage } from "@/i18n";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
 
@@ -40,7 +41,7 @@ function formatDate(s: string, locale: string) {
 
 export default function InvoiceDetailPage() {
   const { t, i18n } = useTranslation("finance");
-  const locale = i18n.language === "gu" ? "gu-IN" : "en-IN";
+  const locale = calendarLocaleForLanguage(i18n.language ?? "en");
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const [showRecordPayment, setShowRecordPayment] = useState(false);

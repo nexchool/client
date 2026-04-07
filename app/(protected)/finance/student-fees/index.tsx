@@ -22,6 +22,7 @@ import {
 import { useAcademicYearContext } from "@/modules/academics/context/AcademicYearContext";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
+import { calendarLocaleForLanguage } from "@/i18n";
 import { ClassSelect } from "@/common/components/ClassSelect";
 import { ProfileAvatar } from "@/common/components/ProfileAvatar";
 
@@ -75,7 +76,7 @@ function getStatusesToDisplay(
 
 export default function StudentFeesPage() {
   const { t, i18n } = useTranslation("finance");
-  const locale = i18n.language === "gu" ? "gu-IN" : "en-IN";
+  const locale = calendarLocaleForLanguage(i18n.language ?? "en");
   const router = useRouter();
   const { selectedAcademicYearId: contextYearId } = useAcademicYearContext();
   const [academicYearId, setAcademicYearId] = useState<string>("");

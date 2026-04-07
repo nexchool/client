@@ -30,6 +30,7 @@ import type { FeeStructure } from "@/modules/finance/types";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
 import { ClassMultiSelect } from "@/common/components/ClassMultiSelect";
+import { calendarLocaleForLanguage } from "@/i18n";
 import { DateField } from "@/common/components/DateField";
 
 function formatDate(s: string, locale: string) {
@@ -42,7 +43,7 @@ function formatDate(s: string, locale: string) {
 
 export default function FeeStructuresPage() {
   const { t, i18n } = useTranslation("finance");
-  const locale = i18n.language === "gu" ? "gu-IN" : "en-IN";
+  const locale = calendarLocaleForLanguage(i18n.language ?? "en");
   const router = useRouter();
   const { selectedAcademicYearId: contextYearId } = useAcademicYearContext();
   const [academicYearFilter, setAcademicYearFilter] = useState<string>("");

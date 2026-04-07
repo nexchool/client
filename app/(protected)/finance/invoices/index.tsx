@@ -14,6 +14,7 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useInvoices } from "@/modules/fees/hooks/useFees";
 import type { FeeInvoice } from "@/modules/fees/services/feesService";
+import { calendarLocaleForLanguage } from "@/i18n";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
 
@@ -54,7 +55,7 @@ function StatusBadge({ status }: { status: string }) {
 
 export default function InvoicesListPage() {
   const { t, i18n } = useTranslation("finance");
-  const locale = i18n.language === "gu" ? "gu-IN" : "en-IN";
+  const locale = calendarLocaleForLanguage(i18n.language ?? "en");
   const router = useRouter();
   const [statusFilter, setStatusFilter] = useState<string>("");
   const invoiceFilterKey = (s: string) =>

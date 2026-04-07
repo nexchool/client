@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { calendarLocaleForLanguage } from '@/i18n';
 import { Colors } from '@/common/constants/colors';
 import { Spacing, Layout } from '@/common/constants/spacing';
 import { Holiday, HOLIDAY_TYPE_COLORS } from '../types';
@@ -20,7 +21,7 @@ export const HolidayListItem: React.FC<HolidayListItemProps> = ({
   canManage = false,
 }) => {
   const { t, i18n } = useTranslation(['holidays', 'teacherLeaves']);
-  const locale = i18n.language?.startsWith('gu') ? 'gu-IN' : 'en-IN';
+  const locale = calendarLocaleForLanguage(i18n.language ?? 'en');
 
   const dateRange = useMemo(() => {
     const fmt = (iso: string) => {

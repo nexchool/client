@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { calendarLocaleForLanguage } from "@/i18n";
 import { useFinanceDashboard } from "@/modules/finance/hooks/useFinance";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
@@ -22,7 +23,7 @@ function formatCurrency(n: number) {
 
 export default function FinanceDashboardPage() {
   const { t, i18n } = useTranslation("finance");
-  const locale = i18n.language === "gu" ? "gu-IN" : "en-IN";
+  const locale = calendarLocaleForLanguage(i18n.language ?? "en");
   const router = useRouter();
   const { data: dashboardData, isLoading, error, refetch, isRefetching } = useFinanceDashboard(10);
 

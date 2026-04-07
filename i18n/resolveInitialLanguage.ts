@@ -24,6 +24,9 @@ export async function resolveInitialLanguage(): Promise<SupportedLanguage> {
   if (deviceCode === "gu") {
     return "gu";
   }
+  if (deviceCode === "hi") {
+    return "hi";
+  }
   return "en";
 }
 

@@ -11,3 +11,4 @@ export {
   type I18nNamespace,
 } from "./config";
 export { resolveInitialLanguage, deviceLanguageTag } from "./resolveInitialLanguage";
+export { calendarLocaleForLanguage } from "./locale";

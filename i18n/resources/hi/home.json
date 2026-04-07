@@ -1,0 +1,54 @@
+{
+  "welcomeBack": "वापसी पर स्वागत है",
+  "sections": {
+    "academicControl": "शैक्षणिक नियंत्रण",
+    "management": "प्रबंधन",
+    "leaveManagement": "अवकाश प्रबंधन",
+    "teachingToday": "आज की पढ़ाई",
+    "quickActions": "त्वरित कार्य",
+    "academics": "शैक्षणिक"
+  },
+  "adminOverview": {
+    "title": "शैक्षणिक अवलोकन",
+    "classes": "कक्षाएँ",
+    "lecturesToday": "आज के व्याख्यान",
+    "pendingAtt": "लंबित उपस्थिति",
+    "noTimetable": "कोई समय सारणी नहीं",
+    "subjectsDeltaTeacher": "विषय Δ शिक्षक",
+    "ttConflicts": "समय सारणी संघर्ष"
+  },
+  "teacherStrip": {
+    "title": "आज",
+    "noMoreClasses": "आज और कोई कक्षा निर्धारित नहीं।",
+    "totalSlots": "आज कुल {{count}} स्लॉट",
+    "eligibleOne": "{{count}} कक्षा उपस्थिति के लिए योग्य",
+    "eligibleMany": "{{count}} कक्षाएँ उपस्थिति के लिए योग्य",
+    "markAttendance": "उपस्थिति दर्ज करें",
+    "next": "अगला: {{className}} · P{{period}} {{subject}}"
+  },
+  "studentStrip": {
+    "title": "मेरा दिन",
+    "classesToday": "आज {{count}} कक्षाएँ",
+    "weeklySlots": "साप्ताहिक समय सारणी: {{count}} स्लॉट",
+    "attendance": "उपस्थिति: {{pct}}%"
+  },
+  "shortcuts": {
+    "classes": "कक्षाएँ",
+    "timetables": "समय सारणी",
+    "bellSchedules": "घंटी अनुसूची",
+    "attendance": "उपस्थिति",
+    "addStudent": "छात्र जोड़ें",
+    "teachers": "शिक्षक",
+    "students": "छात्र",
+    "finance": "वित्त",
+    "leaveRequests": "अवकाश अनुरोध",
+    "holidays": "छुट्टियाँ",
+    "todaysSchedule": "आज का कार्यक्रम",
+    "weeklyTimetable": "साप्ताहिक समय सारणी",
+    "markAttendance": "उपस्थिति दर्ज करें",
+    "leaveTracker": "अवकाश ट्रैकर",
+    "academics": "शैक्षणिक",
+    "myAttendance": "मेरी उपस्थिति",
+    "profile": "प्रोफ़ाइल"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "back": "वापस",
+  "academicYearPicker": {
+    "title": "शैक्षणिक वर्ष",
+    "allYears": "सभी वर्ष",
+    "select": "चुनें",
+    "createNew": "नया शैक्षणिक वर्ष बनाएँ"
+  },
+  "academicYearCreate": {
+    "title": "शैक्षणिक वर्ष बनाएँ",
+    "nameLabel": "नाम *",
+    "namePlaceholder": "जैसे 2025-2026",
+    "startDate": "प्रारंभ तिथि *",
+    "endDate": "समाप्ति तिथि *",
+    "datePlaceholder": "YYYY-MM-DD",
+    "create": "बनाएँ",
+    "errors": {
+      "required": "नाम, प्रारंभ और समाप्ति तिथि आवश्यक हैं",
+      "dateFormat": "तिथियाँ YYYY-MM-DD प्रारूप में हों",
+      "startBeforeEnd": "प्रारंभ तिथि समाप्ति तिथि से पहले होनी चाहिए",
+      "failed": "शैक्षणिक वर्ष बनाने में विफल"
+    }
+  },
+  "languageCode": {
+    "en": "EN",
+    "gu": "GU",
+    "hi": "HI"
+  }
+}

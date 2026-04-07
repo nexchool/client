@@ -28,6 +28,7 @@ import { HolidayFormModal } from "@/modules/holidays/components/HolidayFormModal
 import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
 import * as PERMS from "@/modules/permissions/constants/permissions";
 import { DateField } from "@/common/components/DateField";
+import { calendarLocaleForLanguage } from "@/i18n";
 
 const { width: SW } = Dimensions.get("window");
 
@@ -230,7 +231,7 @@ function LeaveRow({
   onCancel?: () => void;
 }) {
   const { t, i18n } = useTranslation("teacherLeaves");
-  const dateLoc = i18n.language === "gu" ? "gu-IN" : "en-IN";
+  const dateLoc = calendarLocaleForLanguage(i18n.language ?? "en");
   const days = item.working_days ?? 1;
   const sameDay = item.start_date === item.end_date;
   const dateStr = sameDay
@@ -289,7 +290,7 @@ interface HolidayRowProps {
 }
 function HolidayRow({ h, onEdit, onDelete }: HolidayRowProps) {
   const { t, i18n } = useTranslation("teacherLeaves");
-  const dateLoc = i18n.language === "gu" ? "gu-IN" : "en-IN";
+  const dateLoc = calendarLocaleForLanguage(i18n.language ?? "en");
   const [c1] = avatarColors(h.name);
   const abbr = initials(h.name);
   const dateLabel = h.is_recurring

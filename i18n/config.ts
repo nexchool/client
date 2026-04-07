@@ -28,10 +28,25 @@ import guAttendance from "./resources/gu/attendance.json";
 import guTeacherLeaves from "./resources/gu/teacherLeaves.json";
 import guFinance from "./resources/gu/finance.json";
 import guHolidays from "./resources/gu/holidays.json";
+import hiCommon from "./resources/hi/common.json";
+import hiAuth from "./resources/hi/auth.json";
+import hiSettings from "./resources/hi/settings.json";
+import hiNavigation from "./resources/hi/navigation.json";
+import hiHome from "./resources/hi/home.json";
+import hiProfile from "./resources/hi/profile.json";
+import hiStudents from "./resources/hi/students.json";
+import hiTeachers from "./resources/hi/teachers.json";
+import hiClasses from "./resources/hi/classes.json";
+import hiSubjects from "./resources/hi/subjects.json";
+import hiTimetable from "./resources/hi/timetable.json";
+import hiAttendance from "./resources/hi/attendance.json";
+import hiTeacherLeaves from "./resources/hi/teacherLeaves.json";
+import hiFinance from "./resources/hi/finance.json";
+import hiHolidays from "./resources/hi/holidays.json";
 
 export const LANGUAGE_STORAGE_KEY = "@school_erp_app_language";
 
-export const SUPPORTED_LANGUAGES = ["en", "gu"] as const;
+export const SUPPORTED_LANGUAGES = ["en", "gu", "hi"] as const;
 export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 
 export const isSupportedLanguage = (code: string): code is SupportedLanguage =>
@@ -90,5 +105,22 @@ export const resources = {
     teacherLeaves: guTeacherLeaves,
     finance: guFinance,
     holidays: guHolidays,
+  },
+  hi: {
+    common: hiCommon,
+    auth: hiAuth,
+    settings: hiSettings,
+    navigation: hiNavigation,
+    home: hiHome,
+    profile: hiProfile,
+    students: hiStudents,
+    teachers: hiTeachers,
+    classes: hiClasses,
+    subjects: hiSubjects,
+    timetable: hiTimetable,
+    attendance: hiAttendance,
+    teacherLeaves: hiTeacherLeaves,
+    finance: hiFinance,
+    holidays: hiHolidays,
   },
 } as const;

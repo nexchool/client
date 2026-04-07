@@ -25,6 +25,7 @@ import {
 } from "@/modules/finance/hooks/useFinance";
 import { financeService } from "@/modules/finance/services/financeService";
 import type { RecordPaymentInput } from "@/modules/finance/types";
+import { calendarLocaleForLanguage } from "@/i18n";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
 
@@ -45,7 +46,7 @@ type AllocationState = Record<string, string>;
 
 export default function StudentFeeDetailPage() {
   const { t, i18n } = useTranslation("finance");
-  const locale = i18n.language === "gu" ? "gu-IN" : "en-IN";
+  const locale = calendarLocaleForLanguage(i18n.language ?? "en");
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);

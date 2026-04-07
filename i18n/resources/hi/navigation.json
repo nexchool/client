@@ -1,0 +1,24 @@
+{
+  "tabs": {
+    "home": "होम",
+    "students": "छात्र",
+    "teachers": "शिक्षक",
+    "classes": "कक्षाएँ",
+    "subjects": "विषय",
+    "finance": "वित्त",
+    "my-leaves": "अवकाश ट्रैकर",
+    "teacher-leaves": "अवकाश अनुरोध",
+    "profile": "प्रोफ़ाइल",
+    "settings": "सेटिंग्स"
+  },
+  "sidebar": {
+    "signOut": "साइन आउट",
+    "schoolFallback": "स्कूल"
+  },
+  "roles": {
+    "admin": "व्यवस्थापक",
+    "teacher": "शिक्षक",
+    "student": "छात्र",
+    "parent": "अभिभावक"
+  }
+}

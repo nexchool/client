@@ -1,0 +1,11 @@
+{
+  "languageSectionTitle": "भाषा",
+  "languageSectionSubtitle": "यह विकल्प आपके डिवाइस पर सहेजा जाता है और पूरे ऐप पर लागू होता है।",
+  "language": {
+    "english": "अंग्रेज़ी",
+    "gujarati": "गुजराती",
+    "hindi": "हिन्दी"
+  },
+  "languageSwitcherHint": "ऐप की भाषा चुनें",
+  "languageDropdownHint": "उपलब्ध भाषाओं की सूची खोलता है"
+}
