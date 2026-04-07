@@ -1,3 +1,4 @@
+/** @deprecated Prefer academics `classAcademicApi` + `ClassTimetableV2Panel` for timetable v2. */
 import { useState, useCallback, useEffect } from "react";
 import { timetableService, GenerateResult, TimetableConfig } from "../services/timetableService";
 import { TimetableSlot, CreateSlotDTO, UpdateSlotDTO, MoveSlotResult, SwapSlotsResult } from "../types";

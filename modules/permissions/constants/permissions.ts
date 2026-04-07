@@ -119,6 +119,16 @@ export const SUBJECT_UPDATE = 'subject.update';
 export const SUBJECT_DELETE = 'subject.delete';
 export const SUBJECT_MANAGE = 'subject.manage';
 
+// Class subjects & class teachers (academic backbone)
+export const CLASS_SUBJECT_READ = 'class_subject.read';
+export const CLASS_SUBJECT_MANAGE = 'class_subject.manage';
+/** Manage authoritative class teacher assignments (primary / assistant). */
+export const CLASS_TEACHER_MANAGE = 'class_teacher.manage';
+
+// Academics dashboard / health
+export const ACADEMICS_READ = 'academics.read';
+export const ACADEMICS_MANAGE = 'academics.manage';
+
 // Timetable Management
 export const TIMETABLE_READ = 'timetable.read';
 export const TIMETABLE_CREATE = 'timetable.create';

@@ -1,3 +1,7 @@
+/**
+ * @deprecated Legacy TimetableSlot editor — not wired to academic backbone.
+ * Prefer `ClassTimetableV2Panel` + `classAcademicApi` for timetable v2.
+ */
 import React, { useState, useEffect } from "react";
 import {
   View,

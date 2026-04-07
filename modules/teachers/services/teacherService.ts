@@ -1,4 +1,5 @@
 import { apiDelete, apiGet, apiPost, apiPut } from '@/common/services/api';
+import type { TeacherTodayScheduleResponse } from '@/modules/academics/types';
 import { Teacher, CreateTeacherDTO, UpdateTeacherDTO, CreateTeacherResponse } from '../types';
 
 export const teacherService = {
@@ -20,6 +21,10 @@ export const teacherService = {
 
   getMyProfile: async () => {
     return await apiGet<Teacher>('/api/teachers/me');
+  },
+
+  getTodaySchedule: async () => {
+    return await apiGet<TeacherTodayScheduleResponse>('/api/teachers/me/today-schedule');
   },
 
   createTeacher: async (data: CreateTeacherDTO) => {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -11,39 +11,49 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useAttendance } from "../hooks/useAttendance";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
+import { useMyAttendanceV2 } from "@/modules/academics/hooks/useAcademicQueries";
 
 export default function MyAttendanceScreen() {
   const router = useRouter();
-  const { studentAttendance, loading, fetchMyAttendance } = useAttendance();
-  const [selectedMonth, setSelectedMonth] = useState<string | undefined>(undefined);
+  const { data, isLoading, refetch, isRefetching, error } = useMyAttendanceV2(undefined);
 
-  useEffect(() => {
-    fetchMyAttendance(selectedMonth);
-  }, [selectedMonth]);
+  const records = data?.records ?? [];
+  const percentage = data?.percentage ?? 0;
+  const present = data?.present ?? 0;
+  const totalDays = data?.total_days ?? 0;
+  const absent = records.filter((r) => r.status === "absent").length;
+  const late = records.filter((r) => r.status === "late").length;
+
+  const percentageColor =
+    percentage >= 75 ? Colors.success : percentage >= 50 ? Colors.warning : Colors.error;
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "present": return Colors.success;
-      case "absent": return Colors.error;
-      case "late": return Colors.warning;
-      default: return Colors.textTertiary;
+      case "present":
+        return Colors.success;
+      case "absent":
+        return Colors.error;
+      case "late":
+        return Colors.warning;
+      default:
+        return Colors.textTertiary;
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "present": return "checkmark-circle" as const;
-      case "absent": return "close-circle" as const;
-      case "late": return "time" as const;
-      default: return "ellipse-outline" as const;
+      case "present":
+        return "checkmark-circle" as const;
+      case "absent":
+        return "close-circle" as const;
+      case "late":
+        return "time" as const;
+      default:
+        return "ellipse-outline" as const;
     }
   };
-
-  const percentage = studentAttendance?.percentage ?? 0;
-  const percentageColor = percentage >= 75 ? Colors.success : percentage >= 50 ? Colors.warning : Colors.error;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -54,62 +64,56 @@ export default function MyAttendanceScreen() {
         <Text style={styles.headerTitle}>My Attendance</Text>
       </View>
 
-      {loading && !studentAttendance ? (
+      {isLoading && !data ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color={Colors.primary} />
         </View>
+      ) : error ? (
+        <View style={styles.center}>
+          <Text style={styles.emptyText}>{(error as Error).message}</Text>
+        </View>
       ) : (
         <>
-          {/* Summary Card */}
-          {studentAttendance && (
+          {data && (
             <View style={styles.summaryCard}>
               <View style={styles.percentageCircle}>
-                <Text style={[styles.percentageText, { color: percentageColor }]}>
-                  {percentage}%
-                </Text>
+                <Text style={[styles.percentageText, { color: percentageColor }]}>{percentage}%</Text>
                 <Text style={styles.percentageLabel}>Attendance</Text>
               </View>
               <View style={styles.summaryStats}>
                 <View style={styles.summaryRow}>
                   <Ionicons name="checkmark-circle" size={18} color={Colors.success} />
-                  <Text style={styles.summaryText}>Present: {studentAttendance.present}</Text>
+                  <Text style={styles.summaryText}>Present: {present}</Text>
                 </View>
                 <View style={styles.summaryRow}>
                   <Ionicons name="close-circle" size={18} color={Colors.error} />
-                  <Text style={styles.summaryText}>Absent: {studentAttendance.absent}</Text>
+                  <Text style={styles.summaryText}>Absent: {absent}</Text>
                 </View>
                 <View style={styles.summaryRow}>
                   <Ionicons name="time" size={18} color={Colors.warning} />
-                  <Text style={styles.summaryText}>Late: {studentAttendance.late}</Text>
+                  <Text style={styles.summaryText}>Late: {late}</Text>
                 </View>
                 <View style={styles.summaryRow}>
                   <Ionicons name="calendar-outline" size={18} color={Colors.textSecondary} />
-                  <Text style={styles.summaryText}>Total Days: {studentAttendance.total_days}</Text>
+                  <Text style={styles.summaryText}>Total days: {totalDays}</Text>
                 </View>
               </View>
             </View>
           )}
 
-          {/* Records List */}
           <FlatList
-            data={studentAttendance?.records || []}
-            keyExtractor={(item) => item.id}
+            data={records}
+            keyExtractor={(item) => `${item.date}-${item.session_id}`}
             contentContainerStyle={styles.listContent}
             refreshControl={
-              <RefreshControl refreshing={loading} onRefresh={() => fetchMyAttendance(selectedMonth)} />
+              <RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} />
             }
             renderItem={({ item }) => (
               <View style={styles.recordRow}>
-                <Ionicons
-                  name={getStatusIcon(item.status)}
-                  size={22}
-                  color={getStatusColor(item.status)}
-                />
+                <Ionicons name={getStatusIcon(item.status)} size={22} color={getStatusColor(item.status)} />
                 <View style={styles.recordInfo}>
                   <Text style={styles.recordDate}>{item.date}</Text>
-                  {item.remarks && (
-                    <Text style={styles.recordRemarks}>{item.remarks}</Text>
-                  )}
+                  {item.remarks ? <Text style={styles.recordRemarks}>{item.remarks}</Text> : null}
                 </View>
                 <Text style={[styles.recordStatus, { color: getStatusColor(item.status) }]}>
                   {item.status}

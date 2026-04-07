@@ -62,4 +62,18 @@ export const classService = {
     const params = classId ? `?class_id=${classId}` : "";
     return await apiGet<Teacher[]>(`/api/classes/meta/available-class-teachers${params}`);
   },
+
+  /** Add a subject offering to every class section with the same standard (grade) in an academic year */
+  applySubjectToGrade: async (body: {
+    academic_year_id: string;
+    grade_level: number;
+    subject_id: string;
+    weekly_periods: number;
+  }) => {
+    return await apiPost<{
+      applied_count: number;
+      skipped: Array<{ class_id: string; reason?: string; error?: string }>;
+      class_ids: string[];
+    }>("/api/classes/subjects/by-grade", body);
+  },
 };
