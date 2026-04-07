@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -17,6 +18,7 @@ import { useEligibleAttendanceClasses } from "@/modules/academics/hooks/useAcade
 import type { EligibleClassItem } from "@/modules/academics/types";
 
 export default function MyClassesScreen() {
+  const { t } = useTranslation("attendance");
   const router = useRouter();
   const today = new Date().toISOString().slice(0, 10);
   const { data: items = [], isLoading, refetch, isRefetching } = useEligibleAttendanceClasses(today);
@@ -38,7 +40,7 @@ export default function MyClassesScreen() {
         <Text style={styles.cardDetail}>{item.reason.replace(/_/g, " ")}</Text>
       </View>
       <View style={styles.markButton}>
-        <Text style={styles.markButtonText}>Open</Text>
+        <Text style={styles.markButtonText}>{t("myClasses.open")}</Text>
         <Ionicons name="chevron-forward" size={16} color={Colors.primary} />
       </View>
     </TouchableOpacity>
@@ -50,7 +52,7 @@ export default function MyClassesScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backIcon}>
           <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Attendance classes</Text>
+        <Text style={styles.headerTitle}>{t("myClasses.title")}</Text>
       </View>
 
       {isLoading && items.length === 0 ? (
@@ -69,11 +71,8 @@ export default function MyClassesScreen() {
           ListEmptyComponent={
             <View style={styles.center}>
               <Ionicons name="school-outline" size={48} color={Colors.textTertiary} />
-              <Text style={styles.emptyText}>No eligible classes for attendance today.</Text>
-              <Text style={styles.emptySubtext}>
-                You need to be assigned as a class teacher with attendance authority, or receive a delegated
-                session.
-              </Text>
+              <Text style={styles.emptyText}>{t("myClasses.empty")}</Text>
+              <Text style={styles.emptySubtext}>{t("myClasses.emptySub")}</Text>
             </View>
           }
         />

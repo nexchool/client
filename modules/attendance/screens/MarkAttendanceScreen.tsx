@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -20,6 +21,7 @@ import { holidayService } from "@/modules/holidays/services/holidayService";
 import { Holiday } from "@/modules/holidays/types";
 
 export default function MarkAttendanceScreen() {
+  const { t } = useTranslation("attendance");
   const { classId, className } = useLocalSearchParams<{
     classId: string;
     className: string;
@@ -36,8 +38,35 @@ export default function MarkAttendanceScreen() {
   // Holiday awareness
   const [holidayMap, setHolidayMap] = useState<Record<string, Holiday>>({});
 
-  const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const DAY_NAMES = useMemo(
+    () => [
+      t("mark.weekdaySun"),
+      t("mark.weekdayMon"),
+      t("mark.weekdayTue"),
+      t("mark.weekdayWed"),
+      t("mark.weekdayThu"),
+      t("mark.weekdayFri"),
+      t("mark.weekdaySat"),
+    ],
+    [t]
+  );
+  const MONTH_NAMES = useMemo(
+    () => [
+      t("mark.monthJan"),
+      t("mark.monthFeb"),
+      t("mark.monthMar"),
+      t("mark.monthApr"),
+      t("mark.monthMay"),
+      t("mark.monthJun"),
+      t("mark.monthJul"),
+      t("mark.monthAug"),
+      t("mark.monthSep"),
+      t("mark.monthOct"),
+      t("mark.monthNov"),
+      t("mark.monthDec"),
+    ],
+    [t]
+  );
 
   // Generate last 30 days up to today
   const dateList = useMemo(() => {
@@ -56,7 +85,7 @@ export default function MarkAttendanceScreen() {
       });
     }
     return dates;
-  }, [today]);
+  }, [today, DAY_NAMES, MONTH_NAMES]);
 
   // Fetch holidays for the date range shown in the strip
   useEffect(() => {
@@ -152,9 +181,9 @@ export default function MarkAttendanceScreen() {
 
     if (isSelectedHoliday) {
       const label = selectedHoliday.is_recurring
-        ? (selectedHoliday.recurring_day_name ?? "Weekly Off")
+        ? (selectedHoliday.recurring_day_name ?? t("mark.offDay"))
         : selectedHoliday.name;
-      Alert.alert("Holiday", `Cannot mark attendance on "${label}". This day is a holiday.`);
+      Alert.alert(t("mark.holidayAlertTitle"), t("mark.holidayAlertBody", { label }));
       return;
     }
 
@@ -164,7 +193,7 @@ export default function MarkAttendanceScreen() {
     }));
 
     if (records.length === 0) {
-      Alert.alert("Error", "Please mark attendance for at least one student");
+      Alert.alert(t("mark.errorTitle"), t("mark.markOneError"));
       return;
     }
 
@@ -175,11 +204,11 @@ export default function MarkAttendanceScreen() {
         date: selectedDate,
         records,
       });
-      Alert.alert("Success", "Attendance saved successfully", [
-        { text: "OK", onPress: () => fetchClassAttendance(classId, selectedDate) },
+      Alert.alert(t("mark.successTitle"), t("mark.successBody"), [
+        { text: t("mark.ok"), onPress: () => fetchClassAttendance(classId, selectedDate) },
       ]);
     } catch (err: any) {
-      Alert.alert("Error", err.message || "Failed to save attendance");
+      Alert.alert(t("mark.errorTitle"), err.message || t("mark.saveError"));
     } finally {
       setSubmitting(false);
     }
@@ -214,7 +243,7 @@ export default function MarkAttendanceScreen() {
             {item.student_name}
           </Text>
           <Text style={styles.studentDetail}>
-            {item.roll_number ? `Roll: ${item.roll_number} - ` : ""}
+            {item.roll_number ? t("mark.rollPrefix", { roll: item.roll_number }) : ""}
             {item.admission_number}
           </Text>
         </View>
@@ -225,7 +254,7 @@ export default function MarkAttendanceScreen() {
             color={isSelectedHoliday ? Colors.textTertiary : icon.color}
           />
           <Text style={[styles.statusText, { color: isSelectedHoliday ? Colors.textTertiary : icon.color }]}>
-            {status || "Not marked"}
+            {status ? t(`status.${status}`, { defaultValue: status }) : t("mark.notMarked")}
           </Text>
         </View>
       </TouchableOpacity>
@@ -245,7 +274,7 @@ export default function MarkAttendanceScreen() {
           <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </TouchableOpacity>
         <View style={styles.headerInfo}>
-          <Text style={styles.headerTitle}>{className || "Attendance"}</Text>
+          <Text style={styles.headerTitle}>{className || t("mark.headerFallback")}</Text>
           <Text style={styles.headerDate}>{selectedDate}</Text>
         </View>
       </View>
@@ -317,19 +346,19 @@ export default function MarkAttendanceScreen() {
       <View style={styles.summaryBar}>
         <View style={styles.summaryItem}>
           <Text style={styles.summaryNumber}>{total}</Text>
-          <Text style={styles.summaryLabel}>Total</Text>
+          <Text style={styles.summaryLabel}>{t("mark.total")}</Text>
         </View>
         <View style={styles.summaryItem}>
           <Text style={[styles.summaryNumber, { color: Colors.success }]}>{presentCount}</Text>
-          <Text style={styles.summaryLabel}>Present</Text>
+          <Text style={styles.summaryLabel}>{t("mark.present")}</Text>
         </View>
         <View style={styles.summaryItem}>
           <Text style={[styles.summaryNumber, { color: Colors.error }]}>{absentCount}</Text>
-          <Text style={styles.summaryLabel}>Absent</Text>
+          <Text style={styles.summaryLabel}>{t("mark.absent")}</Text>
         </View>
         <View style={styles.summaryItem}>
           <Text style={[styles.summaryNumber, { color: Colors.warning }]}>{lateCount}</Text>
-          <Text style={styles.summaryLabel}>Late</Text>
+          <Text style={styles.summaryLabel}>{t("mark.late")}</Text>
         </View>
       </View>
 
@@ -340,12 +369,10 @@ export default function MarkAttendanceScreen() {
           <View style={{ flex: 1 }}>
             <Text style={styles.holidayBannerTitle}>
               {selectedHoliday.is_recurring
-                ? `Weekly Off — ${selectedHoliday.recurring_day_name ?? "Off Day"}`
+                ? t("mark.weeklyOffTitle", { name: selectedHoliday.recurring_day_name ?? t("mark.offDay") })
                 : selectedHoliday.name}
             </Text>
-            <Text style={styles.holidayBannerSubtitle}>
-              Attendance cannot be marked on this holiday.
-            </Text>
+            <Text style={styles.holidayBannerSubtitle}>{t("mark.holidaySubtitle")}</Text>
           </View>
         </View>
       )}
@@ -358,7 +385,7 @@ export default function MarkAttendanceScreen() {
           disabled={isSelectedHoliday}
         >
           <Text style={[styles.quickBtnText, isSelectedHoliday && { color: Colors.textTertiary }]}>
-            All Present
+            {t("mark.allPresent")}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -367,7 +394,7 @@ export default function MarkAttendanceScreen() {
           disabled={isSelectedHoliday}
         >
           <Text style={[styles.quickBtnText, isSelectedHoliday && { color: Colors.textTertiary }]}>
-            All Absent
+            {t("mark.allAbsent")}
           </Text>
         </TouchableOpacity>
       </View>
@@ -385,7 +412,7 @@ export default function MarkAttendanceScreen() {
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
             <View style={styles.center}>
-              <Text style={styles.emptyText}>No students in this class</Text>
+              <Text style={styles.emptyText}>{t("mark.emptyStudents")}</Text>
             </View>
           }
         />
@@ -407,10 +434,10 @@ export default function MarkAttendanceScreen() {
           ) : isSelectedHoliday ? (
             <View style={styles.submitHolidayContent}>
               <Ionicons name="ban-outline" size={18} color="#FFFFFF" />
-              <Text style={styles.submitText}>Holiday — Attendance Disabled</Text>
+              <Text style={styles.submitText}>{t("mark.holidayDisabled")}</Text>
             </View>
           ) : (
-            <Text style={styles.submitText}>Save Attendance</Text>
+            <Text style={styles.submitText}>{t("mark.saveAttendance")}</Text>
           )}
         </TouchableOpacity>
       </View>

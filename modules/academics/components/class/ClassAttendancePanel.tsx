@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -23,6 +24,8 @@ type Props = {
 };
 
 export function ClassAttendancePanel({ classId, classLabel, canMark, canViewHistory }: Props) {
+  const { t } = useTranslation("classes");
+  const { t: ta } = useTranslation("attendance");
   const router = useRouter();
   const [items, setItems] = useState<AttendanceSessionV2[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,19 +66,19 @@ export function ClassAttendancePanel({ classId, classLabel, canMark, canViewHist
           }
         >
           <Ionicons name="checkbox-outline" size={22} color="#fff" />
-          <Text style={styles.ctaTxt}>Mark attendance (today)</Text>
+          <Text style={styles.ctaTxt}>{t("panels.classAttendance.markToday")}</Text>
           <Ionicons name="chevron-forward" size={20} color="#fff" />
         </TouchableOpacity>
       )}
       {!canViewHistory ? (
-        <Text style={styles.muted}>You do not have permission to view class attendance history.</Text>
+        <Text style={styles.muted}>{t("panels.classAttendance.noHistoryPermission")}</Text>
       ) : loading ? (
         <View style={styles.center}>
           <ActivityIndicator color={Colors.primary} />
         </View>
       ) : (
         <>
-          <Text style={styles.sub}>Recent sessions</Text>
+          <Text style={styles.sub}>{t("panels.classAttendance.recentSessions")}</Text>
           <FlatList
             data={items.slice(0, 30)}
             keyExtractor={(i) => i.id}
@@ -85,7 +88,7 @@ export function ClassAttendancePanel({ classId, classLabel, canMark, canViewHist
                 <View style={{ flex: 1 }}>
                   <Text style={styles.date}>{item.session_date}</Text>
                   <StatusChip
-                    label={item.status}
+                    label={ta(`status.${item.status}`, { defaultValue: item.status })}
                     variant={item.status === "finalized" ? "finalized" : "draft"}
                   />
                 </View>
@@ -101,11 +104,11 @@ export function ClassAttendancePanel({ classId, classLabel, canMark, canViewHist
                     } as any)
                   }
                 >
-                  <Text style={styles.open}>Open</Text>
+                  <Text style={styles.open}>{t("panels.classAttendance.open")}</Text>
                 </TouchableOpacity>
               </View>
             )}
-            ListEmptyComponent={<Text style={styles.muted}>No sessions recorded yet.</Text>}
+            ListEmptyComponent={<Text style={styles.muted}>{t("panels.classAttendance.emptySessions")}</Text>}
           />
         </>
       )}

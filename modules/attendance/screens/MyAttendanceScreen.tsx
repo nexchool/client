@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -16,6 +17,7 @@ import { Spacing, Layout } from "@/common/constants/spacing";
 import { useMyAttendanceV2 } from "@/modules/academics/hooks/useAcademicQueries";
 
 export default function MyAttendanceScreen() {
+  const { t } = useTranslation("attendance");
   const router = useRouter();
   const { data, isLoading, refetch, isRefetching, error } = useMyAttendanceV2(undefined);
 
@@ -61,7 +63,7 @@ export default function MyAttendanceScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backIcon}>
           <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Attendance</Text>
+        <Text style={styles.headerTitle}>{t("myAttendance.title")}</Text>
       </View>
 
       {isLoading && !data ? (
@@ -78,24 +80,24 @@ export default function MyAttendanceScreen() {
             <View style={styles.summaryCard}>
               <View style={styles.percentageCircle}>
                 <Text style={[styles.percentageText, { color: percentageColor }]}>{percentage}%</Text>
-                <Text style={styles.percentageLabel}>Attendance</Text>
+                <Text style={styles.percentageLabel}>{t("myAttendance.attendanceLabel")}</Text>
               </View>
               <View style={styles.summaryStats}>
                 <View style={styles.summaryRow}>
                   <Ionicons name="checkmark-circle" size={18} color={Colors.success} />
-                  <Text style={styles.summaryText}>Present: {present}</Text>
+                  <Text style={styles.summaryText}>{t("myAttendance.presentCount", { count: present })}</Text>
                 </View>
                 <View style={styles.summaryRow}>
                   <Ionicons name="close-circle" size={18} color={Colors.error} />
-                  <Text style={styles.summaryText}>Absent: {absent}</Text>
+                  <Text style={styles.summaryText}>{t("myAttendance.absentCount", { count: absent })}</Text>
                 </View>
                 <View style={styles.summaryRow}>
                   <Ionicons name="time" size={18} color={Colors.warning} />
-                  <Text style={styles.summaryText}>Late: {late}</Text>
+                  <Text style={styles.summaryText}>{t("myAttendance.lateCount", { count: late })}</Text>
                 </View>
                 <View style={styles.summaryRow}>
                   <Ionicons name="calendar-outline" size={18} color={Colors.textSecondary} />
-                  <Text style={styles.summaryText}>Total days: {totalDays}</Text>
+                  <Text style={styles.summaryText}>{t("myAttendance.totalDays", { count: totalDays })}</Text>
                 </View>
               </View>
             </View>
@@ -116,13 +118,13 @@ export default function MyAttendanceScreen() {
                   {item.remarks ? <Text style={styles.recordRemarks}>{item.remarks}</Text> : null}
                 </View>
                 <Text style={[styles.recordStatus, { color: getStatusColor(item.status) }]}>
-                  {item.status}
+                  {t(`status.${item.status}`, { defaultValue: item.status })}
                 </Text>
               </View>
             )}
             ListEmptyComponent={
               <View style={styles.center}>
-                <Text style={styles.emptyText}>No attendance records found</Text>
+                <Text style={styles.emptyText}>{t("myAttendance.emptyRecords")}</Text>
               </View>
             }
           />

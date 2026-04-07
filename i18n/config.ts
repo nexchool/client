@@ -8,6 +8,10 @@ import enStudents from "./resources/en/students.json";
 import enTeachers from "./resources/en/teachers.json";
 import enClasses from "./resources/en/classes.json";
 import enSubjects from "./resources/en/subjects.json";
+import enTimetable from "./resources/en/timetable.json";
+import enAttendance from "./resources/en/attendance.json";
+import enTeacherLeaves from "./resources/en/teacherLeaves.json";
+import enFinance from "./resources/en/finance.json";
 import guCommon from "./resources/gu/common.json";
 import guAuth from "./resources/gu/auth.json";
 import guSettings from "./resources/gu/settings.json";
@@ -18,6 +22,10 @@ import guStudents from "./resources/gu/students.json";
 import guTeachers from "./resources/gu/teachers.json";
 import guClasses from "./resources/gu/classes.json";
 import guSubjects from "./resources/gu/subjects.json";
+import guTimetable from "./resources/gu/timetable.json";
+import guAttendance from "./resources/gu/attendance.json";
+import guTeacherLeaves from "./resources/gu/teacherLeaves.json";
+import guFinance from "./resources/gu/finance.json";
 
 export const LANGUAGE_STORAGE_KEY = "@school_erp_app_language";
 
@@ -38,6 +46,10 @@ export const I18N_NAMESPACES = [
   "teachers",
   "classes",
   "subjects",
+  "timetable",
+  "attendance",
+  "teacherLeaves",
+  "finance",
 ] as const;
 export type I18nNamespace = (typeof I18N_NAMESPACES)[number];
 
@@ -53,6 +65,10 @@ export const resources = {
     teachers: enTeachers,
     classes: enClasses,
     subjects: enSubjects,
+    timetable: enTimetable,
+    attendance: enAttendance,
+    teacherLeaves: enTeacherLeaves,
+    finance: enFinance,
   },
   gu: {
     common: guCommon,
@@ -65,5 +81,9 @@ export const resources = {
     teachers: guTeachers,
     classes: guClasses,
     subjects: guSubjects,
+    timetable: guTimetable,
+    attendance: guAttendance,
+    teacherLeaves: guTeacherLeaves,
+    finance: guFinance,
   },
 } as const;

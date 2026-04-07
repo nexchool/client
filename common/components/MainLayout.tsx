@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView } from "react-native";
+import { useTranslation } from "react-i18next";
 import { ProfileAvatar } from "@/common/components/ProfileAvatar";
 import { router, usePathname, Slot } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -23,6 +24,7 @@ function shouldHideHeaderProfile(pathname: string | undefined): boolean {
 }
 
 export default function MainLayout() {
+  const { t } = useTranslation("common");
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [yearPickerVisible, setYearPickerVisible] = useState(false);
   const [createYearModalVisible, setCreateYearModalVisible] = useState(false);
@@ -47,8 +49,8 @@ export default function MainLayout() {
 
   const selectedLabel =
     selectedAcademicYearId
-      ? academicYears.find((ay) => ay.id === selectedAcademicYearId)?.name ?? "Select"
-      : "All Years";
+      ? academicYears.find((ay) => ay.id === selectedAcademicYearId)?.name ?? t("academicYearPicker.select")
+      : t("academicYearPicker.allYears");
 
   return (
     <SafeScreenWrapper backgroundColor={Colors.background}>
@@ -124,7 +126,7 @@ export default function MainLayout() {
             onPress={() => setYearPickerVisible(false)}
           >
             <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
-              <Text style={styles.modalTitle}>Academic Year</Text>
+              <Text style={styles.modalTitle}>{t("academicYearPicker.title")}</Text>
               <ScrollView style={styles.modalList}>
                 <TouchableOpacity
                   style={[styles.modalItem, !selectedAcademicYearId && styles.modalItemActive]}
@@ -134,7 +136,7 @@ export default function MainLayout() {
                   }}
                 >
                   <Text style={[styles.modalItemText, !selectedAcademicYearId && styles.modalItemTextActive]}>
-                    All Years
+                    {t("academicYearPicker.allYears")}
                   </Text>
                 </TouchableOpacity>
                 {academicYears.map((ay) => (
@@ -164,7 +166,7 @@ export default function MainLayout() {
                   }}
                 >
                   <Ionicons name="add-circle-outline" size={20} color={Colors.primary} />
-                  <Text style={styles.createYearText}>Create new academic year</Text>
+                  <Text style={styles.createYearText}>{t("academicYearPicker.createNew")}</Text>
                 </TouchableOpacity>
               </ScrollView>
             </View>

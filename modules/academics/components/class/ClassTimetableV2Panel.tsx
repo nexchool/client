@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -26,8 +27,6 @@ import type {
 } from "../../types";
 import { StatusChip } from "../StatusChip";
 
-const DOW = ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
 type Props = { classId: string; canManage: boolean };
 
 function fmtTime(iso?: string | null) {
@@ -36,7 +35,10 @@ function fmtTime(iso?: string | null) {
   return t ?? "";
 }
 
-function derivePeriodsFromEntries(entries: TimetableEntryV2[]): BellSchedulePeriod[] {
+function derivePeriodsFromEntries(
+  entries: TimetableEntryV2[],
+  periodLabel: (n: number) => string
+): BellSchedulePeriod[] {
   const nums = [...new Set(entries.map((e) => e.period_number))].sort((a, b) => a - b);
   return nums.map((n) => ({
     id: `derived-${n}`,
@@ -45,12 +47,13 @@ function derivePeriodsFromEntries(entries: TimetableEntryV2[]): BellSchedulePeri
     period_kind: "lesson",
     starts_at: null,
     ends_at: null,
-    label: `P${n}`,
+    label: periodLabel(n),
     sort_order: n,
   }));
 }
 
 export function ClassTimetableV2Panel({ classId, canManage }: Props) {
+  const { t } = useTranslation("timetable");
   const qc = useQueryClient();
   const [versions, setVersions] = useState<TimetableVersion[]>([]);
   const [selVer, setSelVer] = useState<string | null>(null);
@@ -74,6 +77,17 @@ export function ClassTimetableV2Panel({ classId, canManage }: Props) {
   const [swapMode, setSwapMode] = useState(false);
   const [swapFirst, setSwapFirst] = useState<TimetableEntryV2 | null>(null);
 
+  const DOW = useMemo(
+    () => ["", t("dow1"), t("dow2"), t("dow3"), t("dow4"), t("dow5"), t("dow6"), t("dow7")] as const,
+    [t]
+  );
+
+  const verStatusLabel = (status: string) => {
+    if (status === "active") return t("verStatusActive");
+    if (status === "draft") return t("verStatusDraft");
+    return t("verStatusArchived");
+  };
+
   const loadVersions = useCallback(async () => {
     try {
       const r = await classAcademicApi.listTimetableVersions(classId);
@@ -96,6 +110,7 @@ export function ClassTimetableV2Panel({ classId, canManage }: Props) {
   }, [classId, canManage]);
 
   const loadBundle = useCallback(async () => {
+    const periodFallback = (n: number) => t("periodFallback", { n });
     if (!selVer) {
       setBundleVer(null);
       setEntries([]);
@@ -118,7 +133,7 @@ export function ClassTimetableV2Panel({ classId, canManage }: Props) {
         setLessonPeriods(b.bell_schedule.lesson_periods);
         setBellScheduleName(b.bell_schedule.name);
       } else {
-        setLessonPeriods(derivePeriodsFromEntries(b.items ?? []));
+        setLessonPeriods(derivePeriodsFromEntries(b.items ?? [], periodFallback));
         setBellScheduleName(null);
       }
     } catch {
@@ -130,7 +145,7 @@ export function ClassTimetableV2Panel({ classId, canManage }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [classId, selVer]);
+  }, [classId, selVer, t]);
 
   const loadMeta = async () => {
     try {
@@ -174,10 +189,7 @@ export function ClassTimetableV2Panel({ classId, canManage }: Props) {
 
   const openAdd = (d: number, p: number) => {
     if (!bundleVer || !bundleEditable) {
-      Alert.alert(
-        "Timetable",
-        "Create or select a draft version to edit. Active timetables are read-only."
-      );
+      Alert.alert(t("alertReadOnlyTitle"), t("alertReadOnlyBody"));
       return;
     }
     setEditing(null);
@@ -222,7 +234,7 @@ export function ClassTimetableV2Panel({ classId, canManage }: Props) {
       loadBundle();
     } catch (e: unknown) {
       const err = e as Error;
-      Alert.alert("Swap failed", err.message);
+      Alert.alert(t("swapFailed"), err.message);
     } finally {
       setBusy(false);
     }
@@ -231,7 +243,7 @@ export function ClassTimetableV2Panel({ classId, canManage }: Props) {
   const saveEntry = async () => {
     if (!bundleVer) return;
     if (!csId || !teacherId) {
-      Alert.alert("Validation", "Select subject offering and teacher");
+      Alert.alert(t("validationTitle"), t("validationOfferingTeacher"));
       return;
     }
     setBusy(true);
@@ -260,7 +272,7 @@ export function ClassTimetableV2Panel({ classId, canManage }: Props) {
       loadVersions();
     } catch (e: unknown) {
       const err = e as Error;
-      Alert.alert("Error", err.message);
+      Alert.alert(t("errorTitle"), err.message);
     } finally {
       setBusy(false);
     }
@@ -268,10 +280,10 @@ export function ClassTimetableV2Panel({ classId, canManage }: Props) {
 
   const deleteEntry = (e: TimetableEntryV2) => {
     if (!bundleEditable) return;
-    Alert.alert("Delete slot", "Remove this timetable entry?", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("deleteSlotTitle"), t("deleteSlotBody"), [
+      { text: t("cancel"), style: "cancel" },
       {
-        text: "Delete",
+        text: t("delete"),
         style: "destructive",
         onPress: async () => {
           try {
@@ -280,7 +292,7 @@ export function ClassTimetableV2Panel({ classId, canManage }: Props) {
             loadBundle();
           } catch (err: unknown) {
             const e2 = err as Error;
-            Alert.alert("Error", e2.message);
+            Alert.alert(t("errorTitle"), e2.message);
           }
         },
       },
@@ -288,109 +300,94 @@ export function ClassTimetableV2Panel({ classId, canManage }: Props) {
   };
 
   const generateNewDraftFromScratch = () => {
-    Alert.alert(
-      "Generate new draft",
-      "Creates a brand-new draft from class subjects, teachers, and the default bell schedule (Academics settings). You can edit or activate it when ready.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Generate",
-          onPress: async () => {
-            try {
-              const r = await classAcademicApi.generateTimetableDraft(classId);
-              const lines = [
-                `Placed ${r.entries_placed} of ${r.total_required} periods.`,
-                typeof r.unplaced_periods === "number" ? `Unplaced: ${r.unplaced_periods}` : "",
-              ].filter(Boolean);
-              if (r.warnings?.length) {
-                Alert.alert("Generated with warnings", `${lines.join("\n")}\n\n${r.warnings.join("\n")}`);
-              } else {
-                Alert.alert("Done", lines.join("\n"));
-              }
-              await loadVersions();
-              setSelVer(r.timetable_version.id);
-              await qc.invalidateQueries({ queryKey: qk.timetableVersions(classId) });
-              loadBundle();
-            } catch (e: unknown) {
-              const ex = e as ApiException;
-              const w = (ex.data as { details?: { warnings?: string[] } } | undefined)?.details?.warnings;
-              const msg = w?.length ? `${(e as Error).message}\n\n${w.join("\n")}` : (e as Error).message;
-              Alert.alert("Generation failed", msg);
+    Alert.alert(t("generateNewDraftTitle"), t("generateNewDraftBody"), [
+      { text: t("cancel"), style: "cancel" },
+      {
+        text: t("generate"),
+        onPress: async () => {
+          try {
+            const r = await classAcademicApi.generateTimetableDraft(classId);
+            const lines = [
+              t("placedLine", { placed: r.entries_placed, required: r.total_required }),
+              typeof r.unplaced_periods === "number" ? t("unplacedLine", { count: r.unplaced_periods }) : "",
+            ].filter(Boolean);
+            if (r.warnings?.length) {
+              Alert.alert(t("generatedWithWarnings"), `${lines.join("\n")}\n\n${r.warnings.join("\n")}`);
+            } else {
+              Alert.alert(t("doneTitle"), lines.join("\n"));
             }
-          },
+            await loadVersions();
+            setSelVer(r.timetable_version.id);
+            await qc.invalidateQueries({ queryKey: qk.timetableVersions(classId) });
+            loadBundle();
+          } catch (e: unknown) {
+            const ex = e as ApiException;
+            const w = (ex.data as { details?: { warnings?: string[] } } | undefined)?.details?.warnings;
+            const msg = w?.length ? `${(e as Error).message}\n\n${w.join("\n")}` : (e as Error).message;
+            Alert.alert(t("generationFailed"), msg);
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const generateDraft = () => {
     if (!bundleVer || bundleVer.status !== "draft") {
-      Alert.alert(
-        "Select a draft",
-        "Create an empty draft or clone the active timetable, then select it before filling this draft. Or use “New draft (auto)” to generate in one step."
-      );
+      Alert.alert(t("selectDraftTitle"), t("selectDraftBody"));
       return;
     }
-    Alert.alert(
-      "Generate draft",
-      "This fills the current draft using each class subject’s weekly periods, assigned teachers (primary or first available), and lesson periods from this version’s bell schedule. Existing cells in this draft will be replaced.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Generate",
-          onPress: async () => {
-            try {
-              const r = await classAcademicApi.generateTimetableDraft(classId, {
-                timetable_version_id: bundleVer.id,
-              });
-              const lines = [
-                `Placed ${r.entries_placed} of ${r.total_required} periods.`,
-                typeof r.unplaced_periods === "number" ? `Unplaced: ${r.unplaced_periods}` : "",
-              ].filter(Boolean);
-              if (r.warnings?.length) {
-                Alert.alert("Generated with warnings", `${lines.join("\n")}\n\n${r.warnings.join("\n")}`);
-              } else {
-                Alert.alert("Done", lines.join("\n"));
-              }
-              await loadVersions();
-              setSelVer(r.timetable_version.id);
-              await qc.invalidateQueries({ queryKey: qk.timetableVersions(classId) });
-              loadBundle();
-            } catch (e: unknown) {
-              const ex = e as ApiException;
-              const w = (ex.data as { details?: { warnings?: string[] } } | undefined)?.details?.warnings;
-              const msg = w?.length ? `${(e as Error).message}\n\n${w.join("\n")}` : (e as Error).message;
-              Alert.alert("Generation failed", msg);
+    Alert.alert(t("generateDraftTitle"), t("generateDraftBody"), [
+      { text: t("cancel"), style: "cancel" },
+      {
+        text: t("generate"),
+        onPress: async () => {
+          try {
+            const r = await classAcademicApi.generateTimetableDraft(classId, {
+              timetable_version_id: bundleVer.id,
+            });
+            const lines = [
+              t("placedLine", { placed: r.entries_placed, required: r.total_required }),
+              typeof r.unplaced_periods === "number" ? t("unplacedLine", { count: r.unplaced_periods }) : "",
+            ].filter(Boolean);
+            if (r.warnings?.length) {
+              Alert.alert(t("generatedWithWarnings"), `${lines.join("\n")}\n\n${r.warnings.join("\n")}`);
+            } else {
+              Alert.alert(t("doneTitle"), lines.join("\n"));
             }
-          },
+            await loadVersions();
+            setSelVer(r.timetable_version.id);
+            await qc.invalidateQueries({ queryKey: qk.timetableVersions(classId) });
+            loadBundle();
+          } catch (e: unknown) {
+            const ex = e as ApiException;
+            const w = (ex.data as { details?: { warnings?: string[] } } | undefined)?.details?.warnings;
+            const msg = w?.length ? `${(e as Error).message}\n\n${w.join("\n")}` : (e as Error).message;
+            Alert.alert(t("generationFailed"), msg);
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const activateDraft = () => {
     if (!bundleVer || bundleVer.status !== "draft") return;
-    Alert.alert(
-      "Activate timetable",
-      "This sets this draft as the active timetable for the class. Any other active version will be archived.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Activate",
-          onPress: async () => {
-            try {
-              await classAcademicApi.activateTimetableVersion(classId, bundleVer.id);
-              await loadVersions();
-              setSelVer(bundleVer.id);
-              loadBundle();
-              await qc.invalidateQueries({ queryKey: qk.timetableVersions(classId) });
-            } catch (e: unknown) {
-              Alert.alert("Error", (e as Error).message);
-            }
-          },
+    Alert.alert(t("activateTitle"), t("activateBody"), [
+      { text: t("cancel"), style: "cancel" },
+      {
+        text: t("activate"),
+        onPress: async () => {
+          try {
+            await classAcademicApi.activateTimetableVersion(classId, bundleVer.id);
+            await loadVersions();
+            setSelVer(bundleVer.id);
+            loadBundle();
+            await qc.invalidateQueries({ queryKey: qk.timetableVersions(classId) });
+          } catch (e: unknown) {
+            Alert.alert(t("errorTitle"), (e as Error).message);
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const newDraft = async () => {
@@ -400,7 +397,7 @@ export function ClassTimetableV2Panel({ classId, canManage }: Props) {
       setSelVer(v.id);
       await qc.invalidateQueries({ queryKey: qk.timetableVersions(classId) });
     } catch (e: unknown) {
-      Alert.alert("Error", (e as Error).message);
+      Alert.alert(t("errorTitle"), (e as Error).message);
     }
   };
 
@@ -411,16 +408,16 @@ export function ClassTimetableV2Panel({ classId, canManage }: Props) {
       setSelVer(v.id);
       await qc.invalidateQueries({ queryKey: qk.timetableVersions(classId) });
     } catch (e: unknown) {
-      Alert.alert("Error", (e as Error).message);
+      Alert.alert(t("errorTitle"), (e as Error).message);
     }
   };
 
   const deleteDraft = () => {
     if (!bundleVer || bundleVer.status !== "draft") return;
-    Alert.alert("Delete draft", "Delete this draft version permanently?", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("deleteDraftTitle"), t("deleteDraftBody"), [
+      { text: t("cancel"), style: "cancel" },
       {
-        text: "Delete",
+        text: t("delete"),
         style: "destructive",
         onPress: async () => {
           try {
@@ -429,7 +426,7 @@ export function ClassTimetableV2Panel({ classId, canManage }: Props) {
             setSelVer(activeVersion?.id ?? null);
             await qc.invalidateQueries({ queryKey: qk.timetableVersions(classId) });
           } catch (e: unknown) {
-            Alert.alert("Error", (e as Error).message);
+            Alert.alert(t("errorTitle"), (e as Error).message);
           }
         },
       },
@@ -449,10 +446,10 @@ export function ClassTimetableV2Panel({ classId, canManage }: Props) {
             onPress={() => setSelVer(v.id)}
           >
             <Text style={[styles.verChipTxt, selVer === v.id && styles.verChipTxtOn]} numberOfLines={1}>
-              {v.label || "Version"}
+              {v.label || t("versionFallback")}
             </Text>
             <StatusChip
-              label={v.status}
+              label={verStatusLabel(v.status)}
               variant={v.status === "active" ? "active" : v.status === "draft" ? "draft" : "inactive"}
             />
           </TouchableOpacity>
@@ -462,23 +459,25 @@ export function ClassTimetableV2Panel({ classId, canManage }: Props) {
       {bundleVer && (
         <View style={styles.banner}>
           <Text style={styles.bannerTxt}>
-            {bundleVer.label || "Timetable"} · {bundleVer.status}
-            {bellScheduleName ? ` · Bell: ${bellScheduleName}` : ""}
+            {bundleVer.label || t("timetableFallback")}
+            {t("bannerStatusSep")}
+            {verStatusLabel(bundleVer.status)}
+            {bellScheduleName ? t("bellSuffix", { name: bellScheduleName }) : ""}
           </Text>
           {!bundleEditable ? (
-            <Text style={styles.readOnly}>Read-only (active or archived). Clone or create a draft to edit.</Text>
+            <Text style={styles.readOnly}>{t("readOnlyBanner")}</Text>
           ) : null}
           {canManage && (
             <View style={styles.actions}>
               <TouchableOpacity style={styles.smallBtn} onPress={newDraft}>
-                <Text style={styles.smallBtnTxt}>New draft</Text>
+                <Text style={styles.smallBtnTxt}>{t("newDraft")}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.smallBtn} onPress={generateNewDraftFromScratch}>
-                <Text style={styles.smallBtnTxt}>New draft (auto)</Text>
+                <Text style={styles.smallBtnTxt}>{t("newDraftAuto")}</Text>
               </TouchableOpacity>
               {activeVersion ? (
                 <TouchableOpacity style={styles.smallBtn} onPress={cloneActive}>
-                  <Text style={styles.smallBtnTxt}>Clone active</Text>
+                  <Text style={styles.smallBtnTxt}>{t("cloneActive")}</Text>
                 </TouchableOpacity>
               ) : null}
               <TouchableOpacity
@@ -486,16 +485,16 @@ export function ClassTimetableV2Panel({ classId, canManage }: Props) {
                 onPress={generateDraft}
                 disabled={!bundleEditable}
               >
-                <Text style={[styles.smallBtnTxt, !bundleEditable && styles.smallBtnTxtDim]}>Generate</Text>
+                <Text style={[styles.smallBtnTxt, !bundleEditable && styles.smallBtnTxtDim]}>{t("generate")}</Text>
               </TouchableOpacity>
               {bundleVer.status === "draft" ? (
                 <TouchableOpacity style={[styles.smallBtn, styles.actBtn]} onPress={activateDraft}>
-                  <Text style={[styles.smallBtnTxt, { color: "#fff" }]}>Activate</Text>
+                  <Text style={[styles.smallBtnTxt, { color: "#fff" }]}>{t("activate")}</Text>
                 </TouchableOpacity>
               ) : null}
               {bundleVer.status === "draft" ? (
                 <TouchableOpacity style={styles.smallBtn} onPress={deleteDraft}>
-                  <Text style={[styles.smallBtnTxt, { color: Colors.error }]}>Delete draft</Text>
+                  <Text style={[styles.smallBtnTxt, { color: Colors.error }]}>{t("deleteDraftBtn")}</Text>
                 </TouchableOpacity>
               ) : null}
               {bundleEditable ? (
@@ -506,14 +505,16 @@ export function ClassTimetableV2Panel({ classId, canManage }: Props) {
                     setSwapFirst(null);
                   }}
                 >
-                  <Text style={styles.smallBtnTxt}>{swapMode ? "Cancel swap" : "Swap cells"}</Text>
+                  <Text style={styles.smallBtnTxt}>{swapMode ? t("cancelSwap") : t("swapCells")}</Text>
                 </TouchableOpacity>
               ) : null}
             </View>
           )}
           {swapMode ? (
             <Text style={styles.swapHint}>
-              {swapFirst ? `Selected: ${swapFirst.subject_name}. Tap another cell to swap.` : "Tap first cell, then second."}
+              {swapFirst
+                ? t("swapSelected", { subject: swapFirst.subject_name ?? "" })
+                : t("swapTapTwo")}
             </Text>
           ) : null}
         </View>
@@ -525,15 +526,10 @@ export function ClassTimetableV2Panel({ classId, canManage }: Props) {
         </View>
       ) : !bundleVer ? (
         <Text style={styles.empty}>
-          {canManage
-            ? "No timetable version yet. Create a draft, clone the active timetable, or generate."
-            : "No published timetable yet. An administrator must activate a timetable version before it appears here."}
+          {canManage ? t("emptyNoVersionManage") : t("emptyNoVersionView")}
         </Text>
       ) : lessonPeriods.length === 0 ? (
-        <Text style={styles.empty}>
-          No lesson periods found. Set a bell schedule on this draft or configure academic settings (default bell
-          schedule).
-        </Text>
+        <Text style={styles.empty}>{t("emptyNoLessonPeriods")}</Text>
       ) : (
         <ScrollView horizontal>
           <View>
@@ -542,7 +538,7 @@ export function ClassTimetableV2Panel({ classId, canManage }: Props) {
               {lessonPeriods.map((lp) => (
                 <View key={lp.period_number} style={[styles.hCell, { width: periodColWidth }]}>
                   <Text style={styles.hTxt} numberOfLines={2}>
-                    {lp.label || `P${lp.period_number}`}
+                    {lp.label || t("periodFallback", { n: lp.period_number })}
                   </Text>
                   <Text style={styles.hSub}>
                     {fmtTime(lp.starts_at)}
@@ -608,19 +604,19 @@ export function ClassTimetableV2Panel({ classId, canManage }: Props) {
       )}
 
       <Text style={styles.help}>
-        Grid: rows = school days, columns = lesson periods (from bell schedule). Long-press a cell to clear (draft
-        only). {swapMode ? "" : " Use Swap cells to exchange two slots."}
+        {t("helpGrid")}
+        {swapMode ? "" : t("helpSwapSuffix")}
       </Text>
 
       <Modal visible={modal} animationType="slide" presentationStyle="formSheet">
         <ScrollView style={styles.modal} contentContainerStyle={{ paddingBottom: 40 }}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>{editing ? "Edit entry" : "Add entry"}</Text>
+            <Text style={styles.modalTitle}>{editing ? t("modalEditEntry") : t("modalAddEntry")}</Text>
             <TouchableOpacity onPress={() => setModal(false)}>
               <Ionicons name="close" size={24} color={Colors.text} />
             </TouchableOpacity>
           </View>
-          <Text style={styles.label}>Day</Text>
+          <Text style={styles.label}>{t("labelDay")}</Text>
           <View style={styles.rowRoles}>
             {workingDays.map((d) => (
               <TouchableOpacity key={d} style={[styles.mini, day === d && styles.miniOn]} onPress={() => setDay(d)}>
@@ -628,14 +624,14 @@ export function ClassTimetableV2Panel({ classId, canManage }: Props) {
               </TouchableOpacity>
             ))}
           </View>
-          <Text style={styles.label}>Period #</Text>
+          <Text style={styles.label}>{t("labelPeriod")}</Text>
           <TextInput
             style={styles.input}
             keyboardType="number-pad"
             value={String(period)}
             onChangeText={(t) => setPeriod(parseInt(t, 10) || 1)}
           />
-          <Text style={styles.label}>Class subject *</Text>
+          <Text style={styles.label}>{t("labelClassSubject")}</Text>
           <View style={styles.chips}>
             {offerings.map((o) => (
               <TouchableOpacity
@@ -653,35 +649,35 @@ export function ClassTimetableV2Panel({ classId, canManage }: Props) {
               </TouchableOpacity>
             ))}
           </View>
-          <Text style={styles.label}>Teacher *</Text>
+          <Text style={styles.label}>{t("labelTeacher")}</Text>
           <View style={styles.chips}>
-            {teachersForCs.map((t) => (
+            {teachersForCs.map((row) => (
               <TouchableOpacity
-                key={t.id}
-                style={[styles.chip, teacherId === t.teacher_id && styles.chipOn]}
-                onPress={() => setTeacherId(t.teacher_id)}
+                key={row.id}
+                style={[styles.chip, teacherId === row.teacher_id && styles.chipOn]}
+                onPress={() => setTeacherId(row.teacher_id)}
               >
                 <Text
-                  style={[styles.chipTxt, teacherId === t.teacher_id && styles.chipTxtOn]}
+                  style={[styles.chipTxt, teacherId === row.teacher_id && styles.chipTxtOn]}
                   numberOfLines={1}
                 >
-                  {t.teacher_name}
+                  {row.teacher_name}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
           {teachersForCs.length === 0 && csId ? (
-            <Text style={styles.warn}>Assign a subject teacher for this offering first.</Text>
+            <Text style={styles.warn}>{t("warnNoSubjectTeacher")}</Text>
           ) : null}
-          <Text style={styles.label}>Room (optional)</Text>
-          <TextInput style={styles.input} value={room} onChangeText={setRoom} placeholder="e.g. 101" />
+          <Text style={styles.label}>{t("labelRoomOptional")}</Text>
+          <TextInput style={styles.input} value={room} onChangeText={setRoom} placeholder={t("roomPlaceholder")} />
           {editing && canManage && bundleEditable && (
             <TouchableOpacity style={styles.dangerBtn} onPress={() => deleteEntry(editing)}>
-              <Text style={styles.dangerTxt}>Delete slot</Text>
+              <Text style={styles.dangerTxt}>{t("deleteSlotBtn")}</Text>
             </TouchableOpacity>
           )}
           <TouchableOpacity style={styles.primaryBtn} onPress={saveEntry} disabled={busy}>
-            <Text style={styles.primaryBtnTxt}>{busy ? "Saving…" : "Save"}</Text>
+            <Text style={styles.primaryBtnTxt}>{busy ? t("saving") : t("save")}</Text>
           </TouchableOpacity>
         </ScrollView>
       </Modal>

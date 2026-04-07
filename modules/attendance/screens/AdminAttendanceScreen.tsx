@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -20,6 +21,7 @@ import { holidayService } from "@/modules/holidays/services/holidayService";
 import { Holiday } from "@/modules/holidays/types";
 
 export default function AdminAttendanceScreen() {
+  const { t } = useTranslation("attendance");
   const router = useRouter();
   const { classAttendance, loading: attLoading, fetchClassAttendance } = useAttendance();
   const { classes, fetchClasses, loading: classesLoading } = useClasses();
@@ -86,16 +88,16 @@ export default function AdminAttendanceScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backIcon}>
           <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Attendance Overview</Text>
+        <Text style={styles.headerTitle}>{t("admin.title")}</Text>
       </View>
 
       {/* Date Picker */}
       <View style={styles.dateRow}>
         <DateField
-          label="Date"
+          label={t("admin.dateLabel")}
           value={selectedDate}
           onChange={handleDateChange}
-          placeholder="YYYY-MM-DD"
+          placeholder={t("admin.datePlaceholder")}
         />
       </View>
 
@@ -106,12 +108,10 @@ export default function AdminAttendanceScreen() {
           <View style={{ flex: 1 }}>
             <Text style={styles.holidayBannerTitle}>
               {holidayInfo.is_recurring
-                ? `Weekly Off — ${holidayInfo.recurring_day_name ?? "Off Day"}`
+                ? t("admin.weeklyOff", { day: holidayInfo.recurring_day_name ?? t("admin.offDay") })
                 : holidayInfo.name}
             </Text>
-            <Text style={styles.holidayBannerSubtitle}>
-              This is a holiday. Attendance records shown are read-only.
-            </Text>
+            <Text style={styles.holidayBannerSubtitle}>{t("admin.holidayReadOnly")}</Text>
           </View>
         </View>
       )}
@@ -119,7 +119,7 @@ export default function AdminAttendanceScreen() {
       {/* Class Selector */}
       {!selectedClass ? (
         <>
-          <Text style={styles.sectionLabel}>Select a class:</Text>
+          <Text style={styles.sectionLabel}>{t("admin.selectClass")}</Text>
           {classesLoading ? (
             <View style={styles.center}>
               <ActivityIndicator size="large" color={Colors.primary} />
@@ -153,7 +153,7 @@ export default function AdminAttendanceScreen() {
             <Text style={styles.selectedClassName}>
               {selectedClass.name} - {selectedClass.section}
             </Text>
-            <Text style={styles.changeText}>Change</Text>
+            <Text style={styles.changeText}>{t("admin.change")}</Text>
           </TouchableOpacity>
 
           {/* Summary */}
@@ -161,25 +161,25 @@ export default function AdminAttendanceScreen() {
             <View style={styles.summaryBar}>
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryNum}>{classAttendance.total_students}</Text>
-                <Text style={styles.summaryLabel}>Total</Text>
+                <Text style={styles.summaryLabel}>{t("admin.total")}</Text>
               </View>
               <View style={styles.summaryItem}>
                 <Text style={[styles.summaryNum, { color: Colors.success }]}>
                   {classAttendance.present_count}
                 </Text>
-                <Text style={styles.summaryLabel}>Present</Text>
+                <Text style={styles.summaryLabel}>{t("admin.present")}</Text>
               </View>
               <View style={styles.summaryItem}>
                 <Text style={[styles.summaryNum, { color: Colors.error }]}>
                   {classAttendance.absent_count}
                 </Text>
-                <Text style={styles.summaryLabel}>Absent</Text>
+                <Text style={styles.summaryLabel}>{t("admin.absent")}</Text>
               </View>
               <View style={styles.summaryItem}>
                 <Text style={[styles.summaryNum, { color: Colors.warning }]}>
                   {classAttendance.late_count}
                 </Text>
-                <Text style={styles.summaryLabel}>Late</Text>
+                <Text style={styles.summaryLabel}>{t("admin.late")}</Text>
               </View>
             </View>
           )}
@@ -206,13 +206,13 @@ export default function AdminAttendanceScreen() {
                       { color: getStatusColor(item.status || "unmarked") },
                     ]}
                   >
-                    {item.marked ? item.status : "Not marked"}
+                    {item.marked ? t(`status.${item.status}`, { defaultValue: item.status ?? "" }) : t("admin.notMarked")}
                   </Text>
                 </View>
               )}
               ListEmptyComponent={
                 <View style={styles.center}>
-                  <Text style={styles.emptyText}>No attendance data for this date</Text>
+                  <Text style={styles.emptyText}>{t("admin.emptyDate")}</Text>
                 </View>
               }
             />

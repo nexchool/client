@@ -1,5 +1,26 @@
 {
   "back": "Back",
+  "academicYearPicker": {
+    "title": "Academic Year",
+    "allYears": "All Years",
+    "select": "Select",
+    "createNew": "Create new academic year"
+  },
+  "academicYearCreate": {
+    "title": "Create Academic Year",
+    "nameLabel": "Name *",
+    "namePlaceholder": "e.g. 2025-2026",
+    "startDate": "Start Date *",
+    "endDate": "End Date *",
+    "datePlaceholder": "YYYY-MM-DD",
+    "create": "Create",
+    "errors": {
+      "required": "Name, start date, and end date are required",
+      "dateFormat": "Dates must be in YYYY-MM-DD format",
+      "startBeforeEnd": "Start date must be before end date",
+      "failed": "Failed to create academic year"
+    }
+  },
   "languageCode": {
     "en": "EN",
     "gu": "GU"

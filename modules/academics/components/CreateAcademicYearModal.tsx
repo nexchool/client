@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -27,6 +28,7 @@ export function CreateAcademicYearModal({
   onClose,
   onSuccess,
 }: CreateAcademicYearModalProps) {
+  const { t } = useTranslation("common");
   const [name, setName] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -47,17 +49,17 @@ export function CreateAcademicYearModal({
     const sd = startDate.trim();
     const ed = endDate.trim();
     if (!n || !sd || !ed) {
-      setError("Name, start date, and end date are required");
+      setError(t("academicYearCreate.errors.required"));
       return;
     }
     const startMatch = /^\d{4}-\d{2}-\d{2}$/.test(sd);
     const endMatch = /^\d{4}-\d{2}-\d{2}$/.test(ed);
     if (!startMatch || !endMatch) {
-      setError("Dates must be in YYYY-MM-DD format");
+      setError(t("academicYearCreate.errors.dateFormat"));
       return;
     }
     if (new Date(sd) >= new Date(ed)) {
-      setError("Start date must be before end date");
+      setError(t("academicYearCreate.errors.startBeforeEnd"));
       return;
     }
 
@@ -73,7 +75,7 @@ export function CreateAcademicYearModal({
       onSuccess(created);
       onClose();
     } catch (e: any) {
-      setError(e?.message ?? "Failed to create academic year");
+      setError(e?.message ?? t("academicYearCreate.errors.failed"));
     } finally {
       setLoading(false);
     }
@@ -92,7 +94,7 @@ export function CreateAcademicYearModal({
         />
         <View style={styles.modal}>
           <View style={styles.header}>
-            <Text style={styles.title}>Create Academic Year</Text>
+            <Text style={styles.title}>{t("academicYearCreate.title")}</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
               <Ionicons name="close" size={24} color={Colors.text} />
             </TouchableOpacity>
@@ -104,28 +106,28 @@ export function CreateAcademicYearModal({
             </View>
           )}
 
-          <Text style={styles.label}>Name *</Text>
+          <Text style={styles.label}>{t("academicYearCreate.nameLabel")}</Text>
           <TextInput
             style={styles.input}
             value={name}
             onChangeText={setName}
-            placeholder="e.g. 2025-2026"
+            placeholder={t("academicYearCreate.namePlaceholder")}
             placeholderTextColor={Colors.textTertiary}
             editable={!loading}
           />
 
           <DateField
-            label="Start Date *"
+            label={t("academicYearCreate.startDate")}
             value={startDate}
             onChange={setStartDate}
-            placeholder="YYYY-MM-DD"
+            placeholder={t("academicYearCreate.datePlaceholder")}
           />
 
           <DateField
-            label="End Date *"
+            label={t("academicYearCreate.endDate")}
             value={endDate}
             onChange={setEndDate}
-            placeholder="YYYY-MM-DD"
+            placeholder={t("academicYearCreate.datePlaceholder")}
           />
 
           <TouchableOpacity
@@ -136,7 +138,7 @@ export function CreateAcademicYearModal({
             {loading ? (
               <ActivityIndicator color="#FFF" />
             ) : (
-              <Text style={styles.submitText}>Create</Text>
+              <Text style={styles.submitText}>{t("academicYearCreate.create")}</Text>
             )}
           </TouchableOpacity>
         </View>

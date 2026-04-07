@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -23,6 +24,7 @@ import type { Teacher } from "@/modules/teachers/types";
 type Props = { classId: string; canManage: boolean };
 
 export function ClassTeachersPanel({ classId, canManage }: Props) {
+  const { t } = useTranslation("classes");
   const qc = useQueryClient();
   const [rows, setRows] = useState<ClassTeacherAssignment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,7 +80,7 @@ export function ClassTeachersPanel({ classId, canManage }: Props) {
 
   const save = async () => {
     if (!tid) {
-      Alert.alert("Validation", "Select a teacher");
+      Alert.alert(t("detail.errorTitle"), t("panels.classTeachers.validation"));
       return;
     }
     setSaving(true);
@@ -100,17 +102,17 @@ export function ClassTeachersPanel({ classId, canManage }: Props) {
       setOpen(false);
       load();
     } catch (e: any) {
-      Alert.alert("Error", e.message);
+      Alert.alert(t("panels.classTeachers.errorTitle"), e.message);
     } finally {
       setSaving(false);
     }
   };
 
   const remove = (a: ClassTeacherAssignment) => {
-    Alert.alert("Remove", "Remove this class teacher assignment?", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("panels.classTeachers.removeTitle"), t("panels.classTeachers.removeBody"), [
+      { text: t("panels.classTeachers.cancel"), style: "cancel" },
       {
-        text: "Remove",
+        text: t("panels.classTeachers.remove"),
         style: "destructive",
         onPress: async () => {
           try {
@@ -118,7 +120,7 @@ export function ClassTeachersPanel({ classId, canManage }: Props) {
             await qc.invalidateQueries({ queryKey: qk.classTeachers(classId) });
             load();
           } catch (e: any) {
-            Alert.alert("Error", e.message);
+            Alert.alert(t("panels.classTeachers.errorTitle"), e.message);
           }
         },
       },
@@ -138,13 +140,11 @@ export function ClassTeachersPanel({ classId, canManage }: Props) {
   return (
     <View>
       <View style={styles.head}>
-        <Text style={styles.hint}>
-          Primary class teacher is the main attendance authority when enabled.
-        </Text>
+        <Text style={styles.hint}>{t("panels.classTeachers.hint")}</Text>
         {canManage && (
           <TouchableOpacity style={styles.addBtn} onPress={openCreate}>
             <Ionicons name="add" size={18} color={Colors.primary} />
-            <Text style={styles.addTxt}>Add</Text>
+            <Text style={styles.addTxt}>{t("panels.classTeachers.add")}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -152,12 +152,15 @@ export function ClassTeachersPanel({ classId, canManage }: Props) {
         <View style={styles.primaryBanner}>
           <Ionicons name="star" size={16} color={Colors.warning} />
           <Text style={styles.primaryTxt}>
-            Primary: {primary.teacher_name} {primary.allow_attendance_marking ? "(can mark attendance)" : ""}
+            {t("panels.classTeachers.primaryBanner", {
+              name: primary.teacher_name,
+              suffix: primary.allow_attendance_marking ? t("panels.classTeachers.canMarkAttendance") : "",
+            })}
           </Text>
         </View>
       )}
       {rows.length === 0 ? (
-        <Text style={styles.empty}>No class teacher assignments.</Text>
+        <Text style={styles.empty}>{t("panels.classTeachers.empty")}</Text>
       ) : (
         rows.map((a) => (
           <View key={a.id} style={styles.row}>
@@ -165,12 +168,18 @@ export function ClassTeachersPanel({ classId, canManage }: Props) {
               <Text style={styles.name}>{a.teacher_name}</Text>
               <Text style={styles.meta}>{a.employee_id}</Text>
               <View style={styles.badges}>
-                <StatusChip label={a.role} variant={a.role === "primary" ? "primary" : "assistant"} />
                 <StatusChip
-                  label={a.allow_attendance_marking ? "attendance OK" : "no attendance"}
+                  label={a.role === "primary" ? t("panels.classTeachers.roleOptPrimary") : t("panels.classTeachers.roleOptAssistant")}
+                  variant={a.role === "primary" ? "primary" : "assistant"}
+                />
+                <StatusChip
+                  label={a.allow_attendance_marking ? t("panels.classTeachers.chipAttendanceOk") : t("panels.classTeachers.chipNoAttendance")}
                   variant={a.allow_attendance_marking ? "active" : "inactive"}
                 />
-                <StatusChip label={a.is_active ? "active" : "inactive"} variant={a.is_active ? "active" : "inactive"} />
+                <StatusChip
+                  label={a.is_active ? t("panels.classTeachers.statusActive") : t("panels.classTeachers.statusInactive")}
+                  variant={a.is_active ? "active" : "inactive"}
+                />
               </View>
             </View>
             {canManage && (
@@ -190,41 +199,45 @@ export function ClassTeachersPanel({ classId, canManage }: Props) {
       <Modal visible={open} animationType="slide" presentationStyle="formSheet">
         <ScrollView style={styles.modal} contentContainerStyle={{ paddingBottom: 40 }}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>{editing ? "Edit class teacher" : "Add class teacher"}</Text>
+            <Text style={styles.modalTitle}>
+              {editing ? t("panels.classTeachers.modalEdit") : t("panels.classTeachers.modalAdd")}
+            </Text>
             <TouchableOpacity onPress={() => setOpen(false)}>
               <Ionicons name="close" size={24} color={Colors.text} />
             </TouchableOpacity>
           </View>
-          <Text style={styles.label}>Teacher *</Text>
+          <Text style={styles.label}>{t("panels.classTeachers.teacherLabel")}</Text>
           <View style={styles.chips}>
-            {teachers.map((t) => (
+            {teachers.map((teacher) => (
               <TouchableOpacity
-                key={t.id}
-                style={[styles.chip, tid === t.id && styles.chipOn]}
-                onPress={() => setTid(t.id)}
+                key={teacher.id}
+                style={[styles.chip, tid === teacher.id && styles.chipOn]}
+                onPress={() => setTid(teacher.id)}
               >
-                <Text style={[styles.chipTxt, tid === t.id && styles.chipTxtOn]} numberOfLines={1}>
-                  {t.name}
+                <Text style={[styles.chipTxt, tid === teacher.id && styles.chipTxtOn]} numberOfLines={1}>
+                  {teacher.name}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
-          <Text style={styles.label}>Role</Text>
+          <Text style={styles.label}>{t("panels.classTeachers.roleLabel")}</Text>
           <View style={styles.rowRoles}>
             {(["primary", "assistant"] as const).map((r) => (
               <TouchableOpacity key={r} style={[styles.roleBtn, role === r && styles.roleBtnOn]} onPress={() => setRole(r)}>
-                <Text style={[styles.roleTxt, role === r && styles.roleTxtOn]}>{r}</Text>
+                <Text style={[styles.roleTxt, role === r && styles.roleTxtOn]}>
+                  {r === "primary" ? t("panels.classTeachers.roleOptPrimary") : t("panels.classTeachers.roleOptAssistant")}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
           {role === "assistant" && (
             <TouchableOpacity style={styles.toggleRow} onPress={() => setAllowAtt(!allowAtt)}>
               <Ionicons name={allowAtt ? "checkbox" : "square-outline"} size={22} color={Colors.primary} />
-              <Text style={styles.toggleTxt}>Allow attendance marking</Text>
+              <Text style={styles.toggleTxt}>{t("panels.classTeachers.allowAttendanceMarking")}</Text>
             </TouchableOpacity>
           )}
           <TouchableOpacity style={styles.primaryBtn} onPress={save} disabled={saving}>
-            <Text style={styles.primaryBtnTxt}>{saving ? "Saving…" : "Save"}</Text>
+            <Text style={styles.primaryBtnTxt}>{saving ? t("panels.classTeachers.saving") : t("panels.classTeachers.save")}</Text>
           </TouchableOpacity>
         </ScrollView>
       </Modal>

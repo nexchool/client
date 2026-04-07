@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -23,6 +24,7 @@ import type { Teacher } from "@/modules/teachers/types";
 type Props = { classId: string; canManage: boolean };
 
 export function SubjectTeachersPanel({ classId, canManage }: Props) {
+  const { t } = useTranslation("classes");
   const qc = useQueryClient();
   const [offerings, setOfferings] = useState<ClassSubjectOffering[]>([]);
   const [assignments, setAssignments] = useState<SubjectTeacherAssignment[]>([]);
@@ -62,6 +64,13 @@ export function SubjectTeachersPanel({ classId, canManage }: Props) {
     return m;
   }, [offerings]);
 
+  const roleLabel = (r: string) =>
+    r === "primary"
+      ? t("panels.subjectTeachers.rolePrimary")
+      : r === "assistant"
+        ? t("panels.subjectTeachers.roleAssistant")
+        : t("panels.subjectTeachers.roleGuest");
+
   const openCreate = async () => {
     setEditing(null);
     setCsId(offerings[0]?.id ?? "");
@@ -92,7 +101,7 @@ export function SubjectTeachersPanel({ classId, canManage }: Props) {
 
   const save = async () => {
     if (!csId || !tid) {
-      Alert.alert("Validation", "Select class subject and teacher");
+      Alert.alert(t("detail.errorTitle"), t("panels.subjectTeachers.validation"));
       return;
     }
     setSaving(true);
@@ -115,17 +124,17 @@ export function SubjectTeachersPanel({ classId, canManage }: Props) {
       setModalOpen(false);
       load();
     } catch (e: any) {
-      Alert.alert("Error", e.message);
+      Alert.alert(t("panels.subjectTeachers.errorTitle"), e.message);
     } finally {
       setSaving(false);
     }
   };
 
   const remove = (row: SubjectTeacherAssignment) => {
-    Alert.alert("Remove", "Unassign this teacher from the subject?", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("panels.subjectTeachers.removeTitle"), t("panels.subjectTeachers.removeBody"), [
+      { text: t("panels.subjectTeachers.cancel"), style: "cancel" },
       {
-        text: "Remove",
+        text: t("panels.subjectTeachers.remove"),
         style: "destructive",
         onPress: async () => {
           try {
@@ -133,7 +142,7 @@ export function SubjectTeachersPanel({ classId, canManage }: Props) {
             await qc.invalidateQueries({ queryKey: qk.subjectTeachers(classId) });
             load();
           } catch (e: any) {
-            Alert.alert("Error", e.message);
+            Alert.alert(t("panels.subjectTeachers.errorTitle"), e.message);
           }
         },
       },
@@ -151,25 +160,32 @@ export function SubjectTeachersPanel({ classId, canManage }: Props) {
   return (
     <View>
       <View style={styles.head}>
-        <Text style={styles.hint}>Primary teacher is used for timetable generation.</Text>
+        <Text style={styles.hint}>{t("panels.subjectTeachers.hint")}</Text>
         {canManage && (
           <TouchableOpacity style={styles.addBtn} onPress={openCreate} disabled={offerings.length === 0}>
             <Ionicons name="add" size={18} color={offerings.length ? Colors.primary : Colors.textTertiary} />
-            <Text style={[styles.addTxt, offerings.length === 0 && { color: Colors.textTertiary }]}>Assign</Text>
+            <Text style={[styles.addTxt, offerings.length === 0 && { color: Colors.textTertiary }]}>
+              {t("panels.subjectTeachers.assign")}
+            </Text>
           </TouchableOpacity>
         )}
       </View>
       {assignments.length === 0 ? (
-        <Text style={styles.empty}>No subject teachers assigned.</Text>
+        <Text style={styles.empty}>{t("panels.subjectTeachers.empty")}</Text>
       ) : (
         assignments.map((a) => (
           <View key={a.id} style={styles.row}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.subj}>{subjectName.get(a.class_subject_id) ?? "Subject"}</Text>
+              <Text style={styles.subj}>
+                {subjectName.get(a.class_subject_id) ?? t("panels.subjectTeachers.subjectFallback")}
+              </Text>
               <Text style={styles.teacher}>{a.teacher_name ?? a.teacher_id}</Text>
               <View style={styles.badges}>
-                <StatusChip label={a.role} variant={a.role === "primary" ? "primary" : "assistant"} />
-                <StatusChip label={a.is_active ? "active" : "inactive"} variant={a.is_active ? "active" : "inactive"} />
+                <StatusChip label={roleLabel(a.role)} variant={a.role === "primary" ? "primary" : "assistant"} />
+                <StatusChip
+                  label={a.is_active ? t("panels.subjectTeachers.statusActive") : t("panels.subjectTeachers.statusInactive")}
+                  variant={a.is_active ? "active" : "inactive"}
+                />
               </View>
               {(a.effective_from || a.effective_to) && (
                 <Text style={styles.dates}>
@@ -194,12 +210,14 @@ export function SubjectTeachersPanel({ classId, canManage }: Props) {
       <Modal visible={modalOpen} animationType="slide" presentationStyle="formSheet">
         <ScrollView style={styles.modal} contentContainerStyle={{ paddingBottom: 40 }}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>{editing ? "Edit assignment" : "Assign teacher"}</Text>
+            <Text style={styles.modalTitle}>
+              {editing ? t("panels.subjectTeachers.modalEdit") : t("panels.subjectTeachers.modalAssign")}
+            </Text>
             <TouchableOpacity onPress={() => setModalOpen(false)}>
               <Ionicons name="close" size={24} color={Colors.text} />
             </TouchableOpacity>
           </View>
-          <Text style={styles.label}>Class subject *</Text>
+          <Text style={styles.label}>{t("panels.subjectTeachers.classSubjectLabel")}</Text>
           <View style={styles.chips}>
             {offerings.map((o) => (
               <TouchableOpacity
@@ -211,30 +229,30 @@ export function SubjectTeachersPanel({ classId, canManage }: Props) {
               </TouchableOpacity>
             ))}
           </View>
-          <Text style={styles.label}>Teacher *</Text>
+          <Text style={styles.label}>{t("panels.subjectTeachers.teacherLabel")}</Text>
           <View style={styles.chips}>
-            {teachers.map((t) => (
+            {teachers.map((teacher) => (
               <TouchableOpacity
-                key={t.id}
-                style={[styles.chip, tid === t.id && styles.chipOn]}
-                onPress={() => setTid(t.id)}
+                key={teacher.id}
+                style={[styles.chip, tid === teacher.id && styles.chipOn]}
+                onPress={() => setTid(teacher.id)}
               >
-                <Text style={[styles.chipTxt, tid === t.id && styles.chipTxtOn]} numberOfLines={1}>
-                  {t.name}
+                <Text style={[styles.chipTxt, tid === teacher.id && styles.chipTxtOn]} numberOfLines={1}>
+                  {teacher.name}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
-          <Text style={styles.label}>Role</Text>
+          <Text style={styles.label}>{t("panels.subjectTeachers.roleLabel")}</Text>
           <View style={styles.rowRoles}>
             {(["primary", "assistant", "guest"] as const).map((r) => (
               <TouchableOpacity key={r} style={[styles.roleBtn, role === r && styles.roleBtnOn]} onPress={() => setRole(r)}>
-                <Text style={[styles.roleTxt, role === r && styles.roleTxtOn]}>{r}</Text>
+                <Text style={[styles.roleTxt, role === r && styles.roleTxtOn]}>{roleLabel(r)}</Text>
               </TouchableOpacity>
             ))}
           </View>
           <TouchableOpacity style={styles.primaryBtn} onPress={save} disabled={saving}>
-            <Text style={styles.primaryBtnTxt}>{saving ? "Saving…" : "Save"}</Text>
+            <Text style={styles.primaryBtnTxt}>{saving ? t("panels.subjectTeachers.saving") : t("panels.subjectTeachers.save")}</Text>
           </TouchableOpacity>
         </ScrollView>
       </Modal>

@@ -1,5 +1,26 @@
 {
   "back": "પાછા",
+  "academicYearPicker": {
+    "title": "શૈક્ષણિક વર્ષ",
+    "allYears": "બધા વર્ષ",
+    "select": "પસંદ કરો",
+    "createNew": "નવું શૈક્ષણિક વર્ષ બનાવો"
+  },
+  "academicYearCreate": {
+    "title": "શૈક્ષણિક વર્ષ બનાવો",
+    "nameLabel": "નામ *",
+    "namePlaceholder": "જેમ કે 2025-2026",
+    "startDate": "શરૂ તારીખ *",
+    "endDate": "અંત તારીખ *",
+    "datePlaceholder": "YYYY-MM-DD",
+    "create": "બનાવો",
+    "errors": {
+      "required": "નામ, શરૂ તારીખ અને અંત તારીખ જરૂરી છે",
+      "dateFormat": "તારીખો YYYY-MM-DD ફોર્મેટમાં હોવી જોઈએ",
+      "startBeforeEnd": "શરૂ તારીખ અંત તારીખ પહેલાં હોવી જોઈએ",
+      "failed": "શૈક્ષણિક વર્ષ બનાવવામાં નિષ્ફળ"
+    }
+  },
   "languageCode": {
     "en": "EN",
     "gu": "GU"

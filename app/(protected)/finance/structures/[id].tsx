@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -27,9 +28,9 @@ import { Spacing, Layout } from "@/common/constants/spacing";
 import { ClassMultiSelect } from "@/common/components/ClassMultiSelect";
 import { DateField } from "@/common/components/DateField";
 
-function formatDate(s: string) {
+function formatDate(s: string, locale: string) {
   try {
-    return new Date(s).toLocaleDateString("en-IN");
+    return new Date(s).toLocaleDateString(locale);
   } catch {
     return s;
   }
@@ -40,6 +41,8 @@ function formatCurrency(n: number) {
 }
 
 export default function FeeStructureInfoPage() {
+  const { t, i18n } = useTranslation("finance");
+  const locale = i18n.language === "gu" ? "gu-IN" : "en-IN";
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const [modalOpen, setModalOpen] = useState(false);
@@ -58,19 +61,19 @@ export default function FeeStructureInfoPage() {
   const handleDelete = () => {
     if (!structure) return;
     Alert.alert(
-      "Delete Structure",
-      `Delete "${structure.name}"? This cannot be undone.`,
+      t("structureDetail.deleteTitle"),
+      t("structureDetail.deleteMessage", { name: structure.name }),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: "Delete",
+          text: t("common.delete"),
           style: "destructive",
           onPress: async () => {
             try {
               await deleteMut.mutateAsync(structure.id);
               router.back();
             } catch (e: unknown) {
-              Alert.alert("Error", e instanceof Error ? e.message : "Failed to delete");
+              Alert.alert(t("common.error"), e instanceof Error ? e.message : t("structureDetail.deleteFailed"));
             }
           },
         },
@@ -82,10 +85,10 @@ export default function FeeStructureInfoPage() {
     return (
       <View style={styles.center}>
         <Text style={styles.errorText}>
-          {error instanceof Error ? error.message : "Failed to load"}
+          {error instanceof Error ? error.message : t("common.failedToLoad")}
         </Text>
         <TouchableOpacity style={styles.retryBtn} onPress={() => refetch()}>
-          <Text style={styles.retryBtnText}>Retry</Text>
+          <Text style={styles.retryBtnText}>{t("common.retry")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -105,7 +108,7 @@ export default function FeeStructureInfoPage() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backIcon}>
           <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Fee Structure</Text>
+        <Text style={styles.headerTitle}>{t("structureDetail.title")}</Text>
         <View style={styles.headerActions}>
           <TouchableOpacity onPress={handleDelete} style={styles.headerIconBtn}>
             <Ionicons name="trash-outline" size={24} color={Colors.error} />
@@ -122,37 +125,37 @@ export default function FeeStructureInfoPage() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Academic Year</Text>
+          <Text style={styles.sectionLabel}>{t("structureDetail.academicYear")}</Text>
           <Text style={styles.sectionValue}>{academicYearName}</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Due Date</Text>
-          <Text style={styles.sectionValue}>{formatDate(structure.due_date)}</Text>
+          <Text style={styles.sectionLabel}>{t("structureDetail.dueDate")}</Text>
+          <Text style={styles.sectionValue}>{formatDate(structure.due_date, locale)}</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Classes</Text>
+          <Text style={styles.sectionLabel}>{t("structureDetail.classes")}</Text>
           <Text style={styles.sectionValue}>
-            {structure.class_name ?? "All classes"}
+            {structure.class_name ?? t("common.allClasses")}
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Components</Text>
+          <Text style={styles.sectionLabel}>{t("structureDetail.components")}</Text>
           {structure.components?.length ? (
             <View style={styles.componentsList}>
               {structure.components.map((c) => (
                 <View key={c.id} style={styles.componentRow}>
                   <Text style={styles.componentName}>
-                    {c.name} {c.is_optional ? "(optional)" : ""}
+                    {c.name} {c.is_optional ? t("structureDetail.optionalSuffix") : ""}
                   </Text>
                   <Text style={styles.componentAmount}>{formatCurrency(c.amount)}</Text>
                 </View>
               ))}
             </View>
           ) : (
-            <Text style={styles.emptyText}>No components</Text>
+            <Text style={styles.emptyText}>{t("structureDetail.noComponents")}</Text>
           )}
         </View>
       </ScrollView>
@@ -162,7 +165,6 @@ export default function FeeStructureInfoPage() {
           visible={modalOpen}
           onClose={() => setModalOpen(false)}
           structure={structure}
-          academicYears={academicYears}
           onUpdate={async (data) => {
             await updateMut.mutateAsync({ id: structure.id, data });
             setModalOpen(false);
@@ -178,7 +180,6 @@ interface StructureEditModalProps {
   visible: boolean;
   onClose: () => void;
   structure: FeeStructure;
-  academicYears: { id: string; name: string }[];
   onUpdate: (data: { name?: string; due_date?: string; class_ids?: string[]; components?: { name: string; amount: number; is_optional: boolean }[] }) => Promise<void>;
   isUpdating: boolean;
 }
@@ -187,10 +188,10 @@ function StructureEditModal({
   visible,
   onClose,
   structure,
-  academicYears,
   onUpdate,
   isUpdating,
 }: StructureEditModalProps) {
+  const { t } = useTranslation("finance");
   const [name, setName] = useState(structure.name ?? "");
   const [classIds, setClassIds] = useState<string[]>(structure.class_ids ?? []);
   const [dueDate, setDueDate] = useState(structure.due_date ?? "");
@@ -248,11 +249,11 @@ function StructureEditModal({
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      Alert.alert("Error", "Name is required");
+      Alert.alert(t("common.error"), t("structures.modal.alerts.nameRequired"));
       return;
     }
     if (!dueDate.trim()) {
-      Alert.alert("Error", "Due date is required");
+      Alert.alert(t("common.error"), t("structures.modal.alerts.dueRequired"));
       return;
     }
     const comps = components
@@ -263,7 +264,7 @@ function StructureEditModal({
         is_optional: c.is_optional,
       }));
     if (comps.length === 0) {
-      Alert.alert("Error", "At least one component is required");
+      Alert.alert(t("common.error"), t("structures.modal.alerts.componentsEdit"));
       return;
     }
     try {
@@ -274,7 +275,7 @@ function StructureEditModal({
         components: comps,
       });
     } catch (e: unknown) {
-      Alert.alert("Error", e instanceof Error ? e.message : "Failed to save");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("structures.modal.alerts.saveFailed"));
     }
   };
 
@@ -283,37 +284,37 @@ function StructureEditModal({
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Edit Structure</Text>
+            <Text style={styles.modalTitle}>{t("structures.modal.editTitle")}</Text>
             <TouchableOpacity onPress={onClose}>
               <Ionicons name="close" size={24} color={Colors.text} />
             </TouchableOpacity>
           </View>
           <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
-            <Text style={styles.inputLabel}>Structure name</Text>
+            <Text style={styles.inputLabel}>{t("structures.modal.structureName")}</Text>
             <TextInput
               style={styles.input}
               value={name}
               onChangeText={setName}
-              placeholder="e.g. Term 1 Fee 2025"
+              placeholder={t("structures.modal.namePlaceholder")}
             />
-            <Text style={styles.inputLabel}>Classes</Text>
+            <Text style={styles.inputLabel}>{t("structures.modal.classes")}</Text>
             <ClassMultiSelect
               value={classIds}
               onChange={setClassIds}
               options={classOptions}
-              placeholder="All classes"
+              placeholder={t("structures.modal.classesPlaceholder")}
             />
             <DateField
-              label="Due Date"
+              label={t("structures.modal.dueDate")}
               value={dueDate}
               onChange={setDueDate}
-              placeholder="e.g. 2025-03-31"
+              placeholder={t("structures.modal.dueDatePlaceholder")}
             />
             <View style={styles.componentHeader}>
-              <Text style={styles.inputLabel}>Components</Text>
+              <Text style={styles.inputLabel}>{t("structures.modal.components")}</Text>
               <TouchableOpacity onPress={addComponent} style={styles.addComponentBtn}>
                 <Ionicons name="add" size={20} color={Colors.primary} />
-                <Text style={styles.addComponentText}>Add</Text>
+                <Text style={styles.addComponentText}>{t("structures.modal.add")}</Text>
               </TouchableOpacity>
             </View>
             {components.map((c, i) => (
@@ -322,17 +323,17 @@ function StructureEditModal({
                   style={[styles.input, styles.componentInput]}
                   value={c.name}
                   onChangeText={(v) => updateComponent(i, "name", v)}
-                  placeholder="Component name"
+                  placeholder={t("structures.modal.componentName")}
                 />
                 <TextInput
                   style={[styles.input, styles.amountInput]}
                   value={c.amount}
                   onChangeText={(v) => updateComponent(i, "amount", v)}
-                  placeholder="Amount"
+                  placeholder={t("structures.modal.amount")}
                   keyboardType="decimal-pad"
                 />
                 <View style={styles.optionalRow}>
-                  <Text style={styles.optionalLabel}>Optional</Text>
+                  <Text style={styles.optionalLabel}>{t("structures.modal.optional")}</Text>
                   <Switch
                     value={c.is_optional}
                     onValueChange={(v) => updateComponent(i, "is_optional", v)}
@@ -350,7 +351,7 @@ function StructureEditModal({
           </ScrollView>
           <View style={styles.modalFooter}>
             <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
-              <Text style={styles.cancelBtnText}>Cancel</Text>
+              <Text style={styles.cancelBtnText}>{t("structures.modal.cancel")}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.submitBtn, isUpdating && styles.submitBtnDisabled]}
@@ -360,7 +361,7 @@ function StructureEditModal({
               {isUpdating ? (
                 <ActivityIndicator size="small" color={Colors.background} />
               ) : (
-                <Text style={styles.submitBtnText}>Update</Text>
+                <Text style={styles.submitBtnText}>{t("structures.modal.update")}</Text>
               )}
             </TouchableOpacity>
           </View>

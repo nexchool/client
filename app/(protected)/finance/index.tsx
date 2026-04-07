@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -20,6 +21,8 @@ function formatCurrency(n: number) {
 }
 
 export default function FinanceDashboardPage() {
+  const { t, i18n } = useTranslation("finance");
+  const locale = i18n.language === "gu" ? "gu-IN" : "en-IN";
   const router = useRouter();
   const { data: dashboardData, isLoading, error, refetch, isRefetching } = useFinanceDashboard(10);
 
@@ -36,10 +39,10 @@ export default function FinanceDashboardPage() {
       <View style={styles.center}>
         <Ionicons name="alert-circle-outline" size={48} color={Colors.error} style={{ marginBottom: Spacing.md }} />
         <Text style={styles.errorText}>
-          {error instanceof Error ? error.message : "Failed to load"}
+          {error instanceof Error ? error.message : t("common.failedToLoad")}
         </Text>
         <TouchableOpacity style={styles.retryBtn} onPress={() => refetch()}>
-          <Text style={styles.retryBtnText}>Try again</Text>
+          <Text style={styles.retryBtnText}>{t("common.tryAgain")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -54,20 +57,20 @@ export default function FinanceDashboardPage() {
       }
     >
       <View style={styles.header}>
-        <Text style={styles.title}>Finance</Text>
-        <Text style={styles.subtitle}>Track fees and collect payments</Text>
+        <Text style={styles.title}>{t("dashboard.title")}</Text>
+        <Text style={styles.subtitle}>{t("dashboard.subtitle")}</Text>
       </View>
 
       {isLoading && !dashboardData ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={styles.loadingText}>Loading your finance data…</Text>
+          <Text style={styles.loadingText}>{t("dashboard.loading")}</Text>
         </View>
       ) : (
         <View style={styles.content}>
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Summary</Text>
-            <Text style={styles.sectionHint}>Overview of fee collection this term</Text>
+            <Text style={styles.sectionTitle}>{t("dashboard.summary")}</Text>
+            <Text style={styles.sectionHint}>{t("dashboard.summaryHint")}</Text>
             <View style={styles.statsGrid}>
               <View style={styles.statCard}>
                 <View style={styles.statIconWrap}>
@@ -76,7 +79,7 @@ export default function FinanceDashboardPage() {
                 <Text style={styles.statValue} numberOfLines={1}>
                   {formatCurrency(stats.totalExpected)}
                 </Text>
-                <Text style={styles.statLabel}>Total Expected</Text>
+                <Text style={styles.statLabel}>{t("dashboard.totalExpected")}</Text>
               </View>
               <View style={[styles.statCard, styles.statCardSuccess]}>
                 <View style={styles.statIconWrap}>
@@ -85,7 +88,7 @@ export default function FinanceDashboardPage() {
                 <Text style={styles.statValue} numberOfLines={1}>
                   {formatCurrency(stats.totalCollected)}
                 </Text>
-                <Text style={styles.statLabel}>Total Collected</Text>
+                <Text style={styles.statLabel}>{t("dashboard.totalCollected")}</Text>
               </View>
             </View>
             <View style={styles.statsGrid}>
@@ -96,7 +99,7 @@ export default function FinanceDashboardPage() {
                 <Text style={styles.statValue} numberOfLines={1}>
                   {formatCurrency(stats.totalOutstanding)}
                 </Text>
-                <Text style={styles.statLabel}>Total Outstanding</Text>
+                <Text style={styles.statLabel}>{t("dashboard.totalOutstanding")}</Text>
               </View>
               <View style={[styles.statCard, stats.overdueCount > 0 && styles.statCardDanger]}>
                 <View style={styles.statIconWrap}>
@@ -105,14 +108,14 @@ export default function FinanceDashboardPage() {
                 <Text style={styles.statValue} numberOfLines={1}>
                   {stats.overdueCount}
                 </Text>
-                <Text style={styles.statLabel}>Overdue</Text>
+                <Text style={styles.statLabel}>{t("dashboard.overdue")}</Text>
               </View>
             </View>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Quick Actions</Text>
-            <Text style={styles.sectionHint}>Jump to common tasks</Text>
+            <Text style={styles.sectionTitle}>{t("dashboard.quickActions")}</Text>
+            <Text style={styles.sectionHint}>{t("dashboard.quickActionsHint")}</Text>
             <Pressable
               style={({ pressed }) => [styles.linkCard, pressed && styles.linkCardPressed]}
               onPress={() => router.push("/(protected)/finance/structures" as any)}
@@ -122,8 +125,8 @@ export default function FinanceDashboardPage() {
                   <Ionicons name="layers-outline" size={26} color={Colors.primary} />
                 </View>
                 <View style={styles.linkText}>
-                  <Text style={styles.linkTitle}>Fee Structures</Text>
-                  <Text style={styles.linkSubtitle}>Create and manage fee structures</Text>
+                  <Text style={styles.linkTitle}>{t("dashboard.linkStructuresTitle")}</Text>
+                  <Text style={styles.linkSubtitle}>{t("dashboard.linkStructuresSubtitle")}</Text>
                 </View>
               </View>
               <Ionicons name="chevron-forward" size={22} color={Colors.textSecondary} />
@@ -137,8 +140,8 @@ export default function FinanceDashboardPage() {
                   <Ionicons name="people-outline" size={26} color={Colors.primary} />
                 </View>
                 <View style={styles.linkText}>
-                  <Text style={styles.linkTitle}>Student Fees</Text>
-                  <Text style={styles.linkSubtitle}>View fees and record payments</Text>
+                  <Text style={styles.linkTitle}>{t("dashboard.linkStudentFeesTitle")}</Text>
+                  <Text style={styles.linkSubtitle}>{t("dashboard.linkStudentFeesSubtitle")}</Text>
                 </View>
               </View>
               <Ionicons name="chevron-forward" size={22} color={Colors.textSecondary} />
@@ -152,8 +155,8 @@ export default function FinanceDashboardPage() {
                   <Ionicons name="receipt-outline" size={26} color={Colors.primary} />
                 </View>
                 <View style={styles.linkText}>
-                  <Text style={styles.linkTitle}>Fee Invoices</Text>
-                  <Text style={styles.linkSubtitle}>Manage invoices, payments & receipts</Text>
+                  <Text style={styles.linkTitle}>{t("dashboard.linkInvoicesTitle")}</Text>
+                  <Text style={styles.linkSubtitle}>{t("dashboard.linkInvoicesSubtitle")}</Text>
                 </View>
               </View>
               <Ionicons name="chevron-forward" size={22} color={Colors.textSecondary} />
@@ -163,30 +166,30 @@ export default function FinanceDashboardPage() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <View>
-                <Text style={styles.sectionTitle}>Recent Payments</Text>
-                <Text style={styles.sectionHint}>Latest collections</Text>
+                <Text style={styles.sectionTitle}>{t("dashboard.recentPayments")}</Text>
+                <Text style={styles.sectionHint}>{t("dashboard.recentPaymentsHint")}</Text>
               </View>
               {recentPayments.length > 0 && (
                 <TouchableOpacity
                   onPress={() => router.push("/(protected)/finance/student-fees" as any)}
                   hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                 >
-                  <Text style={styles.viewAllText}>View all</Text>
+                  <Text style={styles.viewAllText}>{t("dashboard.viewAll")}</Text>
                 </TouchableOpacity>
               )}
             </View>
             {recentPayments.length === 0 ? (
               <View style={styles.emptyCard}>
                 <Ionicons name="card-outline" size={40} color={Colors.textTertiary} />
-                <Text style={styles.emptyTitle}>No recent payments</Text>
+                <Text style={styles.emptyTitle}>{t("dashboard.noRecentPayments")}</Text>
                 <Text style={styles.emptySubtitle}>
-                  Payments you record will appear here
+                  {t("dashboard.noRecentPaymentsHint")}
                 </Text>
                 <TouchableOpacity
                   style={styles.emptyCta}
                   onPress={() => router.push("/(protected)/finance/student-fees" as any)}
                 >
-                  <Text style={styles.emptyCtaText}>Go to Student Fees</Text>
+                  <Text style={styles.emptyCtaText}>{t("dashboard.goToStudentFees")}</Text>
                 </TouchableOpacity>
               </View>
             ) : (
@@ -206,10 +209,10 @@ export default function FinanceDashboardPage() {
                     </View>
                     <View style={styles.paymentInfo}>
                       <Text style={styles.paymentStudent}>
-                        {p.student_name ?? "Unknown"}
+                        {p.student_name ?? t("common.unknown")}
                       </Text>
                       <Text style={styles.paymentDate}>
-                        {new Date(p.created_at).toLocaleDateString("en-IN", {
+                        {new Date(p.created_at).toLocaleDateString(locale, {
                           day: "numeric",
                           month: "short",
                         })}

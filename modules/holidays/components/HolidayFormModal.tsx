@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View, Text, StyleSheet, Modal, TextInput,
   TouchableOpacity, ScrollView, KeyboardAvoidingView,
-  Platform, Switch,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/common/constants/colors';
 import { Spacing, Layout } from '@/common/constants/spacing';
-import { Holiday, CreateHolidayDTO, HolidayType, HOLIDAY_TYPE_LABELS, DAY_NAMES } from '../types';
+import { Holiday, CreateHolidayDTO, HolidayType } from '../types';
 import { validateHolidayData } from '../validation/schemas';
 import { DateField } from '@/common/components/DateField';
 import { useAcademicYears } from '@/modules/academics/hooks/useAcademicYears';
@@ -44,9 +45,27 @@ function getDefaultForm(): {
   };
 }
 
+const ZOD_MSG_KEYS: Record<string, string> = {
+  'Name is required': 'holidayForm.validation.nameRequired',
+  'Max 120 characters': 'holidayForm.validation.nameMax',
+  'Max 500 characters': 'holidayForm.validation.descriptionMax',
+  'Select a valid holiday type': 'holidayForm.validation.invalidHolidayType',
+  'Start date must be YYYY-MM-DD': 'holidayForm.validation.startDateFormat',
+  'End date must be YYYY-MM-DD': 'holidayForm.validation.endDateFormat',
+  'End date must be on or after start date': 'holidayForm.validation.endAfterStart',
+  'Day of week is required': 'holidayForm.validation.dayRequired',
+  'Must be 0-6': 'holidayForm.validation.dayRange',
+};
+
 export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
   visible, onClose, onSubmit, initialData = null, mode = 'create',
 }) => {
+  const { t } = useTranslation('teacherLeaves');
+  const trZod = useCallback((msg: string) => {
+    const key = ZOD_MSG_KEYS[msg];
+    return key ? t(key) : msg;
+  }, [t]);
+
   const [form, setForm] = useState(getDefaultForm());
   const [holidayMode, setHolidayMode] = useState<HolidayMode>('single');
   const [loading, setLoading] = useState(false);
@@ -132,8 +151,10 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
     const payload = buildPayload();
     const validation = validateHolidayData(payload);
     if (!validation.valid) {
-      setFieldErrors(validation.errors);
-      setSubmitError('Please fix the errors below.');
+      const mapped: Record<string, string> = {};
+      Object.entries(validation.errors).forEach(([k, v]) => { mapped[k] = trZod(v); });
+      setFieldErrors(mapped);
+      setSubmitError(t('holidayForm.fixErrorsBelow'));
       return;
     }
 
@@ -143,7 +164,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
     try {
       await onSubmit(payload);
     } catch (err: any) {
-      setSubmitError(err.message || 'Failed to save holiday');
+      setSubmitError(err.message || t('holidayForm.saveFailed'));
     } finally {
       setLoading(false);
     }
@@ -159,7 +180,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.title}>
-              {mode === 'edit' ? 'Edit Holiday' : 'Add Holiday'}
+              {mode === 'edit' ? t('holidayForm.titleEdit') : t('holidayForm.titleAdd')}
             </Text>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
               <Ionicons name="close" size={24} color={Colors.text} />
@@ -177,7 +198,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
           <ScrollView style={styles.form} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
             {/* ─── Holiday Mode Tabs ─────────────────────────────── */}
-            <Text style={styles.sectionLabel}>Holiday Type</Text>
+            <Text style={styles.sectionLabel}>{t('holidayForm.sectionSchedule')}</Text>
             <View style={styles.modeTabs}>
               {(['single', 'range', 'recurring'] as HolidayMode[]).map((m) => (
                 <TouchableOpacity
@@ -191,19 +212,19 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
                     color={holidayMode === m ? Colors.background : Colors.textSecondary}
                   />
                   <Text style={[styles.modeTabText, holidayMode === m && styles.modeTabTextActive]}>
-                    {m === 'single' ? 'Single Day' : m === 'range' ? 'Date Range' : 'Recurring'}
+                    {m === 'single' ? t('holidayForm.modeSingle') : m === 'range' ? t('holidayForm.modeRange') : t('holidayForm.modeRecurring')}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
 
             {/* ─── Name ─────────────────────────────────────────── */}
-            <Text style={styles.label}>Name *</Text>
+            <Text style={styles.label}>{t('holidayForm.nameLabel')}</Text>
             <TextInput
               style={[styles.input, fieldErrors.name && styles.inputError]}
               value={form.name}
               onChangeText={(v) => setField('name', v)}
-              placeholder="e.g. Diwali, Summer Vacation, Sunday Off"
+              placeholder={t('holidayForm.namePlaceholder')}
               placeholderTextColor={Colors.textSecondary}
             />
             {fieldErrors.name && <Text style={styles.fieldError}>{fieldErrors.name}</Text>}
@@ -212,10 +233,10 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
             {holidayMode === 'single' && (
               <>
                 <DateField
-                  label="Date *"
+                  label={t('holidayForm.dateLabel')}
                   value={form.start_date}
                   onChange={(v) => setField('start_date', v)}
-                  placeholder="YYYY-MM-DD"
+                  placeholder={t('holidayForm.datePlaceholder')}
                   error={fieldErrors.start_date}
                   useOverlayInsideModal
                 />
@@ -226,20 +247,20 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
               <View style={styles.row}>
                 <View style={styles.col}>
                   <DateField
-                    label="Start Date *"
+                    label={t('holidayForm.startDateLabel')}
                     value={form.start_date}
                     onChange={(v) => setField('start_date', v)}
-                    placeholder="YYYY-MM-DD"
+                    placeholder={t('holidayForm.datePlaceholder')}
                     error={fieldErrors.start_date}
                     useOverlayInsideModal
                   />
                 </View>
                 <View style={[styles.col, { marginLeft: Spacing.md }]}>
                   <DateField
-                    label="End Date *"
+                    label={t('holidayForm.endDateLabel')}
                     value={form.end_date}
                     onChange={(v) => setField('end_date', v)}
-                    placeholder="YYYY-MM-DD"
+                    placeholder={t('holidayForm.datePlaceholder')}
                     error={fieldErrors.end_date}
                     useOverlayInsideModal
                   />
@@ -249,10 +270,9 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
 
             {holidayMode === 'recurring' && (
               <>
-                <Text style={styles.label}>Repeats Every *</Text>
+                <Text style={styles.label}>{t('holidayForm.repeatsEvery')}</Text>
                 <View style={styles.dayGrid}>
-                  {Object.entries(DAY_NAMES).map(([key, dayName]) => {
-                    const dow = Number(key);
+                  {([0, 1, 2, 3, 4, 5, 6] as const).map((dow) => {
                     const active = form.recurring_day_of_week === dow;
                     return (
                       <TouchableOpacity
@@ -266,7 +286,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
                         }}
                       >
                         <Text style={[styles.dayChipText, active && styles.dayChipTextActive]}>
-                          {dayName.slice(0, 3)}
+                          {t(`holidayForm.daysShort.${dow}`)}
                         </Text>
                       </TouchableOpacity>
                     );
@@ -278,31 +298,29 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
                 <View style={styles.infoBox}>
                   <Ionicons name="information-circle-outline" size={14} color={Colors.textSecondary} />
                   <Text style={styles.infoText}>
-                    Recurring holidays (e.g. every Sunday) apply across all weeks. They count
-                    as weekly-off days — any public holiday that also falls on this day will show
-                    a {'"' }Falls on Sunday{'"' } warning.
+                    {t('holidayForm.recurringInfo')}
                   </Text>
                 </View>
               </>
             )}
 
             {/* ─── Holiday Category ─────────────────────────────── */}
-            <Text style={styles.label}>Category</Text>
+            <Text style={styles.label}>{t('holidayForm.categoryLabel')}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.typeRow}>
-              {HOLIDAY_TYPES.map((t) => (
+              {HOLIDAY_TYPES.map((ht) => (
                 <TouchableOpacity
-                  key={t}
-                  style={[styles.typeChip, form.holiday_type === t && styles.typeChipActive]}
-                  onPress={() => setField('holiday_type', t)}
+                  key={ht}
+                  style={[styles.typeChip, form.holiday_type === ht && styles.typeChipActive]}
+                  onPress={() => setField('holiday_type', ht)}
                 >
                   <Ionicons
-                    name={TYPE_ICONS[t]}
+                    name={TYPE_ICONS[ht]}
                     size={14}
-                    color={form.holiday_type === t ? Colors.background : Colors.textSecondary}
+                    color={form.holiday_type === ht ? Colors.background : Colors.textSecondary}
                     style={{ marginRight: 4 }}
                   />
-                  <Text style={[styles.typeChipText, form.holiday_type === t && styles.typeChipTextActive]}>
-                    {HOLIDAY_TYPE_LABELS[t]}
+                  <Text style={[styles.typeChipText, form.holiday_type === ht && styles.typeChipTextActive]}>
+                    {t(`holidayForm.types.${ht}`)}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -312,14 +330,14 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
             {/* ─── Academic Year ────────────────────────────────── */}
             {academicYears.length > 0 && (
               <>
-                <Text style={styles.label}>Academic Year</Text>
+                <Text style={styles.label}>{t('holidayForm.academicYear')}</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.typeRow}>
                   <TouchableOpacity
                     style={[styles.typeChip, !form.academic_year_id && styles.typeChipActive]}
                     onPress={() => setField('academic_year_id', '')}
                   >
                     <Text style={[styles.typeChipText, !form.academic_year_id && styles.typeChipTextActive]}>
-                      All Years
+                      {t('holidayForm.allYears')}
                     </Text>
                   </TouchableOpacity>
                   {academicYears.map((ay: any) => (
@@ -338,12 +356,12 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
             )}
 
             {/* ─── Description ─────────────────────────────────── */}
-            <Text style={styles.label}>Description (optional)</Text>
+            <Text style={styles.label}>{t('holidayForm.descriptionLabel')}</Text>
             <TextInput
               style={[styles.input, styles.textArea, fieldErrors.description && styles.inputError]}
               value={form.description}
               onChangeText={(v) => setField('description', v)}
-              placeholder="Additional details about this holiday…"
+              placeholder={t('holidayForm.descriptionPlaceholder')}
               placeholderTextColor={Colors.textSecondary}
               multiline
               numberOfLines={3}
@@ -357,7 +375,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
           {/* Footer */}
           <View style={styles.footer}>
             <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
-              <Text style={styles.cancelText}>Cancel</Text>
+              <Text style={styles.cancelText}>{t('holidayForm.cancel')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.submitBtn, loading && styles.disabledBtn]}
@@ -366,8 +384,8 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
             >
               <Text style={styles.submitText}>
                 {loading
-                  ? (mode === 'edit' ? 'Saving…' : 'Adding…')
-                  : (mode === 'edit' ? 'Save Changes' : 'Add Holiday')}
+                  ? (mode === 'edit' ? t('holidayForm.saving') : t('holidayForm.adding'))
+                  : (mode === 'edit' ? t('holidayForm.saveChanges') : t('holidayForm.addHoliday'))}
               </Text>
             </TouchableOpacity>
           </View>
