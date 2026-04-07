@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -21,6 +22,7 @@ import {
 import { useAcademicYearContext } from "@/modules/academics/context/AcademicYearContext";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
+import { calendarLocaleForLanguage } from "@/i18n";
 import { ClassSelect } from "@/common/components/ClassSelect";
 import { ProfileAvatar } from "@/common/components/ProfileAvatar";
 
@@ -28,32 +30,28 @@ function formatCurrency(n: number) {
   return `₹${n.toLocaleString("en-IN")}`;
 }
 
-function formatDate(s: string) {
+function formatDate(s: string, locale: string) {
   try {
-    return new Date(s).toLocaleDateString("en-IN");
+    return new Date(s).toLocaleDateString(locale);
   } catch {
     return s;
   }
 }
 
-const STATUS_OPTIONS = [
-  { value: "", label: "All" },
-  { value: "overdue", label: "Overdue" },
-  { value: "unpaid", label: "Unpaid" },
-  { value: "partial", label: "Partial" },
-  { value: "paid", label: "Paid" },
-];
+const STATUS_VALUES = ["", "overdue", "unpaid", "partial", "paid"] as const;
 
 function StatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation("finance");
   const colors: Record<string, string> = {
     paid: Colors.success,
     partial: Colors.warning,
     unpaid: Colors.textSecondary,
     overdue: Colors.error,
   };
+  const label = t(`studentFeeStatuses.${status}`);
   return (
     <View style={[styles.badge, { backgroundColor: colors[status] || Colors.textSecondary }]}>
-      <Text style={styles.badgeText}>{status}</Text>
+      <Text style={styles.badgeText}>{label}</Text>
     </View>
   );
 }
@@ -77,6 +75,8 @@ function getStatusesToDisplay(
 }
 
 export default function StudentFeesPage() {
+  const { t, i18n } = useTranslation("finance");
+  const locale = calendarLocaleForLanguage(i18n.language ?? "en");
   const router = useRouter();
   const { selectedAcademicYearId: contextYearId } = useAcademicYearContext();
   const [academicYearId, setAcademicYearId] = useState<string>("");
@@ -114,7 +114,7 @@ export default function StudentFeesPage() {
     return (
       <View style={styles.center}>
         <Text style={styles.errorText}>
-          {error instanceof Error ? error.message : "Failed to load"}
+          {error instanceof Error ? error.message : t("common.failedToLoad")}
         </Text>
       </View>
     );
@@ -137,11 +137,16 @@ export default function StudentFeesPage() {
       <View style={styles.content}>
         <Text style={styles.name}>{sf.student_name ?? "—"}</Text>
         <Text style={styles.info}>
-          {sf.fee_structure_name ?? "—"} • Due {formatDate(sf.due_date)}
+          {t("studentFeesList.feeDueLine", {
+            structure: sf.fee_structure_name ?? "—",
+            date: formatDate(sf.due_date, locale),
+          })}
         </Text>
         <View style={styles.metaRow}>
           <Text style={styles.amountText}>{formatCurrency(sf.total_amount)}</Text>
-          <Text style={styles.paidText}>{formatCurrency(sf.paid_amount)} paid</Text>
+          <Text style={styles.paidText}>
+            {t("studentFeesList.paidLine", { amount: formatCurrency(sf.paid_amount) })}
+          </Text>
           <View style={styles.badgeRow}>
             {getStatusesToDisplay(sf.items, sf.status).map((s) => (
               <StatusBadge key={s} status={s} />
@@ -159,7 +164,7 @@ export default function StudentFeesPage() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backIcon}>
           <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Student Fees</Text>
+        <Text style={styles.headerTitle}>{t("studentFeesList.title")}</Text>
       </View>
 
       {/* Search */}
@@ -169,7 +174,7 @@ export default function StudentFeesPage() {
           style={styles.searchInput}
           value={search}
           onChangeText={setSearch}
-          placeholder="Search by name or admission number..."
+          placeholder={t("studentFeesList.searchPlaceholder")}
           placeholderTextColor={Colors.textSecondary}
         />
         {search.length > 0 && (
@@ -181,14 +186,14 @@ export default function StudentFeesPage() {
 
       {/* Filter bar */}
       <View style={styles.filterBar}>
-        <Text style={styles.filterLabel}>Academic Year</Text>
+        <Text style={styles.filterLabel}>{t("studentFeesList.academicYear")}</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
           <TouchableOpacity
             style={[styles.filterChip, !academicYearId && styles.filterChipActive]}
             onPress={() => setAcademicYearId("")}
           >
             <Text style={[styles.filterChipText, !academicYearId && styles.filterChipTextActive]}>
-              All
+              {t("common.all")}
             </Text>
           </TouchableOpacity>
           {academicYears.map((ay) => (
@@ -209,30 +214,30 @@ export default function StudentFeesPage() {
           ))}
         </ScrollView>
 
-        <Text style={styles.filterLabel}>Class</Text>
+        <Text style={styles.filterLabel}>{t("studentFeesList.class")}</Text>
         <ClassSelect
           value={classId || null}
           onChange={(id) => setClassId(id ?? "")}
           options={classOptions}
           allowEmpty
-          emptyLabel="All"
+          emptyLabel={t("common.all")}
         />
 
-        <Text style={styles.filterLabel}>Status</Text>
+        <Text style={styles.filterLabel}>{t("studentFeesList.status")}</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
-          {STATUS_OPTIONS.map((opt) => (
+          {STATUS_VALUES.map((fv) => (
             <TouchableOpacity
-              key={opt.value || "all"}
-              style={[styles.filterChip, status === opt.value && styles.filterChipActive]}
-              onPress={() => setStatus(opt.value)}
+              key={fv || "all"}
+              style={[styles.filterChip, status === fv && styles.filterChipActive]}
+              onPress={() => setStatus(fv)}
             >
               <Text
                 style={[
                   styles.filterChipText,
-                  status === opt.value && styles.filterChipTextActive,
+                  status === fv && styles.filterChipTextActive,
                 ]}
               >
-                {opt.label}
+                {t(`feeFilters.${fv || "all"}`)}
               </Text>
             </TouchableOpacity>
           ))}
@@ -261,19 +266,19 @@ export default function StudentFeesPage() {
                 color={Colors.textTertiary}
               />
               <Text style={styles.emptyTitle}>
-                {search ? "No results" : "No student fees yet"}
+                {search ? t("studentFeesList.emptySearch") : t("studentFeesList.emptyNoFees")}
               </Text>
               <Text style={styles.emptySubtext}>
                 {search
-                  ? "Try a different search or clear filters"
-                  : "Assign fee structures to students to see them here"}
+                  ? t("studentFeesList.emptySearchHint")
+                  : t("studentFeesList.emptyNoFeesHint")}
               </Text>
               {!search && (
                 <TouchableOpacity
                   style={styles.emptyCta}
                   onPress={() => router.push("/(protected)/finance/structures" as any)}
                 >
-                  <Text style={styles.emptyCtaText}>Go to Fee Structures</Text>
+                  <Text style={styles.emptyCtaText}>{t("studentFeesList.goToStructures")}</Text>
                   <Ionicons name="arrow-forward" size={18} color="#fff" />
                 </TouchableOpacity>
               )}

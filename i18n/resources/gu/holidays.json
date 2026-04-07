@@ -1,0 +1,44 @@
+{
+  "screen": {
+    "title": "રજાઓ",
+    "subtitle": "શાળા કૅલેન્ડર અને સાપ્તાહિક રજા",
+    "searchPlaceholder": "રજાઓ શોધો…"
+  },
+  "tabs": {
+    "all": "બધી",
+    "upcoming": "આગામી",
+    "recurring": "પુનરાવર્તન"
+  },
+  "sections": {
+    "holidays": "રજાઓ",
+    "weeklyOff": "સાપ્તાહિક રજાના દિવસો"
+  },
+  "summary": {
+    "holidays": "રજાઓ",
+    "weeklyOff": "સાપ્તાહિક રજા"
+  },
+  "empty": {
+    "title": "કોઈ રજા મળી નથી",
+    "hintManage": "રજા અથવા સાપ્તાહિક રજા ઉમેરવા + દબાવો.",
+    "hintReadOnly": "હજી કોઈ રજા નિયોજિત નથી."
+  },
+  "alerts": {
+    "deleteTitle": "રજા કાઢો",
+    "deleteMessage": "\"{{name}}\" દૂર કરો{{recurringPart}}?",
+    "recurringPart": " (પુનરાવર્તન – દર {{day}})",
+    "cancel": "રદ કરો",
+    "delete": "કાઢો",
+    "error": "ભૂલ",
+    "deleteFailed": "રજા કાઢવામાં નિષ્ફળ",
+    "holidayUpdated": "રજા અપડેટ થઈ",
+    "holidayAdded": "રજા ઉમેરાઈ"
+  },
+  "errors": {
+    "loadFailed": "રજાઓ લોડ કરવામાં નિષ્ફળ"
+  },
+  "list": {
+    "everyPrefix": "દર {{day}}",
+    "fallsOnSunday": "રવિવારે પડે છે (સાપ્તાહિક રજા)",
+    "durationDays": "{{count}} દિવસ"
+  }
+}

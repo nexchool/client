@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -22,6 +23,7 @@ import { Spacing, Layout } from "@/common/constants/spacing";
 import { ClassItem, CreateClassDTO } from "../types";
 
 export default function ClassesScreen() {
+  const { t } = useTranslation("classes");
   const router = useRouter();
   const { classes, loading, fetchClasses, createClass } = useClasses();
   const { hasPermission } = usePermissions();
@@ -42,7 +44,7 @@ export default function ClassesScreen() {
     try {
       await createClass(data);
       setModalVisible(false);
-      Alert.alert("Success", "Class created successfully");
+      Alert.alert(t("list.success"), t("list.created"));
       fetchClasses();
     } catch (error: any) {
       throw error;
@@ -66,11 +68,15 @@ export default function ClassesScreen() {
         <View style={styles.statsRow}>
           <View style={styles.stat}>
             <Ionicons name="people-outline" size={14} color={Colors.textSecondary} />
-            <Text style={styles.statText}>{item.student_count || 0} students</Text>
+            <Text style={styles.statText}>
+              {t("list.studentsCount", { count: item.student_count || 0 })}
+            </Text>
           </View>
           <View style={styles.stat}>
             <Ionicons name="person-outline" size={14} color={Colors.textSecondary} />
-            <Text style={styles.statText}>{item.teacher_count || 0} teachers</Text>
+            <Text style={styles.statText}>
+              {t("list.teachersCount", { count: item.teacher_count || 0 })}
+            </Text>
           </View>
         </View>
       </View>
@@ -81,7 +87,7 @@ export default function ClassesScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Classes</Text>
+        <Text style={styles.headerTitle}>{t("list.title")}</Text>
         {canCreate && (
           <TouchableOpacity
             style={styles.addButton}
@@ -107,7 +113,7 @@ export default function ClassesScreen() {
           }
           ListEmptyComponent={
             <View style={styles.center}>
-              <Text style={styles.emptyText}>No classes found.</Text>
+              <Text style={styles.emptyText}>{t("list.empty")}</Text>
             </View>
           }
         />

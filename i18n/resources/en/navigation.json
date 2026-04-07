@@ -1,0 +1,24 @@
+{
+  "tabs": {
+    "home": "Home",
+    "students": "Students",
+    "teachers": "Teachers",
+    "classes": "Classes",
+    "subjects": "Subjects",
+    "finance": "Finance",
+    "my-leaves": "Leave Tracker",
+    "teacher-leaves": "Leave Requests",
+    "profile": "Profile",
+    "settings": "Settings"
+  },
+  "sidebar": {
+    "signOut": "Sign out",
+    "schoolFallback": "School"
+  },
+  "roles": {
+    "admin": "Admin",
+    "teacher": "Teacher",
+    "student": "Student",
+    "parent": "Parent"
+  }
+}

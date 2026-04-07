@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -27,6 +28,7 @@ type Props = {
 };
 
 export function ClassSubjectsPanel({ classId, canManage }: Props) {
+  const { t } = useTranslation("classes");
   const qc = useQueryClient();
   const [items, setItems] = useState<ClassSubjectOffering[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -74,33 +76,37 @@ export function ClassSubjectsPanel({ classId, canManage }: Props) {
   };
 
   const archive = (row: ClassSubjectOffering) => {
-    Alert.alert("Remove subject", `Remove ${row.subject_name ?? "subject"} from this class?`, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Remove",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await classAcademicApi.deleteClassSubject(classId, row.id);
-            await qc.invalidateQueries({ queryKey: qk.classSubjects(classId) });
-            load();
-          } catch (e: any) {
-            Alert.alert("Error", e.message);
-          }
+    Alert.alert(
+      t("panels.subjects.removeTitle"),
+      t("panels.subjects.removeMessage", { name: row.subject_name ?? "subject" }),
+      [
+        { text: t("panels.subjects.cancel"), style: "cancel" },
+        {
+          text: t("panels.subjects.remove"),
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await classAcademicApi.deleteClassSubject(classId, row.id);
+              await qc.invalidateQueries({ queryKey: qk.classSubjects(classId) });
+              load();
+            } catch (e: any) {
+              Alert.alert(t("panels.subjects.errorTitle"), e.message);
+            }
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
 
   const submit = async () => {
     if (modal === "add") {
       if (!pickSubject) {
-        Alert.alert("Validation", "Select a subject");
+        Alert.alert(t("detail.errorTitle"), t("panels.subjects.validationSelect"));
         return;
       }
       const w = parseInt(weekly, 10);
       if (!w || w < 1) {
-        Alert.alert("Validation", "Weekly periods must be ≥ 1");
+        Alert.alert(t("detail.errorTitle"), t("panels.subjects.validationWeekly"));
         return;
       }
       setSaving(true);
@@ -113,14 +119,14 @@ export function ClassSubjectsPanel({ classId, canManage }: Props) {
         setModal(null);
         load();
       } catch (e: any) {
-        Alert.alert("Error", e.message);
+        Alert.alert(t("panels.subjects.errorTitle"), e.message);
       } finally {
         setSaving(false);
       }
     } else if (modal === "edit" && editing) {
       const w = parseInt(weekly, 10);
       if (!w || w < 1) {
-        Alert.alert("Validation", "Weekly periods must be ≥ 1");
+        Alert.alert(t("detail.errorTitle"), t("panels.subjects.validationWeekly"));
         return;
       }
       setSaving(true);
@@ -131,7 +137,7 @@ export function ClassSubjectsPanel({ classId, canManage }: Props) {
         setEditing(null);
         load();
       } catch (e: any) {
-        Alert.alert("Error", e.message);
+        Alert.alert(t("panels.subjects.errorTitle"), e.message);
       } finally {
         setSaving(false);
       }
@@ -151,32 +157,34 @@ export function ClassSubjectsPanel({ classId, canManage }: Props) {
   return (
     <View>
       <View style={styles.headRow}>
-        <Text style={styles.sectionHint}>Weekly periods and offering status for this class.</Text>
+        <Text style={styles.sectionHint}>{t("panels.subjects.sectionHint")}</Text>
         {canManage && (
           <TouchableOpacity style={styles.addBtn} onPress={openAdd}>
             <Ionicons name="add" size={18} color={Colors.primary} />
-            <Text style={styles.addBtnText}>Add</Text>
+            <Text style={styles.addBtnText}>{t("panels.subjects.add")}</Text>
           </TouchableOpacity>
         )}
       </View>
       {rows.length === 0 ? (
-        <Text style={styles.empty}>No subjects linked to this class yet.</Text>
+        <Text style={styles.empty}>{t("panels.subjects.emptyList")}</Text>
       ) : (
         rows.map((row) => (
           <View key={row.id} style={styles.row}>
             <View style={{ flex: 1 }}>
               <Text style={styles.name}>{row.subject_name ?? "—"}</Text>
               {row.subject_code ? (
-                <Text style={styles.meta}>Code: {row.subject_code}</Text>
+                <Text style={styles.meta}>{t("panels.subjects.codeLabel", { code: row.subject_code })}</Text>
               ) : null}
               <View style={styles.badges}>
-                <Text style={styles.periodBadge}>{row.weekly_periods} / week</Text>
+                <Text style={styles.periodBadge}>
+                  {t("panels.subjects.perWeek", { count: row.weekly_periods })}
+                </Text>
                 <StatusChip
-                  label={row.status === "active" ? "active" : row.status}
+                  label={row.status === "active" ? t("panels.subjects.statusActive") : row.status}
                   variant={row.status === "active" ? "active" : "inactive"}
                 />
                 {row.academic_term_name ? (
-                  <Text style={styles.term}>Term: {row.academic_term_name}</Text>
+                  <Text style={styles.term}>{t("panels.subjects.termLabel", { name: row.academic_term_name })}</Text>
                 ) : null}
               </View>
             </View>
@@ -197,7 +205,9 @@ export function ClassSubjectsPanel({ classId, canManage }: Props) {
       <Modal visible={modal !== null} animationType="slide" presentationStyle="formSheet">
         <ScrollView style={styles.modalBody} contentContainerStyle={{ paddingBottom: 32 }}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>{modal === "add" ? "Add subject" : "Edit subject"}</Text>
+            <Text style={styles.modalTitle}>
+              {modal === "add" ? t("panels.subjects.modalAdd") : t("panels.subjects.modalEdit")}
+            </Text>
             <TouchableOpacity
               onPress={() => {
                 setModal(null);
@@ -209,7 +219,7 @@ export function ClassSubjectsPanel({ classId, canManage }: Props) {
           </View>
           {modal === "add" && (
             <>
-              <Text style={styles.label}>Subject *</Text>
+              <Text style={styles.label}>{t("panels.subjects.subjectLabel")}</Text>
               <View style={styles.chips}>
                 {subjectsPool.map((s) => (
                   <TouchableOpacity
@@ -224,14 +234,14 @@ export function ClassSubjectsPanel({ classId, canManage }: Props) {
                 ))}
               </View>
               {subjectsPool.length === 0 ? (
-                <Text style={styles.empty}>No available subjects to add.</Text>
+                <Text style={styles.empty}>{t("panels.subjects.noSubjectsPool")}</Text>
               ) : null}
             </>
           )}
           {modal === "edit" && editing && (
             <Text style={styles.editSubjectName}>{editing.subject_name}</Text>
           )}
-          <Text style={styles.label}>Weekly periods *</Text>
+          <Text style={styles.label}>{t("panels.subjects.weeklyLabel")}</Text>
           <TextInput
             style={styles.input}
             keyboardType="number-pad"
@@ -243,7 +253,7 @@ export function ClassSubjectsPanel({ classId, canManage }: Props) {
             onPress={submit}
             disabled={saving}
           >
-            <Text style={styles.primaryBtnTxt}>{saving ? "Saving…" : "Save"}</Text>
+            <Text style={styles.primaryBtnTxt}>{saving ? t("panels.subjects.saving") : t("panels.subjects.save")}</Text>
           </TouchableOpacity>
         </ScrollView>
       </Modal>

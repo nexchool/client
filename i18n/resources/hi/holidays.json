@@ -1,0 +1,44 @@
+{
+  "screen": {
+    "title": "छुट्टियाँ",
+    "subtitle": "स्कूल कैलेंडर और साप्ताहिक अवकाश",
+    "searchPlaceholder": "छुट्टियाँ खोजें…"
+  },
+  "tabs": {
+    "all": "सभी",
+    "upcoming": "आगामी",
+    "recurring": "आवर्ती"
+  },
+  "sections": {
+    "holidays": "छुट्टियाँ",
+    "weeklyOff": "साप्ताहिक अवकाश के दिन"
+  },
+  "summary": {
+    "holidays": "छुट्टियाँ",
+    "weeklyOff": "साप्ताहिक अवकाश"
+  },
+  "empty": {
+    "title": "कोई छुट्टी नहीं मिली",
+    "hintManage": "छुट्टी या साप्ताहिक अवकाश जोड़ने के लिए + दबाएँ।",
+    "hintReadOnly": "अभी कोई छुट्टी निर्धारित नहीं।"
+  },
+  "alerts": {
+    "deleteTitle": "छुट्टी हटाएँ",
+    "deleteMessage": "\"{{name}}\" हटाएँ{{recurringPart}}?",
+    "recurringPart": " (आवर्ती – हर {{day}})",
+    "cancel": "रद्द करें",
+    "delete": "हटाएँ",
+    "error": "त्रुटि",
+    "deleteFailed": "छुट्टी हटाने में विफल",
+    "holidayUpdated": "छुट्टी अपडेट हुई",
+    "holidayAdded": "छुट्टी जोड़ी गई"
+  },
+  "errors": {
+    "loadFailed": "छुट्टियाँ लोड करने में विफल"
+  },
+  "list": {
+    "everyPrefix": "हर {{day}}",
+    "fallsOnSunday": "रविवार को पड़ती है (साप्ताहिक अवकाश)",
+    "durationDays": "{{count}}दि"
+  }
+}

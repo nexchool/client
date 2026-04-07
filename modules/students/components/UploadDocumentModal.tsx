@@ -4,6 +4,7 @@
  * Document type picker, file picker (PDF/images), upload button, loading and error states.
  */
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -20,8 +21,9 @@ import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
 import {
   DOCUMENT_TYPES,
-  DOCUMENT_TYPE_LABELS,
   type DocumentTypeValue,
+  type StudentDocument,
+  type UploadDocumentInput,
 } from "../types";
 import type { UseMutationResult } from "@tanstack/react-query";
 import { prepareFileForUpload } from "@/common/utils/prepareUploadFile";
@@ -32,9 +34,9 @@ interface UploadDocumentModalProps {
   onSuccess: () => void;
   studentId: string;
   uploadMutation: UseMutationResult<
-    { id: string } & Record<string, unknown>,
+    StudentDocument,
     Error,
-    { documentType: DocumentTypeValue; file: { uri: string; name: string } },
+    UploadDocumentInput,
     unknown
   >;
 }
@@ -45,6 +47,7 @@ export function UploadDocumentModal({
   onSuccess,
   uploadMutation,
 }: UploadDocumentModalProps) {
+  const { t } = useTranslation("profile");
   const [documentType, setDocumentType] = useState<DocumentTypeValue | "">("");
   const [selectedFile, setSelectedFile] = useState<{
     uri: string;
@@ -87,7 +90,7 @@ export function UploadDocumentModal({
       }
     } catch (e) {
       console.error("Document picker error:", e);
-      Alert.alert("Error", "Failed to pick file");
+      Alert.alert(t("uploadModal.error"), t("uploadModal.pickFileError"));
     }
   };
 
@@ -95,8 +98,10 @@ export function UploadDocumentModal({
     if (isPreparing || isPending) return;
     if (!documentType || !selectedFile) {
       Alert.alert(
-        "Validation",
-        documentType ? "Please select a file" : "Please select a document type",
+        t("uploadModal.validationTitle"),
+        documentType
+          ? t("uploadModal.selectFileFirst")
+          : t("uploadModal.selectTypeFirst"),
       );
       return;
     }
@@ -116,8 +121,10 @@ export function UploadDocumentModal({
       );
     } catch (e: unknown) {
       Alert.alert(
-        "Cannot upload",
-        e instanceof Error ? e.message : "Something went wrong preparing the file.",
+        t("uploadModal.cannotUploadTitle"),
+        e instanceof Error
+          ? e.message
+          : t("uploadModal.prepareFailed"),
       );
     } finally {
       setIsPreparing(false);
@@ -136,7 +143,7 @@ export function UploadDocumentModal({
       <View style={styles.overlay}>
         <View style={styles.modal}>
           <View style={styles.header}>
-            <Text style={styles.title}>Upload Document</Text>
+            <Text style={styles.title}>{t("uploadModal.title")}</Text>
             <TouchableOpacity onPress={handleClose} style={styles.closeBtn}>
               <Ionicons name="close" size={24} color={Colors.text} />
             </TouchableOpacity>
@@ -144,15 +151,15 @@ export function UploadDocumentModal({
 
           <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
             {/* Document Type */}
-            <Text style={styles.label}>Document Type</Text>
+            <Text style={styles.label}>{t("uploadModal.documentType")}</Text>
             <TouchableOpacity
               style={styles.picker}
               onPress={() => setShowTypePicker(!showTypePicker)}
             >
               <Text style={documentType ? styles.pickerText : styles.pickerPlaceholder}>
                 {documentType
-                  ? DOCUMENT_TYPE_LABELS[documentType]
-                  : "Select document type"}
+                  ? t(`documentTypes.${documentType}`)
+                  : t("uploadModal.selectType")}
               </Text>
               <Ionicons
                 name={showTypePicker ? "chevron-up" : "chevron-down"}
@@ -172,7 +179,7 @@ export function UploadDocumentModal({
                     }}
                   >
                     <Text style={styles.pickerOptionText}>
-                      {DOCUMENT_TYPE_LABELS[type]}
+                      {t(`documentTypes.${type}`)}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -180,11 +187,13 @@ export function UploadDocumentModal({
             )}
 
             {/* File Picker */}
-            <Text style={[styles.label, { marginTop: Spacing.md }]}>File</Text>
+            <Text style={[styles.label, { marginTop: Spacing.md }]}>
+              {t("uploadModal.file")}
+            </Text>
             <TouchableOpacity style={styles.fileButton} onPress={handlePickFile}>
               <Ionicons name="document-attach-outline" size={24} color={Colors.primary} />
               <Text style={styles.fileButtonText}>
-                {selectedFile ? selectedFile.name : "Choose PDF or Image"}
+                {selectedFile ? selectedFile.name : t("uploadModal.chooseFile")}
               </Text>
             </TouchableOpacity>
 
@@ -192,16 +201,16 @@ export function UploadDocumentModal({
               <View style={styles.errorBox}>
                 <Ionicons name="alert-circle" size={18} color={Colors.error} />
                 <Text style={styles.errorText}>
-                  {typeof error === 'object' && error !== null && 'data' in error
+                  {typeof error === "object" && error !== null && "data" in error
                     ? (error as { data?: { message?: string } }).data?.message ||
-                      (typeof (error as Error).message === 'string' &&
-                      (error as Error).message !== 'true'
+                      (typeof (error as Error).message === "string" &&
+                      (error as Error).message !== "true"
                         ? (error as Error).message
-                        : 'Upload failed. Use PDF or images under about 5 MB (large images are compressed automatically).')
-                    : typeof (error as Error).message === 'string' &&
-                      (error as Error).message !== 'true'
+                        : t("uploadModal.uploadFailedHint"))
+                    : typeof (error as Error).message === "string" &&
+                      (error as Error).message !== "true"
                     ? (error as Error).message
-                    : 'Upload failed. Use PDF or images under about 5 MB (large images are compressed automatically).'}
+                    : t("uploadModal.uploadFailedHint")}
                 </Text>
               </View>
             )}
@@ -209,7 +218,7 @@ export function UploadDocumentModal({
 
           <View style={styles.footer}>
             <TouchableOpacity style={styles.cancelButton} onPress={handleClose}>
-              <Text style={styles.cancelButtonText}>Cancel</Text>
+              <Text style={styles.cancelButtonText}>{t("uploadModal.cancel")}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.uploadButton, !isValid && styles.uploadButtonDisabled]}
@@ -219,7 +228,7 @@ export function UploadDocumentModal({
               {isPending || isPreparing ? (
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
-                <Text style={styles.uploadButtonText}>Upload</Text>
+                <Text style={styles.uploadButtonText}>{t("uploadModal.upload")}</Text>
               )}
             </TouchableOpacity>
           </View>

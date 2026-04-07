@@ -24,6 +24,7 @@ import type { Teacher } from "@/modules/teachers/types";
 import { uploadProfilePicture } from "@/modules/auth/services/profileService";
 import { StudentDocumentsSection } from "@/modules/students/components/StudentDocumentsSection";
 import { ApiException } from "@/common/services/api";
+import { useTranslation } from "react-i18next";
 
 type ProfileKind = "student" | "teacher" | "account";
 
@@ -110,6 +111,7 @@ function TableSection({
 }
 
 export default function MyProfileScreen() {
+  const { t } = useTranslation("profile");
   const router = useRouter();
   const { user, enabledFeatures, updateLocalUser } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -176,8 +178,8 @@ export default function MyProfileScreen() {
     if (student?.name) return student.name;
     if (teacher?.name) return teacher.name;
     if (user?.name) return user.name;
-    return user?.email?.split("@")[0] ?? "Profile";
-  }, [student, teacher, user]);
+    return user?.email?.split("@")[0] ?? t("myProfile.defaultDisplayName");
+  }, [student, teacher, user, t]);
 
   const avatarUri = useMemo(() => {
     return (
@@ -192,8 +194,8 @@ export default function MyProfileScreen() {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
       Alert.alert(
-        "Permission needed",
-        "Allow photo library access to change your profile picture.",
+        t("myProfile.alerts.permissionTitle"),
+        t("myProfile.alerts.permissionMessage"),
       );
       return;
     }
@@ -213,8 +215,8 @@ export default function MyProfileScreen() {
         prepared = await prepareImageForUploadUri(asset);
       } catch {
         Alert.alert(
-          "Could not read photo",
-          "The image could not be copied for upload. Try again, or pick the photo without using the crop screen.",
+          t("myProfile.alerts.readPhotoTitle"),
+          t("myProfile.alerts.readPhotoMessage"),
         );
         return;
       }
@@ -232,12 +234,12 @@ export default function MyProfileScreen() {
       const msg =
         e instanceof ApiException
           ? e.message
-          : "Could not update your photo. Please try again.";
-      Alert.alert("Upload failed", msg);
+          : t("myProfile.alerts.uploadFailedFallback");
+      Alert.alert(t("myProfile.alerts.uploadFailedTitle"), msg);
     } finally {
       setUploading(false);
     }
-  }, [updateLocalUser, student, teacher]);
+  }, [updateLocalUser, student, teacher, t]);
 
   return (
     <View style={styles.container}>
@@ -246,7 +248,7 @@ export default function MyProfileScreen() {
           <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>
-          My profile
+          {t("myProfile.screenTitle")}
         </Text>
         <View style={styles.headerSpacer} />
       </View>
@@ -291,19 +293,15 @@ export default function MyProfileScreen() {
               )}
             </TouchableOpacity>
             <Text style={styles.heroName}>{displayName}</Text>
-            <Text style={styles.heroHint}>
-              Tap the photo to change it here. Your school can also set your
-              photo from the admin panel. Other details are read-only and come
-              from your school records.
-            </Text>
+            <Text style={styles.heroHint}>{t("myProfile.heroHint")}</Text>
           </View>
 
-          <TableSection title="Account">
-            <TableRow label="Login email" value={user?.email} />
+          <TableSection title={t("myProfile.sections.account")}>
+            <TableRow label={t("fields.loginEmail")} value={user?.email} />
             <View style={rowStyles.row}>
-              <Text style={rowStyles.labelCell}>Profile photo</Text>
+              <Text style={rowStyles.labelCell}>{t("fields.profilePhoto")}</Text>
               <Text style={[rowStyles.valueCell, styles.mutedValue]}>
-                You or your school can set this (tap photo above)
+                {t("fields.profilePhotoHint")}
               </Text>
             </View>
           </TableSection>
@@ -315,51 +313,51 @@ export default function MyProfileScreen() {
                 size={22}
                 color={Colors.textSecondary}
               />
-              <Text style={styles.noticeText}>
-                No student or teacher record is linked to this login. If you
-                are a student or teacher, contact your school administrator.
-              </Text>
+              <Text style={styles.noticeText}>{t("myProfile.notice")}</Text>
             </View>
           )}
 
           {kind === "student" && student && (
             <>
-              <TableSection title="Basic information">
-                <TableRow label="Full name" value={student.name} />
+              <TableSection title={t("myProfile.sections.basicInformation")}>
+                <TableRow label={t("fields.fullName")} value={student.name} />
                 <TableRow
-                  label="Admission number"
+                  label={t("fields.admissionNumber")}
                   value={student.admission_number}
                 />
                 <TableRow
-                  label="Academic year"
-                  value={student.academic_year || "—"}
+                  label={t("fields.academicYear")}
+                  value={student.academic_year || t("myProfile.dash")}
                 />
-                <TableRow label="Gender" value={student.gender} />
-                <TableRow label="Date of birth" value={student.date_of_birth} />
-              </TableSection>
-
-              <TableSection title="Contact">
-                <TableRow label="Email" value={student.email} />
-                <TableRow label="Phone" value={student.phone} />
-                <TableRow label="Address" value={student.address} />
-              </TableSection>
-
-              <TableSection title="Guardian">
-                <TableRow label="Name" value={student.guardian_name} />
+                <TableRow label={t("fields.gender")} value={student.gender} />
                 <TableRow
-                  label="Relationship"
+                  label={t("fields.dateOfBirth")}
+                  value={student.date_of_birth}
+                />
+              </TableSection>
+
+              <TableSection title={t("myProfile.sections.contact")}>
+                <TableRow label={t("fields.email")} value={student.email} />
+                <TableRow label={t("fields.phone")} value={student.phone} />
+                <TableRow label={t("fields.address")} value={student.address} />
+              </TableSection>
+
+              <TableSection title={t("myProfile.sections.guardian")}>
+                <TableRow label={t("fields.name")} value={student.guardian_name} />
+                <TableRow
+                  label={t("fields.relationship")}
                   value={student.guardian_relationship}
                 />
-                <TableRow label="Phone" value={student.guardian_phone} />
-                <TableRow label="Email" value={student.guardian_email} />
+                <TableRow label={t("fields.phone")} value={student.guardian_phone} />
+                <TableRow label={t("fields.email")} value={student.guardian_email} />
               </TableSection>
 
-              <TableSection title="Class">
+              <TableSection title={t("myProfile.sections.classInfo")}>
                 <TableRow
-                  label="Current class"
-                  value={student.class_name || "Not assigned"}
+                  label={t("fields.currentClass")}
+                  value={student.class_name || t("myProfile.notAssigned")}
                 />
-                <TableRow label="Roll number" value={student.roll_number} />
+                <TableRow label={t("fields.rollNumber")} value={student.roll_number} />
               </TableSection>
 
               <View style={styles.documentsWrap}>
@@ -370,39 +368,41 @@ export default function MyProfileScreen() {
 
           {kind === "teacher" && teacher && (
             <>
-              <TableSection title="Basic information">
-                <TableRow label="Full name" value={teacher.name} />
-                <TableRow label="Employee ID" value={teacher.employee_id} />
-                <TableRow label="Email" value={teacher.email} />
-                <TableRow label="Phone" value={teacher.phone} />
-                <TableRow label="Status" value={teacher.status} />
+              <TableSection title={t("myProfile.sections.basicInformation")}>
+                <TableRow label={t("fields.fullName")} value={teacher.name} />
+                <TableRow label={t("fields.employeeId")} value={teacher.employee_id} />
+                <TableRow label={t("fields.email")} value={teacher.email} />
+                <TableRow label={t("fields.phone")} value={teacher.phone} />
+                <TableRow label={t("fields.status")} value={teacher.status} />
               </TableSection>
 
-              <TableSection title="Professional">
-                <TableRow label="Designation" value={teacher.designation} />
-                <TableRow label="Department" value={teacher.department} />
-                <TableRow label="Qualification" value={teacher.qualification} />
+              <TableSection title={t("myProfile.sections.professional")}>
+                <TableRow label={t("fields.designation")} value={teacher.designation} />
+                <TableRow label={t("fields.department")} value={teacher.department} />
+                <TableRow label={t("fields.qualification")} value={teacher.qualification} />
                 <TableRow
-                  label="Specialization"
+                  label={t("fields.specialization")}
                   value={teacher.specialization}
                 />
                 <TableRow
-                  label="Experience"
+                  label={t("fields.experience")}
                   value={
                     teacher.experience_years != null
-                      ? `${teacher.experience_years} years`
+                      ? t("myProfile.experienceYears", {
+                          years: teacher.experience_years,
+                        })
                       : undefined
                   }
                 />
                 <TableRow
-                  label="Date of joining"
+                  label={t("fields.dateOfJoining")}
                   value={teacher.date_of_joining}
                 />
               </TableSection>
 
               {teacher.address ? (
-                <TableSection title="Address">
-                  <TableRow label="Address" value={teacher.address} />
+                <TableSection title={t("myProfile.sections.address")}>
+                  <TableRow label={t("fields.address")} value={teacher.address} />
                 </TableSection>
               ) : null}
             </>

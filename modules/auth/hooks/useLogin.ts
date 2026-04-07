@@ -1,6 +1,9 @@
-import { useState } from 'react';
-import { validateEmailField } from '@/common/utils/validation';
-import { useAuth } from './useAuth';
+import { useState } from "react";
+import { isValidEmail } from "@/common/utils/validation";
+import i18n from "@/i18n/i18nextInstance";
+import { LoginFieldError } from "@/modules/auth/errors/LoginFieldError";
+import { mapLoginApiError } from "@/modules/auth/utils/mapLoginApiError";
+import { useAuth } from "./useAuth";
 
 export const useLogin = () => {
   const [loading, setLoading] = useState(false);
@@ -12,15 +15,31 @@ export const useLogin = () => {
     setLoading(true);
 
     try {
-      const emailValidation = validateEmailField(email);
-      if (!emailValidation.isValid) throw new Error(emailValidation.error);
-      if (!password) throw new Error('Password is required');
+      if (!email?.trim()) {
+        throw new LoginFieldError(
+          "email",
+          i18n.t("auth:validation.emailRequired"),
+        );
+      }
+      if (!isValidEmail(email)) {
+        throw new LoginFieldError(
+          "email",
+          i18n.t("auth:validation.emailInvalid"),
+        );
+      }
+      if (!password) {
+        throw new LoginFieldError(
+          "password",
+          i18n.t("auth:validation.passwordRequired"),
+        );
+      }
 
       await authLogin(email, password);
-    } catch (err: any) {
-      const message = err?.message || 'Login failed';
-      setError(message);
-      throw err;
+    } catch (err: unknown) {
+      if (err instanceof LoginFieldError) {
+        throw err;
+      }
+      setError(mapLoginApiError(err));
     } finally {
       setLoading(false);
     }

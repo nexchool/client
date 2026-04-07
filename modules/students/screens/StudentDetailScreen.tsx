@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -20,6 +21,7 @@ import { CreateStudentModal } from "../components/CreateStudentModal";
 import { StudentDocumentsSection } from "../components/StudentDocumentsSection";
 
 export default function StudentDetailScreen() {
+  const { t } = useTranslation("students");
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { currentStudent, loading, fetchStudent, updateStudent, deleteStudent } = useStudents();
@@ -41,7 +43,7 @@ export default function StudentDetailScreen() {
     try {
       await updateStudent(id, data);
       setEditModalVisible(false);
-      Alert.alert("Success", "Student updated successfully");
+      Alert.alert(t("list.success"), t("detail.updated"));
       // Refresh data
       fetchStudent(id);
     } catch (error: any) {
@@ -52,6 +54,26 @@ export default function StudentDetailScreen() {
   const handleBack = () => {
     router.back();
   };
+
+  const confirmDelete = useCallback(() => {
+    if (!currentStudent) return;
+    Alert.alert(t("detail.deleteConfirmTitle"), t("detail.deleteConfirmMessage"), [
+      { text: t("detail.cancel"), style: "cancel" },
+      {
+        text: t("detail.delete"),
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deleteStudent(currentStudent.id);
+            router.replace("/students" as never);
+          } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : t("detail.deleteFailed");
+            Alert.alert(t("detail.errorTitle"), msg);
+          }
+        },
+      },
+    ]);
+  }, [currentStudent, deleteStudent, router, t]);
 
   if (loading && !currentStudent) {
     return (
@@ -67,9 +89,9 @@ export default function StudentDetailScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.center}>
-          <Text style={styles.errorText}>Student not found</Text>
+          <Text style={styles.errorText}>{t("detail.notFound")}</Text>
           <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-            <Text style={styles.backButtonText}>Go Back</Text>
+            <Text style={styles.backButtonText}>{t("detail.goBack")}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -83,14 +105,11 @@ export default function StudentDetailScreen() {
         <TouchableOpacity onPress={handleBack} style={styles.backIcon}>
           <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Student Details</Text>
+        <Text style={styles.headerTitle}>{t("detail.title")}</Text>
         {canDelete && (
           <TouchableOpacity
             style={styles.deleteButton}
-            onPress={() => {deleteStudent(currentStudent.id)
-              Alert.alert("Success", "Student deleted successfully");
-              router.replace("/students");
-            }}
+            onPress={confirmDelete}
           >
             <Ionicons name="trash-outline" size={24} color={Colors.error} />
           </TouchableOpacity>
@@ -108,35 +127,35 @@ export default function StudentDetailScreen() {
       <ScrollView style={styles.content}>
         {/* Basic Information */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Basic Information</Text>
-          
+          <Text style={styles.sectionTitle}>{t("detail.basicInfo")}</Text>
+
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Full Name</Text>
+            <Text style={styles.label}>{t("detail.fullName")}</Text>
             <Text style={styles.value}>{currentStudent.name}</Text>
           </View>
 
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Admission Number</Text>
+            <Text style={styles.label}>{t("detail.admissionNumber")}</Text>
             <Text style={styles.value}>{currentStudent.admission_number}</Text>
           </View>
 
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Academic Year</Text>
+            <Text style={styles.label}>{t("detail.academicYear")}</Text>
             <Text style={styles.value}>
-              {currentStudent.academic_year || "Not set"}
+              {currentStudent.academic_year || t("detail.notSet")}
             </Text>
           </View>
 
           {currentStudent.gender && (
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Gender</Text>
+              <Text style={styles.label}>{t("detail.gender")}</Text>
               <Text style={styles.value}>{currentStudent.gender}</Text>
             </View>
           )}
 
           {currentStudent.date_of_birth && (
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Date of Birth</Text>
+              <Text style={styles.label}>{t("detail.dateOfBirth")}</Text>
               <Text style={styles.value}>{currentStudent.date_of_birth}</Text>
             </View>
           )}
@@ -144,25 +163,25 @@ export default function StudentDetailScreen() {
 
         {/* Contact Information */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Contact Information</Text>
+          <Text style={styles.sectionTitle}>{t("detail.contactInfo")}</Text>
 
           {currentStudent.email && (
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Email</Text>
+              <Text style={styles.label}>{t("detail.email")}</Text>
               <Text style={styles.value}>{currentStudent.email}</Text>
             </View>
           )}
 
           {currentStudent.phone && (
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Phone</Text>
+              <Text style={styles.label}>{t("detail.phone")}</Text>
               <Text style={styles.value}>{currentStudent.phone}</Text>
             </View>
           )}
 
           {currentStudent.address && (
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Address</Text>
+              <Text style={styles.label}>{t("detail.address")}</Text>
               <Text style={styles.value}>{currentStudent.address}</Text>
             </View>
           )}
@@ -170,32 +189,32 @@ export default function StudentDetailScreen() {
 
         {/* Guardian Information */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Guardian Information</Text>
+          <Text style={styles.sectionTitle}>{t("detail.guardianInfo")}</Text>
 
           {currentStudent.guardian_name && (
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Guardian Name</Text>
+              <Text style={styles.label}>{t("detail.guardianName")}</Text>
               <Text style={styles.value}>{currentStudent.guardian_name}</Text>
             </View>
           )}
 
           {currentStudent.guardian_relationship && (
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Relationship</Text>
+              <Text style={styles.label}>{t("detail.relationship")}</Text>
               <Text style={styles.value}>{currentStudent.guardian_relationship}</Text>
             </View>
           )}
 
           {currentStudent.guardian_phone && (
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Guardian Phone</Text>
+              <Text style={styles.label}>{t("detail.guardianPhone")}</Text>
               <Text style={styles.value}>{currentStudent.guardian_phone}</Text>
             </View>
           )}
 
           {currentStudent.guardian_email && (
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Guardian Email</Text>
+              <Text style={styles.label}>{t("detail.guardianEmail")}</Text>
               <Text style={styles.value}>{currentStudent.guardian_email}</Text>
             </View>
           )}
@@ -203,18 +222,18 @@ export default function StudentDetailScreen() {
 
         {/* Class Information */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Class Information</Text>
+          <Text style={styles.sectionTitle}>{t("detail.classInfo")}</Text>
 
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Current Class</Text>
+            <Text style={styles.label}>{t("detail.currentClass")}</Text>
             <Text style={styles.value}>
-              {currentStudent.class_name || "Not Assigned"}
+              {currentStudent.class_name || t("detail.notAssigned")}
             </Text>
           </View>
 
           {currentStudent.roll_number && (
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Roll Number</Text>
+              <Text style={styles.label}>{t("detail.rollNumber")}</Text>
               <Text style={styles.value}>{currentStudent.roll_number}</Text>
             </View>
           )}

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -24,6 +25,7 @@ import {
 } from "@/modules/finance/hooks/useFinance";
 import { financeService } from "@/modules/finance/services/financeService";
 import type { RecordPaymentInput } from "@/modules/finance/types";
+import { calendarLocaleForLanguage } from "@/i18n";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
 
@@ -31,37 +33,20 @@ function formatCurrency(n: number) {
   return `₹${n.toLocaleString("en-IN")}`;
 }
 
-function formatDate(s: string) {
+function formatDate(s: string, locale: string) {
   try {
-    return new Date(s).toLocaleDateString("en-IN");
+    return new Date(s).toLocaleDateString(locale);
   } catch {
     return s;
   }
-}
-
-function getItemStatus(amount: number, paidAmount: number): "paid" | "partial" | "unpaid" {
-  if (paidAmount >= amount) return "paid";
-  if (paidAmount > 0) return "partial";
-  return "unpaid";
-}
-
-function ItemStatusBadge({ status }: { status: "paid" | "partial" | "unpaid" }) {
-  const colors: Record<string, string> = {
-    paid: Colors.success,
-    partial: Colors.warning,
-    unpaid: Colors.textSecondary,
-  };
-  return (
-    <View style={[styles.itemStatusBadge, { backgroundColor: colors[status] }]}>
-      <Text style={styles.itemStatusText}>{status}</Text>
-    </View>
-  );
 }
 
 // Allocation state: { item_id: amount_string }
 type AllocationState = Record<string, string>;
 
 export default function StudentFeeDetailPage() {
+  const { t, i18n } = useTranslation("finance");
+  const locale = calendarLocaleForLanguage(i18n.language ?? "en");
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
@@ -136,14 +121,14 @@ export default function StudentFeeDetailPage() {
   const handleRecordPayment = async () => {
     const amt = parseFloat(amount);
     if (!id || isNaN(amt) || amt <= 0) {
-      Alert.alert("Error", "Enter a valid amount");
+      Alert.alert(t("common.error"), t("studentFeeDetail.alerts.validAmount"));
       return;
     }
     if (amt > remaining) {
       return; // Handled by disabled state and inline error
     }
     if (useAllocations && allocationMismatch) {
-      Alert.alert("Error", "Allocation amounts must sum to the total payment amount");
+      Alert.alert(t("common.error"), t("studentFeeDetail.alerts.allocationSum"));
       return;
     }
     try {
@@ -169,7 +154,7 @@ export default function StudentFeeDetailPage() {
       setNotes("");
       setAllocations({});
     } catch (e: any) {
-      Alert.alert("Error", e?.message ?? "Failed to record payment");
+      Alert.alert(t("common.error"), e?.message ?? t("studentFeeDetail.alerts.recordFailed"));
     }
   };
 
@@ -190,7 +175,7 @@ export default function StudentFeeDetailPage() {
       setRefundPaymentId(null);
       setRefundReason("");
     } catch (e: any) {
-      Alert.alert("Error", e?.message ?? "Failed to refund");
+      Alert.alert(t("common.error"), e?.message ?? t("studentFeeDetail.alerts.refundFailed"));
     }
   };
 
@@ -207,10 +192,10 @@ export default function StudentFeeDetailPage() {
         a.click();
         URL.revokeObjectURL(url);
       } else {
-        Alert.alert("Invoice PDF", "Download available on web. For native, install expo-sharing to share/save.");
+        Alert.alert(t("studentFeeDetail.alerts.pdfInvoiceTitle"), t("studentFeeDetail.alerts.pdfInvoiceBody"));
       }
     } catch (e) {
-      Alert.alert("Error", e instanceof Error ? e.message : "Failed to download invoice");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("studentFeeDetail.alerts.downloadInvoiceFailed"));
     } finally {
       setDownloading(null);
     }
@@ -228,10 +213,10 @@ export default function StudentFeeDetailPage() {
         a.click();
         URL.revokeObjectURL(url);
       } else {
-        Alert.alert("Receipt PDF", "Download available on web. For native, install expo-sharing to share/save.");
+        Alert.alert(t("studentFeeDetail.alerts.pdfReceiptTitle"), t("studentFeeDetail.alerts.pdfReceiptBody"));
       }
     } catch (e) {
-      Alert.alert("Error", e instanceof Error ? e.message : "Failed to download receipt");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("studentFeeDetail.alerts.downloadReceiptFailed"));
     } finally {
       setDownloading(null);
     }
@@ -240,22 +225,22 @@ export default function StudentFeeDetailPage() {
   const handleRemoveFromStructure = async () => {
     if (!id) return;
     Alert.alert(
-      "Remove from Fee Structure",
-      "This will remove this student from the fee structure as long as there are no successful payments recorded. Continue?",
+      t("studentFeeDetail.alerts.removeTitle"),
+      t("studentFeeDetail.alerts.removeMessage"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: "Remove",
+          text: t("common.remove"),
           style: "destructive",
           onPress: async () => {
             try {
               await deleteFeeMut.mutateAsync(id);
               Alert.alert(
-                "Success",
-                "Student removed from fee structure.",
+                t("studentFeeDetail.alerts.removeSuccessTitle"),
+                t("studentFeeDetail.alerts.removeSuccessMessage"),
                 [
                   {
-                    text: "OK",
+                    text: t("common.ok"),
                     onPress: () =>
                       router.replace("/(protected)/finance/student-fees" as any),
                   },
@@ -263,7 +248,7 @@ export default function StudentFeeDetailPage() {
                 { cancelable: false }
               );
             } catch (e: any) {
-              Alert.alert("Error", e?.message ?? "Failed to remove student from fee structure");
+              Alert.alert(t("common.error"), e?.message ?? t("studentFeeDetail.alerts.removeFailed"));
             }
           },
         },
@@ -276,7 +261,7 @@ export default function StudentFeeDetailPage() {
       <SafeAreaView style={styles.container}>
         <View style={styles.center}>
           <Text style={styles.errorText}>
-            {error instanceof Error ? error.message : "Failed to load"}
+            {error instanceof Error ? error.message : t("common.failedToLoad")}
           </Text>
         </View>
       </SafeAreaView>
@@ -297,7 +282,7 @@ export default function StudentFeeDetailPage() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.center}>
-          <Text style={styles.errorText}>Not found</Text>
+          <Text style={styles.errorText}>{t("common.notFound")}</Text>
         </View>
       </SafeAreaView>
     );
@@ -309,7 +294,7 @@ export default function StudentFeeDetailPage() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backIcon}>
           <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Fee Detail</Text>
+        <Text style={styles.headerTitle}>{t("studentFeeDetail.title")}</Text>
       </View>
 
       <ScrollView
@@ -322,38 +307,38 @@ export default function StudentFeeDetailPage() {
       {/* Summary card */}
       <View style={styles.section}>
         <View style={styles.summaryHeaderRow}>
-          <Text style={styles.sectionTitle}>Summary</Text>
+          <Text style={styles.sectionTitle}>{t("studentFeeDetail.summary")}</Text>
           <TouchableOpacity
             onPress={handleRemoveFromStructure}
             style={styles.removeFeeBtn}
           >
             <Ionicons name="trash-outline" size={18} color={Colors.error} />
-            <Text style={styles.removeFeeBtnText}>Remove from structure</Text>
+            <Text style={styles.removeFeeBtnText}>{t("studentFeeDetail.removeFromStructure")}</Text>
           </TouchableOpacity>
         </View>
       <View style={styles.card}>
         <Text style={styles.summaryName}>{data.student_name ?? "—"}</Text>
         <Text style={styles.summaryStructure}>{data.fee_structure_name ?? "—"}</Text>
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Total</Text>
+          <Text style={styles.summaryLabel}>{t("studentFeeDetail.total")}</Text>
           <Text style={[styles.summaryValue, styles.summaryValueFlex]}>
             {formatCurrency(data.total_amount)}
           </Text>
         </View>
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Paid</Text>
+          <Text style={styles.summaryLabel}>{t("studentFeeDetail.paid")}</Text>
           <Text style={[styles.summaryValue, { color: Colors.success }, styles.summaryValueFlex]}>
             {formatCurrency(data.paid_amount)}
           </Text>
         </View>
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Remaining</Text>
+          <Text style={styles.summaryLabel}>{t("studentFeeDetail.remaining")}</Text>
           <Text style={[styles.summaryValue, { color: Colors.warning }, styles.summaryValueFlex]}>
             {formatCurrency(remaining)}
           </Text>
         </View>
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Status</Text>
+          <Text style={styles.summaryLabel}>{t("studentFeeDetail.status")}</Text>
           <View
             style={[
               styles.statusBadge,
@@ -369,7 +354,7 @@ export default function StudentFeeDetailPage() {
               },
             ]}
           >
-            <Text style={styles.statusText}>{data.status}</Text>
+            <Text style={styles.statusText}>{t(`studentFeeStatuses.${data.status}`)}</Text>
           </View>
         </View>
         <TouchableOpacity
@@ -382,7 +367,7 @@ export default function StudentFeeDetailPage() {
           ) : (
             <Ionicons name="document-text-outline" size={20} color={Colors.primary} />
           )}
-          <Text style={styles.downloadInvoiceBtnText}>Download Invoice</Text>
+          <Text style={styles.downloadInvoiceBtnText}>{t("studentFeeDetail.downloadInvoice")}</Text>
         </TouchableOpacity>
         {remaining > 0 && (
           <TouchableOpacity
@@ -390,7 +375,7 @@ export default function StudentFeeDetailPage() {
             onPress={() => setPaymentModalOpen(true)}
           >
             <Ionicons name="card-outline" size={20} color={Colors.background} />
-            <Text style={styles.recordBtnText}>Record Payment</Text>
+            <Text style={styles.recordBtnText}>{t("studentFeeDetail.recordPayment")}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -398,7 +383,7 @@ export default function StudentFeeDetailPage() {
 
       {/* Fee items table */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Fee Items</Text>
+        <Text style={styles.sectionTitle}>{t("studentFeeDetail.feeItems")}</Text>
         {(data.items ?? []).map((item) => {
           const itemAmount = item.amount ?? 0;
           const itemPaid = item.paid_amount ?? 0;
@@ -410,12 +395,15 @@ export default function StudentFeeDetailPage() {
               <View style={styles.itemMain}>
                 <Text style={styles.itemName}>{item.component_name ?? "—"}</Text>
                 <Text style={styles.itemMeta}>
-                  {formatCurrency(item.amount)} • Paid {formatCurrency(item.paid_amount)}
+                  {t("studentFeeDetail.itemMeta", {
+                    total: formatCurrency(item.amount),
+                    paid: formatCurrency(item.paid_amount),
+                  })}
                 </Text>
               </View>
               <View style={styles.itemRight}>
                 <Text style={styles.itemRemaining}>
-                  {formatCurrency(itemRemaining)} left
+                  {t("studentFeeDetail.itemLeft", { amount: formatCurrency(itemRemaining) })}
                 </Text>
                 <View
                   style={[
@@ -430,26 +418,26 @@ export default function StudentFeeDetailPage() {
                     },
                   ]}
                 >
-                  <Text style={styles.itemStatusText}>{itemStatus}</Text>
+                  <Text style={styles.itemStatusText}>{t(`studentFeeStatuses.${itemStatus}`)}</Text>
                 </View>
               </View>
             </View>
           );
         })}
         {(data.items ?? []).length === 0 && (
-          <Text style={styles.emptyText}>No fee items</Text>
+          <Text style={styles.emptyText}>{t("studentFeeDetail.noFeeItems")}</Text>
         )}
       </View>
 
       {/* Payment history */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Payment History</Text>
+        <Text style={styles.sectionTitle}>{t("studentFeeDetail.paymentHistory")}</Text>
         {(data.payments ?? []).map((p) => (
           <View key={p.id} style={styles.paymentRow}>
             <View style={styles.paymentMain}>
               <Text style={styles.paymentAmount}>{formatCurrency(p.amount)}</Text>
               <Text style={styles.paymentMeta}>
-                {p.method} • {formatDate(p.created_at)}
+                {p.method} • {formatDate(p.created_at, locale)}
                 {p.reference_number ? ` • ${p.reference_number}` : ""}
               </Text>
             </View>
@@ -467,7 +455,7 @@ export default function StudentFeeDetailPage() {
                   },
                 ]}
               >
-                <Text style={styles.paymentStatusText}>{p.status}</Text>
+                <Text style={styles.paymentStatusText}>{t(`paymentTxnStatuses.${p.status}`)}</Text>
               </View>
               {p.status === "success" && (
                 <>
@@ -481,14 +469,14 @@ export default function StudentFeeDetailPage() {
                     ) : (
                       <Ionicons name="receipt-outline" size={18} color={Colors.primary} />
                     )}
-                    <Text style={styles.receiptBtnText}>Receipt</Text>
+                    <Text style={styles.receiptBtnText}>{t("studentFeeDetail.receipt")}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => openRefundModal(p.id)}
                     style={styles.refundBtn}
                   >
                     <Ionicons name="arrow-undo-outline" size={18} color={Colors.error} />
-                    <Text style={styles.refundBtnText}>Refund</Text>
+                    <Text style={styles.refundBtnText}>{t("studentFeeDetail.refund")}</Text>
                   </TouchableOpacity>
                 </>
               )}
@@ -496,7 +484,7 @@ export default function StudentFeeDetailPage() {
           </View>
         ))}
         {(data.payments ?? []).length === 0 && (
-          <Text style={styles.emptyText}>No payments yet</Text>
+          <Text style={styles.emptyText}>{t("studentFeeDetail.noPaymentsYet")}</Text>
         )}
       </View>
 
@@ -505,7 +493,7 @@ export default function StudentFeeDetailPage() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Record Payment</Text>
+              <Text style={styles.modalTitle}>{t("studentFeeDetail.paymentModal.title")}</Text>
               <TouchableOpacity
                 onPress={() => {
                   setPaymentModalOpen(false);
@@ -517,10 +505,10 @@ export default function StudentFeeDetailPage() {
             </View>
             <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
               <View style={styles.remainingCard}>
-                <Text style={styles.remainingLabel}>Remaining balance</Text>
+                <Text style={styles.remainingLabel}>{t("studentFeeDetail.paymentModal.remainingBalance")}</Text>
                 <Text style={styles.remainingAmount}>{formatCurrency(remaining)}</Text>
               </View>
-              <Text style={styles.inputLabel}>Amount</Text>
+              <Text style={styles.inputLabel}>{t("studentFeeDetail.paymentModal.amount")}</Text>
               <View style={styles.quickAmountRow}>
                 <Pressable
                   style={({ pressed }) => [
@@ -529,7 +517,7 @@ export default function StudentFeeDetailPage() {
                   ]}
                   onPress={() => handleQuickAmount(1)}
                 >
-                  <Text style={styles.quickAmountBtnText}>Full</Text>
+                  <Text style={styles.quickAmountBtnText}>{t("studentFeeDetail.paymentModal.full")}</Text>
                   <Text style={styles.quickAmountBtnSub}>{formatCurrency(remaining)}</Text>
                 </Pressable>
                 <Pressable
@@ -539,7 +527,7 @@ export default function StudentFeeDetailPage() {
                   ]}
                   onPress={() => handleQuickAmount(0.5)}
                 >
-                  <Text style={styles.quickAmountBtnText}>Half</Text>
+                  <Text style={styles.quickAmountBtnText}>{t("studentFeeDetail.paymentModal.half")}</Text>
                   <Text style={styles.quickAmountBtnSub}>
                     {formatCurrency(Math.round(remaining * 0.5))}
                   </Text>
@@ -551,7 +539,7 @@ export default function StudentFeeDetailPage() {
                   ]}
                   onPress={() => handleQuickAmount(0.25)}
                 >
-                  <Text style={styles.quickAmountBtnText}>Quarter</Text>
+                  <Text style={styles.quickAmountBtnText}>{t("studentFeeDetail.paymentModal.quarter")}</Text>
                   <Text style={styles.quickAmountBtnSub}>
                     {formatCurrency(Math.round(remaining * 0.25))}
                   </Text>
@@ -564,20 +552,22 @@ export default function StudentFeeDetailPage() {
                 ]}
                 value={amount}
                 onChangeText={setAmount}
-                placeholder={`Or enter custom amount (max ${formatCurrency(remaining)})`}
+                placeholder={t("studentFeeDetail.paymentModal.placeholderAmount", {
+                  max: formatCurrency(remaining),
+                })}
                 keyboardType="decimal-pad"
               />
               {amountExceedsRemaining && (
                 <Text style={styles.validationError}>
-                  Amount cannot exceed remaining balance
+                  {t("studentFeeDetail.paymentModal.amountExceeds")}
                 </Text>
               )}
               {itemsWithRemaining.length > 0 && amountNum > 0 && (
                 <>
                   <View style={styles.allocationHeader}>
-                    <Text style={styles.inputLabel}>Split by component (optional)</Text>
+                    <Text style={styles.inputLabel}>{t("studentFeeDetail.paymentModal.splitTitle")}</Text>
                     <Text style={styles.allocationHint}>
-                      Specify how much goes to each fee item
+                      {t("studentFeeDetail.paymentModal.splitHint")}
                     </Text>
                     <View style={styles.allocationActions}>
                       <TouchableOpacity
@@ -585,12 +575,12 @@ export default function StudentFeeDetailPage() {
                         style={styles.allocationLink}
                       >
                         <Ionicons name="flash-outline" size={16} color={Colors.primary} />
-                        <Text style={styles.linkText}>Auto-fill</Text>
+                        <Text style={styles.linkText}>{t("studentFeeDetail.paymentModal.autoFill")}</Text>
                       </TouchableOpacity>
                       {Object.keys(allocations).length > 0 && (
                         <TouchableOpacity onPress={clearAllocations} style={styles.allocationLink}>
                           <Ionicons name="close-circle-outline" size={16} color={Colors.textSecondary} />
-                          <Text style={styles.linkTextSecondary}>Clear</Text>
+                          <Text style={styles.linkTextSecondary}>{t("studentFeeDetail.paymentModal.clear")}</Text>
                         </TouchableOpacity>
                       )}
                     </View>
@@ -604,7 +594,9 @@ export default function StudentFeeDetailPage() {
                             {item.component_name ?? "—"}
                           </Text>
                           <Text style={styles.allocationItemMeta}>
-                            {formatCurrency(itemRemaining)} left
+                            {t("studentFeeDetail.paymentModal.left", {
+                              amount: formatCurrency(itemRemaining),
+                            })}
                           </Text>
                         </View>
                         <View style={styles.allocationItemRight}>
@@ -621,7 +613,7 @@ export default function StudentFeeDetailPage() {
                             style={styles.payFullBtn}
                             onPress={() => handlePayFullForItem(item)}
                           >
-                            <Text style={styles.payFullBtnText}>Pay full</Text>
+                            <Text style={styles.payFullBtnText}>{t("studentFeeDetail.paymentModal.payFull")}</Text>
                           </TouchableOpacity>
                         </View>
                       </View>
@@ -629,18 +621,23 @@ export default function StudentFeeDetailPage() {
                   })}
                   {useAllocations && allocationMismatch && (
                     <Text style={styles.validationError}>
-                      Allocation sum ({formatCurrency(allocationSum)}) must equal total ({formatCurrency(amountNum)})
+                      {t("studentFeeDetail.paymentModal.allocationMismatch", {
+                        sum: formatCurrency(allocationSum),
+                        total: formatCurrency(amountNum),
+                      })}
                     </Text>
                   )}
                 </>
               )}
-              <Text style={styles.inputLabel}>Payment method</Text>
+              <Text style={styles.inputLabel}>{t("studentFeeDetail.paymentModal.paymentMethod")}</Text>
               <View style={styles.methodRow}>
-                {[
-                  { id: "cash", label: "Cash", icon: "cash-outline" },
-                  { id: "online", label: "Online", icon: "phone-portrait-outline" },
-                  { id: "bank_transfer", label: "Bank", icon: "business-outline" },
-                ].map((m) => (
+                {(
+                  [
+                    { id: "cash" as const, icon: "cash-outline" },
+                    { id: "online" as const, icon: "phone-portrait-outline" },
+                    { id: "bank_transfer" as const, icon: "business-outline" },
+                  ] as const
+                ).map((m) => (
                   <TouchableOpacity
                     key={m.id}
                     style={[styles.methodChip, method === m.id && styles.methodChipActive]}
@@ -657,24 +654,24 @@ export default function StudentFeeDetailPage() {
                         method === m.id && styles.methodChipTextActive,
                       ]}
                     >
-                      {m.label}
+                      {t(`studentFeeDetail.paymentMethods.${m.id}`)}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
-              <Text style={styles.inputLabel}>Reference (optional)</Text>
+              <Text style={styles.inputLabel}>{t("studentFeeDetail.paymentModal.referenceOptional")}</Text>
               <TextInput
                 style={styles.input}
                 value={referenceNumber}
                 onChangeText={setReferenceNumber}
-                placeholder="Transaction ID or receipt number"
+                placeholder={t("studentFeeDetail.paymentModal.referencePlaceholder")}
               />
-              <Text style={styles.inputLabel}>Notes (optional)</Text>
+              <Text style={styles.inputLabel}>{t("studentFeeDetail.paymentModal.notesOptional")}</Text>
               <TextInput
                 style={[styles.input, styles.notesInput]}
                 value={notes}
                 onChangeText={setNotes}
-                placeholder="Add a note for your records"
+                placeholder={t("studentFeeDetail.paymentModal.notesPlaceholder")}
               />
             </ScrollView>
             <View style={styles.modalFooter}>
@@ -685,7 +682,7 @@ export default function StudentFeeDetailPage() {
                   setAllocations({});
                 }}
               >
-                <Text style={styles.cancelBtnText}>Cancel</Text>
+                <Text style={styles.cancelBtnText}>{t("studentFeeDetail.paymentModal.cancel")}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
@@ -698,7 +695,7 @@ export default function StudentFeeDetailPage() {
                 {recordMut.isPending ? (
                   <ActivityIndicator size="small" color={Colors.background} />
                 ) : (
-                  <Text style={styles.submitBtnText}>Record</Text>
+                  <Text style={styles.submitBtnText}>{t("studentFeeDetail.paymentModal.record")}</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -711,7 +708,7 @@ export default function StudentFeeDetailPage() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Refund Payment</Text>
+              <Text style={styles.modalTitle}>{t("studentFeeDetail.refundModal.title")}</Text>
               <TouchableOpacity
                 onPress={() => {
                   setRefundModalOpen(false);
@@ -725,16 +722,15 @@ export default function StudentFeeDetailPage() {
               <View style={styles.refundWarning}>
                 <Ionicons name="warning" size={32} color={Colors.error} />
                 <Text style={styles.refundWarningText}>
-                  This action cannot be undone. The payment will be marked as refunded and the
-                  student fee balance will be adjusted.
+                  {t("studentFeeDetail.refundModal.warning")}
                 </Text>
               </View>
-              <Text style={styles.inputLabel}>Reason (optional)</Text>
+              <Text style={styles.inputLabel}>{t("studentFeeDetail.refundModal.reasonOptional")}</Text>
               <TextInput
                 style={styles.input}
                 value={refundReason}
                 onChangeText={setRefundReason}
-                placeholder="e.g. Duplicate payment, Wrong amount"
+                placeholder={t("studentFeeDetail.refundModal.reasonPlaceholder")}
                 multiline
               />
             </View>
@@ -746,7 +742,7 @@ export default function StudentFeeDetailPage() {
                   setRefundPaymentId(null);
                 }}
               >
-                <Text style={styles.cancelBtnText}>Cancel</Text>
+                <Text style={styles.cancelBtnText}>{t("studentFeeDetail.paymentModal.cancel")}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
@@ -759,7 +755,7 @@ export default function StudentFeeDetailPage() {
                 {refundMut.isPending ? (
                   <ActivityIndicator size="small" color={Colors.background} />
                 ) : (
-                  <Text style={styles.refundSubmitBtnText}>Confirm Refund</Text>
+                  <Text style={styles.refundSubmitBtnText}>{t("studentFeeDetail.refundModal.confirmRefund")}</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -827,6 +823,12 @@ const styles = StyleSheet.create({
     marginTop: Spacing.lg,
   },
   recordBtnText: { fontSize: 16, fontWeight: "600", color: Colors.background, marginLeft: Spacing.sm },
+  downloadInvoiceBtn: {
+    backgroundColor: Colors.background,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+  },
+  downloadInvoiceBtnText: { fontSize: 16, fontWeight: "600", color: Colors.primary, marginLeft: Spacing.sm },
   removeFeeBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -851,7 +853,14 @@ const styles = StyleSheet.create({
   itemMain: {},
   itemName: { fontSize: 15, fontWeight: "500", color: Colors.text },
   itemMeta: { fontSize: 12, color: Colors.textSecondary },
+  itemRight: { alignItems: "flex-end", gap: Spacing.xs },
   itemRemaining: { fontSize: 14, color: Colors.warning },
+  itemStatusBadge: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+    borderRadius: Layout.borderRadius.sm,
+  },
+  itemStatusText: { fontSize: 11, fontWeight: "600", color: Colors.background },
   paymentRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -871,6 +880,8 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   paymentStatusText: { fontSize: 11, fontWeight: "600", color: Colors.background },
+  receiptBtn: { flexDirection: "row", alignItems: "center", marginTop: Spacing.xs },
+  receiptBtnText: { fontSize: 13, color: Colors.primary, marginLeft: Spacing.xs },
   refundBtn: { flexDirection: "row", alignItems: "center" },
   refundBtnText: { fontSize: 13, color: Colors.error, marginLeft: Spacing.xs },
   emptyText: { color: Colors.textSecondary, fontSize: 14 },

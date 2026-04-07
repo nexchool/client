@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -14,23 +15,14 @@ import {
   Modal,
   Switch,
 } from "react-native";
-import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
 import { useTeacherLeaves } from "@/modules/teachers/hooks/useTeacherLeaves";
 import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
 import * as PERMS from "@/modules/permissions/constants/permissions";
-import { TeacherLeave, LeaveBalance, LeavePolicy, LEAVE_TYPES } from "@/modules/teachers/types";
+import { TeacherLeave, LeaveBalance, LeavePolicy } from "@/modules/teachers/types";
 import { ProfileAvatar } from "@/common/components/ProfileAvatar";
-
-const STATUS_FILTERS: { label: string; value: string }[] = [
-  { label: "All", value: "" },
-  { label: "Pending", value: "pending" },
-  { label: "Approved", value: "approved" },
-  { label: "Rejected", value: "rejected" },
-  { label: "Cancelled", value: "cancelled" },
-];
 
 const LEAVE_TYPE_ICONS: Record<string, string> = {
   casual: "☀️",
@@ -81,6 +73,7 @@ function TeacherBalanceModal({
   onAdjust,
   onClose,
 }: TeacherBalanceModalProps) {
+  const { t } = useTranslation("teacherLeaves");
   const [editingType, setEditingType] = useState<string | null>(null);
   const [editDays, setEditDays] = useState("");
   const [editNotes, setEditNotes] = useState("");
@@ -90,7 +83,7 @@ function TeacherBalanceModal({
     if (!editingType) return;
     const days = parseInt(editDays, 10);
     if (isNaN(days) || days < 0) {
-      Alert.alert("Validation", "Please enter a valid number of days (>= 0)");
+      Alert.alert(t("balanceModal.validationTitle"), t("balanceModal.validationDays"));
       return;
     }
     setSaving(true);
@@ -100,7 +93,7 @@ function TeacherBalanceModal({
       setEditDays("");
       setEditNotes("");
     } catch (e: any) {
-      Alert.alert("Error", e.message || "Failed to update balance");
+      Alert.alert(t("balanceModal.errorTitle"), e.message || t("balanceModal.updateFailed"));
     } finally {
       setSaving(false);
     }
@@ -114,7 +107,7 @@ function TeacherBalanceModal({
             <Ionicons name="close" size={22} color={Colors.text} />
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
-            <Text style={balModal.title}>Leave Balances</Text>
+            <Text style={balModal.title}>{t("balanceModal.title")}</Text>
             <Text style={balModal.subtitle}>{teacherName}</Text>
           </View>
         </View>
@@ -123,7 +116,7 @@ function TeacherBalanceModal({
           {balancesLoading ? (
             <View style={balModal.loadingRow}>
               <ActivityIndicator color={Colors.primary} />
-              <Text style={balModal.loadingText}>Loading balances…</Text>
+              <Text style={balModal.loadingText}>{t("balanceModal.loading")}</Text>
             </View>
           ) : (
             balances.map(bal => (
@@ -133,11 +126,11 @@ function TeacherBalanceModal({
                   <View style={balModal.typeHeader}>
                     <Text style={balModal.typeIcon}>{LEAVE_TYPE_ICONS[bal.leave_type]}</Text>
                     <Text style={[balModal.typeName, { color: leaveTypeColor(bal.leave_type) }]}>
-                      {bal.leave_type.toUpperCase()}
+                      {t(`leaveTypes.${bal.leave_type}`, { defaultValue: bal.leave_type })}
                     </Text>
                     {bal.is_unlimited && (
                       <View style={balModal.unlimitedBadge}>
-                        <Text style={balModal.unlimitedText}>Unlimited</Text>
+                        <Text style={balModal.unlimitedText}>{t("balanceModal.unlimited")}</Text>
                       </View>
                     )}
                   </View>
@@ -146,15 +139,15 @@ function TeacherBalanceModal({
                     <View style={balModal.statsGrid}>
                       <View style={balModal.statBox}>
                         <Text style={balModal.statValue}>{bal.allocated_days + bal.carried_forward_days}</Text>
-                        <Text style={balModal.statLabel}>Total</Text>
+                        <Text style={balModal.statLabel}>{t("balanceModal.statTotal")}</Text>
                       </View>
                       <View style={balModal.statBox}>
                         <Text style={[balModal.statValue, { color: Colors.error }]}>{bal.used_days.toFixed(1)}</Text>
-                        <Text style={balModal.statLabel}>Used</Text>
+                        <Text style={balModal.statLabel}>{t("balanceModal.statUsed")}</Text>
                       </View>
                       <View style={balModal.statBox}>
                         <Text style={[balModal.statValue, { color: Colors.warning }]}>{bal.pending_days.toFixed(1)}</Text>
-                        <Text style={balModal.statLabel}>Pending</Text>
+                        <Text style={balModal.statLabel}>{t("balanceModal.statPending")}</Text>
                       </View>
                       <View style={balModal.statBox}>
                         <Text style={[balModal.statValue, {
@@ -162,20 +155,27 @@ function TeacherBalanceModal({
                         }]}>
                           {bal.available_days.toFixed(1)}
                         </Text>
-                        <Text style={balModal.statLabel}>Available</Text>
+                        <Text style={balModal.statLabel}>{t("balanceModal.statAvailable")}</Text>
                       </View>
                     </View>
                   )}
 
                   {bal.carried_forward_days > 0 && (
-                    <Text style={balModal.carryForward}>+{bal.carried_forward_days}d carried from previous year</Text>
+                    <Text style={balModal.carryForward}>
+                      {t("balanceModal.carryForward", { days: bal.carried_forward_days })}
+                    </Text>
                   )}
-                  {bal.notes && <Text style={balModal.notes}>Note: {bal.notes}</Text>}
+                  {bal.notes && (
+                    <Text style={balModal.notes}>
+                      {t("balanceModal.notePrefix")}
+                      {bal.notes}
+                    </Text>
+                  )}
 
                   {!bal.is_unlimited && (
                     editingType === bal.leave_type ? (
                       <View style={balModal.editBox}>
-                        <Text style={balModal.editLabel}>Set allocated days:</Text>
+                        <Text style={balModal.editLabel}>{t("balanceModal.setAllocated")}</Text>
                         <TextInput
                           style={balModal.editInput}
                           value={editDays}
@@ -184,12 +184,12 @@ function TeacherBalanceModal({
                           placeholder={String(bal.allocated_days)}
                           placeholderTextColor={Colors.textTertiary}
                         />
-                        <Text style={balModal.editLabel}>Admin note (optional):</Text>
+                        <Text style={balModal.editLabel}>{t("balanceModal.adminNote")}</Text>
                         <TextInput
                           style={[balModal.editInput, { height: 60, textAlignVertical: "top" }]}
                           value={editNotes}
                           onChangeText={setEditNotes}
-                          placeholder="Reason for adjustment..."
+                          placeholder={t("balanceModal.adminNotePlaceholder")}
                           placeholderTextColor={Colors.textTertiary}
                           multiline
                         />
@@ -198,10 +198,14 @@ function TeacherBalanceModal({
                             style={balModal.cancelEditBtn}
                             onPress={() => { setEditingType(null); setEditDays(""); setEditNotes(""); }}
                           >
-                            <Text style={balModal.cancelEditText}>Cancel</Text>
+                            <Text style={balModal.cancelEditText}>{t("balanceModal.cancel")}</Text>
                           </TouchableOpacity>
                           <TouchableOpacity style={balModal.saveBtn} onPress={handleSave} disabled={saving}>
-                            {saving ? <ActivityIndicator size="small" color="#fff" /> : <Text style={balModal.saveBtnText}>Save</Text>}
+                            {saving ? (
+                              <ActivityIndicator size="small" color="#fff" />
+                            ) : (
+                              <Text style={balModal.saveBtnText}>{t("balanceModal.save")}</Text>
+                            )}
                           </TouchableOpacity>
                         </View>
                       </View>
@@ -211,7 +215,7 @@ function TeacherBalanceModal({
                         onPress={() => { setEditingType(bal.leave_type); setEditDays(String(bal.allocated_days)); setEditNotes(""); }}
                       >
                         <Ionicons name="create-outline" size={14} color={Colors.primary} />
-                        <Text style={balModal.adjustBtnText}>Adjust Allocation</Text>
+                        <Text style={balModal.adjustBtnText}>{t("balanceModal.adjustAllocation")}</Text>
                       </TouchableOpacity>
                     )
                   )}
@@ -239,6 +243,7 @@ interface PolicyModalProps {
 }
 
 function PolicyModal({ visible, policies, policiesLoading, onUpdate, onSave, onClose, editingPolicies }: PolicyModalProps) {
+  const { t } = useTranslation("teacherLeaves");
   const [saving, setSaving] = useState<string | null>(null);
 
   const handleSave = async (leaveType: string) => {
@@ -246,7 +251,7 @@ function PolicyModal({ visible, policies, policiesLoading, onUpdate, onSave, onC
     try {
       await onSave(leaveType);
     } catch (e: any) {
-      Alert.alert("Error", e.message || "Failed to update policy");
+      Alert.alert(t("policyModal.errorTitle"), e.message || t("policyModal.saveFailed"));
     } finally {
       setSaving(null);
     }
@@ -259,19 +264,17 @@ function PolicyModal({ visible, policies, policiesLoading, onUpdate, onSave, onC
           <TouchableOpacity onPress={onClose}>
             <Ionicons name="close" size={22} color={Colors.text} />
           </TouchableOpacity>
-          <Text style={policyModal.title}>Leave Policy</Text>
+          <Text style={policyModal.title}>{t("policyModal.title")}</Text>
           <View style={{ width: 22 }} />
         </View>
 
         <ScrollView contentContainerStyle={{ padding: Spacing.lg }}>
-          <Text style={policyModal.description}>
-            Configure default leave allocations for all teachers. Changes apply to new balance records only — existing allocations can be adjusted per teacher.
-          </Text>
+          <Text style={policyModal.description}>{t("policyModal.description")}</Text>
 
           {policiesLoading ? (
             <View style={policyModal.loadingRow}>
               <ActivityIndicator color={Colors.primary} />
-              <Text style={policyModal.loadingText}>Loading policies…</Text>
+              <Text style={policyModal.loadingText}>{t("policyModal.loading")}</Text>
             </View>
           ) : (
             policies.map(policy => {
@@ -283,12 +286,12 @@ function PolicyModal({ visible, policies, policiesLoading, onUpdate, onSave, onC
                   <View style={policyModal.cardTitle}>
                     <Text style={policyModal.typeIcon}>{LEAVE_TYPE_ICONS[policy.leave_type]}</Text>
                     <Text style={[policyModal.typeName, { color: leaveTypeColor(policy.leave_type) }]}>
-                      {policy.leave_type.toUpperCase()}
+                      {t(`leaveTypes.${policy.leave_type}`, { defaultValue: policy.leave_type })}
                     </Text>
                   </View>
 
                   <View style={policyModal.fieldRow}>
-                    <Text style={policyModal.fieldLabel}>Unlimited</Text>
+                    <Text style={policyModal.fieldLabel}>{t("policyModal.unlimited")}</Text>
                     <Switch
                       value={current.is_unlimited}
                       onValueChange={v => onUpdate(policy.leave_type, "is_unlimited", v)}
@@ -299,7 +302,7 @@ function PolicyModal({ visible, policies, policiesLoading, onUpdate, onSave, onC
 
                   {!current.is_unlimited && (
                     <View style={policyModal.fieldRow}>
-                      <Text style={policyModal.fieldLabel}>Annual days</Text>
+                      <Text style={policyModal.fieldLabel}>{t("policyModal.annualDays")}</Text>
                       <TextInput
                         style={policyModal.numInput}
                         value={String(current.total_days ?? policy.total_days)}
@@ -311,7 +314,7 @@ function PolicyModal({ visible, policies, policiesLoading, onUpdate, onSave, onC
                   )}
 
                   <View style={policyModal.fieldRow}>
-                    <Text style={policyModal.fieldLabel}>Allow carry-forward</Text>
+                    <Text style={policyModal.fieldLabel}>{t("policyModal.allowCarryForward")}</Text>
                     <Switch
                       value={current.is_carry_forward_allowed}
                       onValueChange={v => onUpdate(policy.leave_type, "is_carry_forward_allowed", v)}
@@ -322,7 +325,7 @@ function PolicyModal({ visible, policies, policiesLoading, onUpdate, onSave, onC
 
                   {current.is_carry_forward_allowed && (
                     <View style={policyModal.fieldRow}>
-                      <Text style={policyModal.fieldLabel}>Max carry-forward days{"\n"}(0 = no cap)</Text>
+                      <Text style={policyModal.fieldLabel}>{t("policyModal.maxCarryForward")}</Text>
                       <TextInput
                         style={policyModal.numInput}
                         value={String(current.max_carry_forward_days ?? policy.max_carry_forward_days)}
@@ -334,7 +337,7 @@ function PolicyModal({ visible, policies, policiesLoading, onUpdate, onSave, onC
                   )}
 
                   <View style={policyModal.fieldRow}>
-                    <Text style={policyModal.fieldLabel}>Allow negative balance</Text>
+                    <Text style={policyModal.fieldLabel}>{t("policyModal.allowNegative")}</Text>
                     <Switch
                       value={current.allow_negative}
                       onValueChange={v => onUpdate(policy.leave_type, "allow_negative", v)}
@@ -344,7 +347,7 @@ function PolicyModal({ visible, policies, policiesLoading, onUpdate, onSave, onC
                   </View>
 
                   <View style={policyModal.fieldRow}>
-                    <Text style={policyModal.fieldLabel}>Require reason</Text>
+                    <Text style={policyModal.fieldLabel}>{t("policyModal.requireReason")}</Text>
                     <Switch
                       value={current.requires_reason}
                       onValueChange={v => onUpdate(policy.leave_type, "requires_reason", v)}
@@ -361,7 +364,11 @@ function PolicyModal({ visible, policies, policiesLoading, onUpdate, onSave, onC
                     {saving === policy.leave_type ? (
                       <ActivityIndicator size="small" color="#fff" />
                     ) : (
-                      <Text style={policyModal.saveBtnText}>Save {policy.leave_type} policy</Text>
+                      <Text style={policyModal.saveBtnText}>
+                        {t("policyModal.savePolicy", {
+                          type: t(`leaveTypes.${policy.leave_type}`, { defaultValue: policy.leave_type }),
+                        })}
+                      </Text>
                     )}
                   </TouchableOpacity>
                 </View>
@@ -378,9 +385,29 @@ function PolicyModal({ visible, policies, policiesLoading, onUpdate, onSave, onC
 // Main Screen
 // ---------------------------------------------------------------------------
 export default function TeacherLeavesScreen() {
-  const router = useRouter();
+  const { t } = useTranslation("teacherLeaves");
   const { hasPermission } = usePermissions();
   const canManage = hasPermission(PERMS.TEACHER_LEAVE_MANAGE);
+
+  const STATUS_FILTERS = useMemo(
+    () => [
+      { label: t("filters.all"), value: "" },
+      { label: t("filters.pending"), value: "pending" },
+      { label: t("filters.approved"), value: "approved" },
+      { label: t("filters.rejected"), value: "rejected" },
+      { label: t("filters.cancelled"), value: "cancelled" },
+    ],
+    [t]
+  );
+
+  const leaveTypeLabel = useCallback(
+    (type: string) => t(`leaveTypes.${type}`, { defaultValue: type }),
+    [t]
+  );
+  const statusLabel = useCallback(
+    (status: string) => t(`status.${status}`, { defaultValue: status }),
+    [t]
+  );
 
   const {
     leaves,
@@ -432,19 +459,26 @@ export default function TeacherLeavesScreen() {
   // -------------------------------------------------------------------------
 
   const handleApprove = (leave: TeacherLeave) => {
+    const days =
+      leave.working_days != null
+        ? t("alerts.approveWorkingDays", { count: leave.working_days })
+        : "";
     Alert.alert(
-      "Approve Leave",
-      `Approve ${leave.teacher_name ?? "this teacher"}'s ${leave.leave_type} leave request` +
-      (leave.working_days ? ` (${leave.working_days} working day(s))` : "") + "?",
+      t("alerts.approveTitle"),
+      t("alerts.approveMessage", {
+        name: leave.teacher_name ?? t("alerts.fallbackTeacher"),
+        leaveType: leaveTypeLabel(leave.leave_type),
+        days,
+      }),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("alerts.cancel"), style: "cancel" },
         {
-          text: "Approve",
+          text: t("alerts.approve"),
           onPress: async () => {
             try {
               await approveLeave(leave.id);
             } catch (e: any) {
-              Alert.alert("Error", e.message || "Failed to approve leave");
+              Alert.alert(t("alerts.errorTitle"), e.message || t("alerts.approveFailed"));
             }
           },
         },
@@ -454,18 +488,18 @@ export default function TeacherLeavesScreen() {
 
   const handleReject = (leave: TeacherLeave) => {
     Alert.alert(
-      "Reject Leave",
-      `Reject ${leave.teacher_name ?? "this teacher"}'s leave request?`,
+      t("alerts.rejectTitle"),
+      t("alerts.rejectMessage", { name: leave.teacher_name ?? t("alerts.fallbackTeacher") }),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("alerts.cancel"), style: "cancel" },
         {
-          text: "Reject",
+          text: t("alerts.reject"),
           style: "destructive",
           onPress: async () => {
             try {
               await rejectLeave(leave.id);
             } catch (e: any) {
-              Alert.alert("Error", e.message || "Failed to reject leave");
+              Alert.alert(t("alerts.errorTitle"), e.message || t("alerts.rejectFailed"));
             }
           },
         },
@@ -479,7 +513,7 @@ export default function TeacherLeavesScreen() {
 
   const openBalanceModal = async (leave: TeacherLeave) => {
     setBalanceModalTeacherId(leave.teacher_id);
-    setBalanceModalTeacherName(leave.teacher_name ?? "Teacher");
+    setBalanceModalTeacherName(leave.teacher_name ?? t("screen.fallbackTeacherName"));
     await fetchTeacherBalances(leave.teacher_id);
   };
 
@@ -491,7 +525,10 @@ export default function TeacherLeavesScreen() {
   const handleAdjustBalance = async (leaveType: string, days: number, notes: string) => {
     if (!balanceModalTeacherId) return;
     await adjustBalance(balanceModalTeacherId, leaveType, { allocated_days: days, notes });
-    Alert.alert("Updated", `${leaveType} leave allocation updated to ${days} day(s).`);
+    Alert.alert(
+      t("alerts.updatedTitle"),
+      t("alerts.balanceUpdated", { type: leaveTypeLabel(leaveType), days })
+    );
   };
 
   // -------------------------------------------------------------------------
@@ -519,7 +556,7 @@ export default function TeacherLeavesScreen() {
       delete next[leaveType];
       return next;
     });
-    Alert.alert("Saved", `${leaveType} leave policy updated.`);
+    Alert.alert(t("alerts.savedTitle"), t("alerts.policySaved", { type: leaveTypeLabel(leaveType) }));
   };
 
   // -------------------------------------------------------------------------
@@ -546,7 +583,7 @@ export default function TeacherLeavesScreen() {
           </View>
         </View>
         <View style={[styles.statusBadge, { backgroundColor: statusColor(item.status) + "20" }]}>
-          <Text style={[styles.statusText, { color: statusColor(item.status) }]}>{item.status}</Text>
+          <Text style={[styles.statusText, { color: statusColor(item.status) }]}>{statusLabel(item.status)}</Text>
         </View>
       </View>
 
@@ -554,17 +591,21 @@ export default function TeacherLeavesScreen() {
         <View style={styles.detailRow}>
           <Text style={{ fontSize: 13 }}>{LEAVE_TYPE_ICONS[item.leave_type] ?? "📋"}</Text>
           <Text style={[styles.detailText, { color: leaveTypeColor(item.leave_type), fontWeight: "600" }]}>
-            {item.leave_type.toUpperCase()}
+            {leaveTypeLabel(item.leave_type)}
           </Text>
           {item.working_days != null && (
             <View style={styles.workingDaysTag}>
-              <Text style={styles.workingDaysText}>{item.working_days}d</Text>
+              <Text style={styles.workingDaysText}>
+                {t("screen.workingDaysShort", { count: item.working_days })}
+              </Text>
             </View>
           )}
         </View>
         <View style={styles.detailRow}>
           <Ionicons name="calendar-outline" size={14} color={Colors.textSecondary} />
-          <Text style={styles.detailText}>{item.start_date} → {item.end_date}</Text>
+          <Text style={styles.detailText}>
+            {t("screen.dateRange", { start: item.start_date, end: item.end_date })}
+          </Text>
         </View>
         {item.reason ? (
           <View style={styles.detailRow}>
@@ -574,7 +615,9 @@ export default function TeacherLeavesScreen() {
         ) : null}
         <View style={styles.detailRow}>
           <Ionicons name="time-outline" size={14} color={Colors.textSecondary} />
-          <Text style={styles.detailText}>Applied: {item.created_at.slice(0, 10)}</Text>
+          <Text style={styles.detailText}>
+            {t("screen.applied", { date: item.created_at.slice(0, 10) })}
+          </Text>
         </View>
       </View>
 
@@ -583,18 +626,18 @@ export default function TeacherLeavesScreen() {
           <>
             <TouchableOpacity style={styles.approveBtn} onPress={() => handleApprove(item)}>
               <Ionicons name="checkmark-circle-outline" size={16} color={Colors.success} />
-              <Text style={styles.approveBtnText}>Approve</Text>
+              <Text style={styles.approveBtnText}>{t("screen.approve")}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.rejectBtn} onPress={() => handleReject(item)}>
               <Ionicons name="close-circle-outline" size={16} color={Colors.error} />
-              <Text style={styles.rejectBtnText}>Reject</Text>
+              <Text style={styles.rejectBtnText}>{t("screen.reject")}</Text>
             </TouchableOpacity>
           </>
         )}
         {canManage && (
           <TouchableOpacity style={styles.balanceBtn} onPress={() => openBalanceModal(item)}>
             <Ionicons name="wallet-outline" size={14} color={Colors.primary} />
-            <Text style={styles.balanceBtnText}>Balance</Text>
+            <Text style={styles.balanceBtnText}>{t("screen.balance")}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -605,12 +648,12 @@ export default function TeacherLeavesScreen() {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Teacher Leaves</Text>
+        <Text style={styles.headerTitle}>{t("screen.title")}</Text>
         <View style={styles.headerActions}>
           {canManage && (
             <TouchableOpacity style={styles.policyBtn} onPress={openPolicyModal}>
               <Ionicons name="settings-outline" size={18} color={Colors.primary} />
-              <Text style={styles.policyBtnText}>Policy</Text>
+              <Text style={styles.policyBtnText}>{t("screen.policy")}</Text>
             </TouchableOpacity>
           )}
           <TouchableOpacity style={styles.refreshBtn} onPress={() => load(statusFilter)}>
@@ -626,7 +669,7 @@ export default function TeacherLeavesScreen() {
           style={styles.searchInput}
           value={searchQuery}
           onChangeText={setSearchQuery}
-          placeholder="Search by teacher name or ID..."
+          placeholder={t("screen.searchPlaceholder")}
           placeholderTextColor={Colors.textTertiary}
         />
         {searchQuery.length > 0 && (
@@ -660,8 +703,11 @@ export default function TeacherLeavesScreen() {
       {!loading && !error && (
         <View style={styles.countRow}>
           <Text style={styles.countText}>
-            {filteredLeaves.length} {filteredLeaves.length === 1 ? "request" : "requests"}
-            {searchQuery ? " matching search" : ""}
+            {t("screen.countLine", {
+              count: filteredLeaves.length,
+              unit: filteredLeaves.length === 1 ? t("screen.request") : t("screen.requests"),
+              suffix: searchQuery ? t("screen.matchingSearchSuffix") : "",
+            })}
           </Text>
         </View>
       )}
@@ -672,7 +718,7 @@ export default function TeacherLeavesScreen() {
           <Ionicons name="alert-circle-outline" size={48} color={Colors.error} />
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryBtn} onPress={() => load(statusFilter)}>
-            <Text style={styles.retryBtnText}>Retry</Text>
+            <Text style={styles.retryBtnText}>{t("screen.retry")}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -691,7 +737,7 @@ export default function TeacherLeavesScreen() {
               <View style={styles.center}>
                 <Ionicons name="document-text-outline" size={56} color={Colors.borderLight} />
                 <Text style={styles.emptyText}>
-                  {searchQuery ? "No results found for your search." : "No leave requests found."}
+                  {searchQuery ? t("screen.emptySearch") : t("screen.emptyNone")}
                 </Text>
               </View>
             ) : null

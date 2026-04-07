@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   Linking,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/common/constants/colors";
@@ -16,10 +17,13 @@ import { Spacing, Layout } from "@/common/constants/spacing";
 const SUPPORT_EMAIL = "hello@nexchool.in";
 
 export default function HelpSupportScreen() {
+  const { t } = useTranslation("profile");
   const router = useRouter();
 
   const openEmail = () => {
-    const url = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Nexchool support")}`;
+    const url = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
+      t("helpSupport.emailSubject"),
+    )}`;
     void Linking.openURL(url);
   };
 
@@ -29,7 +33,7 @@ export default function HelpSupportScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Help & Support</Text>
+        <Text style={styles.headerTitle}>{t("helpSupport.screenTitle")}</Text>
       </View>
 
       <ScrollView
@@ -37,24 +41,20 @@ export default function HelpSupportScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.lead}>
-          Need help with application? Send us an email and we will get back to you.
-        </Text>
+        <Text style={styles.lead}>{t("helpSupport.lead")}</Text>
 
         <TouchableOpacity style={styles.emailCard} onPress={openEmail} activeOpacity={0.7}>
           <View style={styles.emailIconWrap}>
             <Ionicons name="mail-outline" size={28} color={Colors.primary} />
           </View>
           <View style={styles.emailTextWrap}>
-            <Text style={styles.emailLabel}>Email us</Text>
+            <Text style={styles.emailLabel}>{t("helpSupport.emailLabel")}</Text>
             <Text style={styles.emailValue}>{SUPPORT_EMAIL}</Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
         </TouchableOpacity>
 
-        <Text style={styles.footerNote}>
-          More support options will be available here in a future update.
-        </Text>
+        <Text style={styles.footerNote}>{t("helpSupport.footerNote")}</Text>
       </ScrollView>
     </SafeAreaView>
   );

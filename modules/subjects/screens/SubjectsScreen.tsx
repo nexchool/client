@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -35,6 +36,7 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 export default function SubjectsScreen() {
+  const { t } = useTranslation("subjects");
   const { subjects, loading, fetchSubjects, createSubject, updateSubject, deleteSubject } =
     useSubjects();
   const { hasPermission } = usePermissions();
@@ -97,7 +99,7 @@ export default function SubjectsScreen() {
     try {
       await createSubject(data);
       handleModalClose();
-      Alert.alert("Success", "Subject created successfully");
+      Alert.alert(t("list.success"), t("list.created"));
       fetchSubjects();
     } catch (error: any) {
       throw error;
@@ -109,7 +111,7 @@ export default function SubjectsScreen() {
     try {
       await updateSubject(editingSubject.id, data);
       handleModalClose();
-      Alert.alert("Success", "Subject updated successfully");
+      Alert.alert(t("list.success"), t("list.updated"));
       fetchSubjects();
     } catch (error: any) {
       throw error;
@@ -120,17 +122,17 @@ export default function SubjectsScreen() {
 
   const handleApplyToGrade = async () => {
     if (!gradeApplyYear || !gradeLevel.trim() || !gradeSubjectId) {
-      Alert.alert("Missing fields", "Choose academic year, standard (grade), and a subject from the catalog.");
+      Alert.alert(t("list.missingFieldsTitle"), t("list.missingFieldsBody"));
       return;
     }
     const gl = parseInt(gradeLevel.trim(), 10);
     const wk = parseInt(gradeWeekly.trim(), 10);
     if (Number.isNaN(gl) || gl < 1 || gl > 20) {
-      Alert.alert("Invalid grade", "Enter a standard between 1 and 20 (e.g. 10).");
+      Alert.alert(t("list.invalidGradeTitle"), t("list.invalidGradeBody"));
       return;
     }
     if (Number.isNaN(wk) || wk < 1) {
-      Alert.alert("Invalid periods", "Weekly periods must be a positive number.");
+      Alert.alert(t("list.invalidPeriodsTitle"), t("list.invalidPeriodsBody"));
       return;
     }
     try {
@@ -141,42 +143,35 @@ export default function SubjectsScreen() {
         subject_id: gradeSubjectId,
         weekly_periods: wk,
       });
-      const skipNote =
-        r.skipped?.length > 0
-          ? `\n\nSkipped ${r.skipped.length} (often already assigned for that class).`
-          : "";
-      Alert.alert(
-        "Applied",
-        `Added to ${r.applied_count} class section(s).${skipNote}`
-      );
+      let message = t("list.appliedBody", { count: r.applied_count });
+      if (r.skipped?.length > 0) {
+        message += t("list.appliedSkipped", { count: r.skipped.length });
+      }
+      Alert.alert(t("list.appliedTitle"), message);
     } catch (e: any) {
-      Alert.alert("Error", e.message || "Could not apply subject to grade");
+      Alert.alert(t("list.errorTitle"), e.message || t("list.applyError"));
     } finally {
       setGradeApplyBusy(false);
     }
   };
 
   const handleDelete = (subject: Subject) => {
-    Alert.alert(
-      "Delete Subject",
-      `Are you sure you want to delete "${subject.name}"?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteSubject(subject.id);
-              Alert.alert("Success", "Subject deleted successfully");
-              fetchSubjects();
-            } catch (error: any) {
-              Alert.alert("Error", error.message || "Failed to delete subject");
-            }
-          },
+    Alert.alert(t("list.deleteTitle"), t("list.deleteMessage", { name: subject.name }), [
+      { text: t("list.cancel"), style: "cancel" },
+      {
+        text: t("list.delete"),
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deleteSubject(subject.id);
+            Alert.alert(t("list.success"), t("list.deleted"));
+            fetchSubjects();
+          } catch (error: any) {
+            Alert.alert(t("list.errorTitle"), error.message || t("list.deleteError"));
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const renderSubjectCard = ({ item }: { item: Subject }) => (
@@ -188,7 +183,7 @@ export default function SubjectsScreen() {
         <View style={styles.cardInfo}>
           <Text style={styles.cardName}>{item.name}</Text>
           {item.code && (
-            <Text style={styles.cardCode}>Code: {item.code}</Text>
+            <Text style={styles.cardCode}>{t("list.codeLabel", { code: item.code })}</Text>
           )}
           {item.description ? (
             <Text style={styles.cardDescription} numberOfLines={2}>
@@ -221,7 +216,7 @@ export default function SubjectsScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Subjects</Text>
+        <Text style={styles.headerTitle}>{t("list.title")}</Text>
         {canCreate && (
           <TouchableOpacity style={styles.addButton} onPress={handleCreate}>
             <Ionicons name="add" size={24} color={Colors.primary} />
@@ -231,11 +226,8 @@ export default function SubjectsScreen() {
 
       {canApplyToGrade ? (
         <View style={styles.gradeCard}>
-          <Text style={styles.gradeCardTitle}>Apply to all sections of a standard</Text>
-          <Text style={styles.gradeCardHint}>
-            Creates the same subject offering on every class with this standard (grade) and academic year — e.g. all
-            Grade 10 sections (10-A, 10-B). Classes must be created with the standard number set.
-          </Text>
+          <Text style={styles.gradeCardTitle}>{t("list.gradeCardTitle")}</Text>
+          <Text style={styles.gradeCardHint}>{t("list.gradeCardHint")}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
             {academicYears.map((ay) => (
               <TouchableOpacity
@@ -249,7 +241,7 @@ export default function SubjectsScreen() {
           </ScrollView>
           <View style={styles.gradeRow}>
             <View style={styles.gradeField}>
-              <Text style={styles.gradeLabel}>Standard</Text>
+              <Text style={styles.gradeLabel}>{t("list.standard")}</Text>
               <TextInput
                 style={styles.gradeInput}
                 value={gradeLevel}
@@ -260,7 +252,7 @@ export default function SubjectsScreen() {
               />
             </View>
             <View style={styles.gradeField}>
-              <Text style={styles.gradeLabel}>Periods / week</Text>
+              <Text style={styles.gradeLabel}>{t("list.periodsPerWeek")}</Text>
               <TextInput
                 style={styles.gradeInput}
                 value={gradeWeekly}
@@ -274,8 +266,8 @@ export default function SubjectsScreen() {
           <TouchableOpacity style={styles.subjectPick} onPress={() => setSubjectPickerOpen(true)}>
             <Text style={styles.subjectPickTxt}>
               {gradeSubjectId
-                ? subjects.find((s) => s.id === gradeSubjectId)?.name ?? "Selected subject"
-                : "Select subject from catalog →"}
+                ? subjects.find((s) => s.id === gradeSubjectId)?.name ?? t("list.selectedSubject")
+                : t("list.selectSubjectPrompt")}
             </Text>
             <Ionicons name="chevron-down" size={18} color={Colors.textSecondary} />
           </TouchableOpacity>
@@ -287,20 +279,20 @@ export default function SubjectsScreen() {
             {gradeApplyBusy ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.applyBtnTxt}>Apply to all sections of this grade</Text>
+              <Text style={styles.applyBtnTxt}>{t("list.applyButton")}</Text>
             )}
           </TouchableOpacity>
         </View>
       ) : null}
 
-      <Text style={styles.sectionLabel}>Subject catalog</Text>
+      <Text style={styles.sectionLabel}>{t("list.sectionCatalog")}</Text>
 
       {/* Search */}
       <View style={styles.searchContainer}>
         <Ionicons name="search" size={20} color={Colors.textSecondary} style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search by name, code, or description..."
+          placeholder={t("list.searchPlaceholder")}
           placeholderTextColor={Colors.textSecondary}
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -328,7 +320,7 @@ export default function SubjectsScreen() {
           ListEmptyComponent={
             <View style={styles.center}>
               <Text style={styles.emptyText}>
-                {searchQuery ? "No subjects found." : "No subjects yet."}
+                {searchQuery ? t("list.emptySearch") : t("list.emptyNone")}
               </Text>
             </View>
           }
@@ -349,9 +341,9 @@ export default function SubjectsScreen() {
         <SafeAreaView style={styles.pickerModal}>
           <View style={styles.pickerHeader}>
             <TouchableOpacity onPress={() => setSubjectPickerOpen(false)}>
-              <Text style={styles.pickerCancel}>Cancel</Text>
+              <Text style={styles.pickerCancel}>{t("list.pickerCancel")}</Text>
             </TouchableOpacity>
-            <Text style={styles.pickerTitle}>Choose subject</Text>
+            <Text style={styles.pickerTitle}>{t("list.pickerTitle")}</Text>
             <View style={{ width: 56 }} />
           </View>
           <FlatList
@@ -369,7 +361,7 @@ export default function SubjectsScreen() {
               </TouchableOpacity>
             )}
             ListEmptyComponent={
-              <Text style={styles.emptyText}>No subjects in catalog yet. Create one first.</Text>
+              <Text style={styles.emptyText}>{t("list.pickerEmpty")}</Text>
             }
           />
         </SafeAreaView>

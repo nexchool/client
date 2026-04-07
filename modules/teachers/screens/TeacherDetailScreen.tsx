@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -31,9 +32,8 @@ import { TeacherLeave, TeacherAvailability } from "../types";
 
 type TabKey = "info" | "subjects" | "availability" | "leaves" | "workload";
 
-const DAYS = ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
 export default function TeacherDetailScreen() {
+  const { t } = useTranslation("teachers");
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { currentTeacher, loading, fetchTeacher, updateTeacher, deleteTeacher } = useTeachers();
@@ -47,6 +47,31 @@ export default function TeacherDetailScreen() {
   const canLeaveManage = hasPermission(PERMS.TEACHER_LEAVE_MANAGE);
 
   const teacherId = id || "";
+
+  const dayNames = useMemo(
+    () => [
+      "",
+      t("detail.days.mon"),
+      t("detail.days.tue"),
+      t("detail.days.wed"),
+      t("detail.days.thu"),
+      t("detail.days.fri"),
+      t("detail.days.sat"),
+      t("detail.days.sun"),
+    ],
+    [t],
+  );
+
+  const TABS: { key: TabKey; label: string }[] = useMemo(
+    () => [
+      { key: "info", label: t("detail.tabs.info") },
+      { key: "subjects", label: t("detail.tabs.subjects") },
+      { key: "availability", label: t("detail.tabs.availability") },
+      { key: "leaves", label: t("detail.tabs.leaves") },
+      { key: "workload", label: t("detail.tabs.workload") },
+    ],
+    [t],
+  );
 
   // --- Subjects tab ---
   const {
@@ -107,7 +132,7 @@ export default function TeacherDetailScreen() {
     try {
       await updateTeacher(id, data);
       setEditModalVisible(false);
-      Alert.alert("Success", "Teacher updated successfully");
+      Alert.alert(t("list.success"), t("detail.updated"));
       fetchTeacher(id);
     } catch (error: any) {
       throw error;
@@ -115,16 +140,20 @@ export default function TeacherDetailScreen() {
   };
 
   const handleDelete = () => {
-    Alert.alert("Delete Teacher", "Are you sure?", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("detail.deleteConfirmTitle"), t("detail.deleteConfirmMessage"), [
+      { text: t("detail.cancel"), style: "cancel" },
       {
-        text: "Delete",
+        text: t("detail.delete"),
         style: "destructive",
         onPress: async () => {
           if (!id) return;
-          await deleteTeacher(id);
-          Alert.alert("Success", "Teacher deleted");
-          router.back();
+          try {
+            await deleteTeacher(id);
+            router.back();
+          } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : t("detail.deleteFailed");
+            Alert.alert(t("detail.errorTitle"), msg);
+          }
         },
       },
     ]);
@@ -138,7 +167,7 @@ export default function TeacherDetailScreen() {
       setAllSubjects(subs.filter((s) => !assigned.has(s.id)));
       setShowSubjectPicker(true);
     } catch {
-      Alert.alert("Error", "Failed to load subjects");
+      Alert.alert(t("detail.errorTitle"), t("detail.loadSubjectsError"));
     }
   };
 
@@ -147,21 +176,21 @@ export default function TeacherDetailScreen() {
       await addSubject(subjectId);
       setShowSubjectPicker(false);
     } catch (e: any) {
-      Alert.alert("Error", e.message || "Failed to assign subject");
+      Alert.alert(t("detail.errorTitle"), e.message || t("detail.assignSubjectError"));
     }
   };
 
   const handleRemoveSubject = (subjectId: string, name: string) => {
-    Alert.alert("Remove Subject", `Remove ${name}?`, [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("detail.removeSubjectTitle"), t("detail.removeSubjectMessage", { name }), [
+      { text: t("detail.cancel"), style: "cancel" },
       {
-        text: "Remove",
+        text: t("detail.delete"),
         style: "destructive",
         onPress: async () => {
           try {
             await removeSubject(subjectId);
           } catch (e: any) {
-            Alert.alert("Error", e.message);
+            Alert.alert(t("detail.errorTitle"), e.message);
           }
         },
       },
@@ -181,21 +210,32 @@ export default function TeacherDetailScreen() {
       setAvailPeriod("1");
       setAvailIsAvailable(false);
     } catch (e: any) {
-      Alert.alert("Error", e.message || "Failed to save");
+      Alert.alert(t("detail.errorTitle"), e.message || t("detail.saveAvailError"));
     }
   };
 
   const handleDeleteAvail = (slot: TeacherAvailability) => {
-    Alert.alert("Delete Slot", `Remove ${DAYS[slot.day_of_week]} period ${slot.period_number}?`, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          try { await deleteSlot(slot.id); } catch (e: any) { Alert.alert("Error", e.message); }
+    Alert.alert(
+      t("detail.deleteSlotTitle"),
+      t("detail.deleteSlotMessage", {
+        day: dayNames[slot.day_of_week] ?? "",
+        period: slot.period_number,
+      }),
+      [
+        { text: t("detail.cancel"), style: "cancel" },
+        {
+          text: t("detail.delete"),
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteSlot(slot.id);
+            } catch (e: any) {
+              Alert.alert(t("detail.errorTitle"), e.message);
+            }
+          },
         },
-      },
-    ]);
+      ],
+    );
   };
 
   // --- Leave helpers ---
@@ -203,7 +243,7 @@ export default function TeacherDetailScreen() {
     try {
       await approveLeave(leave.id);
     } catch (e: any) {
-      Alert.alert("Error", e.message);
+      Alert.alert(t("detail.errorTitle"), e.message);
     }
   };
 
@@ -211,7 +251,7 @@ export default function TeacherDetailScreen() {
     try {
       await rejectLeave(leave.id);
     } catch (e: any) {
-      Alert.alert("Error", e.message);
+      Alert.alert(t("detail.errorTitle"), e.message);
     }
   };
 
@@ -226,7 +266,7 @@ export default function TeacherDetailScreen() {
     const day = parseInt(maxPerDay);
     const week = parseInt(maxPerWeek);
     if (!day || !week || day < 1 || week < 1) {
-      Alert.alert("Validation", "Enter valid period counts (≥ 1)");
+      Alert.alert(t("detail.validationTitle"), t("detail.workloadValidation"));
       return;
     }
     try {
@@ -234,7 +274,7 @@ export default function TeacherDetailScreen() {
       await saveWorkload({ max_periods_per_day: day, max_periods_per_week: week });
       setShowWorkloadModal(false);
     } catch (e: any) {
-      Alert.alert("Error", e.message || "Failed to save workload");
+      Alert.alert(t("detail.errorTitle"), e.message || t("detail.saveWorkloadError"));
     } finally {
       setWorkloadSaving(false);
     }
@@ -260,9 +300,9 @@ export default function TeacherDetailScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.center}>
-          <Text style={styles.errorText}>Teacher not found</Text>
+          <Text style={styles.errorText}>{t("detail.notFound")}</Text>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-            <Text style={styles.backBtnText}>Go Back</Text>
+            <Text style={styles.backBtnText}>{t("detail.goBack")}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -278,14 +318,6 @@ export default function TeacherDetailScreen() {
       </View>
     );
   };
-
-  const TABS: { key: TabKey; label: string }[] = [
-    { key: "info", label: "Info" },
-    { key: "subjects", label: "Subjects" },
-    { key: "availability", label: "Availability" },
-    { key: "leaves", label: "Leaves" },
-    { key: "workload", label: "Workload" },
-  ];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -324,25 +356,37 @@ export default function TeacherDetailScreen() {
       {activeTab === "info" && (
         <ScrollView style={styles.content}>
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Basic Information</Text>
-            <InfoRow label="Full Name" value={currentTeacher.name} />
-            <InfoRow label="Employee ID" value={currentTeacher.employee_id} />
-            <InfoRow label="Email" value={currentTeacher.email} />
-            <InfoRow label="Phone" value={currentTeacher.phone} />
-            <InfoRow label="Status" value={currentTeacher.status} />
+            <Text style={styles.sectionTitle}>{t("detail.sectionBasic")}</Text>
+            <InfoRow label={t("detail.fullName")} value={currentTeacher.name} />
+            <InfoRow label={t("detail.employeeId")} value={currentTeacher.employee_id} />
+            <InfoRow label={t("detail.email")} value={currentTeacher.email} />
+            <InfoRow label={t("detail.phone")} value={currentTeacher.phone} />
+            <InfoRow
+              label={t("detail.status")}
+              value={t(`status.${(currentTeacher.status ?? "").toLowerCase()}`, {
+                defaultValue: currentTeacher.status ?? "",
+              })}
+            />
           </View>
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Professional Information</Text>
-            <InfoRow label="Designation" value={currentTeacher.designation} />
-            <InfoRow label="Department" value={currentTeacher.department} />
-            <InfoRow label="Qualification" value={currentTeacher.qualification} />
-            <InfoRow label="Specialization" value={currentTeacher.specialization} />
-            <InfoRow label="Experience" value={currentTeacher.experience_years ? `${currentTeacher.experience_years} years` : undefined} />
-            <InfoRow label="Date of Joining" value={currentTeacher.date_of_joining} />
+            <Text style={styles.sectionTitle}>{t("detail.sectionProfessional")}</Text>
+            <InfoRow label={t("detail.designation")} value={currentTeacher.designation} />
+            <InfoRow label={t("detail.department")} value={currentTeacher.department} />
+            <InfoRow label={t("detail.qualification")} value={currentTeacher.qualification} />
+            <InfoRow label={t("detail.specialization")} value={currentTeacher.specialization} />
+            <InfoRow
+              label={t("detail.experience")}
+              value={
+                currentTeacher.experience_years != null
+                  ? t("detail.experienceYears", { years: currentTeacher.experience_years })
+                  : undefined
+              }
+            />
+            <InfoRow label={t("detail.dateOfJoining")} value={currentTeacher.date_of_joining} />
           </View>
           {currentTeacher.address && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Address</Text>
+              <Text style={styles.sectionTitle}>{t("detail.sectionAddress")}</Text>
               <Text style={styles.addressText}>{currentTeacher.address}</Text>
             </View>
           )}
@@ -353,18 +397,18 @@ export default function TeacherDetailScreen() {
       {activeTab === "subjects" && (
         <View style={styles.tabContent}>
           <View style={styles.tabContentHeader}>
-            <Text style={styles.tabContentTitle}>Subject Expertise</Text>
+            <Text style={styles.tabContentTitle}>{t("detail.subjectExpertise")}</Text>
             {canManage && (
               <TouchableOpacity style={styles.addBtn} onPress={openSubjectPicker}>
                 <Ionicons name="add" size={20} color="#fff" />
-                <Text style={styles.addBtnText}>Add</Text>
+                <Text style={styles.addBtnText}>{t("detail.add")}</Text>
               </TouchableOpacity>
             )}
           </View>
           {subjectsLoading ? (
             <ActivityIndicator style={{ marginTop: Spacing.xl }} color={Colors.primary} />
           ) : teacherSubjects.length === 0 ? (
-            <Text style={styles.emptyText}>No subjects assigned yet.</Text>
+            <Text style={styles.emptyText}>{t("detail.emptySubjects")}</Text>
           ) : (
             <FlatList
               data={teacherSubjects}
@@ -392,19 +436,19 @@ export default function TeacherDetailScreen() {
       {activeTab === "availability" && (
         <View style={styles.tabContent}>
           <View style={styles.tabContentHeader}>
-            <Text style={styles.tabContentTitle}>Unavailability Slots</Text>
+            <Text style={styles.tabContentTitle}>{t("detail.unavailabilityTitle")}</Text>
             {canManage && (
               <TouchableOpacity style={styles.addBtn} onPress={() => setShowAvailModal(true)}>
                 <Ionicons name="add" size={20} color="#fff" />
-                <Text style={styles.addBtnText}>Add</Text>
+                <Text style={styles.addBtnText}>{t("detail.add")}</Text>
               </TouchableOpacity>
             )}
           </View>
-          <Text style={styles.helperText}>Records where teacher is marked unavailable (available = false).</Text>
+          <Text style={styles.helperText}>{t("detail.availabilityHelper")}</Text>
           {availLoading ? (
             <ActivityIndicator style={{ marginTop: Spacing.xl }} color={Colors.primary} />
           ) : availability.length === 0 ? (
-            <Text style={styles.emptyText}>No constraints set. Teacher is available for all slots.</Text>
+            <Text style={styles.emptyText}>{t("detail.emptyAvailability")}</Text>
           ) : (
             <FlatList
               data={availability}
@@ -413,9 +457,14 @@ export default function TeacherDetailScreen() {
               renderItem={({ item }) => (
                 <View style={styles.listItem}>
                   <View style={styles.listItemInfo}>
-                    <Text style={styles.listItemName}>{DAYS[item.day_of_week]} — Period {item.period_number}</Text>
+                    <Text style={styles.listItemName}>
+                      {t("detail.slotLine", {
+                        day: dayNames[item.day_of_week] ?? "",
+                        period: item.period_number,
+                      })}
+                    </Text>
                     <Text style={[styles.listItemDetail, { color: item.available ? Colors.success : Colors.error }]}>
-                      {item.available ? "Available" : "Unavailable"}
+                      {item.available ? t("detail.slotAvailable") : t("detail.slotUnavailable")}
                     </Text>
                   </View>
                   {canManage && (
@@ -434,12 +483,12 @@ export default function TeacherDetailScreen() {
       {activeTab === "leaves" && (
         <View style={styles.tabContent}>
           <View style={styles.tabContentHeader}>
-            <Text style={styles.tabContentTitle}>Leave Requests</Text>
+            <Text style={styles.tabContentTitle}>{t("detail.leaveRequestsTitle")}</Text>
           </View>
           {leavesLoading ? (
             <ActivityIndicator style={{ marginTop: Spacing.xl }} color={Colors.primary} />
           ) : leaves.length === 0 ? (
-            <Text style={styles.emptyText}>No leave requests.</Text>
+            <Text style={styles.emptyText}>{t("detail.emptyLeaves")}</Text>
           ) : (
             <FlatList
               data={leaves}
@@ -450,7 +499,9 @@ export default function TeacherDetailScreen() {
                   <View style={styles.leaveCardHeader}>
                     <Text style={styles.leaveType}>{item.leave_type.toUpperCase()}</Text>
                     <View style={[styles.statusBadge, { backgroundColor: statusColor(item.status) + "20" }]}>
-                      <Text style={[styles.statusText, { color: statusColor(item.status) }]}>{item.status}</Text>
+                      <Text style={[styles.statusText, { color: statusColor(item.status) }]}>
+                        {t(`status.${item.status}`, { defaultValue: item.status })}
+                      </Text>
                     </View>
                   </View>
                   <Text style={styles.leaveDates}>{item.start_date} → {item.end_date}</Text>
@@ -458,10 +509,10 @@ export default function TeacherDetailScreen() {
                   {canLeaveManage && item.status === "pending" && (
                     <View style={styles.leaveActions}>
                       <TouchableOpacity style={styles.approveBtn} onPress={() => handleApproveLeave(item)}>
-                        <Text style={styles.approveBtnText}>Approve</Text>
+                        <Text style={styles.approveBtnText}>{t("detail.approve")}</Text>
                       </TouchableOpacity>
                       <TouchableOpacity style={styles.rejectBtn} onPress={() => handleRejectLeave(item)}>
-                        <Text style={styles.rejectBtnText}>Reject</Text>
+                        <Text style={styles.rejectBtnText}>{t("detail.reject")}</Text>
                       </TouchableOpacity>
                     </View>
                   )}
@@ -477,11 +528,13 @@ export default function TeacherDetailScreen() {
         <ScrollView style={styles.content}>
           <View style={styles.section}>
             <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>Workload Rule</Text>
+              <Text style={styles.sectionTitle}>{t("detail.workloadRule")}</Text>
               {canManage && (
                 <TouchableOpacity style={styles.addSmallBtn} onPress={openWorkloadModal}>
                   <Ionicons name={workload ? "create-outline" : "add"} size={18} color={Colors.primary} />
-                  <Text style={styles.addSmallBtnText}>{workload ? "Edit" : "Set Rule"}</Text>
+                  <Text style={styles.addSmallBtnText}>
+                    {workload ? t("detail.editRule") : t("detail.setRule")}
+                  </Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -490,16 +543,16 @@ export default function TeacherDetailScreen() {
             ) : workload ? (
               <>
                 <View style={styles.workloadRow}>
-                  <Text style={styles.workloadLabel}>Max Periods / Day</Text>
+                  <Text style={styles.workloadLabel}>{t("detail.maxPeriodsPerDay")}</Text>
                   <Text style={styles.workloadValue}>{workload.max_periods_per_day}</Text>
                 </View>
                 <View style={styles.workloadRow}>
-                  <Text style={styles.workloadLabel}>Max Periods / Week</Text>
+                  <Text style={styles.workloadLabel}>{t("detail.maxPeriodsPerWeek")}</Text>
                   <Text style={styles.workloadValue}>{workload.max_periods_per_week}</Text>
                 </View>
               </>
             ) : (
-              <Text style={styles.emptyText}>No workload rule set. Default limits will apply.</Text>
+              <Text style={styles.emptyText}>{t("detail.noWorkloadDefault")}</Text>
             )}
           </View>
         </ScrollView>
@@ -520,7 +573,7 @@ export default function TeacherDetailScreen() {
       <Modal visible={showSubjectPicker} animationType="slide" presentationStyle="pageSheet">
         <SafeAreaView style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Assign Subject</Text>
+            <Text style={styles.modalTitle}>{t("detail.assignSubjectTitle")}</Text>
             <TouchableOpacity onPress={() => setShowSubjectPicker(false)}>
               <Ionicons name="close" size={24} color={Colors.text} />
             </TouchableOpacity>
@@ -535,7 +588,9 @@ export default function TeacherDetailScreen() {
                 {item.code ? <Text style={styles.pickerDetail}>{item.code}</Text> : null}
               </TouchableOpacity>
             )}
-            ListEmptyComponent={<Text style={styles.emptyText}>All subjects already assigned.</Text>}
+            ListEmptyComponent={
+              <Text style={styles.emptyText}>{t("detail.allSubjectsAssigned")}</Text>
+            }
           />
         </SafeAreaView>
       </Modal>
@@ -544,41 +599,39 @@ export default function TeacherDetailScreen() {
       <Modal visible={showAvailModal} animationType="slide" presentationStyle="formSheet">
         <SafeAreaView style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Add Availability Slot</Text>
+            <Text style={styles.modalTitle}>{t("detail.addAvailabilityTitle")}</Text>
             <TouchableOpacity onPress={() => setShowAvailModal(false)}>
               <Ionicons name="close" size={24} color={Colors.text} />
             </TouchableOpacity>
           </View>
           <ScrollView style={{ padding: Spacing.lg }}>
-            <Text style={styles.fieldLabel}>Day of Week (1=Mon … 7=Sun)</Text>
+            <Text style={styles.fieldLabel}>{t("detail.dayOfWeekLabel")}</Text>
             <TextInput
               style={styles.input}
               value={availDay}
               onChangeText={setAvailDay}
               keyboardType="number-pad"
-              placeholder="e.g. 1"
+              placeholder="1"
             />
-            <Text style={styles.fieldLabel}>Period Number</Text>
+            <Text style={styles.fieldLabel}>{t("detail.periodNumberLabel")}</Text>
             <TextInput
               style={styles.input}
               value={availPeriod}
               onChangeText={setAvailPeriod}
               keyboardType="number-pad"
-              placeholder="e.g. 3"
+              placeholder="3"
             />
             <View style={styles.switchRow}>
-              <Text style={styles.fieldLabel}>Available</Text>
+              <Text style={styles.fieldLabel}>{t("detail.availableLabel")}</Text>
               <Switch
                 value={availIsAvailable}
                 onValueChange={setAvailIsAvailable}
                 trackColor={{ true: Colors.success, false: Colors.error }}
               />
             </View>
-            <Text style={styles.helperText}>
-              Turn OFF to mark this slot as unavailable (e.g. teacher has a meeting).
-            </Text>
+            <Text style={styles.helperText}>{t("detail.availabilitySwitchHint")}</Text>
             <TouchableOpacity style={styles.submitBtn} onPress={handleCreateAvail}>
-              <Text style={styles.submitBtnText}>Save Slot</Text>
+              <Text style={styles.submitBtnText}>{t("detail.saveSlot")}</Text>
             </TouchableOpacity>
           </ScrollView>
         </SafeAreaView>
@@ -588,20 +641,22 @@ export default function TeacherDetailScreen() {
       <Modal visible={showWorkloadModal} animationType="slide" presentationStyle="formSheet">
         <SafeAreaView style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Set Workload Rule</Text>
+            <Text style={styles.modalTitle}>{t("detail.workloadModalTitle")}</Text>
             <TouchableOpacity onPress={() => setShowWorkloadModal(false)}>
               <Ionicons name="close" size={24} color={Colors.text} />
             </TouchableOpacity>
           </View>
           <ScrollView style={{ padding: Spacing.lg }}>
-            <Text style={styles.fieldLabel}>Max Periods Per Day *</Text>
-            <TextInput style={styles.input} value={maxPerDay} onChangeText={setMaxPerDay} keyboardType="number-pad" placeholder="e.g. 6" />
+            <Text style={styles.fieldLabel}>{t("detail.maxPerDayRequired")}</Text>
+            <TextInput style={styles.input} value={maxPerDay} onChangeText={setMaxPerDay} keyboardType="number-pad" placeholder="6" />
 
-            <Text style={styles.fieldLabel}>Max Periods Per Week *</Text>
-            <TextInput style={styles.input} value={maxPerWeek} onChangeText={setMaxPerWeek} keyboardType="number-pad" placeholder="e.g. 30" />
+            <Text style={styles.fieldLabel}>{t("detail.maxPerWeekRequired")}</Text>
+            <TextInput style={styles.input} value={maxPerWeek} onChangeText={setMaxPerWeek} keyboardType="number-pad" placeholder="30" />
 
             <TouchableOpacity style={styles.submitBtn} onPress={handleSaveWorkload} disabled={workloadSaving}>
-              <Text style={styles.submitBtnText}>{workloadSaving ? "Saving..." : "Save Rule"}</Text>
+              <Text style={styles.submitBtnText}>
+                {workloadSaving ? t("detail.saving") : t("detail.saveRule")}
+              </Text>
             </TouchableOpacity>
           </ScrollView>
         </SafeAreaView>

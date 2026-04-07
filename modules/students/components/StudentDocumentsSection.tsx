@@ -4,6 +4,7 @@
  * Opens documents in-app via authenticated API (no public URLs).
  */
 import React, { Fragment, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -22,7 +23,11 @@ import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
 import * as PERMS from "@/modules/permissions/constants/permissions";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
-import { StudentDocument, DOCUMENT_TYPE_LABELS } from "../types";
+import {
+  StudentDocument,
+  DOCUMENT_TYPE_LABELS,
+  type DocumentType,
+} from "../types";
 import { UploadDocumentModal } from "./UploadDocumentModal";
 import { StudentDocumentViewerModal } from "./StudentDocumentViewerModal";
 
@@ -31,6 +36,7 @@ interface StudentDocumentsSectionProps {
 }
 
 export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionProps) {
+  const { t } = useTranslation("profile");
   const {
     data: documents,
     isLoading,
@@ -47,17 +53,17 @@ export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionPr
 
   const handleDeleteDocument = (doc: StudentDocument) => {
     Alert.alert(
-      "Delete Document",
-      `Are you sure you want to delete "${doc.original_filename}"?`,
+      t("documents.deleteTitle"),
+      t("documents.deleteMessage", { filename: doc.original_filename }),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("documents.cancel"), style: "cancel" },
         {
-          text: "Delete",
+          text: t("documents.delete"),
           style: "destructive",
           onPress: () => {
             deleteMutation.mutate(doc.id, {
               onError: (err) => {
-                Alert.alert("Error", err.message);
+                Alert.alert(t("documents.error"), err.message);
               },
             });
           },
@@ -70,7 +76,10 @@ export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionPr
     if (doc.id && doc.student_id) {
       setViewerDoc(doc);
     } else {
-      Alert.alert("Unavailable", "This document cannot be opened. Try uploading again.");
+      Alert.alert(
+        t("documents.unavailableTitle"),
+        t("documents.unavailableMessage"),
+      );
     }
   };
 
@@ -82,7 +91,7 @@ export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionPr
   if (isLoading) {
     return (
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Documents</Text>
+        <Text style={styles.sectionTitle}>{t("documents.title")}</Text>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="small" color={Colors.primary} />
         </View>
@@ -96,16 +105,13 @@ export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionPr
     return (
       <Fragment>
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Documents</Text>
+        <Text style={styles.sectionTitle}>{t("documents.title")}</Text>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorMessage}>
-            Unable to load documents. You can add documents below to complete the
-            profile, or tap Retry to try again.
-          </Text>
+          <Text style={styles.errorMessage}>{t("documents.errorMessage")}</Text>
           <View style={styles.errorActions}>
             <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
               <Ionicons name="refresh" size={18} color={Colors.primary} />
-              <Text style={styles.retryButtonText}>Retry</Text>
+              <Text style={styles.retryButtonText}>{t("documents.retry")}</Text>
             </TouchableOpacity>
             {canManage && (
               <TouchableOpacity
@@ -113,7 +119,7 @@ export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionPr
                 onPress={() => setUploadModalVisible(true)}
               >
                 <Ionicons name="add" size={18} color={Colors.primary} />
-                <Text style={styles.retryButtonText}>Add Document</Text>
+                <Text style={styles.retryButtonText}>{t("documents.addDocument")}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -139,14 +145,14 @@ export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionPr
     <Fragment>
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Documents</Text>
+        <Text style={styles.sectionTitle}>{t("documents.title")}</Text>
         {canManage && (
           <TouchableOpacity
             style={styles.addButton}
             onPress={() => setUploadModalVisible(true)}
           >
             <Ionicons name="add" size={20} color={Colors.primary} />
-            <Text style={styles.addButtonText}>Add Document</Text>
+            <Text style={styles.addButtonText}>{t("documents.addDocument")}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -154,15 +160,13 @@ export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionPr
       {list.length === 0 ? (
         <View style={styles.emptyState}>
           <Ionicons name="document-outline" size={48} color={Colors.textSecondary} />
-          <Text style={styles.emptyText}>
-            No documents uploaded yet. Tap + to add the first one.
-          </Text>
+          <Text style={styles.emptyText}>{t("documents.emptyState")}</Text>
           {canManage && (
             <TouchableOpacity
               style={styles.emptyAddButton}
               onPress={() => setUploadModalVisible(true)}
             >
-              <Text style={styles.emptyAddButtonText}>Add Document</Text>
+              <Text style={styles.emptyAddButtonText}>{t("documents.addDocument")}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -184,7 +188,12 @@ export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionPr
               />
               <View style={styles.docCardContent}>
                 <Text style={styles.docCardLabel}>
-                  {doc.document_type_label || DOCUMENT_TYPE_LABELS[doc.document_type] || doc.document_type}
+                  {doc.document_type_label ||
+                    t(`documentTypes.${doc.document_type}`, {
+                      defaultValue:
+                        DOCUMENT_TYPE_LABELS[doc.document_type as DocumentType] ??
+                        doc.document_type,
+                    })}
                 </Text>
                 <Text style={styles.docCardFilename} numberOfLines={1}>
                   {doc.original_filename}
@@ -277,6 +286,27 @@ const styles = StyleSheet.create({
   errorContainer: {
     padding: Spacing.xl,
     alignItems: "center",
+  },
+  errorMessage: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    textAlign: "center",
+    marginBottom: Spacing.md,
+  },
+  errorActions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: Spacing.sm,
+  },
+  addFromErrorButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    backgroundColor: Colors.backgroundSecondary,
+    borderRadius: Layout.borderRadius.sm,
   },
   errorText: {
     fontSize: 14,

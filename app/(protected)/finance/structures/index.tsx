@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -29,17 +30,20 @@ import type { FeeStructure } from "@/modules/finance/types";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
 import { ClassMultiSelect } from "@/common/components/ClassMultiSelect";
+import { calendarLocaleForLanguage } from "@/i18n";
 import { DateField } from "@/common/components/DateField";
 
-function formatDate(s: string) {
+function formatDate(s: string, locale: string) {
   try {
-    return new Date(s).toLocaleDateString("en-IN");
+    return new Date(s).toLocaleDateString(locale);
   } catch {
     return s;
   }
 }
 
 export default function FeeStructuresPage() {
+  const { t, i18n } = useTranslation("finance");
+  const locale = calendarLocaleForLanguage(i18n.language ?? "en");
   const router = useRouter();
   const { selectedAcademicYearId: contextYearId } = useAcademicYearContext();
   const [academicYearFilter, setAcademicYearFilter] = useState<string>("");
@@ -63,7 +67,7 @@ export default function FeeStructuresPage() {
     return (
       <View style={styles.center}>
         <Text style={styles.errorText}>
-          {error instanceof Error ? error.message : "Failed to load"}
+          {error instanceof Error ? error.message : t("common.failedToLoad")}
         </Text>
       </View>
     );
@@ -81,13 +85,18 @@ export default function FeeStructuresPage() {
       <View style={styles.classInfo}>
         <Text style={styles.className}>{s.name}</Text>
         <Text style={styles.classDetail}>
-          {s.class_name ?? "All classes"} • Due {formatDate(s.due_date)}
+          {t("structures.classDetail", {
+            classes: s.class_name ?? t("common.allClasses"),
+            date: formatDate(s.due_date, locale),
+          })}
         </Text>
         {s.components?.length ? (
           <View style={styles.statsRow}>
             <View style={styles.stat}>
               <Ionicons name="document-text-outline" size={14} color={Colors.textSecondary} />
-              <Text style={styles.statText}>{s.components.length} components</Text>
+              <Text style={styles.statText}>
+                {t("common.componentsLine", { count: s.components.length })}
+              </Text>
             </View>
           </View>
         ) : null}
@@ -101,7 +110,7 @@ export default function FeeStructuresPage() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backIcon}>
           <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Fee Structures</Text>
+        <Text style={styles.headerTitle}>{t("structures.title")}</Text>
         <TouchableOpacity
           style={styles.addButton}
           onPress={() => setModalOpen(true)}
@@ -111,14 +120,14 @@ export default function FeeStructuresPage() {
       </View>
 
       <View style={styles.filterSection}>
-        <Text style={styles.filterLabel}>Academic Year</Text>
+        <Text style={styles.filterLabel}>{t("structures.academicYear")}</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
           <TouchableOpacity
             style={[styles.filterChip, !academicYearFilter && styles.filterChipActive]}
             onPress={() => setAcademicYearFilter("")}
           >
             <Text style={[styles.filterChipText, !academicYearFilter && styles.filterChipTextActive]}>
-              All
+              {t("common.all")}
             </Text>
           </TouchableOpacity>
           {academicYears.map((ay) => (
@@ -154,16 +163,16 @@ export default function FeeStructuresPage() {
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <Ionicons name="layers-outline" size={48} color={Colors.textTertiary} />
-              <Text style={styles.emptyTitle}>No fee structures yet</Text>
+              <Text style={styles.emptyTitle}>{t("structures.emptyTitle")}</Text>
               <Text style={styles.emptySubtext}>
-                Create your first fee structure to assign fees to students
+                {t("structures.emptySubtext")}
               </Text>
               <TouchableOpacity
                 style={styles.emptyCta}
                 onPress={() => setModalOpen(true)}
               >
                 <Ionicons name="add" size={20} color="#fff" />
-                <Text style={styles.emptyCtaText}>Create Structure</Text>
+                <Text style={styles.emptyCtaText}>{t("structures.createStructure")}</Text>
               </TouchableOpacity>
             </View>
           }
@@ -174,21 +183,21 @@ export default function FeeStructuresPage() {
           visible={modalOpen}
           onClose={() => setModalOpen(false)}
           editingId={null}
-        structures={structures}
-        academicYears={academicYears}
-        allClasses={classes}
-        defaultAcademicYearId={contextYearId ?? undefined}
-        onCreate={async (data) => {
-          await createMut.mutateAsync(data);
-          setModalOpen(false);
-        }}
-        onUpdate={async (id, data) => {
-          await updateMut.mutateAsync({ id, data });
-          setModalOpen(false);
-        }}
-        isCreating={createMut.isPending}
-        isUpdating={updateMut.isPending}
-      />
+          structures={structures}
+          academicYears={academicYears}
+          allClasses={classes}
+          defaultAcademicYearId={contextYearId ?? undefined}
+          onCreate={async (data) => {
+            await createMut.mutateAsync(data);
+            setModalOpen(false);
+          }}
+          onUpdate={async (id, data) => {
+            await updateMut.mutateAsync({ id, data });
+            setModalOpen(false);
+          }}
+          isCreating={createMut.isPending}
+          isUpdating={updateMut.isPending}
+        />
     </SafeAreaView>
   );
 }
@@ -226,6 +235,7 @@ function StructureModal({
   isCreating,
   isUpdating,
 }: StructureModalProps) {
+  const { t } = useTranslation("finance");
   const editing = editingId ? structures.find((s) => s.id === editingId) : null;
 
   const [name, setName] = useState(editing?.name ?? "");
@@ -281,15 +291,15 @@ function StructureModal({
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      Alert.alert("Error", "Name is required");
+      Alert.alert(t("common.error"), t("structures.modal.alerts.nameRequired"));
       return;
     }
     if (!editingId && !academicYearId) {
-      Alert.alert("Error", "Academic year is required");
+      Alert.alert(t("common.error"), t("structures.modal.alerts.yearRequired"));
       return;
     }
     if (!dueDate.trim()) {
-      Alert.alert("Error", "Due date is required");
+      Alert.alert(t("common.error"), t("structures.modal.alerts.dueRequired"));
       return;
     }
     const comps = components
@@ -300,11 +310,11 @@ function StructureModal({
         is_optional: c.is_optional,
       }));
     if (!editingId && comps.length === 0) {
-      Alert.alert("Error", "Add at least one component");
+      Alert.alert(t("common.error"), t("structures.modal.alerts.componentsCreate"));
       return;
     }
     if (editingId && comps.length === 0) {
-      Alert.alert("Error", "At least one component is required");
+      Alert.alert(t("common.error"), t("structures.modal.alerts.componentsEdit"));
       return;
     }
 
@@ -326,7 +336,7 @@ function StructureModal({
         });
       }
     } catch (e: unknown) {
-      Alert.alert("Error", e instanceof Error ? e.message : "Failed to save");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("structures.modal.alerts.saveFailed"));
     }
   };
 
@@ -349,7 +359,7 @@ function StructureModal({
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>
-              {editingId ? "Edit Structure" : "Create Structure"}
+              {editingId ? t("structures.modal.editTitle") : t("structures.modal.createTitle")}
             </Text>
             <TouchableOpacity onPress={onClose}>
               <Ionicons name="close" size={24} color={Colors.text} />
@@ -357,18 +367,18 @@ function StructureModal({
           </View>
 
           <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
-            <Text style={styles.inputLabel}>Structure name</Text>
-            <Text style={styles.helperText}>A short name to identify this fee structure</Text>
+            <Text style={styles.inputLabel}>{t("structures.modal.structureName")}</Text>
+            <Text style={styles.helperText}>{t("structures.modal.structureNameHint")}</Text>
             <TextInput
               style={styles.input}
               value={name}
               onChangeText={setName}
-              placeholder="e.g. Term 1 Fee 2025"
+              placeholder={t("structures.modal.namePlaceholder")}
             />
 
             {!editingId && (
               <>
-                <Text style={styles.inputLabel}>Academic Year</Text>
+                <Text style={styles.inputLabel}>{t("structures.modal.academicYear")}</Text>
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
@@ -394,30 +404,29 @@ function StructureModal({
               </>
             )}
 
-            <Text style={styles.inputLabel}>Classes</Text>
+            <Text style={styles.inputLabel}>{t("structures.modal.classes")}</Text>
             <Text style={styles.helperText}>
-              Select one or more classes this fee structure applies to. Each class can belong to only
-              one fee structure in an academic year.
+              {t("structures.modal.classesHint")}
             </Text>
             <ClassMultiSelect
               value={classIds}
               onChange={setClassIds}
               options={classOptions}
-              placeholder="All classes"
+              placeholder={t("structures.modal.classesPlaceholder")}
             />
 
             <DateField
-              label="Due Date"
+              label={t("structures.modal.dueDate")}
               value={dueDate}
               onChange={setDueDate}
-              placeholder="e.g. 2025-03-31"
+              placeholder={t("structures.modal.dueDatePlaceholder")}
             />
 
             <View style={styles.componentHeader}>
-              <Text style={styles.inputLabel}>Components</Text>
+              <Text style={styles.inputLabel}>{t("structures.modal.components")}</Text>
               <TouchableOpacity onPress={addComponent} style={styles.addComponentBtn}>
                 <Ionicons name="add" size={20} color={Colors.primary} />
-                <Text style={styles.addComponentText}>Add</Text>
+                <Text style={styles.addComponentText}>{t("structures.modal.add")}</Text>
               </TouchableOpacity>
             </View>
             {components.map((c, i) => (
@@ -426,17 +435,17 @@ function StructureModal({
                   style={[styles.input, styles.componentInput]}
                   value={c.name}
                   onChangeText={(v) => updateComponent(i, "name", v)}
-                  placeholder="Component name"
+                  placeholder={t("structures.modal.componentName")}
                 />
                 <TextInput
                   style={[styles.input, styles.amountInput]}
                   value={c.amount}
                   onChangeText={(v) => updateComponent(i, "amount", v)}
-                  placeholder="Amount"
+                  placeholder={t("structures.modal.amount")}
                   keyboardType="decimal-pad"
                 />
                 <View style={styles.optionalRow}>
-                  <Text style={styles.optionalLabel}>Optional</Text>
+                  <Text style={styles.optionalLabel}>{t("structures.modal.optional")}</Text>
                   <Switch
                     value={c.is_optional}
                     onValueChange={(v) => updateComponent(i, "is_optional", v)}
@@ -455,7 +464,7 @@ function StructureModal({
 
           <View style={styles.modalFooter}>
             <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
-              <Text style={styles.cancelBtnText}>Cancel</Text>
+              <Text style={styles.cancelBtnText}>{t("structures.modal.cancel")}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.submitBtn, (isCreating || isUpdating) && styles.submitBtnDisabled]}
@@ -465,7 +474,7 @@ function StructureModal({
               {isCreating || isUpdating ? (
                 <ActivityIndicator size="small" color={Colors.background} />
               ) : (
-                <Text style={styles.submitBtnText}>{editingId ? "Update" : "Create"}</Text>
+                <Text style={styles.submitBtnText}>{editingId ? t("structures.modal.update") : t("structures.modal.create")}</Text>
               )}
             </TouchableOpacity>
           </View>

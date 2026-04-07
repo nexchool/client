@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -26,6 +27,7 @@ type Status = "present" | "absent" | "late" | "excused";
 const ORDER: Status[] = ["present", "absent", "late", "excused"];
 
 export default function AttendanceSessionScreen() {
+  const { t } = useTranslation("attendance");
   const router = useRouter();
   const { hasPermission } = usePermissions();
   const { classId, className, date: dateParam } = useLocalSearchParams<{
@@ -69,7 +71,7 @@ export default function AttendanceSessionScreen() {
         }
         setStatusMap(m);
       } catch (e: any) {
-        Alert.alert("Error", e.message);
+        Alert.alert(t("session.errorTitle"), e.message);
       } finally {
         setLoading(false);
       }
@@ -104,9 +106,9 @@ export default function AttendanceSessionScreen() {
         status: statusMap[s.id] ?? "present",
       }));
       await attendanceV2Api.upsertSessionRecords(session.id, records);
-      Alert.alert("Saved", "Attendance draft saved.");
+      Alert.alert(t("session.savedTitle"), t("session.savedDraft"));
     } catch (e: any) {
-      Alert.alert("Error", e.message);
+      Alert.alert(t("session.errorTitle"), e.message);
     } finally {
       setSaving(false);
     }
@@ -114,10 +116,10 @@ export default function AttendanceSessionScreen() {
 
   const finalize = async () => {
     if (!session || readOnly) return;
-    Alert.alert("Finalize", "Finalize attendance for this date? Further edits may require admin.", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("session.finalizeTitle"), t("session.finalizeBody"), [
+      { text: t("session.cancel"), style: "cancel" },
       {
-        text: "Finalize",
+        text: t("session.finalize"),
         onPress: async () => {
           setSaving(true);
           try {
@@ -128,9 +130,9 @@ export default function AttendanceSessionScreen() {
             await attendanceV2Api.upsertSessionRecords(session.id, records);
             const r = await attendanceV2Api.finalizeSession(session.id);
             setSession(r.session);
-            Alert.alert("Done", "Attendance finalized.");
+            Alert.alert(t("session.doneTitle"), t("session.finalizedMsg"));
           } catch (e: any) {
-            Alert.alert("Error", e.message);
+            Alert.alert(t("session.errorTitle"), e.message);
           } finally {
             setSaving(false);
           }
@@ -139,12 +141,12 @@ export default function AttendanceSessionScreen() {
     ]);
   };
 
-  const label = useMemo(() => className ?? "Class", [className]);
+  const label = useMemo(() => className ?? t("session.classFallback"), [className, t]);
 
   if (!classId) {
     return (
       <SafeAreaView style={styles.container}>
-        <Text style={styles.muted}>Missing class</Text>
+        <Text style={styles.muted}>{t("session.missingClass")}</Text>
       </SafeAreaView>
     );
   }
@@ -163,19 +165,19 @@ export default function AttendanceSessionScreen() {
         <Text style={styles.dateTxt}>{date}</Text>
         {session && (
           <StatusChip
-            label={session.status}
+            label={t(`status.${session.status}`, { defaultValue: session.status })}
             variant={session.status === "finalized" ? "finalized" : "draft"}
           />
         )}
-        {readOnly && <Text style={styles.ro}>Read-only</Text>}
+        {readOnly && <Text style={styles.ro}>{t("session.readOnly")}</Text>}
       </View>
 
       <View style={styles.bulk}>
         <TouchableOpacity style={styles.bulkBtn} onPress={() => setAll("present")} disabled={readOnly}>
-          <Text style={styles.bulkTxt}>All present</Text>
+          <Text style={styles.bulkTxt}>{t("session.allPresent")}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.bulkBtn} onPress={() => setAll("absent")} disabled={readOnly}>
-          <Text style={styles.bulkTxt}>All absent</Text>
+          <Text style={styles.bulkTxt}>{t("session.allAbsent")}</Text>
         </TouchableOpacity>
       </View>
 
@@ -199,7 +201,9 @@ export default function AttendanceSessionScreen() {
                   <Text style={styles.stMeta}>{s.admission_number}</Text>
                 </View>
                 <View style={[styles.pill, { borderColor: colorFor(st) }]}>
-                  <Text style={[styles.pillTxt, { color: colorFor(st) }]}>{st}</Text>
+                  <Text style={[styles.pillTxt, { color: colorFor(st) }]}>
+                    {t(`status.${st}`, { defaultValue: st })}
+                  </Text>
                 </View>
               </TouchableOpacity>
             );
@@ -210,10 +214,10 @@ export default function AttendanceSessionScreen() {
       {!readOnly && (
         <View style={styles.footer}>
           <TouchableOpacity style={styles.secondary} onPress={saveDraft} disabled={saving}>
-            <Text style={styles.secondaryTxt}>{saving ? "…" : "Save draft"}</Text>
+            <Text style={styles.secondaryTxt}>{saving ? "…" : t("session.saveDraft")}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.primary} onPress={finalize} disabled={saving}>
-            <Text style={styles.primaryTxt}>Finalize</Text>
+            <Text style={styles.primaryTxt}>{t("session.finalize")}</Text>
           </TouchableOpacity>
         </View>
       )}

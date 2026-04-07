@@ -1,0 +1,135 @@
+{
+  "main": {
+    "sections": {
+      "profileInformation": "प्रोफ़ाइल जानकारी",
+      "academic": "शैक्षणिक",
+      "settings": "सेटिंग्स"
+    },
+    "cards": {
+      "myProfile": "मेरी प्रोफ़ाइल",
+      "myProfileSubtitle": "स्कूल रिकॉर्ड और प्रोफ़ाइल फ़ोटो देखें",
+      "changePassword": "पासवर्ड बदलें",
+      "changePasswordSubtitle": "अपना पासवर्ड अपडेट करें",
+      "reportCard": "रिपोर्ट कार्ड",
+      "reportCardSubtitle": "शैक्षणिक प्रगति देखें",
+      "notifications": "सूचनाएँ",
+      "notificationsSubtitle": "सूचना वरीयताएँ प्रबंधित करें",
+      "helpSupport": "सहायता और समर्थन",
+      "helpSupportSubtitle": "मदद लें और सहायता से संपर्क करें",
+      "terms": "सेवा की शर्तें",
+      "termsSubtitle": "हमारी शर्तें पढ़ें",
+      "privacy": "गोपनीयता नीति",
+      "privacySubtitle": "हम आपकी जानकारी कैसे संभालते हैं"
+    },
+    "logout": "लॉग आउट"
+  },
+  "myProfile": {
+    "screenTitle": "मेरी प्रोफ़ाइल",
+    "defaultDisplayName": "प्रोफ़ाइल",
+    "heroHint": "फ़ोटो बदलने के लिए यहाँ टैप करें। स्कूल भी एडमिन पैनल से फ़ोटो सेट कर सकता है। अन्य विवरण केवल पढ़ने योग्य हैं और स्कूल रिकॉर्ड से आते हैं।",
+    "sections": {
+      "account": "खाता",
+      "basicInformation": "मूल जानकारी",
+      "contact": "संपर्क",
+      "guardian": "अभिभावक",
+      "classInfo": "कक्षा",
+      "professional": "व्यावसायिक",
+      "address": "पता"
+    },
+    "notice": "इस लॉगिन से कोई छात्र या शिक्षक रिकॉर्ड जुड़ा नहीं है। यदि आप छात्र या शिक्षक हैं, तो स्कूल व्यवस्थापक से संपर्क करें।",
+    "experienceYears": "{{years}} वर्ष",
+    "notAssigned": "नियुक्त नहीं",
+    "dash": "—",
+    "alerts": {
+      "permissionTitle": "अनुमति आवश्यक",
+      "permissionMessage": "प्रोफ़ाइल फ़ोटो बदलने के लिए फ़ोटो लाइब्रेरी की अनुमति दें।",
+      "readPhotoTitle": "फ़ोटो नहीं पढ़ सके",
+      "readPhotoMessage": "अपलोड के लिए छवि कॉपी नहीं हो सकी। पुनः प्रयास करें, या क्रॉप स्क्रीन के बिना फ़ोटो चुनें।",
+      "uploadFailedTitle": "अपलोड विफल",
+      "uploadFailedFallback": "फ़ोटो अपडेट नहीं हो सका। पुनः प्रयास करें।"
+    }
+  },
+  "fields": {
+    "loginEmail": "लॉगिन ईमेल",
+    "profilePhoto": "प्रोफ़ाइल फ़ोटो",
+    "profilePhotoHint": "आप या स्कूल यह सेट कर सकते हैं (ऊपर फ़ोटो टैप करें)",
+    "fullName": "पूरा नाम",
+    "admissionNumber": "प्रवेश संख्या",
+    "academicYear": "शैक्षणिक वर्ष",
+    "gender": "लिंग",
+    "dateOfBirth": "जन्म तिथि",
+    "email": "ईमेल",
+    "phone": "फ़ोन",
+    "address": "पता",
+    "name": "नाम",
+    "relationship": "संबंध",
+    "currentClass": "वर्तमान कक्षा",
+    "rollNumber": "रोल नंबर",
+    "employeeId": "कर्मचारी ID",
+    "status": "स्थिति",
+    "designation": "पदनाम",
+    "department": "विभाग",
+    "qualification": "योग्यता",
+    "specialization": "विशेषज्ञता",
+    "experience": "अनुभव",
+    "dateOfJoining": "जॉइनिंग तिथि"
+  },
+  "helpSupport": {
+    "screenTitle": "सहायता और समर्थन",
+    "lead": "ऐप में मदद चाहिए? हमें ईमेल भेजें, हम जवाब देंगे।",
+    "emailLabel": "हमें ईमेल करें",
+    "footerNote": "भविष्य के अपडेट में यहाँ और सहायता विकल्प मिलेंगे।",
+    "emailSubject": "Nexchool सहायता"
+  },
+  "documents": {
+    "title": "दस्तावेज़",
+    "addDocument": "दस्तावेज़ जोड़ें",
+    "retry": "पुनः प्रयास",
+    "errorMessage": "दस्तावेज़ लोड नहीं हो सके। प्रोफ़ाइल पूरा करने के लिए नीचे दस्तावेज़ जोड़ें, या पुनः प्रयास टैप करें।",
+    "emptyState": "अभी कोई दस्तावेज़ अपलोड नहीं। पहला जोड़ने के लिए + दबाएँ।",
+    "deleteTitle": "दस्तावेज़ हटाएँ",
+    "deleteMessage": "क्या आप \"{{filename}}\" हटाना चाहते हैं?",
+    "cancel": "रद्द करें",
+    "delete": "हटाएँ",
+    "error": "त्रुटि",
+    "unavailableTitle": "अनुपलब्ध",
+    "unavailableMessage": "यह दस्तावेज़ नहीं खुल सका। पुनः अपलोड करके देखें।"
+  },
+  "documentTypes": {
+    "aadhar_card": "आधार कार्ड",
+    "birth_certificate": "जन्म प्रमाणपत्र",
+    "leaving_certificate": "टीसी / लीविंग सर्टिफिकेट",
+    "transfer_certificate": "स्थानांतरण प्रमाणपत्र",
+    "passport": "पासपोर्ट",
+    "other": "अन्य"
+  },
+  "uploadModal": {
+    "title": "दस्तावेज़ अपलोड",
+    "documentType": "दस्तावेज़ प्रकार",
+    "file": "फ़ाइल",
+    "selectType": "दस्तावेज़ प्रकार चुनें",
+    "chooseFile": "PDF या छवि चुनें",
+    "cancel": "रद्द करें",
+    "upload": "अपलोड",
+    "pickFileError": "फ़ाइल चुनने में विफल",
+    "validationTitle": "सत्यापन",
+    "selectFileFirst": "कृपया एक फ़ाइल चुनें",
+    "selectTypeFirst": "कृपया दस्तावेज़ प्रकार चुनें",
+    "cannotUploadTitle": "अपलोड नहीं हो सकता",
+    "prepareFailed": "फ़ाइल तैयार करने में समस्या।",
+    "uploadFailedHint": "अपलोड विफल। लगभग 5 MB तक PDF या छवि उपयोग करें (बड़ी छवियाँ स्वतः संपीड़ित)।",
+    "error": "त्रुटि"
+  },
+  "viewer": {
+    "fallbackTitle": "दस्तावेज़",
+    "close": "बंद करें",
+    "imageError": "छवि नहीं दिखा सके।",
+    "pdfIframeTitle": "PDF",
+    "expoGoHint": "PDF दूसरे ऐप में खोलें (Expo Go में इन-ऐप PDF व्यूअर नहीं है)।",
+    "openPdf": "PDF खोलें",
+    "sharingUnavailable": "इस डिवाइस पर साझाकरण उपलब्ध नहीं।",
+    "couldNotOpen": "नहीं खुल सका",
+    "storageUnavailable": "स्टोरेज उपलब्ध नहीं।",
+    "couldNotOpenDocument": "दस्तावेज़ नहीं खुल सका"
+  }
+}

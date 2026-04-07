@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -18,6 +19,7 @@ import {
   useSendReminder,
 } from "@/modules/fees/hooks/useFees";
 import { feesService } from "@/modules/fees/services/feesService";
+import { calendarLocaleForLanguage } from "@/i18n";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
 
@@ -25,9 +27,9 @@ function formatCurrency(n: number) {
   return `₹${n.toLocaleString("en-IN")}`;
 }
 
-function formatDate(s: string) {
+function formatDate(s: string, locale: string) {
   try {
-    return new Date(s).toLocaleDateString("en-IN", {
+    return new Date(s).toLocaleDateString(locale, {
       day: "numeric",
       month: "short",
       year: "numeric",
@@ -38,13 +40,15 @@ function formatDate(s: string) {
 }
 
 export default function InvoiceDetailPage() {
+  const { t, i18n } = useTranslation("finance");
+  const locale = calendarLocaleForLanguage(i18n.language ?? "en");
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const [showRecordPayment, setShowRecordPayment] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "bank" | "upi" | "online">("cash");
 
-  const { data: invoice, isLoading, error, refetch } = useInvoice(id);
+  const { data: invoice, isLoading, error } = useInvoice(id);
   const recordMut = useRecordPayment(id);
   const sendReminderMut = useSendReminder(id);
 
@@ -60,12 +64,12 @@ export default function InvoiceDetailPage() {
         URL.revokeObjectURL(url);
       } else {
         Alert.alert(
-          "Invoice PDF",
-          "PDF downloaded. Install expo-sharing for share/save on device."
+          t("invoiceDetail.alerts.pdfInvoiceTitle"),
+          t("invoiceDetail.alerts.pdfInvoiceBody")
         );
       }
     } catch (e) {
-      Alert.alert("Error", e instanceof Error ? e.message : "Failed to download");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("invoiceDetail.alerts.downloadFailed"));
     }
   };
 
@@ -81,19 +85,19 @@ export default function InvoiceDetailPage() {
         URL.revokeObjectURL(url);
       } else {
         Alert.alert(
-          "Receipt PDF",
-          "PDF downloaded. Install expo-sharing for share/save on device."
+          t("invoiceDetail.alerts.pdfReceiptTitle"),
+          t("invoiceDetail.alerts.pdfReceiptBody")
         );
       }
     } catch (e) {
-      Alert.alert("Error", e instanceof Error ? e.message : "Failed to download");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("invoiceDetail.alerts.downloadFailed"));
     }
   };
 
   const handleRecordPayment = async () => {
     const amt = parseFloat(paymentAmount);
     if (!amt || amt <= 0) {
-      Alert.alert("Error", "Enter a valid amount");
+      Alert.alert(t("common.error"), t("invoiceDetail.alerts.validAmount"));
       return;
     }
     try {
@@ -105,16 +109,16 @@ export default function InvoiceDetailPage() {
       setShowRecordPayment(false);
       setPaymentAmount("");
     } catch (e) {
-      Alert.alert("Error", e instanceof Error ? e.message : "Failed to record payment");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("invoiceDetail.alerts.recordFailed"));
     }
   };
 
   const handleSendReminder = async () => {
     try {
       await sendReminderMut.mutateAsync(id!);
-      Alert.alert("Reminder sent", "The parent/student will receive the reminder.");
+      Alert.alert(t("invoiceDetail.alerts.reminderSentTitle"), t("invoiceDetail.alerts.reminderSentBody"));
     } catch (e) {
-      Alert.alert("Error", e instanceof Error ? e.message : "Failed to send reminder");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("invoiceDetail.alerts.reminderFailed"));
     }
   };
 
@@ -129,9 +133,9 @@ export default function InvoiceDetailPage() {
   if (error || !invoice) {
     return (
       <View style={styles.center}>
-        <Text style={styles.errorText}>Invoice not found</Text>
+        <Text style={styles.errorText}>{t("invoiceDetail.notFound")}</Text>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Text style={styles.backBtnText}>Go back</Text>
+          <Text style={styles.backBtnText}>{t("common.goBack")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -151,34 +155,34 @@ export default function InvoiceDetailPage() {
 
       <View style={styles.section}>
         <View style={styles.summaryRow}>
-          <Text style={styles.label}>Total Invoice</Text>
+          <Text style={styles.label}>{t("invoiceDetail.totalInvoice")}</Text>
           <Text style={styles.value}>{formatCurrency(invoice.total_amount)}</Text>
         </View>
         <View style={styles.summaryRow}>
-          <Text style={styles.label}>Amount Paid</Text>
+          <Text style={styles.label}>{t("invoiceDetail.amountPaid")}</Text>
           <Text style={[styles.value, styles.valueSuccess]}>
             {formatCurrency(invoice.amount_paid)}
           </Text>
         </View>
         <View style={styles.summaryRow}>
-          <Text style={styles.label}>Remaining Balance</Text>
+          <Text style={styles.label}>{t("invoiceDetail.remainingBalance")}</Text>
           <Text style={[styles.value, styles.valueBold]}>
             {formatCurrency(invoice.remaining_balance)}
           </Text>
         </View>
         <View style={styles.summaryRow}>
-          <Text style={styles.label}>Due Date</Text>
-          <Text style={styles.value}>{formatDate(invoice.due_date)}</Text>
+          <Text style={styles.label}>{t("invoiceDetail.dueDate")}</Text>
+          <Text style={styles.value}>{formatDate(invoice.due_date, locale)}</Text>
         </View>
         <View style={styles.summaryRow}>
-          <Text style={styles.label}>Status</Text>
-          <Text style={styles.value}>{invoice.status}</Text>
+          <Text style={styles.label}>{t("invoiceDetail.status")}</Text>
+          <Text style={styles.value}>{t(`invoiceStatuses.${invoice.status}`)}</Text>
         </View>
       </View>
 
       {invoice.items && invoice.items.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Fee Breakdown</Text>
+          <Text style={styles.sectionTitle}>{t("invoiceDetail.feeBreakdown")}</Text>
           {invoice.items.map((it) => (
             <View key={it.id} style={styles.itemRow}>
               <Text style={styles.itemName}>{it.fee_head}</Text>
@@ -190,14 +194,14 @@ export default function InvoiceDetailPage() {
 
       {invoice.payments && invoice.payments.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Payment History</Text>
+          <Text style={styles.sectionTitle}>{t("invoiceDetail.paymentHistory")}</Text>
           {invoice.payments.map((p) => (
             <View key={p.id} style={styles.paymentRow}>
               <View style={styles.paymentInfo}>
-                <Text style={styles.paymentDate}>{formatDate(p.payment_date || p.created_at)}</Text>
+                <Text style={styles.paymentDate}>{formatDate(p.payment_date || p.created_at, locale)}</Text>
                 <Text style={styles.paymentMethod}>{p.payment_method}</Text>
                 {p.payment_reference && (
-                  <Text style={styles.paymentRef}>Ref: {p.payment_reference}</Text>
+                  <Text style={styles.paymentRef}>{t("invoiceDetail.refPrefix")} {p.payment_reference}</Text>
                 )}
               </View>
               <View style={styles.paymentActions}>
@@ -207,7 +211,7 @@ export default function InvoiceDetailPage() {
                   onPress={() => handleDownloadReceipt(p.id)}
                 >
                   <Ionicons name="download-outline" size={18} color={Colors.primary} />
-                  <Text style={styles.downloadReceiptText}>Receipt</Text>
+                  <Text style={styles.downloadReceiptText}>{t("invoiceDetail.receipt")}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -221,7 +225,7 @@ export default function InvoiceDetailPage() {
           onPress={handleDownloadInvoice}
         >
           <Ionicons name="document-text-outline" size={20} color="#fff" />
-          <Text style={styles.primaryBtnText}>Download Invoice</Text>
+          <Text style={styles.primaryBtnText}>{t("invoiceDetail.downloadInvoice")}</Text>
         </TouchableOpacity>
 
         {canRecordPayment && (
@@ -230,7 +234,7 @@ export default function InvoiceDetailPage() {
             onPress={() => setShowRecordPayment(true)}
           >
             <Ionicons name="card-outline" size={20} color={Colors.primary} />
-            <Text style={styles.secondaryBtnText}>Record Payment</Text>
+            <Text style={styles.secondaryBtnText}>{t("invoiceDetail.recordPayment")}</Text>
           </TouchableOpacity>
         )}
 
@@ -241,7 +245,7 @@ export default function InvoiceDetailPage() {
             disabled={sendReminderMut.isPending}
           >
             <Ionicons name="notifications-outline" size={20} color={Colors.primary} />
-            <Text style={styles.secondaryBtnText}>Send Reminder</Text>
+            <Text style={styles.secondaryBtnText}>{t("invoiceDetail.sendReminder")}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -249,9 +253,11 @@ export default function InvoiceDetailPage() {
       {showRecordPayment && (
         <View style={styles.modalOverlay}>
           <View style={styles.modal}>
-            <Text style={styles.modalTitle}>Record Payment</Text>
-            <Text style={styles.modalHint}>Remaining: {formatCurrency(invoice.remaining_balance)}</Text>
-            <Text style={styles.inputLabel}>Amount</Text>
+            <Text style={styles.modalTitle}>{t("invoiceDetail.recordModal.title")}</Text>
+            <Text style={styles.modalHint}>
+              {t("invoiceDetail.recordModal.remaining", { amount: formatCurrency(invoice.remaining_balance) })}
+            </Text>
+            <Text style={styles.inputLabel}>{t("invoiceDetail.recordModal.amount")}</Text>
             <View style={styles.inputRow}>
               <Text style={styles.currencyPrefix}>₹</Text>
               <TextInput
@@ -263,7 +269,7 @@ export default function InvoiceDetailPage() {
                 placeholderTextColor={Colors.textTertiary}
               />
             </View>
-            <Text style={styles.inputLabel}>Method</Text>
+            <Text style={styles.inputLabel}>{t("invoiceDetail.recordModal.method")}</Text>
             <View style={styles.methodRow}>
               {(["cash", "bank", "upi", "online"] as const).map((m) => (
                 <TouchableOpacity
@@ -277,7 +283,7 @@ export default function InvoiceDetailPage() {
                       paymentMethod === m && styles.methodChipTextActive,
                     ]}
                   >
-                    {m.charAt(0).toUpperCase() + m.slice(1)}
+                    {t(`invoiceDetail.paymentMethods.${m}`)}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -287,7 +293,7 @@ export default function InvoiceDetailPage() {
                 style={styles.cancelBtn}
                 onPress={() => setShowRecordPayment(false)}
               >
-                <Text style={styles.cancelBtnText}>Cancel</Text>
+                <Text style={styles.cancelBtnText}>{t("invoiceDetail.recordModal.cancel")}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.submitBtn, recordMut.isPending && styles.submitBtnDisabled]}
@@ -297,7 +303,7 @@ export default function InvoiceDetailPage() {
                 {recordMut.isPending ? (
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
-                  <Text style={styles.submitBtnText}>Record</Text>
+                  <Text style={styles.submitBtnText}>{t("invoiceDetail.recordModal.record")}</Text>
                 )}
               </TouchableOpacity>
             </View>

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -13,6 +14,7 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useInvoices } from "@/modules/fees/hooks/useFees";
 import type { FeeInvoice } from "@/modules/fees/services/feesService";
+import { calendarLocaleForLanguage } from "@/i18n";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
 
@@ -20,9 +22,9 @@ function formatCurrency(n: number) {
   return `₹${n.toLocaleString("en-IN")}`;
 }
 
-function formatDate(s: string) {
+function formatDate(s: string, locale: string) {
   try {
-    return new Date(s).toLocaleDateString("en-IN", {
+    return new Date(s).toLocaleDateString(locale, {
       day: "numeric",
       month: "short",
       year: "numeric",
@@ -33,6 +35,7 @@ function formatDate(s: string) {
 }
 
 function StatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation("finance");
   const colors: Record<string, string> = {
     draft: Colors.textSecondary,
     unpaid: Colors.error,
@@ -44,15 +47,19 @@ function StatusBadge({ status }: { status: string }) {
   return (
     <View style={[styles.statusBadge, { borderColor: color }]}>
       <Text style={[styles.statusText, { color }]}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+        {t(`invoiceStatuses.${status}`)}
       </Text>
     </View>
   );
 }
 
 export default function InvoicesListPage() {
+  const { t, i18n } = useTranslation("finance");
+  const locale = calendarLocaleForLanguage(i18n.language ?? "en");
   const router = useRouter();
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const invoiceFilterKey = (s: string) =>
+    s === "" ? "filterAll" : s === "unpaid" ? "filterUnpaid" : s === "partial" ? "filterPartial" : "filterPaid";
   const { data: invoices = [], isLoading, error, refetch, isRefetching } = useInvoices({
     status: statusFilter || undefined,
   });
@@ -68,11 +75,14 @@ export default function InvoicesListPage() {
         <StatusBadge status={item.status} />
       </View>
       <Text style={styles.invoiceDetail}>
-        Due {formatDate(item.due_date)} • {formatCurrency(item.total_amount)}
+        {t("invoices.dueLine", {
+          date: formatDate(item.due_date, locale),
+          amount: formatCurrency(item.total_amount),
+        })}
       </Text>
       <View style={styles.invoiceFooter}>
         <Text style={styles.balanceText}>
-          Balance: {formatCurrency(item.remaining_balance)}
+          {t("invoices.balance", { amount: formatCurrency(item.remaining_balance) })}
         </Text>
       </View>
     </TouchableOpacity>
@@ -84,11 +94,11 @@ export default function InvoicesListPage() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Fee Invoices</Text>
+        <Text style={styles.headerTitle}>{t("invoices.title")}</Text>
       </View>
 
       <View style={styles.filterRow}>
-        {["", "unpaid", "partial", "paid"].map((s) => (
+        {(["", "unpaid", "partial", "paid"] as const).map((s) => (
           <TouchableOpacity
             key={s || "all"}
             style={[styles.filterChip, statusFilter === s && styles.filterChipActive]}
@@ -100,7 +110,7 @@ export default function InvoicesListPage() {
                 statusFilter === s && styles.filterChipTextActive,
               ]}
             >
-              {s || "All"}
+              {t(`invoices.${invoiceFilterKey(s)}`)}
             </Text>
           </TouchableOpacity>
         ))}
@@ -109,10 +119,10 @@ export default function InvoicesListPage() {
       {error && (
         <View style={styles.errorBox}>
           <Text style={styles.errorText}>
-            {error instanceof Error ? error.message : "Failed to load"}
+            {error instanceof Error ? error.message : t("common.failedToLoad")}
           </Text>
           <TouchableOpacity style={styles.retryBtn} onPress={() => refetch()}>
-            <Text style={styles.retryBtnText}>Retry</Text>
+            <Text style={styles.retryBtnText}>{t("common.retry")}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -133,9 +143,9 @@ export default function InvoicesListPage() {
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <Ionicons name="document-text-outline" size={48} color={Colors.textTertiary} />
-              <Text style={styles.emptyTitle}>No invoices</Text>
+              <Text style={styles.emptyTitle}>{t("invoices.emptyTitle")}</Text>
               <Text style={styles.emptySubtext}>
-                Invoices will appear here when created
+                {t("invoices.emptySubtext")}
               </Text>
             </View>
           }

@@ -30,7 +30,10 @@ interface ClassSelectProps {
   placeholder?: string;
   allowEmpty?: boolean;
   emptyLabel?: string;
+  /** Shown above the trigger when set */
   label?: string;
+  /** Title inside the picker modal (defaults to `label` or English "Select class") */
+  modalTitle?: string;
   style?: object;
 }
 
@@ -42,6 +45,7 @@ export function ClassSelect({
   allowEmpty = true,
   emptyLabel = "All",
   label,
+  modalTitle,
   style,
 }: ClassSelectProps) {
   const [modalVisible, setModalVisible] = useState(false);
@@ -73,7 +77,9 @@ export function ClassSelect({
         <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
-              <Text style={styles.modalTitle}>{label ?? "Select Class"}</Text>
+              <Text style={styles.modalTitle}>
+                {modalTitle ?? label ?? "Select class"}
+              </Text>
               <FlatList
                 data={
                   allowEmpty

@@ -1,10 +1,11 @@
 import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/modules/auth/context/AuthContext";
 import { checkAndFetchUpdateInBackground } from "@/common/utils/checkForAppUpdate";
+import { initI18n } from "@/i18n";
 
 const queryClient = new QueryClient();
 
@@ -12,6 +13,8 @@ const queryClient = new QueryClient();
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const [i18nReady, setI18nReady] = useState(false);
+
   const [fontsLoaded, fontError] = useFonts({
     // SF Pro fonts - using system fonts as fallback
     // If you have SF Pro font files, add them here:
@@ -22,17 +25,22 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (fontsLoaded || fontError) {
+    void initI18n().then(() => setI18nReady(true));
+  }, []);
+
+  useEffect(() => {
+    if ((fontsLoaded || fontError) && i18nReady) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, fontError]);
+  }, [fontsLoaded, fontError, i18nReady]);
 
   useEffect(() => {
     if (!fontsLoaded && !fontError) return;
+    if (!i18nReady) return;
     void checkAndFetchUpdateInBackground();
-  }, [fontsLoaded, fontError]);
+  }, [fontsLoaded, fontError, i18nReady]);
 
-  if (!fontsLoaded && !fontError) {
+  if ((!fontsLoaded && !fontError) || !i18nReady) {
     return null;
   }
 

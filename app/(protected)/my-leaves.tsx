@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -21,12 +22,13 @@ import { Spacing, Layout } from "@/common/constants/spacing";
 import { useTeacherLeaves } from "@/modules/teachers/hooks/useTeacherLeaves";
 import { TeacherLeave, LeaveBalance, LEAVE_TYPES } from "@/modules/teachers/types";
 import { holidayService } from "@/modules/holidays/services/holidayService";
-import { Holiday, HOLIDAY_TYPE_LABELS, CreateHolidayDTO } from "@/modules/holidays/types";
+import { Holiday, CreateHolidayDTO } from "@/modules/holidays/types";
 import { useHolidays } from "@/modules/holidays/hooks/useHolidays";
 import { HolidayFormModal } from "@/modules/holidays/components/HolidayFormModal";
 import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
 import * as PERMS from "@/modules/permissions/constants/permissions";
 import { DateField } from "@/common/components/DateField";
+import { calendarLocaleForLanguage } from "@/i18n";
 
 const { width: SW } = Dimensions.get("window");
 
@@ -43,14 +45,14 @@ function statusColor(s: string) {
   }
 }
 
-function fmtDate(iso: string) {
+function fmtDate(iso: string, locale = "en-IN") {
   const d = new Date(iso);
-  return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+  return d.toLocaleDateString(locale, { day: "2-digit", month: "short", year: "numeric" });
 }
 
-function fmtDateShort(iso: string) {
+function fmtDateShort(iso: string, locale = "en-IN") {
   const d = new Date(iso);
-  return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
+  return d.toLocaleDateString(locale, { day: "2-digit", month: "short" });
 }
 
 // Deterministic color from a string (for holiday avatars)
@@ -77,16 +79,10 @@ function initials(name: string) {
 // ---------------------------------------------------------------------------
 // Sub-tab data
 // ---------------------------------------------------------------------------
-const DATA_TABS = ["Summary", "Balance", "Requests"] as const;
+const DATA_TABS = ["summary", "balance", "requests"] as const;
 type DataTab = (typeof DATA_TABS)[number];
 
-const STATUS_FILTERS = [
-  { label: "All",       value: "" },
-  { label: "Pending",   value: "pending" },
-  { label: "Approved",  value: "approved" },
-  { label: "Rejected",  value: "rejected" },
-  { label: "Cancelled", value: "cancelled" },
-];
+const STATUS_FILTER_VALUES = ["", "pending", "approved", "rejected", "cancelled"] as const;
 
 // ---------------------------------------------------------------------------
 // Balance Summary Card  (compact, horizontal)
@@ -98,6 +94,7 @@ function BalanceCard({
   balance: LeaveBalance;
   onPress: () => void;
 }) {
+  const { t } = useTranslation("teacherLeaves");
   const avail     = balance.is_unlimited ? "∞"  : balance.available_days.toFixed(1);
   const availColor = balance.is_unlimited
     ? Colors.success
@@ -106,18 +103,19 @@ function BalanceCard({
     : balance.available_days <= 2
     ? Colors.warning
     : Colors.success;
+  const typeLabel = t(`leaveTypes.${balance.leave_type}`);
 
   return (
     <TouchableOpacity style={bc.card} onPress={onPress} activeOpacity={0.7}>
       <Text style={bc.typeName} numberOfLines={1}>
-        {balance.leave_type.charAt(0).toUpperCase() + balance.leave_type.slice(1)}
+        {typeLabel}
       </Text>
       <Text style={[bc.main, { color: availColor }]}>{avail}</Text>
-      <Text style={bc.mainLabel}>Available</Text>
+      <Text style={bc.mainLabel}>{t("tracker.balanceCard.available")}</Text>
       {!balance.is_unlimited && (
         <View style={bc.row}>
           <Text style={[bc.pill, { color: Colors.warning }]}>
-            {balance.pending_days.toFixed(1)} Booked
+            {t("tracker.balanceCard.bookedWithValue", { value: balance.pending_days.toFixed(1) })}
           </Text>
         </View>
       )}
@@ -147,6 +145,7 @@ const bc = StyleSheet.create({
 // Balance Detail Row  (Balance tab)
 // ---------------------------------------------------------------------------
 function BalanceDetailRow({ b }: { b: LeaveBalance }) {
+  const { t } = useTranslation("teacherLeaves");
   const avail = b.is_unlimited ? "∞" : b.available_days.toFixed(1);
   const availColor = b.is_unlimited
     ? Colors.success
@@ -155,37 +154,45 @@ function BalanceDetailRow({ b }: { b: LeaveBalance }) {
     : b.available_days <= 2
     ? Colors.warning
     : Colors.success;
+  const typeLabel = t(`leaveTypes.${b.leave_type}`);
 
   return (
     <View style={bdr.row}>
       <View style={{ flex: 1 }}>
         <Text style={bdr.name}>
-          {b.leave_type.charAt(0).toUpperCase() + b.leave_type.slice(1)} Leave
+          {t("tracker.balanceDetail.leaveSuffix", { type: typeLabel })}
         </Text>
         {b.is_unlimited ? (
-          <Text style={[bdr.unlimited]}>Unlimited</Text>
+          <Text style={[bdr.unlimited]}>{t("tracker.balanceDetail.unlimited")}</Text>
         ) : (
-          <Text style={bdr.sub}>{b.allocated_days + b.carried_forward_days} days allocated · year {b.academic_year}</Text>
+          <Text style={bdr.sub}>
+            {t("tracker.balanceDetail.allocatedLine", {
+              total: b.allocated_days + b.carried_forward_days,
+              year: b.academic_year,
+            })}
+          </Text>
         )}
         {b.carried_forward_days > 0 && (
-          <Text style={bdr.cf}>+{b.carried_forward_days}d carried forward</Text>
+          <Text style={bdr.cf}>
+            {t("tracker.balanceDetail.carriedForward", { days: b.carried_forward_days })}
+          </Text>
         )}
       </View>
       {!b.is_unlimited && (
         <View style={bdr.nums}>
           <View style={bdr.numCol}>
             <Text style={[bdr.numVal, { color: availColor }]}>{avail}</Text>
-            <Text style={bdr.numLabel}>Available</Text>
+            <Text style={bdr.numLabel}>{t("tracker.balanceDetail.available")}</Text>
           </View>
           <View style={bdr.divider} />
           <View style={bdr.numCol}>
             <Text style={[bdr.numVal, { color: Colors.warning }]}>{b.pending_days.toFixed(1)}</Text>
-            <Text style={bdr.numLabel}>Pending</Text>
+            <Text style={bdr.numLabel}>{t("tracker.balanceDetail.pending")}</Text>
           </View>
           <View style={bdr.divider} />
           <View style={bdr.numCol}>
             <Text style={[bdr.numVal, { color: Colors.error }]}>{b.used_days.toFixed(1)}</Text>
-            <Text style={bdr.numLabel}>Used</Text>
+            <Text style={bdr.numLabel}>{t("tracker.balanceDetail.used")}</Text>
           </View>
         </View>
       )}
@@ -223,24 +230,29 @@ function LeaveRow({
   item: TeacherLeave;
   onCancel?: () => void;
 }) {
+  const { t, i18n } = useTranslation("teacherLeaves");
+  const dateLoc = calendarLocaleForLanguage(i18n.language ?? "en");
   const days = item.working_days ?? 1;
   const sameDay = item.start_date === item.end_date;
   const dateStr = sameDay
-    ? fmtDate(item.start_date)
-    : `${fmtDateShort(item.start_date)} – ${fmtDateShort(item.end_date)}`;
+    ? fmtDate(item.start_date, dateLoc)
+    : `${fmtDateShort(item.start_date, dateLoc)} – ${fmtDateShort(item.end_date, dateLoc)}`;
+  const typeLabel = t(`leaveTypes.${item.leave_type}`);
 
   return (
     <View style={lr.row}>
       <View style={{ flex: 1 }}>
         <View style={lr.titleRow}>
           <Text style={lr.type}>
-            {item.leave_type.charAt(0).toUpperCase() + item.leave_type.slice(1)} Leave
+            {t("tracker.leaveRow.leaveSuffix", { type: typeLabel })}
           </Text>
-          <Text style={lr.days}>{days} {days === 1 ? "Day" : "Days"}</Text>
+          <Text style={lr.days}>
+            {days} {days === 1 ? t("tracker.leaveRow.day") : t("tracker.leaveRow.days")}
+          </Text>
         </View>
         <Text style={lr.date}>{dateStr}</Text>
         <Text style={[lr.status, { color: statusColor(item.status) }]}>
-          {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+          {t(`status.${item.status}`)}
         </Text>
       </View>
       {item.status === "pending" && onCancel && (
@@ -277,13 +289,15 @@ interface HolidayRowProps {
   onDelete?: (h: Holiday) => void;
 }
 function HolidayRow({ h, onEdit, onDelete }: HolidayRowProps) {
+  const { t, i18n } = useTranslation("teacherLeaves");
+  const dateLoc = calendarLocaleForLanguage(i18n.language ?? "en");
   const [c1] = avatarColors(h.name);
   const abbr = initials(h.name);
   const dateLabel = h.is_recurring
-    ? (h.recurring_day_name ?? "Weekly Off")
+    ? (h.recurring_day_name ?? t("tracker.holidayRow.weeklyOff"))
     : h.is_single_day
-    ? fmtDate(h.start_date!)
-    : `${fmtDate(h.start_date!)} – ${fmtDate(h.end_date!)}`;
+    ? fmtDate(h.start_date!, dateLoc)
+    : `${fmtDate(h.start_date!, dateLoc)} – ${fmtDate(h.end_date!, dateLoc)}`;
 
   return (
     <View style={hr.row}>
@@ -309,7 +323,7 @@ function HolidayRow({ h, onEdit, onDelete }: HolidayRowProps) {
         </View>
       ) : (
         <View style={hr.typeBadge}>
-          <Text style={hr.typeText}>{HOLIDAY_TYPE_LABELS[h.holiday_type]}</Text>
+          <Text style={hr.typeText}>{t(`holidayForm.types.${h.holiday_type}`)}</Text>
         </View>
       )}
     </View>
@@ -370,6 +384,7 @@ interface ApplyModalProps {
 }
 
 function ApplyModal({ visible, balances, onClose, onSubmit }: ApplyModalProps) {
+  const { t } = useTranslation("teacherLeaves");
   const [leaveStart, setLeaveStart] = useState("");
   const [leaveEnd,   setLeaveEnd]   = useState("");
   const [leaveType,  setLeaveType]  = useState("casual");
@@ -381,15 +396,18 @@ function ApplyModal({ visible, balances, onClose, onSubmit }: ApplyModalProps) {
   const [estDays,    setEstDays]    = useState<number | null>(null);
 
   const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-  const getBal  = (t: string) => balances.find(b => b.leave_type === t);
+  const getBal  = (lt: string) => balances.find(b => b.leave_type === lt);
 
-  const checkBal = useCallback((t: string, days: number | null) => {
-    const bal = balances.find(b => b.leave_type === t);
+  const checkBal = useCallback((lt: string, days: number | null) => {
+    const bal = balances.find(b => b.leave_type === lt);
     if (!bal || bal.is_unlimited || days === null) { setBalErr(null); return; }
     if (!bal.allow_negative && bal.available_days < days) {
-      setBalErr(`Only ${bal.available_days.toFixed(1)}d available · ~${days}d needed`);
+      setBalErr(t("tracker.applyModal.balErr", {
+        available: bal.available_days.toFixed(1),
+        needed: typeof days === "number" ? days.toFixed(1) : String(days),
+      }));
     } else { setBalErr(null); }
-  }, [balances]);
+  }, [balances, t]);
 
   const checkHols = useCallback(async (start: string, end: string) => {
     if (!DATE_RE.test(start) || !DATE_RE.test(end) || end < start) {
@@ -430,11 +448,11 @@ function ApplyModal({ visible, balances, onClose, onSubmit }: ApplyModalProps) {
       const working = total - hCount;
       setEstDays(working); checkBal(leaveType, working);
       if ([...nonRec, ...recHits].length === 0) { setHolidayWarn(null); return; }
-      if (working === 0) setHolidayWarn("All days are holidays — no leave needed.");
-      else setHolidayWarn(`${hCount} holiday day(s) excluded. ${working} working day(s) will be counted.`);
+      if (working === 0) setHolidayWarn(t("tracker.applyModal.holidayWarnAll"));
+      else setHolidayWarn(t("tracker.applyModal.holidayWarnPartial", { excluded: hCount, working }));
     } catch { setHolidayWarn(null); }
     finally { setChecking(false); }
-  }, [leaveType, checkBal]);
+  }, [leaveType, checkBal, t]);
 
   const reset = () => {
     setLeaveStart(""); setLeaveEnd(""); setLeaveType("casual"); setReason("");
@@ -449,12 +467,21 @@ function ApplyModal({ visible, balances, onClose, onSubmit }: ApplyModalProps) {
   const blocked  = submitting || checking || !!balErr;
 
   const handleSubmit = async () => {
-    if (!leaveStart || !leaveEnd) { Alert.alert("Required", "Enter start and end dates"); return; }
-    if (!DATE_RE.test(leaveStart) || !DATE_RE.test(leaveEnd)) { Alert.alert("Format", "Use YYYY-MM-DD"); return; }
-    if (leaveEnd < leaveStart) { Alert.alert("Invalid", "End must be on or after start"); return; }
+    if (!leaveStart || !leaveEnd) {
+      Alert.alert(t("tracker.applyModal.alertRequiredTitle"), t("tracker.applyModal.alertRequiredBody"));
+      return;
+    }
+    if (!DATE_RE.test(leaveStart) || !DATE_RE.test(leaveEnd)) {
+      Alert.alert(t("tracker.applyModal.alertFormatTitle"), t("tracker.applyModal.alertFormatBody"));
+      return;
+    }
+    if (leaveEnd < leaveStart) {
+      Alert.alert(t("tracker.applyModal.alertInvalidTitle"), t("tracker.applyModal.alertInvalidBody"));
+      return;
+    }
     setSubmitting(true);
     try { await onSubmit({ start_date: leaveStart, end_date: leaveEnd, leave_type: leaveType, reason }); reset(); onClose(); }
-    catch (e: any) { Alert.alert("Error", e.message || "Failed to submit"); }
+    catch (e: any) { Alert.alert(t("tracker.applyModal.alertErrorTitle"), e.message || t("tracker.applyModal.alertErrorSubmit")); }
     finally { setSubmitting(false); }
   };
 
@@ -465,13 +492,13 @@ function ApplyModal({ visible, balances, onClose, onSubmit }: ApplyModalProps) {
           <TouchableOpacity onPress={() => { reset(); onClose(); }}>
             <Ionicons name="close" size={24} color={Colors.text} />
           </TouchableOpacity>
-          <Text style={am.title}>Apply for Leave</Text>
+          <Text style={am.title}>{t("tracker.applyModal.title")}</Text>
           <View style={{ width: 24 }} />
         </View>
 
         <ScrollView contentContainerStyle={am.body} showsVerticalScrollIndicator={false}>
           {/* Leave Type */}
-          <Text style={am.label}>Leave Type</Text>
+          <Text style={am.label}>{t("tracker.applyModal.leaveType")}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: Spacing.md }}>
             {LEAVE_TYPES.map(lt => {
               const bal   = getBal(lt);
@@ -485,7 +512,7 @@ function ApplyModal({ visible, balances, onClose, onSubmit }: ApplyModalProps) {
                   onPress={() => onType(lt)}
                 >
                   <Text style={[am.typeChipName, active && am.typeChipNameActive]}>
-                    {lt.charAt(0).toUpperCase() + lt.slice(1)}
+                    {t(`leaveTypes.${lt}`)}
                   </Text>
                   {avail && (
                     <Text style={[am.typeChipBal, {
@@ -509,11 +536,11 @@ function ApplyModal({ visible, balances, onClose, onSubmit }: ApplyModalProps) {
                 <Text style={{ fontWeight: "700", color: selBal.available_days <= 0 ? Colors.error : selBal.available_days <= 2 ? Colors.warning : Colors.success }}>
                   {selBal.available_days.toFixed(1)}
                 </Text>
-                {" "}available · {" "}
+                {t("tracker.applyModal.availSuffix")}
                 <Text style={{ color: Colors.warning }}>{selBal.pending_days.toFixed(1)}</Text>
-                {" "}pending · {" "}
+                {t("tracker.applyModal.pendSuffix")}
                 <Text style={{ color: Colors.error }}>{selBal.used_days.toFixed(1)}</Text>
-                {" "}used
+                {t("tracker.applyModal.usedSuffix")}
               </Text>
             </View>
           )}
@@ -522,10 +549,10 @@ function ApplyModal({ visible, balances, onClose, onSubmit }: ApplyModalProps) {
           <View style={am.dateRow}>
             <View style={{ flex: 1 }}>
               <DateField
-                label="Start Date"
+                label={t("tracker.applyModal.startDate")}
                 value={leaveStart}
                 onChange={onStart}
-                placeholder="YYYY-MM-DD"
+                placeholder={t("tracker.applyModal.datePlaceholder")}
                 useOverlayInsideModal
               />
             </View>
@@ -534,10 +561,10 @@ function ApplyModal({ visible, balances, onClose, onSubmit }: ApplyModalProps) {
             </View>
             <View style={{ flex: 1 }}>
               <DateField
-                label="End Date"
+                label={t("tracker.applyModal.endDate")}
                 value={leaveEnd}
                 onChange={onEnd}
-                placeholder="YYYY-MM-DD"
+                placeholder={t("tracker.applyModal.datePlaceholder")}
                 useOverlayInsideModal
               />
             </View>
@@ -547,7 +574,7 @@ function ApplyModal({ visible, balances, onClose, onSubmit }: ApplyModalProps) {
           {checking && (
             <View style={am.infoRow}>
               <ActivityIndicator size="small" color={Colors.textSecondary} />
-              <Text style={am.infoText}>Checking holidays…</Text>
+              <Text style={am.infoText}>{t("tracker.applyModal.checkingHolidays")}</Text>
             </View>
           )}
           {!checking && holidayWarn && (
@@ -565,13 +592,16 @@ function ApplyModal({ visible, balances, onClose, onSubmit }: ApplyModalProps) {
 
           {/* Reason */}
           <Text style={am.label}>
-            Reason {selBal?.requires_reason ? <Text style={{ color: Colors.error }}>*</Text> : "(optional)"}
+            {t("tracker.applyModal.reason")}{" "}
+            {selBal?.requires_reason
+              ? <Text style={{ color: Colors.error }}>{t("tracker.applyModal.reasonRequiredStar")}</Text>
+              : t("tracker.applyModal.reasonOptional")}
           </Text>
           <TextInput
             style={[am.input, { height: 80, textAlignVertical: "top", paddingTop: 10 }]}
             value={reason}
             onChangeText={setReason}
-            placeholder="Reason for leave…"
+            placeholder={t("tracker.applyModal.placeholderReason")}
             placeholderTextColor={Colors.textTertiary}
             multiline
           />
@@ -584,7 +614,7 @@ function ApplyModal({ visible, balances, onClose, onSubmit }: ApplyModalProps) {
             {submitting
               ? <ActivityIndicator color="#fff" />
               : <Text style={am.submitText}>
-                  {balErr ? "Insufficient Balance" : "Submit Request"}
+                  {balErr ? t("tracker.applyModal.submitInsufficient") : t("tracker.applyModal.submitRequest")}
                 </Text>
             }
           </TouchableOpacity>
@@ -655,6 +685,7 @@ const am = StyleSheet.create({
 // Main Screen
 // ---------------------------------------------------------------------------
 export default function LeaveTrackerScreen() {
+  const { t } = useTranslation("teacherLeaves");
   const { hasAnyPermission, permissions: rawPerms } = usePermissions();
   const canManageHolidays = hasAnyPermission([PERMS.HOLIDAY_MANAGE, PERMS.HOLIDAY_CREATE]);
   const canDeleteHolidays = hasAnyPermission([PERMS.HOLIDAY_MANAGE, PERMS.HOLIDAY_DELETE]);
@@ -686,7 +717,7 @@ export default function LeaveTrackerScreen() {
   useEffect(() => { if (!canApplyLeave) setTopTab("holidays"); }, [canApplyLeave]);
 
   // My Data sub-tab
-  const [dataTab, setDataTab] = useState<DataTab>("Summary");
+  const [dataTab, setDataTab] = useState<DataTab>("summary");
 
   // Requests filter
   const [statusFilter, setStatusFilter] = useState("");
@@ -729,10 +760,10 @@ export default function LeaveTrackerScreen() {
     try {
       if (holEditTarget) {
         const updated = await updateHoliday(holEditTarget.id, data);
-        if ((updated as any).warning) Alert.alert("Holiday Updated", (updated as any).warning);
+        if ((updated as any).warning) Alert.alert(t("tracker.alerts.holidayUpdated"), (updated as any).warning);
       } else {
         const created = await createHoliday(data);
-        if ((created as any).warning) Alert.alert("Holiday Added", (created as any).warning);
+        if ((created as any).warning) Alert.alert(t("tracker.alerts.holidayAdded"), (created as any).warning);
       }
       setHolModalVisible(false);
     } catch (err: any) { throw err; }
@@ -740,13 +771,13 @@ export default function LeaveTrackerScreen() {
 
   const handleHolDelete = (h: Holiday) => {
     Alert.alert(
-      "Delete Holiday",
-      `Remove "${h.name}"?`,
+      t("tracker.alerts.deleteHolidayTitle"),
+      t("tracker.alerts.deleteHolidayMessage", { name: h.name }),
       [
-        { text: "Cancel", style: "cancel" },
-        { text: "Delete", style: "destructive", onPress: async () => {
+        { text: t("tracker.alerts.cancel"), style: "cancel" },
+        { text: t("tracker.alerts.delete"), style: "destructive", onPress: async () => {
             try { await deleteHoliday(h.id, h.is_recurring); }
-            catch (err: any) { Alert.alert("Error", err.message || "Failed to delete"); }
+            catch (err: any) { Alert.alert(t("tracker.alerts.error"), err.message || t("tracker.alerts.deleteFailed")); }
           },
         },
       ]
@@ -754,13 +785,13 @@ export default function LeaveTrackerScreen() {
   };
 
   const handleCancel = (leave: TeacherLeave) => {
-    Alert.alert("Cancel Leave", "Cancel this leave request?", [
-      { text: "No", style: "cancel" },
+    Alert.alert(t("tracker.alerts.cancelLeaveTitle"), t("tracker.alerts.cancelLeaveBody"), [
+      { text: t("tracker.alerts.no"), style: "cancel" },
       {
-        text: "Yes, Cancel", style: "destructive",
+        text: t("tracker.alerts.yesCancel"), style: "destructive",
         onPress: async () => {
           try { await cancelLeave(leave.id); await fetchMyBalances(); }
-          catch (e: any) { Alert.alert("Error", e.message || "Failed to cancel"); }
+          catch (e: any) { Alert.alert(t("tracker.alerts.error"), e.message || t("tracker.alerts.cancelFailed")); }
         },
       },
     ]);
@@ -770,7 +801,7 @@ export default function LeaveTrackerScreen() {
     const result = await createLeave(dto);
     await fetchMyBalances();
     const warn = (result as any)?.warning;
-    if (warn) setTimeout(() => Alert.alert("Applied", warn), 350);
+    if (warn) setTimeout(() => Alert.alert(t("tracker.alerts.applied"), warn), 350);
   };
 
   const filtered      = statusFilter ? leaves.filter(l => l.status === statusFilter) : leaves;
@@ -780,23 +811,27 @@ export default function LeaveTrackerScreen() {
   const recentLeaves  = leaves.slice(0, 10);
 
   // ── Year nav label ──
-  const holYearLabel = `01 Jan ${holYear}  –  31 Dec ${holYear}`;
+  const holYearLabel = t("tracker.yearRange", { year: holYear });
+
+  const emptyRequestsMessage = statusFilter
+    ? t("tracker.emptyRequestsWithFilter", { status: t(`filters.${statusFilter}`) })
+    : t("tracker.emptyRequestsNoFilter");
 
   return (
     <SafeAreaView style={s.container}>
 
       {/* ══ HEADER ══ */}
       <View style={s.header}>
-        <Text style={s.headerTitle}>Leave Tracker</Text>
+        <Text style={s.headerTitle}>{t("tracker.title")}</Text>
         {topTab === "holidays" && canManageHolidays ? (
           <TouchableOpacity style={s.applyBtn} onPress={() => { setHolEditTarget(null); setHolModalVisible(true); }}>
             <Ionicons name="add" size={18} color="#fff" />
-            <Text style={s.applyBtnText}>Add Holiday</Text>
+            <Text style={s.applyBtnText}>{t("tracker.addHoliday")}</Text>
           </TouchableOpacity>
         ) : canApplyLeave ? (
           <TouchableOpacity style={s.applyBtn} onPress={() => setShowApply(true)}>
             <Ionicons name="add" size={18} color="#fff" />
-            <Text style={s.applyBtnText}>Apply</Text>
+            <Text style={s.applyBtnText}>{t("tracker.apply")}</Text>
           </TouchableOpacity>
         ) : null}
       </View>
@@ -810,7 +845,7 @@ export default function LeaveTrackerScreen() {
             onPress={() => setTopTab("mydata")}
           >
             <Text style={[s.toggleBtnText, topTab === "mydata" && s.toggleBtnTextActive]}>
-              My Data
+              {t("tracker.myData")}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -818,7 +853,7 @@ export default function LeaveTrackerScreen() {
             onPress={() => setTopTab("holidays")}
           >
             <Text style={[s.toggleBtnText, topTab === "holidays" && s.toggleBtnTextActive]}>
-              Holidays
+              {t("tracker.holidays")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -830,15 +865,15 @@ export default function LeaveTrackerScreen() {
 
           {/* Sub-tabs */}
           <View style={s.subTabBar}>
-            {DATA_TABS.map(t => (
+            {DATA_TABS.map(dt => (
               <TouchableOpacity
-                key={t}
+                key={dt}
                 style={[s.subTab, { width: tabW }]}
-                onPress={() => switchDataTab(t)}
+                onPress={() => switchDataTab(dt)}
               >
-                <Text style={[s.subTabText, dataTab === t && s.subTabTextActive]}>
-                  {t}
-                  {t === "Requests" && pendingCount > 0
+                <Text style={[s.subTabText, dataTab === dt && s.subTabTextActive]}>
+                  {t(`tracker.dataTabs.${dt}`)}
+                  {dt === "requests" && pendingCount > 0
                     ? <Text style={s.pendingBadge}> {pendingCount}</Text>
                     : null}
                 </Text>
@@ -848,7 +883,7 @@ export default function LeaveTrackerScreen() {
           </View>
 
           {/* ─ Summary ─ */}
-          {dataTab === "Summary" && (
+          {dataTab === "summary" && (
             <ScrollView
               showsVerticalScrollIndicator={false}
               refreshControl={
@@ -859,17 +894,17 @@ export default function LeaveTrackerScreen() {
               <View style={s.statsCard}>
                 <View style={s.statCol}>
                   <Text style={[s.statNum, { color: Colors.success }]}>{approvedCount}</Text>
-                  <Text style={s.statLabel}>Approved</Text>
+                  <Text style={s.statLabel}>{t("tracker.statApproved")}</Text>
                 </View>
                 <View style={s.statSep} />
                 <View style={s.statCol}>
                   <Text style={[s.statNum, { color: Colors.warning }]}>{pendingCount}</Text>
-                  <Text style={s.statLabel}>Pending</Text>
+                  <Text style={s.statLabel}>{t("tracker.statPending")}</Text>
                 </View>
                 <View style={s.statSep} />
                 <View style={s.statCol}>
                   <Text style={[s.statNum, { color: Colors.error }]}>{rejectedCount}</Text>
-                  <Text style={s.statLabel}>Rejected</Text>
+                  <Text style={s.statLabel}>{t("tracker.statRejected")}</Text>
                 </View>
               </View>
 
@@ -877,11 +912,11 @@ export default function LeaveTrackerScreen() {
               {balancesLoading ? (
                 <View style={s.loadRow}>
                   <ActivityIndicator size="small" color={Colors.textSecondary} />
-                  <Text style={s.loadText}>Loading balance…</Text>
+                  <Text style={s.loadText}>{t("tracker.loadingBalance")}</Text>
                 </View>
               ) : balances.length > 0 ? (
                 <View>
-                  <Text style={s.sectionTitle}>Leave Balance</Text>
+                  <Text style={s.sectionTitle}>{t("tracker.sectionLeaveBalance")}</Text>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.cardScrollPad}>
                     {balances.map(b => (
                       <BalanceCard key={b.leave_type} balance={b} onPress={() => setSelectedBal(b)} />
@@ -891,13 +926,13 @@ export default function LeaveTrackerScreen() {
               ) : null}
 
               {/* Recent requests */}
-              <Text style={s.sectionTitle}>Recent Requests</Text>
+              <Text style={s.sectionTitle}>{t("tracker.sectionRecentRequests")}</Text>
               {recentLeaves.length === 0 && !loading ? (
                 <View style={s.emptyBlock}>
                   <Ionicons name="document-text-outline" size={42} color={Colors.borderLight} />
-                  <Text style={s.emptyText}>No leave requests yet</Text>
+                  <Text style={s.emptyText}>{t("tracker.emptyNoRequestsYet")}</Text>
                   <TouchableOpacity style={s.emptyApplyBtn} onPress={() => setShowApply(true)}>
-                    <Text style={s.emptyApplyText}>Apply for Leave</Text>
+                    <Text style={s.emptyApplyText}>{t("tracker.emptyApplyForLeave")}</Text>
                   </TouchableOpacity>
                 </View>
               ) : (
@@ -912,7 +947,7 @@ export default function LeaveTrackerScreen() {
           )}
 
           {/* ─ Balance ─ */}
-          {dataTab === "Balance" && (
+          {dataTab === "balance" && (
             <ScrollView
               showsVerticalScrollIndicator={false}
               refreshControl={<RefreshControl refreshing={balancesLoading} onRefresh={fetchMyBalances} colors={[Colors.primary]} tintColor={Colors.primary} />}
@@ -922,13 +957,15 @@ export default function LeaveTrackerScreen() {
               ) : balances.length === 0 ? (
                 <View style={s.center}>
                   <Ionicons name="wallet-outline" size={44} color={Colors.borderLight} />
-                  <Text style={s.emptyText}>No balance data</Text>
+                  <Text style={s.emptyText}>{t("tracker.emptyNoBalanceData")}</Text>
                 </View>
               ) : (
                 <>
                   <View style={s.balHeader}>
-                    <Text style={s.balHeaderTitle}>Annual Leave Allocation</Text>
-                    <Text style={s.balHeaderSub}>Academic Year {balances[0]?.academic_year ?? "—"}</Text>
+                    <Text style={s.balHeaderTitle}>{t("tracker.balAnnualTitle")}</Text>
+                    <Text style={s.balHeaderSub}>
+                      {t("tracker.balAcademicYear", { year: balances[0]?.academic_year ?? "—" })}
+                    </Text>
                   </View>
                   {balances.map(b => <BalanceDetailRow key={b.leave_type} b={b} />)}
                   <View style={{ height: 80 }} />
@@ -938,17 +975,19 @@ export default function LeaveTrackerScreen() {
           )}
 
           {/* ─ Requests ─ */}
-          {dataTab === "Requests" && (
+          {dataTab === "requests" && (
             <View style={{ flex: 1 }}>
               {/* Filter chips */}
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.filterBar} contentContainerStyle={s.filterBarPad}>
-                {STATUS_FILTERS.map(f => (
+                {STATUS_FILTER_VALUES.map(fv => (
                   <TouchableOpacity
-                    key={f.value}
-                    style={[s.chip, statusFilter === f.value && s.chipActive]}
-                    onPress={() => setStatusFilter(f.value)}
+                    key={fv || "all"}
+                    style={[s.chip, statusFilter === fv && s.chipActive]}
+                    onPress={() => setStatusFilter(fv)}
                   >
-                    <Text style={[s.chipText, statusFilter === f.value && s.chipTextActive]}>{f.label}</Text>
+                    <Text style={[s.chipText, statusFilter === fv && s.chipTextActive]}>
+                      {t(`filters.${fv || "all"}`)}
+                    </Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -958,7 +997,7 @@ export default function LeaveTrackerScreen() {
                   <Ionicons name="alert-circle-outline" size={42} color={Colors.error} />
                   <Text style={s.emptyText}>{error}</Text>
                   <TouchableOpacity style={s.retryBtn} onPress={() => loadLeaves(statusFilter)}>
-                    <Text style={s.retryBtnText}>Retry</Text>
+                    <Text style={s.retryBtnText}>{t("tracker.retry")}</Text>
                   </TouchableOpacity>
                 </View>
               ) : (
@@ -976,7 +1015,7 @@ export default function LeaveTrackerScreen() {
                     !loading ? (
                       <View style={s.center}>
                         <Ionicons name="document-text-outline" size={48} color={Colors.borderLight} />
-                        <Text style={s.emptyText}>No {statusFilter || ""} leave requests</Text>
+                        <Text style={s.emptyText}>{emptyRequestsMessage}</Text>
                       </View>
                     ) : null
                   }
@@ -1019,10 +1058,10 @@ export default function LeaveTrackerScreen() {
               ListEmptyComponent={
                 <View style={s.center}>
                   <Ionicons name="calendar-outline" size={48} color={Colors.borderLight} />
-                  <Text style={s.emptyText}>No holidays for {holYear}</Text>
+                  <Text style={s.emptyText}>{t("tracker.emptyHolidaysYear", { year: holYear })}</Text>
                   {canManageHolidays && (
                     <TouchableOpacity style={s.emptyApplyBtn} onPress={() => { setHolEditTarget(null); setHolModalVisible(true); }}>
-                      <Text style={s.emptyApplyText}>Add Holiday</Text>
+                      <Text style={s.emptyApplyText}>{t("tracker.addHoliday")}</Text>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -1075,31 +1114,33 @@ export default function LeaveTrackerScreen() {
             <View style={s.bsSheet}>
               <View style={s.bsHandle} />
               <Text style={s.bsTitle}>
-                {selectedBal.leave_type.charAt(0).toUpperCase() + selectedBal.leave_type.slice(1)} Leave
+                {t("tracker.balanceSheet.leaveSuffix", {
+                  type: t(`leaveTypes.${selectedBal.leave_type}`),
+                })}
               </Text>
               <Text style={s.bsSub}>{selectedBal.academic_year}</Text>
 
               {selectedBal.is_unlimited ? (
                 <View style={s.bsRow}>
-                  <Text style={s.bsRowLabel}>Balance</Text>
-                  <Text style={[s.bsRowVal, { color: Colors.success }]}>Unlimited</Text>
+                  <Text style={s.bsRowLabel}>{t("tracker.balanceSheet.balance")}</Text>
+                  <Text style={[s.bsRowVal, { color: Colors.success }]}>{t("tracker.balanceSheet.unlimited")}</Text>
                 </View>
               ) : (
                 <>
                   {[
-                    { label: "Balance",       val: selectedBal.available_days.toFixed(1), color: selectedBal.available_days <= 0 ? Colors.error : selectedBal.available_days <= 2 ? Colors.warning : Colors.success },
-                    { label: "Booked",        val: selectedBal.pending_days.toFixed(1),   color: Colors.warning },
-                    { label: "Used",          val: selectedBal.used_days.toFixed(1),      color: Colors.error },
-                    { label: "Total",         val: `${selectedBal.allocated_days + selectedBal.carried_forward_days}`, color: Colors.text },
+                    { labelKey: "tracker.balanceSheet.balance" as const, val: selectedBal.available_days.toFixed(1), color: selectedBal.available_days <= 0 ? Colors.error : selectedBal.available_days <= 2 ? Colors.warning : Colors.success },
+                    { labelKey: "tracker.balanceSheet.booked" as const, val: selectedBal.pending_days.toFixed(1), color: Colors.warning },
+                    { labelKey: "tracker.balanceSheet.used" as const, val: selectedBal.used_days.toFixed(1), color: Colors.error },
+                    { labelKey: "tracker.balanceSheet.total" as const, val: `${selectedBal.allocated_days + selectedBal.carried_forward_days}`, color: Colors.text },
                   ].map(row => (
-                    <View key={row.label} style={s.bsRow}>
-                      <Text style={s.bsRowLabel}>{row.label}</Text>
+                    <View key={row.labelKey} style={s.bsRow}>
+                      <Text style={s.bsRowLabel}>{t(row.labelKey)}</Text>
                       <Text style={[s.bsRowVal, { color: row.color }]}>{row.val}</Text>
                     </View>
                   ))}
                   {selectedBal.carried_forward_days > 0 && (
                     <View style={s.bsRow}>
-                      <Text style={s.bsRowLabel}>Carried Forward</Text>
+                      <Text style={s.bsRowLabel}>{t("tracker.balanceSheet.carriedForward")}</Text>
                       <Text style={[s.bsRowVal, { color: Colors.textSecondary }]}>+{selectedBal.carried_forward_days}</Text>
                     </View>
                   )}
@@ -1110,7 +1151,7 @@ export default function LeaveTrackerScreen() {
                 style={s.bsApplyBtn}
                 onPress={() => { setSelectedBal(null); setTimeout(() => setShowApply(true), 250); }}
               >
-                <Text style={s.bsApplyBtnText}>Apply Leave</Text>
+                <Text style={s.bsApplyBtnText}>{t("tracker.balanceSheet.applyLeave")}</Text>
               </TouchableOpacity>
             </View>
           )}

@@ -1,0 +1,135 @@
+{
+  "main": {
+    "sections": {
+      "profileInformation": "Profile information",
+      "academic": "Academic",
+      "settings": "Settings"
+    },
+    "cards": {
+      "myProfile": "My profile",
+      "myProfileSubtitle": "View school record and profile photo",
+      "changePassword": "Change password",
+      "changePasswordSubtitle": "Update your password",
+      "reportCard": "Report card",
+      "reportCardSubtitle": "View academic progress",
+      "notifications": "Notifications",
+      "notificationsSubtitle": "Manage notification preferences",
+      "helpSupport": "Help & support",
+      "helpSupportSubtitle": "Get help and contact support",
+      "terms": "Terms of service",
+      "termsSubtitle": "Read our terms and conditions",
+      "privacy": "Privacy policy",
+      "privacySubtitle": "How we handle your information"
+    },
+    "logout": "Logout"
+  },
+  "myProfile": {
+    "screenTitle": "My profile",
+    "defaultDisplayName": "Profile",
+    "heroHint": "Tap the photo to change it here. Your school can also set your photo from the admin panel. Other details are read-only and come from your school records.",
+    "sections": {
+      "account": "Account",
+      "basicInformation": "Basic information",
+      "contact": "Contact",
+      "guardian": "Guardian",
+      "classInfo": "Class",
+      "professional": "Professional",
+      "address": "Address"
+    },
+    "notice": "No student or teacher record is linked to this login. If you are a student or teacher, contact your school administrator.",
+    "experienceYears": "{{years}} years",
+    "notAssigned": "Not assigned",
+    "dash": "—",
+    "alerts": {
+      "permissionTitle": "Permission needed",
+      "permissionMessage": "Allow photo library access to change your profile picture.",
+      "readPhotoTitle": "Could not read photo",
+      "readPhotoMessage": "The image could not be copied for upload. Try again, or pick the photo without using the crop screen.",
+      "uploadFailedTitle": "Upload failed",
+      "uploadFailedFallback": "Could not update your photo. Please try again."
+    }
+  },
+  "fields": {
+    "loginEmail": "Login email",
+    "profilePhoto": "Profile photo",
+    "profilePhotoHint": "You or your school can set this (tap photo above)",
+    "fullName": "Full name",
+    "admissionNumber": "Admission number",
+    "academicYear": "Academic year",
+    "gender": "Gender",
+    "dateOfBirth": "Date of birth",
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address",
+    "name": "Name",
+    "relationship": "Relationship",
+    "currentClass": "Current class",
+    "rollNumber": "Roll number",
+    "employeeId": "Employee ID",
+    "status": "Status",
+    "designation": "Designation",
+    "department": "Department",
+    "qualification": "Qualification",
+    "specialization": "Specialization",
+    "experience": "Experience",
+    "dateOfJoining": "Date of joining"
+  },
+  "helpSupport": {
+    "screenTitle": "Help & support",
+    "lead": "Need help with the application? Send us an email and we will get back to you.",
+    "emailLabel": "Email us",
+    "footerNote": "More support options will be available here in a future update.",
+    "emailSubject": "Nexchool support"
+  },
+  "documents": {
+    "title": "Documents",
+    "addDocument": "Add document",
+    "retry": "Retry",
+    "errorMessage": "Unable to load documents. You can add documents below to complete the profile, or tap Retry to try again.",
+    "emptyState": "No documents uploaded yet. Tap + to add the first one.",
+    "deleteTitle": "Delete document",
+    "deleteMessage": "Are you sure you want to delete \"{{filename}}\"?",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "error": "Error",
+    "unavailableTitle": "Unavailable",
+    "unavailableMessage": "This document cannot be opened. Try uploading again."
+  },
+  "documentTypes": {
+    "aadhar_card": "Aadhar card",
+    "birth_certificate": "Birth certificate",
+    "leaving_certificate": "Leaving certificate",
+    "transfer_certificate": "Transfer certificate",
+    "passport": "Passport",
+    "other": "Other"
+  },
+  "uploadModal": {
+    "title": "Upload document",
+    "documentType": "Document type",
+    "file": "File",
+    "selectType": "Select document type",
+    "chooseFile": "Choose PDF or image",
+    "cancel": "Cancel",
+    "upload": "Upload",
+    "pickFileError": "Failed to pick file",
+    "validationTitle": "Validation",
+    "selectFileFirst": "Please select a file",
+    "selectTypeFirst": "Please select a document type",
+    "cannotUploadTitle": "Cannot upload",
+    "prepareFailed": "Something went wrong preparing the file.",
+    "uploadFailedHint": "Upload failed. Use PDF or images under about 5 MB (large images are compressed automatically).",
+    "error": "Error"
+  },
+  "viewer": {
+    "fallbackTitle": "Document",
+    "close": "Close",
+    "imageError": "Could not show image.",
+    "pdfIframeTitle": "PDF",
+    "expoGoHint": "Open the PDF in another app (Expo Go does not include the in-app PDF viewer).",
+    "openPdf": "Open PDF",
+    "sharingUnavailable": "Sharing is not available on this device.",
+    "couldNotOpen": "Could not open",
+    "storageUnavailable": "Storage is not available.",
+    "couldNotOpenDocument": "Could not open document"
+  }
+}
