@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/common/constants/colors";
@@ -12,6 +13,11 @@ interface Props {
 }
 
 export const TeacherListItem: React.FC<Props> = ({ teacher, onPress }) => {
+  const { t } = useTranslation("teachers");
+  const statusKey = teacher.status?.toLowerCase?.() ?? "";
+  const statusLabel = t(`status.${statusKey}`, {
+    defaultValue: teacher.status ?? "",
+  });
   return (
     <TouchableOpacity
       style={styles.container}
@@ -46,7 +52,7 @@ export const TeacherListItem: React.FC<Props> = ({ teacher, onPress }) => {
               teacher.status === "active" ? styles.activeText : styles.inactiveText,
             ]}
           >
-            {teacher.status}
+            {statusLabel}
           </Text>
         </View>
         <Ionicons name="chevron-forward" size={20} color={Colors.textTertiary} />

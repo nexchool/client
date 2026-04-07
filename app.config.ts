@@ -62,6 +62,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   plugins: [
     "expo-router",
+    "expo-localization",
     "@config-plugins/react-native-blob-util",
     "@config-plugins/react-native-pdf",
     [

@@ -6,6 +6,7 @@
  * PDF: react-native-pdf on dev builds; Expo Go / missing module → share sheet.
  */
 import React, { createElement, useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Modal,
   View,
@@ -39,6 +40,8 @@ import type { StudentDocument } from "../types";
 
 const SCREEN_CAPTURE_KEY = "student-document-viewer";
 const isExpoGo = Constants.appOwnership === "expo";
+
+const STORAGE_UNAVAILABLE_EN = "Storage is not available.";
 
 // --- PDF (native module, not in Expo Go) --------------------------------------
 
@@ -162,6 +165,7 @@ async function webObjectUrlFromBlob(blob: Blob, filename: string, kind: Document
 // --- component ----------------------------------------------------------------
 
 export function StudentDocumentViewerModal({ visible, onClose, document }: Props) {
+  const { t } = useTranslation("profile");
   const { width: winW, height: winH } = useWindowDimensions();
   const insets = useSafeAreaInsets();
 
@@ -234,7 +238,7 @@ export function StudentDocumentViewerModal({ visible, onClose, document }: Props
 
         const cache = FileSystem.cacheDirectory;
         if (!cache) {
-          throw new Error("Storage is not available.");
+          throw new Error(STORAGE_UNAVAILABLE_EN);
         }
 
         const stamp = Date.now();
@@ -254,7 +258,9 @@ export function StudentDocumentViewerModal({ visible, onClose, document }: Props
         }
       } catch (e: unknown) {
         if (!cancelled) {
-          setLoadError(e instanceof Error ? e.message : "Could not open document");
+          setLoadError(
+            e instanceof Error ? e.message : "Could not open document",
+          );
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -277,22 +283,36 @@ export function StudentDocumentViewerModal({ visible, onClose, document }: Props
   ]);
   /* eslint-enable react-hooks/exhaustive-deps */
 
+  const displayLoadError = (msg: string | null) => {
+    if (msg === null) return null;
+    if (msg === STORAGE_UNAVAILABLE_EN) return t("viewer.storageUnavailable");
+    if (msg === "Could not open document") return t("viewer.couldNotOpenDocument");
+    return msg;
+  };
+
   const openPdfExternally = useCallback(
     async (uri: string) => {
       try {
         if (!(await Sharing.isAvailableAsync())) {
-          Alert.alert("Unavailable", "Sharing is not available on this device.");
+          Alert.alert(
+            t("documents.unavailableTitle"),
+            t("viewer.sharingUnavailable"),
+          );
           return;
         }
         await Sharing.shareAsync(uri, {
           mimeType: "application/pdf",
-          dialogTitle: document?.original_filename ?? "Document",
+          dialogTitle:
+            document?.original_filename ?? t("viewer.fallbackTitle"),
         });
       } catch (e: unknown) {
-        Alert.alert("Error", e instanceof Error ? e.message : "Could not open");
+        Alert.alert(
+          t("uploadModal.error"),
+          e instanceof Error ? e.message : t("viewer.couldNotOpen"),
+        );
       }
     },
-    [document?.original_filename],
+    [document?.original_filename, t],
   );
 
   const showPdfWeb =
@@ -321,9 +341,13 @@ export function StudentDocumentViewerModal({ visible, onClose, document }: Props
       <View style={[styles.screen, { width: winW, height: winH }]}>
         <View style={[styles.toolbar, { paddingTop: insets.top + Spacing.sm }]}>
           <Text style={styles.title} numberOfLines={1}>
-            {document?.original_filename ?? "Document"}
+            {document?.original_filename ?? t("viewer.fallbackTitle")}
           </Text>
-          <TouchableOpacity onPress={onClose} hitSlop={12} accessibilityLabel="Close">
+          <TouchableOpacity
+            onPress={onClose}
+            hitSlop={12}
+            accessibilityLabel={t("viewer.close")}
+          >
             <Ionicons name="close" size={28} color={Colors.text} />
           </TouchableOpacity>
         </View>
@@ -337,7 +361,7 @@ export function StudentDocumentViewerModal({ visible, onClose, document }: Props
 
           {loadError && !loading && (
             <View style={styles.centered}>
-              <Text style={styles.err}>{loadError}</Text>
+              <Text style={styles.err}>{displayLoadError(loadError)}</Text>
             </View>
           )}
 
@@ -354,7 +378,7 @@ export function StudentDocumentViewerModal({ visible, onClose, document }: Props
                 />
               ) : (
                 <View style={styles.centered}>
-                  <Text style={styles.err}>Could not show image.</Text>
+                  <Text style={styles.err}>{t("viewer.imageError")}</Text>
                 </View>
               )}
             </View>
@@ -370,7 +394,7 @@ export function StudentDocumentViewerModal({ visible, onClose, document }: Props
                   border: "none",
                   backgroundColor: "#525659",
                 },
-                title: document?.original_filename ?? "PDF",
+                title: document?.original_filename ?? t("viewer.pdfIframeTitle"),
               })}
             </View>
           )}
@@ -388,12 +412,10 @@ export function StudentDocumentViewerModal({ visible, onClose, document }: Props
           {showPdfShare && (
             <View style={styles.centered}>
               {isExpoGo && (
-                <Text style={styles.hint}>
-                  Open the PDF in another app (Expo Go does not include the in-app PDF viewer).
-                </Text>
+                <Text style={styles.hint}>{t("viewer.expoGoHint")}</Text>
               )}
               <TouchableOpacity style={styles.btn} onPress={() => openPdfExternally(preview.uri)}>
-                <Text style={styles.btnText}>Open PDF</Text>
+                <Text style={styles.btnText}>{t("viewer.openPdf")}</Text>
               </TouchableOpacity>
             </View>
           )}

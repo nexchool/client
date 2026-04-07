@@ -1,0 +1,10 @@
+{
+  "languageSectionTitle": "Language",
+  "languageSectionSubtitle": "This choice is saved on your device and applies across the app.",
+  "language": {
+    "english": "English",
+    "gujarati": "Gujarati"
+  },
+  "languageSwitcherHint": "Choose app language",
+  "languageDropdownHint": "Opens a list of available languages"
+}

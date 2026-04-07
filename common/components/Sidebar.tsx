@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -37,6 +38,7 @@ export default function Sidebar({
   onClose,
   currentRoute,
 }: SidebarProps) {
+  const { t } = useTranslation("navigation");
   const { logout, permissions, enabledFeatures, user, tenantName } = useAuth();
   const { role: userRole } = useUiRole();
 
@@ -46,15 +48,22 @@ export default function Sidebar({
     [permissions, enabledFeatures]
   );
 
-  // Convert tabs to menu items
+  // Convert tabs to menu items, then append Settings (language & more later)
   const menuItems: MenuItem[] = useMemo(() => {
-    return visibleTabs.map((tab) => ({
+    const tabs = visibleTabs.map((tab) => ({
       id: tab.name,
-      label: tab.title,
+      label: t(`tabs.${tab.name}`, { defaultValue: tab.title }),
       icon: tab.iconOutline,
       route: `/(protected)/${tab.name}`,
     }));
-  }, [visibleTabs]);
+    const settingsItem: MenuItem = {
+      id: "settings",
+      label: t("tabs.settings"),
+      icon: "settings-outline",
+      route: "/(protected)/settings",
+    };
+    return [...tabs, settingsItem];
+  }, [visibleTabs, t]);
   const slideAnim = React.useRef(new Animated.Value(-SIDEBAR_WIDTH)).current;
   const opacityAnim = React.useRef(new Animated.Value(0)).current;
 
@@ -97,7 +106,11 @@ export default function Sidebar({
       onClose();
       return;
     }
-    router.replace(route as any);
+    if (route.includes("/settings")) {
+      router.push("/(protected)/settings");
+    } else {
+      router.replace(route as any);
+    }
     onClose();
   };
 
@@ -158,13 +171,15 @@ export default function Sidebar({
           <View style={styles.userHeader}>
             <Ionicons name="school" size={26} color={Colors.primary} style={styles.schoolIcon} />
             <Text style={styles.schoolName} numberOfLines={3}>
-              {tenantName || "School"}
+              {tenantName || t("navigation:sidebar.schoolFallback")}
             </Text>
             <Text style={styles.userEmail} numberOfLines={1}>
               {user?.email}
             </Text>
             <View style={styles.roleBadge}>
-              <Text style={styles.roleText}>{userRole}</Text>
+              <Text style={styles.roleText}>
+                {t(`navigation:roles.${userRole.toLowerCase()}`, { defaultValue: userRole })}
+              </Text>
             </View>
           </View>
 
@@ -204,7 +219,7 @@ export default function Sidebar({
             activeOpacity={0.7}
           >
             <Ionicons name="log-out-outline" size={24} color={Colors.error} />
-            <Text style={styles.signOutText}>Sign Out</Text>
+            <Text style={styles.signOutText}>{t("navigation:sidebar.signOut")}</Text>
           </TouchableOpacity>
         </ScrollView>
       </Animated.View>

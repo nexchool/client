@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -41,6 +42,7 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 export default function StudentsScreen() {
+  const { t } = useTranslation("students");
   const router = useRouter();
   const {
     students,
@@ -100,12 +102,16 @@ export default function StudentsScreen() {
       // Show credentials if generated
       if (response.credentials) {
         Alert.alert(
-          "Student Created Successfully",
-          `Login credentials have been generated:\n\nUsername (Admission No): ${response.credentials.username}\nEmail: ${response.credentials.email}\nPassword: ${response.credentials.password}\n\nPassword format: First 3 letters + Birth Year\nStudent must reset password on first login.`,
-          [{ text: "OK" }]
+          t("list.credentialTitle"),
+          t("list.credentialBody", {
+            username: response.credentials.username,
+            email: response.credentials.email,
+            password: response.credentials.password,
+          }),
+          [{ text: t("list.ok") }],
         );
       } else {
-        Alert.alert("Success", "Student created successfully");
+        Alert.alert(t("list.success"), t("list.createdSimple"));
       }
       
       // Refresh list
@@ -134,7 +140,7 @@ export default function StudentsScreen() {
             <Ionicons name="search" size={20} color={Colors.textSecondary} style={styles.searchIcon} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search by name or admission number..."
+              placeholder={t("list.searchPlaceholder")}
               placeholderTextColor={Colors.textSecondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -162,7 +168,7 @@ export default function StudentsScreen() {
             ListEmptyComponent={
               <View style={styles.center}>
                 <Text style={styles.emptyText}>
-                  {searchQuery ? "No students found matching your search." : "No students found."}
+                  {searchQuery ? t("list.emptySearch") : t("list.empty")}
                 </Text>
               </View>
             }
@@ -174,20 +180,20 @@ export default function StudentsScreen() {
     if (canViewSelf && currentStudent) {
       return (
         <View style={styles.profileContainer}>
-          <Text style={styles.profileTitle}>My Student Profile</Text>
+          <Text style={styles.profileTitle}>{t("list.myProfileTitle")}</Text>
           <View style={styles.card}>
-            <Text style={styles.label}>Name:</Text>
+            <Text style={styles.label}>{t("list.labelName")}</Text>
             <Text style={styles.value}>{currentStudent.name}</Text>
 
-            <Text style={styles.label}>Admission No:</Text>
+            <Text style={styles.label}>{t("list.labelAdmissionNo")}</Text>
             <Text style={styles.value}>{currentStudent.admission_number}</Text>
 
-            <Text style={styles.label}>Class:</Text>
+            <Text style={styles.label}>{t("list.labelClass")}</Text>
             <Text style={styles.value}>
-              {currentStudent.class_name || "Not assigned"}
+              {currentStudent.class_name || t("list.notAssigned")}
             </Text>
 
-            <Text style={styles.label}>Email:</Text>
+            <Text style={styles.label}>{t("list.labelEmail")}</Text>
             <Text style={styles.value}>{currentStudent.email}</Text>
           </View>
         </View>
@@ -196,9 +202,7 @@ export default function StudentsScreen() {
 
     return (
       <View style={styles.center}>
-        <Text style={styles.errorText}>
-          You do not have permission to view students.
-        </Text>
+        <Text style={styles.errorText}>{t("list.noPermission")}</Text>
       </View>
     );
   };
@@ -206,7 +210,7 @@ export default function StudentsScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Students</Text>
+        <Text style={styles.headerTitle}>{t("list.title")}</Text>
         {canCreate && (
           <TouchableOpacity
             style={styles.addButton}

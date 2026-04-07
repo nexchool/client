@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -32,6 +33,7 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 export default function TeachersScreen() {
+  const { t } = useTranslation("teachers");
   const router = useRouter();
   const { teachers, loading, fetchTeachers, createTeacher } = useTeachers();
   const { hasPermission } = usePermissions();
@@ -57,12 +59,16 @@ export default function TeachersScreen() {
 
       if (response.credentials) {
         Alert.alert(
-          "Teacher Created Successfully",
-          `Login credentials:\n\nEmployee ID: ${response.credentials.employee_id}\nEmail: ${response.credentials.email}\nPassword: ${response.credentials.password}\n\nTeacher must reset password on first login.`,
-          [{ text: "OK" }]
+          t("list.credentialTitle"),
+          t("list.credentialBody", {
+            employee_id: response.credentials.employee_id,
+            email: response.credentials.email,
+            password: response.credentials.password,
+          }),
+          [{ text: t("list.ok") }],
         );
       } else {
-        Alert.alert("Success", "Teacher created successfully");
+        Alert.alert(t("list.success"), t("list.createdSimple"));
       }
 
       fetchTeachers();
@@ -74,7 +80,7 @@ export default function TeachersScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Teachers</Text>
+        <Text style={styles.headerTitle}>{t("list.title")}</Text>
         {canCreate && (
           <TouchableOpacity
             style={styles.addButton}
@@ -90,7 +96,7 @@ export default function TeachersScreen() {
         <Ionicons name="search" size={20} color={Colors.textSecondary} style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search by name, ID, or department..."
+          placeholder={t("list.searchPlaceholder")}
           placeholderTextColor={Colors.textSecondary}
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -120,7 +126,7 @@ export default function TeachersScreen() {
           ListEmptyComponent={
             <View style={styles.center}>
               <Text style={styles.emptyText}>
-                {searchQuery ? "No teachers found." : "No teachers yet."}
+                {searchQuery ? t("list.emptySearch") : t("list.emptyNone")}
               </Text>
             </View>
           }

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -37,6 +38,7 @@ export const CreateStudentModal: React.FC<CreateStudentModalProps> = ({
   initialData = null,
   mode = "create",
 }) => {
+  const { t } = useTranslation("students");
   const [formData, setFormData] = useState<CreateStudentDTO>({
     name: "",
     guardian_name: "",
@@ -96,6 +98,12 @@ export const CreateStudentModal: React.FC<CreateStudentModalProps> = ({
     }
   }, [mode, initialData, visible, contextYearId]);
 
+  const trField = useCallback(
+    (msg: string | undefined) =>
+      msg ? t(`validation.${msg}`, { defaultValue: msg }) : "",
+    [t],
+  );
+
   const validateForm = (): boolean => {
     // Use Zod validation
     const validation = validateStudentData(formData, mode === "edit");
@@ -111,7 +119,7 @@ export const CreateStudentModal: React.FC<CreateStudentModalProps> = ({
 
   const handleSubmit = async () => {
     if (!validateForm()) {
-      setError("Please fix the errors before submitting");
+      setError(t("modal.fixErrors"));
       return;
     }
 
@@ -158,7 +166,10 @@ export const CreateStudentModal: React.FC<CreateStudentModalProps> = ({
       setError(null);
       setFieldErrors({});
     } catch (err: any) {
-      setError(err.message || "Failed to create student");
+      setError(
+        err.message ||
+          (mode === "edit" ? t("modal.updateFailed") : t("modal.createFailed")),
+      );
     } finally {
       setLoading(false);
     }
@@ -178,7 +189,7 @@ export const CreateStudentModal: React.FC<CreateStudentModalProps> = ({
         <View style={styles.modalContent}>
           <View style={styles.header}>
             <Text style={styles.title}>
-              {mode === "edit" ? "Edit Student" : "Add New Student"}
+              {mode === "edit" ? t("modal.titleEdit") : t("modal.titleCreate")}
             </Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <Ionicons name="close" size={24} color={Colors.text} />
@@ -193,9 +204,9 @@ export const CreateStudentModal: React.FC<CreateStudentModalProps> = ({
 
           <ScrollView style={styles.form} showsVerticalScrollIndicator={false}>
             {/* Basic Information */}
-            <Text style={styles.sectionTitle}>Basic Information</Text>
+            <Text style={styles.sectionTitle}>{t("modal.sectionBasic")}</Text>
 
-            <Text style={styles.label}>Full Name *</Text>
+            <Text style={styles.label}>{t("modal.fullNameRequired")}</Text>
             <TextInput
               style={[styles.input, fieldErrors.name && styles.inputError]}
               value={formData.name}
@@ -209,17 +220,15 @@ export const CreateStudentModal: React.FC<CreateStudentModalProps> = ({
                   });
                 }
               }}
-              placeholder="e.g. John Doe"
+              placeholder={t("modal.namePlaceholder")}
               placeholderTextColor={Colors.textSecondary}
             />
             {fieldErrors.name && (
-              <Text style={styles.fieldError}>{fieldErrors.name}</Text>
+              <Text style={styles.fieldError}>{trField(fieldErrors.name)}</Text>
             )}
 
-            <Text style={styles.label}>Admission Number</Text>
-            <Text style={styles.helperText}>
-              Leave empty to auto-generate (e.g., ADM2026001)
-            </Text>
+            <Text style={styles.label}>{t("modal.admissionNumber")}</Text>
+            <Text style={styles.helperText}>{t("modal.admissionHint")}</Text>
             <TextInput
               style={[styles.input, fieldErrors.admission_number && styles.inputError]}
               value={formData.admission_number}
@@ -233,46 +242,50 @@ export const CreateStudentModal: React.FC<CreateStudentModalProps> = ({
                   });
                 }
               }}
-              placeholder="Auto-generated if empty"
+              placeholder={t("modal.admissionPlaceholder")}
               placeholderTextColor={Colors.textSecondary}
               editable={mode === "create"} // Cannot edit admission number
             />
             {fieldErrors.admission_number && (
-              <Text style={styles.fieldError}>{fieldErrors.admission_number}</Text>
+              <Text style={styles.fieldError}>
+                {trField(fieldErrors.admission_number)}
+              </Text>
             )}
 
             <View style={styles.row}>
               <View style={styles.col}>
-                <Text style={styles.label}>Gender</Text>
+                <Text style={styles.label}>{t("modal.gender")}</Text>
                 <TextInput
                   style={styles.input}
                   value={formData.gender}
                   onChangeText={(text) =>
                     setFormData((prev) => ({ ...prev, gender: text }))
                   }
-                  placeholder="Male/Female/Other"
+                  placeholder={t("modal.genderPlaceholder")}
                   placeholderTextColor={Colors.textSecondary}
                 />
               </View>
               <View style={[styles.col, { marginLeft: Spacing.md }]}>
                 <DateField
-                  label="Date of Birth"
+                  label={t("modal.dateOfBirth")}
                   value={formData.date_of_birth || null}
                   onChange={(text) =>
                     setFormData((prev) => ({ ...prev, date_of_birth: text }))
                   }
-                  placeholder="YYYY-MM-DD"
-                  error={fieldErrors.date_of_birth}
+                  placeholder={t("modal.datePlaceholder")}
+                  error={
+                    fieldErrors.date_of_birth
+                      ? trField(fieldErrors.date_of_birth)
+                      : undefined
+                  }
                   useOverlayInsideModal
                 />
               </View>
             </View>
 
             {/* Class (optional) - when selected, academic year is derived */}
-            <Text style={styles.label}>Class</Text>
-            <Text style={styles.helperText}>
-              Optional. If selected, academic year is auto-set from the class.
-            </Text>
+            <Text style={styles.label}>{t("modal.class")}</Text>
+            <Text style={styles.helperText}>{t("modal.classHint")}</Text>
             <ClassSelect
               value={formData.class_id || null}
               onChange={(id) => {
@@ -297,14 +310,18 @@ export const CreateStudentModal: React.FC<CreateStudentModalProps> = ({
                 section: c.section,
               }))}
               allowEmpty
-              emptyLabel="None"
-              placeholder="Select class"
+              emptyLabel={t("modal.classNone")}
+              placeholder={t("modal.classPlaceholder")}
+              modalTitle={t("modal.classModalTitle")}
             />
+            {fieldErrors.class_id && (
+              <Text style={styles.fieldError}>{trField(fieldErrors.class_id)}</Text>
+            )}
 
             {/* Academic Year (required when class not selected) */}
             {!formData.class_id && (
               <>
-                <Text style={styles.label}>Academic Year *</Text>
+                <Text style={styles.label}>{t("modal.academicYearRequired")}</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
                   {academicYears.map((ay) => (
                     <TouchableOpacity
@@ -328,15 +345,17 @@ export const CreateStudentModal: React.FC<CreateStudentModalProps> = ({
                   ))}
                 </ScrollView>
                 {fieldErrors.academic_year_id && (
-                  <Text style={styles.fieldError}>{fieldErrors.academic_year_id}</Text>
+                  <Text style={styles.fieldError}>
+                    {trField(fieldErrors.academic_year_id)}
+                  </Text>
                 )}
               </>
             )}
 
             {/* Guardian Information */}
-            <Text style={styles.sectionTitle}>Guardian Information</Text>
+            <Text style={styles.sectionTitle}>{t("modal.sectionGuardian")}</Text>
 
-            <Text style={styles.label}>Guardian Name *</Text>
+            <Text style={styles.label}>{t("modal.guardianNameRequired")}</Text>
             <TextInput
               style={[styles.input, fieldErrors.guardian_name && styles.inputError]}
               value={formData.guardian_name}
@@ -350,16 +369,18 @@ export const CreateStudentModal: React.FC<CreateStudentModalProps> = ({
                   });
                 }
               }}
-              placeholder="Parent/Guardian Name"
+              placeholder={t("modal.guardianPlaceholder")}
               placeholderTextColor={Colors.textSecondary}
             />
             {fieldErrors.guardian_name && (
-              <Text style={styles.fieldError}>{fieldErrors.guardian_name}</Text>
+              <Text style={styles.fieldError}>
+                {trField(fieldErrors.guardian_name)}
+              </Text>
             )}
 
             <View style={styles.row}>
               <View style={styles.col}>
-                <Text style={styles.label}>Relationship *</Text>
+                <Text style={styles.label}>{t("modal.relationshipRequired")}</Text>
                 <TextInput
                   style={[styles.input, fieldErrors.guardian_relationship && styles.inputError]}
                   value={formData.guardian_relationship}
@@ -373,15 +394,17 @@ export const CreateStudentModal: React.FC<CreateStudentModalProps> = ({
                       });
                     }
                   }}
-                  placeholder="e.g. Father"
+                  placeholder={t("modal.relationshipPlaceholder")}
                   placeholderTextColor={Colors.textSecondary}
                 />
                 {fieldErrors.guardian_relationship && (
-                  <Text style={styles.fieldError}>{fieldErrors.guardian_relationship}</Text>
+                  <Text style={styles.fieldError}>
+                    {trField(fieldErrors.guardian_relationship)}
+                  </Text>
                 )}
               </View>
               <View style={[styles.col, { marginLeft: Spacing.md }]}>
-                <Text style={styles.label}>Phone *</Text>
+                <Text style={styles.label}>{t("modal.guardianPhoneRequired")}</Text>
                 <TextInput
                   style={[styles.input, fieldErrors.guardian_phone && styles.inputError]}
                   value={formData.guardian_phone}
@@ -395,20 +418,24 @@ export const CreateStudentModal: React.FC<CreateStudentModalProps> = ({
                       });
                     }
                   }}
-                  placeholder="Contact Number"
+                  placeholder={t("modal.guardianPhonePlaceholder")}
                   placeholderTextColor={Colors.textSecondary}
                   keyboardType="phone-pad"
                 />
                 {fieldErrors.guardian_phone && (
-                  <Text style={styles.fieldError}>{fieldErrors.guardian_phone}</Text>
+                  <Text style={styles.fieldError}>
+                    {trField(fieldErrors.guardian_phone)}
+                  </Text>
                 )}
               </View>
             </View>
 
             {/* Contact Information */}
-            <Text style={styles.sectionTitle}>Contact Information (Optional)</Text>
+            <Text style={styles.sectionTitle}>
+              {t("modal.sectionContactOptional")}
+            </Text>
 
-            <Text style={styles.label}>Student Phone</Text>
+            <Text style={styles.label}>{t("modal.studentPhone")}</Text>
             <TextInput
               style={[styles.input, fieldErrors.phone && styles.inputError]}
               value={formData.phone}
@@ -422,18 +449,16 @@ export const CreateStudentModal: React.FC<CreateStudentModalProps> = ({
                   });
                 }
               }}
-              placeholder="e.g. 1234567890"
+              placeholder={t("modal.studentPhonePlaceholder")}
               placeholderTextColor={Colors.textSecondary}
               keyboardType="phone-pad"
             />
             {fieldErrors.phone && (
-              <Text style={styles.fieldError}>{fieldErrors.phone}</Text>
+              <Text style={styles.fieldError}>{trField(fieldErrors.phone)}</Text>
             )}
 
-            <Text style={styles.label}>Student Email</Text>
-            <Text style={styles.helperText}>
-              Provide email only if student needs login. Username will be admission number, password will be first 3 letters + birth year.
-            </Text>
+            <Text style={styles.label}>{t("modal.studentEmail")}</Text>
+            <Text style={styles.helperText}>{t("modal.studentEmailHint")}</Text>
             <TextInput
               style={[styles.input, fieldErrors.email && styles.inputError]}
               value={formData.email}
@@ -447,19 +472,19 @@ export const CreateStudentModal: React.FC<CreateStudentModalProps> = ({
                   });
                 }
               }}
-              placeholder="e.g. john@student.school"
+              placeholder={t("modal.studentEmailPlaceholder")}
               placeholderTextColor={Colors.textSecondary}
               autoCapitalize="none"
               keyboardType="email-address"
             />
             {fieldErrors.email && (
-              <Text style={styles.fieldError}>{fieldErrors.email}</Text>
+              <Text style={styles.fieldError}>{trField(fieldErrors.email)}</Text>
             )}
           </ScrollView>
 
           <View style={styles.footer}>
             <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-              <Text style={styles.cancelButtonText}>Cancel</Text>
+              <Text style={styles.cancelButtonText}>{t("modal.cancel")}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.submitButton, loading && styles.disabledButton]}
@@ -467,10 +492,13 @@ export const CreateStudentModal: React.FC<CreateStudentModalProps> = ({
               disabled={loading}
             >
               <Text style={styles.submitButtonText}>
-                {loading 
-                  ? (mode === "edit" ? "Updating..." : "Creating...")
-                  : (mode === "edit" ? "Update Student" : "Create Student")
-                }
+                {loading
+                  ? mode === "edit"
+                    ? t("modal.updating")
+                    : t("modal.creating")
+                  : mode === "edit"
+                    ? t("modal.update")
+                    : t("modal.create")}
               </Text>
             </TouchableOpacity>
           </View>

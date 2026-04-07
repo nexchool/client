@@ -1,0 +1,24 @@
+{
+  "tabs": {
+    "home": "હોમ",
+    "students": "વિદ્યાર્થીઓ",
+    "teachers": "શિક્ષકો",
+    "classes": "વર્ગો",
+    "subjects": "વિષયો",
+    "finance": "ફાઇનાન્સ",
+    "my-leaves": "રજા ટ્રેકર",
+    "teacher-leaves": "રજા વિનંતીઓ",
+    "profile": "પ્રોફાઇલ",
+    "settings": "સેટિંગ્સ"
+  },
+  "sidebar": {
+    "signOut": "સાઇન આઉટ",
+    "schoolFallback": "શાળા"
+  },
+  "roles": {
+    "admin": "એડમિન",
+    "teacher": "શિક્ષક",
+    "student": "વિદ્યાર્થી",
+    "parent": "વાલી"
+  }
+}

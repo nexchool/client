@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -31,6 +32,7 @@ export const CreateTeacherModal: React.FC<Props> = ({
   initialData,
   mode = "create",
 }) => {
+  const { t } = useTranslation("teachers");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,7 +77,7 @@ export const CreateTeacherModal: React.FC<Props> = ({
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      setError("Name is required");
+      setError(t("modal.nameRequired"));
       return;
     }
 
@@ -98,7 +100,7 @@ export const CreateTeacherModal: React.FC<Props> = ({
       await onSubmit(data);
       resetForm();
     } catch (err: any) {
-      setError(err.message || "Failed to save teacher");
+      setError(err.message || t("modal.saveFailed"));
     } finally {
       setLoading(false);
     }
@@ -116,7 +118,7 @@ export const CreateTeacherModal: React.FC<Props> = ({
         style={[styles.input, options?.multiline && styles.multilineInput]}
         value={value}
         onChangeText={setter}
-        placeholder={options?.placeholder || label}
+        placeholder={options?.placeholder ?? label}
         placeholderTextColor={Colors.textTertiary}
         keyboardType={options?.keyboardType || "default"}
         multiline={options?.multiline}
@@ -137,7 +139,7 @@ export const CreateTeacherModal: React.FC<Props> = ({
             <Ionicons name="close" size={24} color={Colors.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>
-            {mode === "edit" ? "Edit Teacher" : "Create Teacher"}
+            {mode === "edit" ? t("modal.titleEdit") : t("modal.titleCreate")}
           </Text>
           <View style={{ width: 40 }} />
         </View>
@@ -149,28 +151,28 @@ export const CreateTeacherModal: React.FC<Props> = ({
             </View>
           )}
 
-          {renderInput("Full Name *", name, setName)}
-          {renderInput("Email", email, setEmail, {
-            placeholder: "teacher@school.com",
+          {renderInput(t("modal.fullName"), name, setName)}
+          {renderInput(t("modal.email"), email, setEmail, {
+            placeholder: t("modal.emailPlaceholder"),
             keyboardType: "email-address",
           })}
-          {renderInput("Phone", phone, setPhone, { keyboardType: "phone-pad" })}
-          {renderInput("Designation", designation, setDesignation, {
-            placeholder: "e.g. Senior Teacher, HOD",
+          {renderInput(t("modal.phone"), phone, setPhone, { keyboardType: "phone-pad" })}
+          {renderInput(t("modal.designation"), designation, setDesignation, {
+            placeholder: t("modal.designationPlaceholder"),
           })}
-          {renderInput("Department", department, setDepartment, {
-            placeholder: "e.g. Mathematics, Science",
+          {renderInput(t("modal.department"), department, setDepartment, {
+            placeholder: t("modal.departmentPlaceholder"),
           })}
-          {renderInput("Qualification", qualification, setQualification, {
-            placeholder: "e.g. M.Ed, Ph.D",
+          {renderInput(t("modal.qualification"), qualification, setQualification, {
+            placeholder: t("modal.qualificationPlaceholder"),
           })}
-          {renderInput("Specialization", specialization, setSpecialization, {
-            placeholder: "e.g. Algebra, Organic Chemistry",
+          {renderInput(t("modal.specialization"), specialization, setSpecialization, {
+            placeholder: t("modal.specializationPlaceholder"),
           })}
-          {renderInput("Experience (Years)", experienceYears, setExperienceYears, {
+          {renderInput(t("modal.experienceYears"), experienceYears, setExperienceYears, {
             keyboardType: "numeric",
           })}
-          {renderInput("Address", address, setAddress, { multiline: true })}
+          {renderInput(t("modal.address"), address, setAddress, { multiline: true })}
 
           <TouchableOpacity
             style={[styles.submitButton, loading && styles.submitButtonDisabled]}
@@ -181,7 +183,7 @@ export const CreateTeacherModal: React.FC<Props> = ({
               <ActivityIndicator color="#FFFFFF" />
             ) : (
               <Text style={styles.submitButtonText}>
-                {mode === "edit" ? "Update Teacher" : "Create Teacher"}
+                {mode === "edit" ? t("modal.update") : t("modal.create")}
               </Text>
             )}
           </TouchableOpacity>

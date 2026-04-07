@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -31,6 +32,7 @@ export const CreateSubjectModal: React.FC<Props> = ({
   initialData,
   mode = "create",
 }) => {
+  const { t } = useTranslation("subjects");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,7 +59,7 @@ export const CreateSubjectModal: React.FC<Props> = ({
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      setError("Name is required");
+      setError(t("modal.nameRequired"));
       return;
     }
 
@@ -74,7 +76,7 @@ export const CreateSubjectModal: React.FC<Props> = ({
       await onSubmit(data);
       resetForm();
     } catch (err: any) {
-      setError(err.message || "Failed to save subject");
+      setError(err.message || t("modal.saveFailed"));
     } finally {
       setLoading(false);
     }
@@ -91,7 +93,7 @@ export const CreateSubjectModal: React.FC<Props> = ({
             <Ionicons name="close" size={24} color={Colors.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>
-            {mode === "edit" ? "Edit Subject" : "Create Subject"}
+            {mode === "edit" ? t("modal.titleEdit") : t("modal.titleCreate")}
           </Text>
           <View style={{ width: 40 }} />
         </View>
@@ -104,34 +106,34 @@ export const CreateSubjectModal: React.FC<Props> = ({
           )}
 
           <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>Name *</Text>
+            <Text style={styles.fieldLabel}>{t("modal.name")}</Text>
             <TextInput
               style={styles.input}
               value={name}
               onChangeText={setName}
-              placeholder="e.g. Mathematics"
+              placeholder={t("modal.placeholderName")}
               placeholderTextColor={Colors.textTertiary}
             />
           </View>
 
           <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>Code</Text>
+            <Text style={styles.fieldLabel}>{t("modal.code")}</Text>
             <TextInput
               style={styles.input}
               value={code}
               onChangeText={setCode}
-              placeholder="e.g. MATH101"
+              placeholder={t("modal.placeholderCode")}
               placeholderTextColor={Colors.textTertiary}
             />
           </View>
 
           <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>Description</Text>
+            <Text style={styles.fieldLabel}>{t("modal.description")}</Text>
             <TextInput
               style={[styles.input, styles.multilineInput]}
               value={description}
               onChangeText={setDescription}
-              placeholder="Optional description"
+              placeholder={t("modal.placeholderDescription")}
               placeholderTextColor={Colors.textTertiary}
               multiline
               numberOfLines={3}
@@ -147,7 +149,7 @@ export const CreateSubjectModal: React.FC<Props> = ({
               <ActivityIndicator color="#FFFFFF" />
             ) : (
               <Text style={styles.submitButtonText}>
-                {mode === "edit" ? "Update Subject" : "Create Subject"}
+                {mode === "edit" ? t("modal.update") : t("modal.create")}
               </Text>
             )}
           </TouchableOpacity>

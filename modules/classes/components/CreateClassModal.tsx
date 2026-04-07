@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -47,6 +48,7 @@ export const CreateClassModal: React.FC<Props> = ({
   initialData,
   classId,
 }) => {
+  const { t } = useTranslation("classes");
   const isEditMode = !!initialData;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -118,19 +120,19 @@ export const CreateClassModal: React.FC<Props> = ({
 
   const handleSubmit = async () => {
     if (!section.trim() || !academicYearId) {
-      setError("Section and academic year are required");
+      setError(t("modal.errSectionYear"));
       return;
     }
 
     if (isEditMode) {
       if (!name.trim()) {
-        setError("Class name is required");
+        setError(t("modal.errNameRequired"));
         return;
       }
     } else {
       const sn = parseInt(standardNum.trim(), 10);
       if (!standardNum.trim() || Number.isNaN(sn) || sn < 1 || sn > 20) {
-        setError("Enter a valid standard (1–20), e.g. 10 for Grade 10");
+        setError(t("modal.errStandard"));
         return;
       }
     }
@@ -166,7 +168,10 @@ export const CreateClassModal: React.FC<Props> = ({
       }
       resetForm();
     } catch (err: any) {
-      setError(err.message || (isEditMode ? "Failed to update class" : "Failed to create class"));
+      setError(
+        err.message ||
+          (isEditMode ? t("modal.errUpdateFailed") : t("modal.errCreateFailed")),
+      );
     } finally {
       setLoading(false);
     }
@@ -183,7 +188,9 @@ export const CreateClassModal: React.FC<Props> = ({
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <Ionicons name="close" size={24} color={Colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>{isEditMode ? "Edit Class" : "Create Class"}</Text>
+          <Text style={styles.headerTitle}>
+            {isEditMode ? t("modal.titleEdit") : t("modal.titleCreate")}
+          </Text>
           <View style={{ width: 40 }} />
         </View>
 
@@ -197,24 +204,24 @@ export const CreateClassModal: React.FC<Props> = ({
           {isEditMode ? (
             <>
               <View style={styles.fieldContainer}>
-                <Text style={styles.fieldLabel}>Standard (grade) number</Text>
-                <Text style={styles.fieldHint}>Used to share subjects across sections (e.g. 10-A and 10-B).</Text>
+                <Text style={styles.fieldLabel}>{t("modal.standardGradeNumber")}</Text>
+                <Text style={styles.fieldHint}>{t("modal.standardHintEdit")}</Text>
                 <TextInput
                   style={styles.input}
                   value={standardNum}
                   onChangeText={setStandardNum}
-                  placeholder="e.g. 10"
+                  placeholder={t("modal.placeholderStandard")}
                   keyboardType="number-pad"
                   placeholderTextColor={Colors.textTertiary}
                 />
               </View>
               <View style={styles.fieldContainer}>
-                <Text style={styles.fieldLabel}>Class name *</Text>
+                <Text style={styles.fieldLabel}>{t("modal.className")}</Text>
                 <TextInput
                   style={styles.input}
                   value={name}
                   onChangeText={setName}
-                  placeholder="e.g. Grade 10"
+                  placeholder={t("modal.placeholderName")}
                   placeholderTextColor={Colors.textTertiary}
                 />
               </View>
@@ -222,41 +229,45 @@ export const CreateClassModal: React.FC<Props> = ({
           ) : (
             <>
               <View style={styles.fieldContainer}>
-                <Text style={styles.fieldLabel}>Standard (grade) *</Text>
-                <Text style={styles.fieldHint}>Only the number (e.g. 10). Class name will be Grade 10.</Text>
+                <Text style={styles.fieldLabel}>{t("modal.standardGrade")}</Text>
+                <Text style={styles.fieldHint}>{t("modal.standardHintCreate")}</Text>
                 <TextInput
                   style={styles.input}
                   value={standardNum}
                   onChangeText={setStandardNum}
-                  placeholder="e.g. 10"
+                  placeholder={t("modal.placeholderStandard")}
                   keyboardType="number-pad"
                   placeholderTextColor={Colors.textTertiary}
                 />
                 {standardNum.trim() && !Number.isNaN(parseInt(standardNum, 10)) ? (
-                  <Text style={styles.previewLabel}>Class name: Grade {parseInt(standardNum, 10)}</Text>
+                  <Text style={styles.previewLabel}>
+                    {t("modal.classNamePreview", {
+                      grade: parseInt(standardNum, 10),
+                    })}
+                  </Text>
                 ) : null}
               </View>
             </>
           )}
 
           <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>Section *</Text>
+            <Text style={styles.fieldLabel}>{t("modal.section")}</Text>
             <TextInput
               style={styles.input}
               value={section}
               onChangeText={setSection}
-              placeholder="e.g. A"
+              placeholder={t("modal.placeholderSection")}
               placeholderTextColor={Colors.textTertiary}
             />
           </View>
 
           <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>Academic Year *</Text>
+            <Text style={styles.fieldLabel}>{t("modal.academicYear")}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
               {academicYearsLoading ? (
-                <Text style={styles.placeholderText}>Loading...</Text>
+                <Text style={styles.placeholderText}>{t("modal.loading")}</Text>
               ) : academicYears.length === 0 ? (
-                <Text style={styles.placeholderText}>No academic years. Create one in Finance.</Text>
+                <Text style={styles.placeholderText}>{t("modal.noAcademicYears")}</Text>
               ) : (
                 academicYears.map((ay) => (
                   <TouchableOpacity
@@ -274,8 +285,8 @@ export const CreateClassModal: React.FC<Props> = ({
           </View>
 
           <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>Class Teacher (optional)</Text>
-            <Text style={styles.fieldHint}>Only the class teacher can mark attendance for this class.</Text>
+            <Text style={styles.fieldLabel}>{t("modal.classTeacherOptional")}</Text>
+            <Text style={styles.fieldHint}>{t("modal.classTeacherHint")}</Text>
             {teachersLoading ? (
               <ActivityIndicator size="small" color={Colors.primary} style={styles.teacherLoader} />
             ) : (
@@ -284,7 +295,9 @@ export const CreateClassModal: React.FC<Props> = ({
                   style={[styles.chip, !classTeacherId && styles.chipActive]}
                   onPress={() => setClassTeacherId("")}
                 >
-                  <Text style={[styles.chipText, !classTeacherId && styles.chipTextActive]}>None</Text>
+                  <Text style={[styles.chipText, !classTeacherId && styles.chipTextActive]}>
+                    {t("modal.none")}
+                  </Text>
                 </TouchableOpacity>
                 {teachers.map((t) => (
                   <TouchableOpacity
@@ -309,20 +322,20 @@ export const CreateClassModal: React.FC<Props> = ({
 
           <View style={styles.fieldContainer}>
             <DateField
-              label="Start Date"
+              label={t("modal.startDate")}
               value={startDate}
               onChange={setStartDate}
-              placeholder="YYYY-MM-DD"
+              placeholder={t("modal.datePlaceholder")}
               useOverlayInsideModal
             />
           </View>
 
           <View style={styles.fieldContainer}>
             <DateField
-              label="End Date"
+              label={t("modal.endDate")}
               value={endDate}
               onChange={setEndDate}
-              placeholder="YYYY-MM-DD"
+              placeholder={t("modal.datePlaceholder")}
               useOverlayInsideModal
             />
           </View>
@@ -335,7 +348,9 @@ export const CreateClassModal: React.FC<Props> = ({
             {loading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.submitButtonText}>{isEditMode ? "Update Class" : "Create Class"}</Text>
+              <Text style={styles.submitButtonText}>
+                {isEditMode ? t("modal.update") : t("modal.create")}
+              </Text>
             )}
           </TouchableOpacity>
         </ScrollView>

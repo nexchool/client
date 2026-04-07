@@ -9,16 +9,19 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Link, router } from "expo-router";
+import { useTranslation } from "react-i18next";
 import SafeScreenWrapper from "@/common/components/SafeScreenWrapper";
 import AuthInput from "@/common/components/AuthInput";
 import AuthButton from "@/common/components/AuthButton";
 import { useLogin } from "@/modules/auth/hooks/useLogin";
 import { useAuth } from "@/modules/auth/hooks/useAuth";
 import { Colors } from "@/common/constants/colors";
+import { isLoginFieldError } from "@/modules/auth/errors/LoginFieldError";
 
 const loginIcon = require("@/assets/images/auth/login.jpg");
 
 export default function LoginScreen() {
+  const { t } = useTranslation("auth");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -26,7 +29,12 @@ export default function LoginScreen() {
   const [choosingTenant, setChoosingTenant] = useState(false);
 
   const { login, loading, error } = useLogin();
-  const { isAuthenticated, pendingTenantChoice, loginWithTenant, clearPendingTenantChoice } = useAuth();
+  const {
+    isAuthenticated,
+    pendingTenantChoice,
+    loginWithTenant,
+    clearPendingTenantChoice,
+  } = useAuth();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -40,12 +48,13 @@ export default function LoginScreen() {
 
     try {
       await login(email, password);
-    } catch (err: any) {
-      const message = err?.message || "";
-      if (message.includes("email")) {
-        setEmailError(message);
-      } else if (message.includes("password")) {
-        setPasswordError(message);
+    } catch (err: unknown) {
+      if (isLoginFieldError(err)) {
+        if (err.field === "email") {
+          setEmailError(err.message);
+        } else {
+          setPasswordError(err.message);
+        }
       }
     }
   };
@@ -55,7 +64,7 @@ export default function LoginScreen() {
     try {
       await loginWithTenant(tenantId);
       router.replace("/(protected)/home");
-    } catch (_) {
+    } catch {
       // Error surfaced by auth
     } finally {
       setChoosingTenant(false);
@@ -72,32 +81,34 @@ export default function LoginScreen() {
         >
           <View style={styles.content}>
             <View style={styles.header}>
-              <Text style={styles.title}>Which school?</Text>
-              <Text style={styles.subtitle}>
-                Your account is linked to more than one school. Choose one to continue.
-              </Text>
+              <Text style={styles.title}>{t("whichSchool")}</Text>
+              <Text style={styles.subtitle}>{t("tenantSubtitle")}</Text>
             </View>
             <TouchableOpacity
               style={styles.backLink}
               onPress={clearPendingTenantChoice}
               disabled={choosingTenant}
+              accessibilityRole="button"
+              accessibilityLabel={t("backToLogin")}
             >
-              <Text style={styles.forgotPasswordText}>← Back to login</Text>
+              <Text style={styles.forgotPasswordText}>{t("backToLogin")}</Text>
             </TouchableOpacity>
             {choosingTenant ? (
               <ActivityIndicator size="large" style={styles.tenantLoader} color={Colors.primary} />
             ) : (
               <View style={styles.tenantList}>
-                {pendingTenantChoice.tenants.map((t) => (
+                {pendingTenantChoice.tenants.map((tenant) => (
                   <TouchableOpacity
-                    key={t.id}
+                    key={tenant.id}
                     style={styles.tenantItem}
-                    onPress={() => handleChooseSchool(t.id)}
+                    onPress={() => handleChooseSchool(tenant.id)}
                     activeOpacity={0.7}
+                    accessibilityRole="button"
+                    accessibilityLabel={tenant.name}
                   >
-                    <Text style={styles.tenantName}>{t.name}</Text>
-                    {t.subdomain ? (
-                      <Text style={styles.tenantSubdomain}>{t.subdomain}</Text>
+                    <Text style={styles.tenantName}>{tenant.name}</Text>
+                    {tenant.subdomain ? (
+                      <Text style={styles.tenantSubdomain}>{tenant.subdomain}</Text>
                     ) : null}
                   </TouchableOpacity>
                 ))}
@@ -123,20 +134,19 @@ export default function LoginScreen() {
               source={loginIcon}
               style={styles.illustration}
               resizeMode="contain"
+              accessibilityIgnoresInvertColors
             />
           </View>
 
           <View style={styles.header}>
-            <Text style={styles.title}>Welcome Back</Text>
-            <Text style={styles.subtitle}>
-              Sign in to continue to your account
-            </Text>
+            <Text style={styles.title}>{t("welcomeBack")}</Text>
+            <Text style={styles.subtitle}>{t("signInSubtitle")}</Text>
           </View>
 
           <View style={styles.form}>
             <AuthInput
-              label="Email"
-              placeholder="Enter your email"
+              label={t("emailLabel")}
+              placeholder={t("emailPlaceholder")}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -147,8 +157,8 @@ export default function LoginScreen() {
             />
 
             <AuthInput
-              label="Password"
-              placeholder="Enter your password"
+              label={t("passwordLabel")}
+              placeholder={t("passwordPlaceholder")}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -161,30 +171,26 @@ export default function LoginScreen() {
 
             <View style={styles.forgotPasswordContainer}>
               <Link href="/(auth)/forgot-password" asChild>
-                <TouchableOpacity>
-                  <Text style={styles.forgotPasswordText}>
-                    Forgot Password?
-                  </Text>
+                <TouchableOpacity accessibilityRole="button" accessibilityLabel={t("forgotPassword")}>
+                  <Text style={styles.forgotPasswordText}>{t("forgotPassword")}</Text>
                 </TouchableOpacity>
               </Link>
             </View>
 
-            {error && <Text style={styles.errorText}>{error}</Text>}
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
             <AuthButton
-              title="Sign In"
+              title={t("signIn")}
               onPress={handleLogin}
               loading={loading}
               style={styles.loginButton}
             />
 
             <View style={styles.footer}>
-              <Text style={styles.footerText}>
-                Don&apos;t have an account?{" "}
-              </Text>
+              <Text style={styles.footerText}>{t("noAccountPrefix")} </Text>
               <Link href="/(auth)/register" asChild>
-                <TouchableOpacity>
-                  <Text style={styles.linkText}>Sign Up</Text>
+                <TouchableOpacity accessibilityRole="button" accessibilityLabel={t("signUp")}>
+                  <Text style={styles.linkText}>{t("signUp")}</Text>
                 </TouchableOpacity>
               </Link>
             </View>
@@ -255,6 +261,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginTop: 24,
+    flexWrap: "wrap",
   },
   footerText: {
     fontSize: 14,

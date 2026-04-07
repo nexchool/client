@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Linking,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { ProfileAvatar } from "@/common/components/ProfileAvatar";
 import { useRouter } from "expo-router";
 import { Colors } from "@/common/constants/colors";
@@ -21,9 +22,13 @@ const TERMS_URL = "https://nexchool.in/terms";
 const PRIVACY_URL = "https://nexchool.in/privacy";
 
 export default function ProfileScreen() {
+  const { t } = useTranslation(["profile", "navigation"]);
   const router = useRouter();
   const { user, logout } = useAuth();
   const { role: userRole } = useUiRole();
+  const roleLabel = t(`navigation:roles.${userRole.toLowerCase()}`, {
+    defaultValue: userRole,
+  });
 
   const handleLogout = async () => {
     await logout();
@@ -49,7 +54,7 @@ export default function ProfileScreen() {
             />
           </View>
           <View style={styles.roleBadge}>
-            <Text style={styles.roleText}>{userRole}</Text>
+            <Text style={styles.roleText}>{roleLabel}</Text>
           </View>
         </View>
         <Text style={styles.name}>{user?.email?.split("@")[0]}</Text>
@@ -58,7 +63,9 @@ export default function ProfileScreen() {
 
       <View style={styles.content}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Profile Information</Text>
+          <Text style={styles.sectionTitle}>
+            {t("profile:main.sections.profileInformation")}
+          </Text>
 
           <TouchableOpacity
             style={styles.infoCard}
@@ -74,9 +81,11 @@ export default function ProfileScreen() {
                 />
               </View>
               <View style={styles.cardText}>
-                <Text style={styles.cardTitle}>My profile</Text>
+                <Text style={styles.cardTitle}>
+                  {t("profile:main.cards.myProfile")}
+                </Text>
                 <Text style={styles.cardSubtitle}>
-                  View school record and profile photo
+                  {t("profile:main.cards.myProfileSubtitle")}
                 </Text>
               </View>
             </View>
@@ -103,8 +112,12 @@ export default function ProfileScreen() {
                   />
                 </View>
                 <View style={styles.cardText}>
-                  <Text style={styles.cardTitle}>Change Password</Text>
-                  <Text style={styles.cardSubtitle}>Update your password</Text>
+                  <Text style={styles.cardTitle}>
+                    {t("profile:main.cards.changePassword")}
+                  </Text>
+                  <Text style={styles.cardSubtitle}>
+                    {t("profile:main.cards.changePasswordSubtitle")}
+                  </Text>
                 </View>
               </View>
               <Ionicons
@@ -121,7 +134,9 @@ export default function ProfileScreen() {
           anyPermissions={[PERMS.GRADE_READ_SELF, PERMS.GRADE_READ_CHILD]}
         >
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Academic</Text>
+            <Text style={styles.sectionTitle}>
+              {t("profile:main.sections.academic")}
+            </Text>
 
             <TouchableOpacity style={styles.infoCard}>
               <View style={styles.cardContent}>
@@ -133,9 +148,11 @@ export default function ProfileScreen() {
                   />
                 </View>
                 <View style={styles.cardText}>
-                  <Text style={styles.cardTitle}>Report Card</Text>
+                  <Text style={styles.cardTitle}>
+                    {t("profile:main.cards.reportCard")}
+                  </Text>
                   <Text style={styles.cardSubtitle}>
-                    View academic progress
+                    {t("profile:main.cards.reportCardSubtitle")}
                   </Text>
                 </View>
               </View>
@@ -150,7 +167,9 @@ export default function ProfileScreen() {
 
         {/* Settings */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Settings</Text>
+          <Text style={styles.sectionTitle}>
+            {t("profile:main.sections.settings")}
+          </Text>
 
           <TouchableOpacity style={styles.infoCard}>
             <View style={styles.cardContent}>
@@ -162,9 +181,11 @@ export default function ProfileScreen() {
                 />
               </View>
               <View style={styles.cardText}>
-                <Text style={styles.cardTitle}>Notifications</Text>
+                <Text style={styles.cardTitle}>
+                  {t("profile:main.cards.notifications")}
+                </Text>
                 <Text style={styles.cardSubtitle}>
-                  Manage notification preferences
+                  {t("profile:main.cards.notificationsSubtitle")}
                 </Text>
               </View>
             </View>
@@ -189,9 +210,11 @@ export default function ProfileScreen() {
                 />
               </View>
               <View style={styles.cardText}>
-                <Text style={styles.cardTitle}>Help & Support</Text>
+                <Text style={styles.cardTitle}>
+                  {t("profile:main.cards.helpSupport")}
+                </Text>
                 <Text style={styles.cardSubtitle}>
-                  Get help and contact support
+                  {t("profile:main.cards.helpSupportSubtitle")}
                 </Text>
               </View>
             </View>
@@ -216,9 +239,11 @@ export default function ProfileScreen() {
                 />
               </View>
               <View style={styles.cardText}>
-                <Text style={styles.cardTitle}>Terms of Service</Text>
+                <Text style={styles.cardTitle}>
+                  {t("profile:main.cards.terms")}
+                </Text>
                 <Text style={styles.cardSubtitle}>
-                  Read our terms and conditions
+                  {t("profile:main.cards.termsSubtitle")}
                 </Text>
               </View>
             </View>
@@ -243,9 +268,11 @@ export default function ProfileScreen() {
                 />
               </View>
               <View style={styles.cardText}>
-                <Text style={styles.cardTitle}>Privacy Policy</Text>
+                <Text style={styles.cardTitle}>
+                  {t("profile:main.cards.privacy")}
+                </Text>
                 <Text style={styles.cardSubtitle}>
-                  How we handle your information
+                  {t("profile:main.cards.privacySubtitle")}
                 </Text>
               </View>
             </View>
@@ -261,7 +288,7 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Ionicons name="log-out-outline" size={24} color={Colors.error} />
-            <Text style={styles.logoutText}>Logout</Text>
+            <Text style={styles.logoutText}>{t("profile:main.logout")}</Text>
           </TouchableOpacity>
         </View>
       </View>

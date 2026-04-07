@@ -1,0 +1,54 @@
+{
+  "welcomeBack": "પાછા સ્વાગત છે",
+  "sections": {
+    "academicControl": "શૈક્ષણિક નિયંત્રણ",
+    "management": "વ્યવસ્થાપન",
+    "leaveManagement": "રજા વ્યવસ્થાપન",
+    "teachingToday": "આજની શિક્ષણ",
+    "quickActions": "ઝડપી ક્રિયાઓ",
+    "academics": "શૈક્ષણિક"
+  },
+  "adminOverview": {
+    "title": "શૈક્ષણિક ઝલક",
+    "classes": "વર્ગો",
+    "lecturesToday": "આજના વ્યાખ્યાનો",
+    "pendingAtt": "બાકી હાજરી",
+    "noTimetable": "સમયપત્રક નહીં",
+    "subjectsDeltaTeacher": "વિષય / શિક્ષક",
+    "ttConflicts": "સમય ટકરાવ"
+  },
+  "teacherStrip": {
+    "title": "આજે",
+    "noMoreClasses": "આજે હવે વર્ગ નિયોજિત નથી.",
+    "totalSlots": "આજે કુલ {{count}} સ્લોટ",
+    "eligibleOne": "હાજરી માટે {{count}} વર્ગ",
+    "eligibleMany": "હાજરી માટે {{count}} વર્ગો",
+    "markAttendance": "હાજરી નોંધો",
+    "next": "આગળ: {{className}} · પી{{period}} {{subject}}"
+  },
+  "studentStrip": {
+    "title": "મારો દિવસ",
+    "classesToday": "આજે {{count}} વર્ગો",
+    "weeklySlots": "સાપ્તાહિક સમયપત્રક: {{count}} સ્લોટ",
+    "attendance": "હાજરી: {{pct}}%"
+  },
+  "shortcuts": {
+    "classes": "વર્ગો",
+    "timetables": "સમયપત્રકો",
+    "bellSchedules": "ઘંટડી સમય",
+    "attendance": "હાજરી",
+    "addStudent": "વિદ્યાર્થી ઉમેરો",
+    "teachers": "શિક્ષકો",
+    "students": "વિદ્યાર્થીઓ",
+    "finance": "ફાઇનાન્સ",
+    "leaveRequests": "રજા વિનંતીઓ",
+    "holidays": "રજાઓ",
+    "todaysSchedule": "આજનું સમયપત્રક",
+    "weeklyTimetable": "સાપ્તાહિક સમયપત્રક",
+    "markAttendance": "હાજરી નોંધો",
+    "leaveTracker": "રજા ટ્રેકર",
+    "academics": "શૈક્ષણિક",
+    "myAttendance": "મારી હાજરી",
+    "profile": "પ્રોફાઇલ"
+  }
+}

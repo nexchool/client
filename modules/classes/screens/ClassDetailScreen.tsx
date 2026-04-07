@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -41,17 +42,8 @@ type HubTab =
   | "timetable"
   | "attendance";
 
-const TAB_DEF: { key: HubTab; label: string }[] = [
-  { key: "students", label: "Students" },
-  // { key: "teachers", label: "Teachers" },
-  { key: "subjects", label: "Subjects" },
-  { key: "subjectTeachers", label: "Subj. teachers" },
-  { key: "classTeachers", label: "Class teachers" },
-  { key: "timetable", label: "Timetable" },
-  { key: "attendance", label: "Attendance" },
-];
-
 export default function ClassDetailScreen() {
+  const { t } = useTranslation("classes");
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { isFeatureEnabled } = useAuth();
@@ -89,16 +81,35 @@ export default function ClassDetailScreen() {
       hasPermission(PERMS.ATTENDANCE_READ_ALL) ||
       canAttendanceMark);
 
+  const tabDefinitions: { key: HubTab; label: string }[] = useMemo(
+    () => [
+      { key: "students", label: t("detail.tabs.students") },
+      { key: "subjects", label: t("detail.tabs.subjects") },
+      { key: "subjectTeachers", label: t("detail.tabs.subjectTeachers") },
+      { key: "classTeachers", label: t("detail.tabs.classTeachers") },
+      { key: "timetable", label: t("detail.tabs.timetable") },
+      { key: "attendance", label: t("detail.tabs.attendance") },
+    ],
+    [t],
+  );
+
   const visibleTabs = useMemo(() => {
-    return TAB_DEF.filter((t) => {
-      if (t.key === "subjects") return canViewSubjects;
-      if (t.key === "subjectTeachers") return canSubjectTeachers;
-      if (t.key === "classTeachers") return canClassTeacherTab;
-      if (t.key === "timetable") return canTimetable;
-      if (t.key === "attendance") return canAttendanceView;
+    return tabDefinitions.filter((tab) => {
+      if (tab.key === "subjects") return canViewSubjects;
+      if (tab.key === "subjectTeachers") return canSubjectTeachers;
+      if (tab.key === "classTeachers") return canClassTeacherTab;
+      if (tab.key === "timetable") return canTimetable;
+      if (tab.key === "attendance") return canAttendanceView;
       return true;
     });
-  }, [canViewSubjects, canSubjectTeachers, canClassTeacherTab, canTimetable, canAttendanceView]);
+  }, [
+    tabDefinitions,
+    canViewSubjects,
+    canSubjectTeachers,
+    canClassTeacherTab,
+    canTimetable,
+    canAttendanceView,
+  ]);
 
   const [tab, setTab] = useState<HubTab>("students");
   const [showStudentPicker, setShowStudentPicker] = useState(false);
@@ -123,62 +134,70 @@ export default function ClassDetailScreen() {
     try {
       await assignStudent(id, student.id);
       setShowStudentPicker(false);
-      Alert.alert("Success", `${student.name} assigned to class`);
+      Alert.alert(t("list.success"), t("detail.studentAssigned", { name: student.name }));
     } catch (err: any) {
-      Alert.alert("Error", err.message || "Failed to assign student");
+      Alert.alert(t("detail.errorTitle"), err.message || t("detail.assignStudentFailed"));
     }
   };
 
   const handleRemoveStudent = (student: Student) => {
-    Alert.alert("Remove Student", `Remove ${student.name} from this class?`, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Remove",
-        style: "destructive",
-        onPress: async () => {
-          if (!id) return;
-          try {
-            await removeStudent(id, student.id);
-          } catch (err: any) {
-            Alert.alert("Error", err.message);
-          }
+    Alert.alert(
+      t("detail.removeStudentTitle"),
+      t("detail.removeStudentMessage", { name: student.name }),
+      [
+        { text: t("detail.cancel"), style: "cancel" },
+        {
+          text: t("detail.remove"),
+          style: "destructive",
+          onPress: async () => {
+            if (!id) return;
+            try {
+              await removeStudent(id, student.id);
+            } catch (err: any) {
+              Alert.alert(t("detail.errorTitle"), err.message);
+            }
+          },
         },
-      },
-    ]);
+      ],
+    );
   };
 
   const handleAssignTeacher = async (teacher: Teacher) => {
     if (!id) return;
     if (!selectedSubjectId) {
-      Alert.alert("Select Subject", "Please select a subject first.");
+      Alert.alert(t("detail.selectSubjectTitle"), t("detail.selectSubjectFirst"));
       return;
     }
     try {
       await assignTeacher(id, teacher.id, selectedSubjectId);
       setShowTeacherPicker(false);
       setSelectedSubjectId("");
-      Alert.alert("Success", `${teacher.name} assigned to class`);
+      Alert.alert(t("list.success"), t("detail.teacherAssigned", { name: teacher.name }));
     } catch (err: any) {
-      Alert.alert("Error", err.message || "Failed to assign teacher");
+      Alert.alert(t("detail.errorTitle"), err.message || t("detail.assignTeacherFailed"));
     }
   };
 
   const handleRemoveTeacher = (teacherId: string, teacherName: string) => {
-    Alert.alert("Remove Teacher", `Remove ${teacherName} from this class?`, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Remove",
-        style: "destructive",
-        onPress: async () => {
-          if (!id) return;
-          try {
-            await removeTeacher(id, teacherId);
-          } catch (err: any) {
-            Alert.alert("Error", err.message);
-          }
+    Alert.alert(
+      t("detail.removeTeacherTitle"),
+      t("detail.removeTeacherMessage", { name: teacherName }),
+      [
+        { text: t("detail.cancel"), style: "cancel" },
+        {
+          text: t("detail.remove"),
+          style: "destructive",
+          onPress: async () => {
+            if (!id) return;
+            try {
+              await removeTeacher(id, teacherId);
+            } catch (err: any) {
+              Alert.alert(t("detail.errorTitle"), err.message);
+            }
+          },
         },
-      },
-    ]);
+      ],
+    );
   };
 
   const openStudentPicker = async () => {
@@ -192,7 +211,7 @@ export default function ClassDetailScreen() {
     try {
       await updateClass(id, data);
       setShowEditModal(false);
-      Alert.alert("Success", "Class updated successfully");
+      Alert.alert(t("list.success"), t("detail.updated"));
       fetchClassDetail(id);
     } catch (err: any) {
       throw err;
@@ -229,9 +248,9 @@ export default function ClassDetailScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.center}>
-          <Text style={styles.errorText}>Class not found</Text>
+          <Text style={styles.errorText}>{t("detail.notFound")}</Text>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-            <Text style={styles.backBtnText}>Go Back</Text>
+            <Text style={styles.backBtnText}>{t("detail.goBack")}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -256,23 +275,23 @@ export default function ClassDetailScreen() {
 
       <ScrollView style={styles.content} nestedScrollEnabled>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Class information</Text>
+          <Text style={styles.sectionTitle}>{t("detail.classInfo")}</Text>
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Academic Year</Text>
+            <Text style={styles.label}>{t("detail.academicYear")}</Text>
             <Text style={styles.value}>{currentClass.academic_year}</Text>
           </View>
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Legacy class teacher</Text>
-            <Text style={styles.value}>{currentClass.teacher_name || "—"}</Text>
+            <Text style={styles.label}>{t("detail.legacyClassTeacher")}</Text>
+            <Text style={styles.value}>{currentClass.teacher_name || t("detail.dash")}</Text>
           </View>
           <View style={styles.statsRow}>
             <View style={styles.statCard}>
               <Text style={styles.statNumber}>{currentClass.student_count || 0}</Text>
-              <Text style={styles.statLabel}>Students</Text>
+              <Text style={styles.statLabel}>{t("detail.students")}</Text>
             </View>
             <View style={styles.statCard}>
               <Text style={styles.statNumber}>{currentClass.teacher_count || 0}</Text>
-              <Text style={styles.statLabel}>Teachers</Text>
+              <Text style={styles.statLabel}>{t("detail.teachers")}</Text>
             </View>
           </View>
         </View>
@@ -295,11 +314,11 @@ export default function ClassDetailScreen() {
           {tab === "students" && (
             <View>
               <View style={styles.rowHeader}>
-                <Text style={styles.panelTitle}>Students</Text>
+                <Text style={styles.panelTitle}>{t("detail.panelStudents")}</Text>
                 {canUpdate && (
                   <TouchableOpacity style={styles.addSmallBtn} onPress={openStudentPicker}>
                     <Ionicons name="add" size={20} color={Colors.primary} />
-                    <Text style={styles.addSmallBtnText}>Add</Text>
+                    <Text style={styles.addSmallBtnText}>{t("detail.add")}</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -318,7 +337,7 @@ export default function ClassDetailScreen() {
                   </View>
                 ))
               ) : (
-                <Text style={styles.emptyText}>No students assigned</Text>
+                <Text style={styles.emptyText}>{t("detail.noStudents")}</Text>
               )}
             </View>
           )}
@@ -385,7 +404,7 @@ export default function ClassDetailScreen() {
       <Modal visible={showStudentPicker} animationType="slide" presentationStyle="pageSheet">
         <SafeAreaView style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Add Student</Text>
+            <Text style={styles.modalTitle}>{t("detail.addStudentTitle")}</Text>
             <TouchableOpacity onPress={() => setShowStudentPicker(false)}>
               <Ionicons name="close" size={24} color={Colors.text} />
             </TouchableOpacity>
@@ -402,7 +421,7 @@ export default function ClassDetailScreen() {
             )}
             ListEmptyComponent={
               <View style={styles.center}>
-                <Text style={styles.emptyText}>No unassigned students available</Text>
+                <Text style={styles.emptyText}>{t("detail.noUnassignedStudents")}</Text>
               </View>
             }
           />
@@ -430,7 +449,7 @@ export default function ClassDetailScreen() {
       <Modal visible={showTeacherPicker} animationType="slide" presentationStyle="pageSheet">
         <SafeAreaView style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Add Teacher</Text>
+            <Text style={styles.modalTitle}>{t("detail.addTeacherTitle")}</Text>
             <TouchableOpacity
               onPress={() => {
                 setShowTeacherPicker(false);
@@ -441,7 +460,7 @@ export default function ClassDetailScreen() {
             </TouchableOpacity>
           </View>
           <View style={styles.subjectSection}>
-            <Text style={styles.subjectLabel}>1. Select Subject *</Text>
+            <Text style={styles.subjectLabel}>{t("detail.selectSubjectStep")}</Text>
             {subjectsLoading ? (
               <ActivityIndicator size="small" color={Colors.primary} style={{ marginVertical: Spacing.md }} />
             ) : (
@@ -460,13 +479,13 @@ export default function ClassDetailScreen() {
                   </TouchableOpacity>
                 ))}
                 {!subjectsLoading && subjects.length === 0 && (
-                  <Text style={styles.subjectEmpty}>No subjects. Create subjects first.</Text>
+                  <Text style={styles.subjectEmpty}>{t("detail.noSubjectsCreateFirst")}</Text>
                 )}
               </ScrollView>
             )}
           </View>
           <View style={styles.teacherSection}>
-            <Text style={styles.subjectLabel}>2. Select Teacher</Text>
+            <Text style={styles.subjectLabel}>{t("detail.selectTeacherStep")}</Text>
           </View>
           <FlatList
             data={unassignedTeachers}
@@ -483,7 +502,7 @@ export default function ClassDetailScreen() {
             )}
             ListEmptyComponent={
               <View style={styles.center}>
-                <Text style={styles.emptyText}>No available teachers</Text>
+                <Text style={styles.emptyText}>{t("detail.noAvailableTeachers")}</Text>
               </View>
             }
           />

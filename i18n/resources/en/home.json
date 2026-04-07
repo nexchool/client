@@ -1,0 +1,54 @@
+{
+  "welcomeBack": "Welcome back",
+  "sections": {
+    "academicControl": "Academic control",
+    "management": "Management",
+    "leaveManagement": "Leave management",
+    "teachingToday": "Teaching today",
+    "quickActions": "Quick actions",
+    "academics": "Academics"
+  },
+  "adminOverview": {
+    "title": "Academic overview",
+    "classes": "Classes",
+    "lecturesToday": "Lectures today",
+    "pendingAtt": "Pending att.",
+    "noTimetable": "No timetable",
+    "subjectsDeltaTeacher": "Subjects Δ teacher",
+    "ttConflicts": "TT conflicts"
+  },
+  "teacherStrip": {
+    "title": "Today",
+    "noMoreClasses": "No more classes scheduled today.",
+    "totalSlots": "{{count}} total slots today",
+    "eligibleOne": "{{count}} class eligible for attendance",
+    "eligibleMany": "{{count}} classes eligible for attendance",
+    "markAttendance": "Mark attendance",
+    "next": "Next: {{className}} · P{{period}} {{subject}}"
+  },
+  "studentStrip": {
+    "title": "My day",
+    "classesToday": "{{count}} classes today",
+    "weeklySlots": "Weekly timetable: {{count}} slots",
+    "attendance": "Attendance: {{pct}}%"
+  },
+  "shortcuts": {
+    "classes": "Classes",
+    "timetables": "Timetables",
+    "bellSchedules": "Bell schedules",
+    "attendance": "Attendance",
+    "addStudent": "Add student",
+    "teachers": "Teachers",
+    "students": "Students",
+    "finance": "Finance",
+    "leaveRequests": "Leave requests",
+    "holidays": "Holidays",
+    "todaysSchedule": "Today's schedule",
+    "weeklyTimetable": "Weekly timetable",
+    "markAttendance": "Mark attendance",
+    "leaveTracker": "Leave tracker",
+    "academics": "Academics",
+    "myAttendance": "My attendance",
+    "profile": "Profile"
+  }
+}

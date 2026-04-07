@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/common/constants/colors";
@@ -15,6 +16,7 @@ export const StudentListItem: React.FC<StudentListItemProps> = ({
   student,
   onPress,
 }) => {
+  const { t } = useTranslation("students");
   return (
     <TouchableOpacity
       style={styles.container}
@@ -30,9 +32,12 @@ export const StudentListItem: React.FC<StudentListItemProps> = ({
         style={{ marginRight: Spacing.md }}
       />
       <View style={styles.content}>
-        <Text style={styles.name}>{student.name || "Unknown Name"}</Text>
+        <Text style={styles.name}>
+          {student.name || t("listItem.unknownName")}
+        </Text>
         <Text style={styles.info}>
-          {student.admission_number} • {student.class_name || "No Class"}
+          {student.admission_number} •{" "}
+          {student.class_name || t("listItem.noClass")}
         </Text>
       </View>
       <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
