@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View, Text, StyleSheet, SectionList, ActivityIndicator,
   SafeAreaView, RefreshControl, TouchableOpacity, Alert, TextInput,
@@ -26,7 +27,8 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 export default function HolidaysScreen() {
-  const { hasAnyPermission, hasPermission } = usePermissions();
+  const { t } = useTranslation('holidays');
+  const { hasAnyPermission } = usePermissions();
   const { selectedAcademicYearId } = useAcademicYearContext();
   const {
     holidays, recurringHolidays, loading, error,
@@ -57,7 +59,7 @@ export default function HolidaysScreen() {
   useEffect(() => { loadData(); }, [loadData]);
 
   // ── Section data ──────────────────────────────────────────────────────────
-  const sections = (() => {
+  const sections = useMemo(() => {
     const list: { title: string; data: Holiday[] }[] = [];
 
     if (activeTab === 'all' || activeTab === 'upcoming') {
@@ -66,35 +68,39 @@ export default function HolidaysScreen() {
       const filtered = activeTab === 'upcoming'
         ? validHolidays.filter((h) => h.start_date && h.start_date >= today)
         : validHolidays;
-      if (filtered.length) list.push({ title: 'Holidays', data: filtered });
+      if (filtered.length) list.push({ title: t('sections.holidays'), data: filtered });
     }
 
     if (activeTab === 'all' || activeTab === 'recurring') {
       const validRecurring = recurringHolidays.filter((h): h is Holiday => !!h?.id);
-      if (validRecurring.length) list.push({ title: 'Weekly Off Days', data: validRecurring });
+      if (validRecurring.length) list.push({ title: t('sections.weeklyOff'), data: validRecurring });
     }
 
     return list;
-  })();
+  }, [activeTab, holidays, recurringHolidays, t]);
 
   // ── Handlers ───────────────────────────────────────────────────────────────
   const handleAdd = () => { setEditTarget(null); setModalVisible(true); };
   const handleEdit = (h: Holiday) => { setEditTarget(h); setModalVisible(true); };
 
   const handleDelete = (h: Holiday) => {
+    const recurringPart =
+      h.is_recurring && h.recurring_day_name
+        ? t('alerts.recurringPart', { day: h.recurring_day_name })
+        : '';
     Alert.alert(
-      'Delete Holiday',
-      `Remove "${h.name}"${h.is_recurring ? ` (recurring – every ${h.recurring_day_name})` : ''}?`,
+      t('alerts.deleteTitle'),
+      t('alerts.deleteMessage', { name: h.name, recurringPart }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('alerts.cancel'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('alerts.delete'),
           style: 'destructive',
           onPress: async () => {
             try {
               await deleteHoliday(h.id, h.is_recurring);
             } catch (err: any) {
-              Alert.alert('Error', err.message || 'Failed to delete holiday');
+              Alert.alert(t('alerts.error'), err.message || t('alerts.deleteFailed'));
             }
           },
         },
@@ -107,12 +113,12 @@ export default function HolidaysScreen() {
       if (editTarget) {
         const updated = await updateHoliday(editTarget.id, data);
         if ((updated as any).warning) {
-          Alert.alert('Holiday Updated', (updated as any).warning);
+          Alert.alert(t('alerts.holidayUpdated'), (updated as any).warning);
         }
       } else {
         const created = await createHoliday(data);
         if ((created as any).warning) {
-          Alert.alert('Holiday Added', (created as any).warning);
+          Alert.alert(t('alerts.holidayAdded'), (created as any).warning);
         }
       }
       setModalVisible(false);
@@ -142,7 +148,7 @@ export default function HolidaysScreen() {
         <Ionicons name="search" size={18} color={Colors.textSecondary} style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search holidays…"
+          placeholder={t('screen.searchPlaceholder')}
           placeholderTextColor={Colors.textSecondary}
           value={search}
           onChangeText={setSearch}
@@ -163,7 +169,7 @@ export default function HolidaysScreen() {
             onPress={() => setActiveTab(tab)}
           >
             <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {t(`tabs.${tab}`)}
             </Text>
           </TouchableOpacity>
         ))}
@@ -180,8 +186,8 @@ export default function HolidaysScreen() {
       {/* Summary counts */}
       {!error && (
         <View style={styles.summaryRow}>
-          <SummaryChip icon="calendar-outline" count={holidays.length} label="Holidays" />
-          <SummaryChip icon="repeat-outline" count={recurringHolidays.length} label="Weekly Off" />
+          <SummaryChip icon="calendar-outline" count={holidays.length} label={t('summary.holidays')} />
+          <SummaryChip icon="repeat-outline" count={recurringHolidays.length} label={t('summary.weeklyOff')} />
         </View>
       )}
 
@@ -212,9 +218,9 @@ export default function HolidaysScreen() {
         ListEmptyComponent={
           <View style={styles.center}>
             <Ionicons name="calendar-outline" size={48} color={Colors.textTertiary} />
-            <Text style={styles.emptyTitle}>No holidays found</Text>
+            <Text style={styles.emptyTitle}>{t('empty.title')}</Text>
             <Text style={styles.emptySubtitle}>
-              {canManage ? 'Tap + to add a holiday or weekly-off day.' : 'No holidays scheduled yet.'}
+              {canManage ? t('empty.hintManage') : t('empty.hintReadOnly')}
             </Text>
           </View>
         }
@@ -236,11 +242,12 @@ export default function HolidaysScreen() {
 // ── Sub-components ────────────────────────────────────────────────────────────
 
 function ScreenHeader({ canManage, onAdd }: { canManage: boolean; onAdd: () => void }) {
+  const { t } = useTranslation('holidays');
   return (
     <View style={styles.header}>
       <View>
-        <Text style={styles.headerTitle}>Holidays</Text>
-        <Text style={styles.headerSubtitle}>School calendar & weekly off</Text>
+        <Text style={styles.headerTitle}>{t('screen.title')}</Text>
+        <Text style={styles.headerSubtitle}>{t('screen.subtitle')}</Text>
       </View>
       {canManage && (
         <TouchableOpacity style={styles.addBtn} onPress={onAdd}>

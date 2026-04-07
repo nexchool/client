@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { Colors } from '@/common/constants/colors';
 import { Spacing, Layout } from '@/common/constants/spacing';
-import { Holiday, HOLIDAY_TYPE_LABELS, HOLIDAY_TYPE_COLORS } from '../types';
+import { Holiday, HOLIDAY_TYPE_COLORS } from '../types';
 
 interface HolidayListItemProps {
   holiday: Holiday;
@@ -12,31 +13,35 @@ interface HolidayListItemProps {
   canManage?: boolean;
 }
 
-function formatDateRange(h: Holiday): string {
-  if (h.is_recurring) {
-    return `Every ${h.recurring_day_name}`;
-  }
-  if (!h.start_date) return '';
-  if (h.is_single_day || !h.end_date || h.start_date === h.end_date) {
-    return formatDate(h.start_date);
-  }
-  return `${formatDate(h.start_date)} – ${formatDate(h.end_date)}`;
-}
-
-function formatDate(iso: string): string {
-  const d = new Date(iso + 'T00:00:00');
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
-
 export const HolidayListItem: React.FC<HolidayListItemProps> = ({
   holiday,
   onEdit,
   onDelete,
   canManage = false,
 }) => {
+  const { t, i18n } = useTranslation(['holidays', 'teacherLeaves']);
+  const locale = i18n.language?.startsWith('gu') ? 'gu-IN' : 'en-IN';
+
+  const dateRange = useMemo(() => {
+    const fmt = (iso: string) => {
+      const d = new Date(iso + 'T00:00:00');
+      return d.toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+    if (holiday.is_recurring) {
+      return t('list.everyPrefix', { day: holiday.recurring_day_name ?? '' });
+    }
+    if (!holiday.start_date) return '';
+    if (holiday.is_single_day || !holiday.end_date || holiday.start_date === holiday.end_date) {
+      return fmt(holiday.start_date);
+    }
+    return `${fmt(holiday.start_date)} – ${fmt(holiday.end_date)}`;
+  }, [holiday, locale, t]);
+
   const typeColor = HOLIDAY_TYPE_COLORS[holiday.holiday_type] ?? Colors.text;
-  const typeLabel = HOLIDAY_TYPE_LABELS[holiday.holiday_type] ?? holiday.holiday_type;
-  const dateRange = formatDateRange(holiday);
+  const typeLabel = t(`holidayForm.types.${holiday.holiday_type}`, {
+    ns: 'teacherLeaves',
+    defaultValue: holiday.holiday_type,
+  });
 
   return (
     <View style={styles.container}>
@@ -91,7 +96,9 @@ export const HolidayListItem: React.FC<HolidayListItemProps> = ({
           {/* Duration badge for multi-day */}
           {!holiday.is_recurring && holiday.duration_days > 1 && (
             <View style={styles.durationBadge}>
-              <Text style={styles.durationText}>{holiday.duration_days}d</Text>
+              <Text style={styles.durationText}>
+                {t('list.durationDays', { count: holiday.duration_days })}
+              </Text>
             </View>
           )}
         </View>
@@ -100,7 +107,7 @@ export const HolidayListItem: React.FC<HolidayListItemProps> = ({
         {holiday.falls_on_sunday && (
           <View style={styles.warningRow}>
             <Ionicons name="warning-outline" size={13} color={Colors.warning} />
-            <Text style={styles.warningText}>Falls on Sunday (weekly off)</Text>
+            <Text style={styles.warningText}>{t('list.fallsOnSunday')}</Text>
           </View>
         )}
 

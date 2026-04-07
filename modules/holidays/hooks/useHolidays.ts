@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import i18n from '@/i18n/i18nextInstance';
 import { Holiday, CreateHolidayDTO } from '../types';
 import { holidayService } from '../services/holidayService';
 
@@ -15,7 +16,7 @@ export function useHolidays() {
       const data = await holidayService.getHolidays({ ...params, include_recurring: false });
       setHolidays(data);
     } catch (err: any) {
-      setError(err.message || 'Failed to load holidays');
+      setError(err.message || i18n.t('errors.loadFailed', { ns: 'holidays' }));
     } finally {
       setLoading(false);
     }

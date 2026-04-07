@@ -1,0 +1,44 @@
+{
+  "screen": {
+    "title": "Holidays",
+    "subtitle": "School calendar & weekly off",
+    "searchPlaceholder": "Search holidays…"
+  },
+  "tabs": {
+    "all": "All",
+    "upcoming": "Upcoming",
+    "recurring": "Recurring"
+  },
+  "sections": {
+    "holidays": "Holidays",
+    "weeklyOff": "Weekly Off Days"
+  },
+  "summary": {
+    "holidays": "Holidays",
+    "weeklyOff": "Weekly Off"
+  },
+  "empty": {
+    "title": "No holidays found",
+    "hintManage": "Tap + to add a holiday or weekly-off day.",
+    "hintReadOnly": "No holidays scheduled yet."
+  },
+  "alerts": {
+    "deleteTitle": "Delete Holiday",
+    "deleteMessage": "Remove \"{{name}}\"{{recurringPart}}?",
+    "recurringPart": " (recurring – every {{day}})",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "error": "Error",
+    "deleteFailed": "Failed to delete holiday",
+    "holidayUpdated": "Holiday Updated",
+    "holidayAdded": "Holiday Added"
+  },
+  "errors": {
+    "loadFailed": "Failed to load holidays"
+  },
+  "list": {
+    "everyPrefix": "Every {{day}}",
+    "fallsOnSunday": "Falls on Sunday (weekly off)",
+    "durationDays": "{{count}}d"
+  }
+}

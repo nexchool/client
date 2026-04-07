@@ -12,6 +12,7 @@ import enTimetable from "./resources/en/timetable.json";
 import enAttendance from "./resources/en/attendance.json";
 import enTeacherLeaves from "./resources/en/teacherLeaves.json";
 import enFinance from "./resources/en/finance.json";
+import enHolidays from "./resources/en/holidays.json";
 import guCommon from "./resources/gu/common.json";
 import guAuth from "./resources/gu/auth.json";
 import guSettings from "./resources/gu/settings.json";
@@ -26,6 +27,7 @@ import guTimetable from "./resources/gu/timetable.json";
 import guAttendance from "./resources/gu/attendance.json";
 import guTeacherLeaves from "./resources/gu/teacherLeaves.json";
 import guFinance from "./resources/gu/finance.json";
+import guHolidays from "./resources/gu/holidays.json";
 
 export const LANGUAGE_STORAGE_KEY = "@school_erp_app_language";
 
@@ -50,6 +52,7 @@ export const I18N_NAMESPACES = [
   "attendance",
   "teacherLeaves",
   "finance",
+  "holidays",
 ] as const;
 export type I18nNamespace = (typeof I18N_NAMESPACES)[number];
 
@@ -69,6 +72,7 @@ export const resources = {
     attendance: enAttendance,
     teacherLeaves: enTeacherLeaves,
     finance: enFinance,
+    holidays: enHolidays,
   },
   gu: {
     common: guCommon,
@@ -85,5 +89,6 @@ export const resources = {
     attendance: guAttendance,
     teacherLeaves: guTeacherLeaves,
     finance: guFinance,
+    holidays: guHolidays,
   },
 } as const;
