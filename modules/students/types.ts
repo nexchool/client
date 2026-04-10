@@ -87,6 +87,19 @@ export interface Student {
   tc_number?: string;
   house_name?: string;
   student_status?: string;
+  is_transport_opted?: boolean;
+  transport?: {
+    status?: string;
+    bus?: { bus_number?: string; vehicle_number?: string | null } | null;
+    driver?: { name?: string; phone?: string | null } | null;
+    helper?: { name?: string; phone?: string | null; role?: string | null } | null;
+    route?: { name?: string } | null;
+    pickup_point?: string | null;
+    drop_point?: string | null;
+    pickup_stop?: { name?: string } | null;
+    drop_stop?: { name?: string } | null;
+    monthly_fee?: number | null;
+  } | null;
   created_at: string;
 }
 

@@ -19,6 +19,7 @@ import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
 import { CreateStudentModal } from "../components/CreateStudentModal";
 import { StudentDocumentsSection } from "../components/StudentDocumentsSection";
+import { useAuthContext } from "@/modules/auth/context/AuthContext";
 
 export default function StudentDetailScreen() {
   const { t } = useTranslation("students");
@@ -26,6 +27,7 @@ export default function StudentDetailScreen() {
   const router = useRouter();
   const { currentStudent, loading, fetchStudent, updateStudent, deleteStudent } = useStudents();
   const { hasPermission } = usePermissions();
+  const { isFeatureEnabled } = useAuthContext();
   const [editModalVisible, setEditModalVisible] = useState(false);
 
   const canUpdate = hasPermission(PERMS.STUDENT_UPDATE);
@@ -238,6 +240,87 @@ export default function StudentDetailScreen() {
             </View>
           )}
         </View>
+
+        {isFeatureEnabled("transport") && currentStudent.transport && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Transport</Text>
+            {currentStudent.transport.status != null && (
+              <View style={styles.infoRow}>
+                <Text style={styles.label}>Status</Text>
+                <Text style={styles.value}>{String(currentStudent.transport.status)}</Text>
+              </View>
+            )}
+            {currentStudent.transport.bus && (
+              <View style={styles.infoRow}>
+                <Text style={styles.label}>Bus</Text>
+                <Text style={styles.value}>
+                  {currentStudent.transport.bus.bus_number}
+                  {currentStudent.transport.bus.vehicle_number
+                    ? ` (${currentStudent.transport.bus.vehicle_number})`
+                    : ""}
+                </Text>
+              </View>
+            )}
+            {currentStudent.transport.route && (
+              <View style={styles.infoRow}>
+                <Text style={styles.label}>Route</Text>
+                <Text style={styles.value}>
+                  {currentStudent.transport.route.name ?? "—"}
+                </Text>
+              </View>
+            )}
+            {(currentStudent.transport.pickup_point != null ||
+              currentStudent.transport.pickup_stop != null) && (
+              <View style={styles.infoRow}>
+                <Text style={styles.label}>Pickup</Text>
+                <Text style={styles.value}>
+                  {currentStudent.transport.pickup_stop?.name ??
+                    currentStudent.transport.pickup_point ??
+                    "—"}
+                </Text>
+              </View>
+            )}
+            {(currentStudent.transport.drop_point != null ||
+              currentStudent.transport.drop_stop != null) && (
+              <View style={styles.infoRow}>
+                <Text style={styles.label}>Drop</Text>
+                <Text style={styles.value}>
+                  {currentStudent.transport.drop_stop?.name ??
+                    currentStudent.transport.drop_point ??
+                    "—"}
+                </Text>
+              </View>
+            )}
+            {currentStudent.transport.driver && (
+              <View style={styles.infoRow}>
+                <Text style={styles.label}>Driver</Text>
+                <Text style={styles.value}>
+                  {currentStudent.transport.driver.name ?? "—"}
+                  {currentStudent.transport.driver.phone
+                    ? ` · ${currentStudent.transport.driver.phone}`
+                    : ""}
+                </Text>
+              </View>
+            )}
+            {currentStudent.transport.helper && (
+              <View style={styles.infoRow}>
+                <Text style={styles.label}>Helper</Text>
+                <Text style={styles.value}>
+                  {(currentStudent.transport.helper as { name?: string }).name ?? "—"}
+                  {(currentStudent.transport.helper as { phone?: string }).phone
+                    ? ` · ${(currentStudent.transport.helper as { phone?: string }).phone}`
+                    : ""}
+                </Text>
+              </View>
+            )}
+            {currentStudent.transport.monthly_fee != null && (
+              <View style={styles.infoRow}>
+                <Text style={styles.label}>Monthly fee</Text>
+                <Text style={styles.value}>{String(currentStudent.transport.monthly_fee)}</Text>
+              </View>
+            )}
+          </View>
+        )}
 
         {/* Parent / Family */}
         <View style={styles.section}>
