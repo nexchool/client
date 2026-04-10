@@ -13,6 +13,7 @@ import enAttendance from "./resources/en/attendance.json";
 import enTeacherLeaves from "./resources/en/teacherLeaves.json";
 import enFinance from "./resources/en/finance.json";
 import enHolidays from "./resources/en/holidays.json";
+import enNotifications from "./resources/en/notifications.json";
 import guCommon from "./resources/gu/common.json";
 import guAuth from "./resources/gu/auth.json";
 import guSettings from "./resources/gu/settings.json";
@@ -28,6 +29,7 @@ import guAttendance from "./resources/gu/attendance.json";
 import guTeacherLeaves from "./resources/gu/teacherLeaves.json";
 import guFinance from "./resources/gu/finance.json";
 import guHolidays from "./resources/gu/holidays.json";
+import guNotifications from "./resources/gu/notifications.json";
 import hiCommon from "./resources/hi/common.json";
 import hiAuth from "./resources/hi/auth.json";
 import hiSettings from "./resources/hi/settings.json";
@@ -43,6 +45,7 @@ import hiAttendance from "./resources/hi/attendance.json";
 import hiTeacherLeaves from "./resources/hi/teacherLeaves.json";
 import hiFinance from "./resources/hi/finance.json";
 import hiHolidays from "./resources/hi/holidays.json";
+import hiNotifications from "./resources/hi/notifications.json";
 
 export const LANGUAGE_STORAGE_KEY = "@school_erp_app_language";
 
@@ -68,6 +71,7 @@ export const I18N_NAMESPACES = [
   "teacherLeaves",
   "finance",
   "holidays",
+  "notifications",
 ] as const;
 export type I18nNamespace = (typeof I18N_NAMESPACES)[number];
 
@@ -88,6 +92,7 @@ export const resources = {
     teacherLeaves: enTeacherLeaves,
     finance: enFinance,
     holidays: enHolidays,
+    notifications: enNotifications,
   },
   gu: {
     common: guCommon,
@@ -105,6 +110,7 @@ export const resources = {
     teacherLeaves: guTeacherLeaves,
     finance: guFinance,
     holidays: guHolidays,
+    notifications: guNotifications,
   },
   hi: {
     common: hiCommon,
@@ -122,5 +128,6 @@ export const resources = {
     teacherLeaves: hiTeacherLeaves,
     finance: hiFinance,
     holidays: hiHolidays,
+    notifications: hiNotifications,
   },
 } as const;

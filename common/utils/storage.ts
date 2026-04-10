@@ -9,6 +9,9 @@ const KEYS = {
   TENANT_ID: 'tenant_id',
   TENANT_NAME: 'tenant_name',
   SELECTED_ACADEMIC_YEAR_ID: 'selected_academic_year_id',
+  PUSH_DEVICE_TOKEN: 'push_device_token',
+  /** User preference: receive push alerts (default on). Not cleared on logout. */
+  PUSH_NOTIFICATIONS_ENABLED: 'push_notifications_enabled',
 } as const;
 
 export const setAccessToken = async (token: string) => {
@@ -82,6 +85,36 @@ export const getSelectedAcademicYearId = async (): Promise<string | null> => {
   return SecureStore.getItemAsync(KEYS.SELECTED_ACADEMIC_YEAR_ID);
 };
 
+export const setPushDeviceToken = async (token: string) => {
+  await SecureStore.setItemAsync(KEYS.PUSH_DEVICE_TOKEN, token);
+};
+
+export const getPushDeviceToken = async (): Promise<string | null> => {
+  return SecureStore.getItemAsync(KEYS.PUSH_DEVICE_TOKEN);
+};
+
+export const clearPushDeviceToken = async () => {
+  try {
+    await SecureStore.deleteItemAsync(KEYS.PUSH_DEVICE_TOKEN);
+  } catch {
+    /* ignore */
+  }
+};
+
+/** Whether the user wants school push alerts (defaults to true if unset). */
+export const getPushNotificationsPreference = async (): Promise<boolean> => {
+  const v = await SecureStore.getItemAsync(KEYS.PUSH_NOTIFICATIONS_ENABLED);
+  if (v == null || v === "") return true;
+  return v === "true" || v === "1";
+};
+
+export const setPushNotificationsPreference = async (enabled: boolean) => {
+  await SecureStore.setItemAsync(
+    KEYS.PUSH_NOTIFICATIONS_ENABLED,
+    enabled ? "true" : "false"
+  );
+};
+
 export const clearAuth = async () => {
   await Promise.all([
     SecureStore.deleteItemAsync(KEYS.ACCESS_TOKEN),
@@ -92,5 +125,6 @@ export const clearAuth = async () => {
     SecureStore.deleteItemAsync(KEYS.TENANT_ID),
     SecureStore.deleteItemAsync(KEYS.TENANT_NAME),
     SecureStore.deleteItemAsync(KEYS.SELECTED_ACADEMIC_YEAR_ID),
+    clearPushDeviceToken(),
   ]);
 };

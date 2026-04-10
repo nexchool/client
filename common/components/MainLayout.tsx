@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView } from "react-native";
 import { useTranslation } from "react-i18next";
 import { ProfileAvatar } from "@/common/components/ProfileAvatar";
-import { router, usePathname, Slot } from "expo-router";
+import { router, usePathname, Slot, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
 import SafeScreenWrapper from "@/common/components/SafeScreenWrapper";
@@ -13,6 +13,7 @@ import { useAuth } from "@/modules/auth/hooks/useAuth";
 import { useAcademicYearContext } from "@/modules/academics/context/AcademicYearContext";
 import { CreateAcademicYearModal } from "@/modules/academics/components/CreateAcademicYearModal";
 import { useUiRole } from "@/modules/permissions/hooks/useUiRole";
+import { useUnreadNotificationsBadge } from "@/modules/notifications/hooks/useNotifications";
 
 /** Hide header profile shortcut when already on Profile or My profile screens. */
 function shouldHideHeaderProfile(pathname: string | undefined): boolean {
@@ -30,9 +31,20 @@ export default function MainLayout() {
   const [createYearModalVisible, setCreateYearModalVisible] = useState(false);
   const pathname = usePathname();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, isFeatureEnabled } = useAuth();
   const { isAdmin } = useUiRole();
   const hideHeaderProfile = shouldHideHeaderProfile(pathname);
+  const showNotifications = isFeatureEnabled("notifications");
+  const unreadBadge = useUnreadNotificationsBadge(showNotifications);
+  const unreadCount = unreadBadge.data?.length ?? 0;
+
+  useFocusEffect(
+    useCallback(() => {
+      if (showNotifications) {
+        void unreadBadge.refetch();
+      }
+    }, [showNotifications, unreadBadge.refetch])
+  );
   const {
     selectedAcademicYearId,
     setSelectedAcademicYearId,
@@ -82,24 +94,50 @@ export default function MainLayout() {
             <View style={styles.yearSelectorPlaceholder} />
           )}
 
-          {hideHeaderProfile ? (
-            <View style={styles.headerProfilePlaceholder} />
-          ) : (
-            <TouchableOpacity
-              style={styles.profileButton}
-              onPress={handleProfilePress}
-              activeOpacity={0.7}
-            >
-              <ProfileAvatar
-                uri={user?.profile_picture_url}
-                size={36}
-                name={user?.name ?? user?.email ?? undefined}
-                iconName="person"
-                iconColor={Colors.text}
-                placeholderBg={Colors.backgroundSecondary}
-              />
-            </TouchableOpacity>
-          )}
+          <View style={styles.headerRight}>
+            {showNotifications && (
+              <TouchableOpacity
+                style={styles.notificationButton}
+                onPress={() => router.push("/(protected)/notifications")}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel={t("notifications.openInbox")}
+              >
+                <View style={styles.notificationIconWrap}>
+                  <Ionicons
+                    name="notifications-outline"
+                    size={26}
+                    color={Colors.text}
+                  />
+                  {unreadCount > 0 ? (
+                    <View style={styles.notificationBadge}>
+                      <Text style={styles.notificationBadgeText}>
+                        {unreadCount >= 100 ? "99+" : String(unreadCount)}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+              </TouchableOpacity>
+            )}
+            {hideHeaderProfile ? (
+              <View style={styles.headerProfilePlaceholder} />
+            ) : (
+              <TouchableOpacity
+                style={styles.profileButton}
+                onPress={handleProfilePress}
+                activeOpacity={0.7}
+              >
+                <ProfileAvatar
+                  uri={user?.profile_picture_url}
+                  size={36}
+                  name={user?.name ?? user?.email ?? undefined}
+                  iconName="person"
+                  iconColor={Colors.text}
+                  placeholderBg={Colors.backgroundSecondary}
+                />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
 
         {/* Main Content */}
@@ -203,6 +241,37 @@ const styles = StyleSheet.create({
   },
   menuButton: {
     padding: Spacing.sm,
+  },
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+  },
+  notificationButton: {
+    padding: Spacing.xs,
+  },
+  notificationIconWrap: {
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  notificationBadge: {
+    position: "absolute",
+    top: -2,
+    right: -4,
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 4,
+    borderRadius: 9,
+    backgroundColor: Colors.error,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  notificationBadgeText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "700",
   },
   profileButton: {
     padding: Spacing.xs,

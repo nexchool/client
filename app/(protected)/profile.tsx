@@ -24,7 +24,7 @@ const PRIVACY_URL = "https://nexchool.in/privacy";
 export default function ProfileScreen() {
   const { t } = useTranslation(["profile", "navigation"]);
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, logout, isFeatureEnabled } = useAuth();
   const { role: userRole } = useUiRole();
   const roleLabel = t(`navigation:roles.${userRole.toLowerCase()}`, {
     defaultValue: userRole,
@@ -165,27 +165,31 @@ export default function ProfileScreen() {
           </View>
         </Protected>
 
-        {/* Settings */}
+        {/* Settings & app preferences */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
             {t("profile:main.sections.settings")}
           </Text>
 
-          <TouchableOpacity style={styles.infoCard}>
+          <TouchableOpacity
+            style={styles.infoCard}
+            onPress={() => router.push("/(protected)/settings" as never)}
+            activeOpacity={0.7}
+          >
             <View style={styles.cardContent}>
               <View style={styles.cardIcon}>
                 <Ionicons
-                  name="notifications-outline"
+                  name="settings-outline"
                   size={24}
                   color={Colors.primary}
                 />
               </View>
               <View style={styles.cardText}>
                 <Text style={styles.cardTitle}>
-                  {t("profile:main.cards.notifications")}
+                  {t("profile:main.cards.appSettings")}
                 </Text>
                 <Text style={styles.cardSubtitle}>
-                  {t("profile:main.cards.notificationsSubtitle")}
+                  {t("profile:main.cards.appSettingsSubtitle")}
                 </Text>
               </View>
             </View>
@@ -195,6 +199,37 @@ export default function ProfileScreen() {
               color={Colors.textSecondary}
             />
           </TouchableOpacity>
+
+          {isFeatureEnabled("notifications") && (
+              <TouchableOpacity
+                style={styles.infoCard}
+                onPress={() => router.push("/(protected)/notifications" as never)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.cardContent}>
+                  <View style={styles.cardIcon}>
+                    <Ionicons
+                      name="notifications-outline"
+                      size={24}
+                      color={Colors.primary}
+                    />
+                  </View>
+                  <View style={styles.cardText}>
+                    <Text style={styles.cardTitle}>
+                      {t("profile:main.cards.notifications")}
+                    </Text>
+                    <Text style={styles.cardSubtitle}>
+                      {t("profile:main.cards.notificationsSubtitle")}
+                    </Text>
+                  </View>
+                </View>
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={Colors.textSecondary}
+                />
+              </TouchableOpacity>
+          )}
 
           <TouchableOpacity
             style={styles.infoCard}

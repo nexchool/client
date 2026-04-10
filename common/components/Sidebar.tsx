@@ -48,21 +48,13 @@ export default function Sidebar({
     [permissions, enabledFeatures]
   );
 
-  // Convert tabs to menu items, then append Settings (language & more later)
   const menuItems: MenuItem[] = useMemo(() => {
-    const tabs = visibleTabs.map((tab) => ({
+    return visibleTabs.map((tab) => ({
       id: tab.name,
       label: t(`tabs.${tab.name}`, { defaultValue: tab.title }),
       icon: tab.iconOutline,
       route: `/(protected)/${tab.name}`,
     }));
-    const settingsItem: MenuItem = {
-      id: "settings",
-      label: t("tabs.settings"),
-      icon: "settings-outline",
-      route: "/(protected)/settings",
-    };
-    return [...tabs, settingsItem];
   }, [visibleTabs, t]);
   const slideAnim = React.useRef(new Animated.Value(-SIDEBAR_WIDTH)).current;
   const opacityAnim = React.useRef(new Animated.Value(0)).current;
@@ -106,11 +98,7 @@ export default function Sidebar({
       onClose();
       return;
     }
-    if (route.includes("/settings")) {
-      router.push("/(protected)/settings");
-    } else {
-      router.replace(route as any);
-    }
+    router.replace(route as any);
     onClose();
   };
 

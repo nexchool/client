@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -8,13 +8,23 @@ import {
   ActivityIndicator,
   Modal,
   Pressable,
+  Switch,
 } from "react-native";
+import * as Device from "expo-device";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
 import { setAppLanguage, getAppLanguage, type SupportedLanguage } from "@/i18n";
+import {
+  getPushNotificationsPreference,
+  setPushNotificationsPreference,
+} from "@/common/utils/storage";
+import {
+  registerDeviceForPushNotifications,
+  unregisterDevicePushNotifications,
+} from "@/modules/devices/pushRegistration";
 
 /** Compact control width (fits EN/GU/HI labels without spanning the row) */
 const DROPDOWN_WIDTH = 168;
@@ -33,8 +43,14 @@ export default function SettingsScreen() {
   const { t } = useTranslation(["navigation", "settings", "common"]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [pending, setPending] = useState(false);
+  const [pushEnabled, setPushEnabled] = useState(true);
+  const [pushBusy, setPushBusy] = useState(false);
 
   const current = getAppLanguage();
+
+  useEffect(() => {
+    void getPushNotificationsPreference().then(setPushEnabled);
+  }, []);
 
   const currentLabel = useMemo(() => {
     const opt = LANGUAGE_OPTIONS.find((o) => o.code === current);
@@ -62,6 +78,22 @@ export default function SettingsScreen() {
       router.replace("/(protected)/home");
     }
   }, [router]);
+
+  const onPushToggle = useCallback(async (value: boolean) => {
+    if (pushBusy) return;
+    setPushBusy(true);
+    try {
+      await setPushNotificationsPreference(value);
+      setPushEnabled(value);
+      if (value) {
+        await registerDeviceForPushNotifications();
+      } else {
+        await unregisterDevicePushNotifications();
+      }
+    } finally {
+      setPushBusy(false);
+    }
+  }, [pushBusy]);
 
   return (
     <View style={styles.container}>
@@ -107,6 +139,28 @@ export default function SettingsScreen() {
               <Ionicons name="chevron-down" size={20} color={Colors.textSecondary} />
             </TouchableOpacity>
           </View>
+        </View>
+
+        <View style={[styles.settingsCard, styles.cardGap]}>
+          <View style={styles.pushHeaderRow}>
+            <Text style={styles.pushTitle}>{t("settings:pushSectionTitle")}</Text>
+            {pushBusy ? (
+              <ActivityIndicator size="small" color={Colors.primary} />
+            ) : (
+              <Switch
+                value={pushEnabled}
+                onValueChange={(v) => void onPushToggle(v)}
+                trackColor={{ false: Colors.borderLight, true: Colors.primary + "99" }}
+                thumbColor={pushEnabled ? Colors.primary : Colors.textSecondary}
+                disabled={pushBusy}
+                accessibilityLabel={t("settings:pushSectionTitle")}
+              />
+            )}
+          </View>
+          <Text style={styles.pushSubtitle}>{t("settings:pushSectionSubtitle")}</Text>
+          {!Device.isDevice ? (
+            <Text style={styles.pushHint}>{t("settings:pushSimulatorHint")}</Text>
+          ) : null}
         </View>
       </ScrollView>
 
@@ -189,6 +243,36 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.backgroundSecondary,
     borderRadius: Layout.borderRadius.lg,
     padding: Spacing.md,
+  },
+  cardGap: {
+    marginTop: Spacing.md,
+  },
+  pushHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  pushTitle: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: "600",
+    color: Colors.text,
+    fontFamily: "System",
+  },
+  pushSubtitle: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    lineHeight: 18,
+    fontFamily: "System",
+  },
+  pushHint: {
+    marginTop: Spacing.sm,
+    fontSize: 12,
+    color: Colors.textSecondary,
+    fontStyle: "italic",
+    fontFamily: "System",
   },
   languageRow: {
     flexDirection: "row",

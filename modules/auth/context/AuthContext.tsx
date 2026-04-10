@@ -23,6 +23,7 @@ import {
   getTenantName,
   setTenantName,
   deleteTenantName,
+  getPushNotificationsPreference,
 } from "@/common/utils/storage";
 import {
   login as loginService,
@@ -31,6 +32,10 @@ import {
 } from "@/modules/auth/services/authService";
 import { apiGet } from "@/common/services/api";
 import { API_ENDPOINTS } from "@/common/constants/api";
+import {
+  registerDeviceForPushNotifications,
+  unregisterDevicePushNotifications,
+} from "@/modules/devices/pushRegistration";
 
 /** Min interval (ms) between enabled-features refresh when app comes to foreground. Avoids overloading server. */
 const ENABLED_FEATURES_REFRESH_THROTTLE_MS = 60_000;
@@ -137,6 +142,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   }, [user]);
 
   useEffect(() => {
+    if (!user) return;
+    void (async () => {
+      const allowed = await getPushNotificationsPreference();
+      if (!allowed) return;
+      await registerDeviceForPushNotifications().catch(() => {
+        /* simulator, permissions denied, or network */
+      });
+    })();
+  }, [user?.id]);
+
+  useEffect(() => {
     const checkAuth = async () => {
       try {
         const [accessToken, refreshToken, userData, userPermissions, storedEnabledFeatures, storedTenantName] =
@@ -226,6 +242,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const logout = async () => {
+    await unregisterDevicePushNotifications().catch(() => {});
     await clearAuth();
     setUser(null);
     setTenantNameState(null);

@@ -1,0 +1,16 @@
+{
+  "title": "Notifications",
+  "empty": "No notifications yet.",
+  "loadError": "Could not load notifications.",
+  "retry": "Retry",
+  "markAllRead": "Mark all read",
+  "markingAll": "…",
+  "unavailable": "Notifications are not available for your account.",
+  "detail": {
+    "title": "Notification",
+    "backA11y": "Back",
+    "notFound": "This notification is no longer available.",
+    "noBody": "No message text.",
+    "openRelated": "Open related"
+  }
+}

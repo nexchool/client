@@ -1,6 +1,9 @@
 {
   "languageSectionTitle": "ભાષા",
   "languageSectionSubtitle": "આ પસંદગી તમારા ડિવાઇસ પર સાચવાય છે અને આખી એપમાં લાગુ પડે છે.",
+  "pushSectionTitle": "પુશ સૂચનાઓ",
+  "pushSectionSubtitle": "જ્યારે શાળા જાહેરાતો, ફી અપડેટ્સ અને બીજી માહિતી મોકલે ત્યારે આ ડિવાઇસ પર ચેતવણી મેળવો.",
+  "pushSimulatorHint": "પુશ માટે વાસ્તવિક ફોન અથવા ટેબ્લેટ જરૂરી છે; સિમ્યુલેટર પર તે મળતું નથી.",
   "language": {
     "english": "અંગ્રેજી",
     "gujarati": "ગુજરાતી",

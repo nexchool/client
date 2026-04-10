@@ -1,6 +1,9 @@
 {
   "languageSectionTitle": "Language",
   "languageSectionSubtitle": "This choice is saved on your device and applies across the app.",
+  "pushSectionTitle": "Push notifications",
+  "pushSectionSubtitle": "Get alerts on this device when your school sends announcements, fees, and other updates.",
+  "pushSimulatorHint": "Push delivery needs a physical phone or tablet; the simulator cannot receive them.",
   "language": {
     "english": "English",
     "gujarati": "Gujarati",

@@ -75,6 +75,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     "expo-updates",
+    [
+      "expo-notifications",
+      {
+        icon: "./assets/icon.png",
+        color: "#ffffff",
+        sounds: [],
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,

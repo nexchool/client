@@ -1,6 +1,9 @@
 {
   "languageSectionTitle": "भाषा",
   "languageSectionSubtitle": "यह विकल्प आपके डिवाइस पर सहेजा जाता है और पूरे ऐप पर लागू होता है।",
+  "pushSectionTitle": "पुश सूचनाएँ",
+  "pushSectionSubtitle": "स्कूल घोषणाएँ, फीस अपडेट आदि भेजे तो इस डिवाइस पर सूचना पाएँ।",
+  "pushSimulatorHint": "पुश के लिए असली फ़ोन या टैबलेट चाहिए; सिम्युलेटर पर ये नहीं मिलतीं।",
   "language": {
     "english": "अंग्रेज़ी",
     "gujarati": "गुजराती",

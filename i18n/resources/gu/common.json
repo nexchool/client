@@ -25,5 +25,8 @@
     "en": "EN",
     "gu": "GU",
     "hi": "HI"
+  },
+  "notifications": {
+    "openInbox": "સૂચનાઓ ખોલો"
   }
 }
