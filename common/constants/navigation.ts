@@ -60,17 +60,6 @@ export const ALL_TABS: TabConfig[] = [
     ],
     requiredPlanFeature: 'class_management',
   },
-  {
-    name: 'subjects',
-    title: 'Subjects',
-    icon: 'book-outline',
-    iconOutline: 'book-outline',
-    requiredPermissions: [
-      PERMS.SUBJECT_READ,
-      PERMS.SUBJECT_MANAGE,
-    ],
-    requiredPlanFeature: 'class_management',
-  },
   // {
   //   name: 'academics',
   //   title: 'Academics',

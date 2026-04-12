@@ -1,12 +1,15 @@
 /**
  * Register Expo push token with School ERP backend (/api/devices/register).
  * Unregister on logout via /api/devices/unregister.
+ *
+ * expo-notifications remote push is not supported in Expo Go on Android (SDK 53+).
+ * A dynamic import with try-catch is used so the module loads cleanly in Expo Go;
+ * all functions become no-ops in that environment.
  */
 
 import { Platform } from "react-native";
 import * as Device from "expo-device";
 import Constants from "expo-constants";
-import * as Notifications from "expo-notifications";
 import { apiPost } from "@/common/services/api";
 import {
   clearPushDeviceToken,
@@ -15,13 +18,32 @@ import {
   setPushDeviceToken,
 } from "@/common/utils/storage";
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+type NotificationsModule = typeof import("expo-notifications");
+
+let _notifications: NotificationsModule | null = null;
+
+async function getNotifications(): Promise<NotificationsModule | null> {
+  if (_notifications !== null) return _notifications;
+  try {
+    const mod = (await import("expo-notifications")) as NotificationsModule;
+    mod.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldShowBanner: true,
+        shouldShowList: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+      }),
+    });
+    _notifications = mod;
+    return _notifications;
+  } catch {
+    return null;
+  }
+}
+
+// Eagerly attempt to initialise notifications on module load (non-blocking).
+void getNotifications();
 
 function resolveExpoProjectId(): string | undefined {
   const extra = Constants.expoConfig?.extra as { eas?: { projectId?: string } } | undefined;
@@ -30,17 +52,16 @@ function resolveExpoProjectId(): string | undefined {
 
 /**
  * Ask OS permission, obtain Expo push token, POST /api/devices/register.
- * No-op on simulators / missing projectId (Expo Go may still work for token in dev).
+ * No-op on simulators, Expo Go (Android SDK 53+), missing projectId, or denied permissions.
  */
 export async function registerDeviceForPushNotifications(): Promise<void> {
-  if (!Device.isDevice) {
-    return;
-  }
+  if (!Device.isDevice) return;
 
   const preferenceOn = await getPushNotificationsPreference();
-  if (!preferenceOn) {
-    return;
-  }
+  if (!preferenceOn) return;
+
+  const Notifications = await getNotifications();
+  if (!Notifications) return;
 
   const { status: existing } = await Notifications.getPermissionsAsync();
   let finalStatus = existing;
@@ -48,9 +69,7 @@ export async function registerDeviceForPushNotifications(): Promise<void> {
     const { status } = await Notifications.requestPermissionsAsync();
     finalStatus = status;
   }
-  if (finalStatus !== "granted") {
-    return;
-  }
+  if (finalStatus !== "granted") return;
 
   const projectId = resolveExpoProjectId();
   if (!projectId) {

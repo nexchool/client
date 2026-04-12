@@ -7,314 +7,645 @@ import {
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
-  Modal,
-  TextInput,
   ScrollView,
-  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
 import { bellScheduleApi, academicSettingsApi } from "../api/classAcademicApi";
 import { qk } from "../hooks/queryKeys";
 import type { BellScheduleListItem, BellSchedulePeriod } from "../types";
-import { Protected } from "@/modules/permissions/components/Protected";
-import * as PERMS from "@/modules/permissions/constants/permissions";
+
+// ── Period kind config ────────────────────────────────────────────────────────
+
+const KIND_META: Record<string, { color: string; bg: string; label: string }> = {
+  lesson:   { color: "#1D1D1F", bg: "#F0F0F5", label: "Lesson" },
+  break:    { color: "#7A4E00", bg: "#FFF3D4", label: "Break" },
+  lunch:    { color: "#1A5C2E", bg: "#D4F5E2", label: "Lunch" },
+  assembly: { color: "#3A1F6B", bg: "#EFE8FF", label: "Assembly" },
+  other:    { color: "#555555", bg: "#EFEFEF", label: "Other" },
+};
+
+function periodKindMeta(kind: string) {
+  return KIND_META[kind] ?? KIND_META.other;
+}
+
+// ── Time helpers ──────────────────────────────────────────────────────────────
+
+function formatTime(t: string | null): string {
+  if (!t) return "—";
+  // datetime "2024-01-01T09:00:00" → slice(11,16); plain time "09:00:00" → slice(0,5)
+  const clean = t.length >= 16 ? t.slice(11, 16) : t.slice(0, 5);
+  return clean;
+}
+
+function parseMinutes(t: string | null): number | null {
+  if (!t) return null;
+  const clean = t.length >= 16 ? t.slice(11, 16) : t.slice(0, 5);
+  const [h, m] = clean.split(":").map(Number);
+  if (isNaN(h) || isNaN(m)) return null;
+  return h * 60 + m;
+}
+
+function minutesToTime(mins: number): string {
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+// ── Main screen ───────────────────────────────────────────────────────────────
 
 export default function BellSchedulesScreen() {
   const router = useRouter();
-  const qc = useQueryClient();
-  const { data: items = [], isLoading } = useQuery({
+
+  const { data: bellListRes, isLoading } = useQuery({
     queryKey: qk.bellSchedules(),
-    queryFn: async () => (await bellScheduleApi.list()).items,
+    queryFn: () => bellScheduleApi.list(),
   });
+  const items = bellListRes?.items ?? [];
+
   const { data: settings } = useQuery({
     queryKey: qk.academicSettings(),
     queryFn: () => academicSettingsApi.get(),
   });
 
-  const [createOpen, setCreateOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [detailId, setDetailId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  /** Tenant default: prefer API list field, then academic settings (same value; list avoids extra round-trip). */
+  const defaultId =
+    (bellListRes?.tenant_default_bell_schedule_id as string | null | undefined) ??
+    (settings?.default_bell_schedule_id as string | undefined) ??
+    undefined;
 
-  const createMut = useMutation({
-    mutationFn: () => bellScheduleApi.create({ name }),
-    onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: qk.bellSchedules() });
-      setCreateOpen(false);
-      setName("");
-    },
-    onError: (e: Error) => Alert.alert("Error", e.message),
-  });
-
-  const setDefault = async (id: string) => {
-    try {
-      await academicSettingsApi.patch({ default_bell_schedule_id: id });
-      await qc.invalidateQueries({ queryKey: qk.academicSettings() });
-      Alert.alert("Updated", "Default bell schedule saved.");
-    } catch (e: any) {
-      Alert.alert("Error", e.message);
-    }
-  };
-
-  const defaultId = (settings?.default_bell_schedule_id as string | undefined) ?? undefined;
-
-  const renderItem = ({ item }: { item: BellScheduleListItem }) => (
-    <View style={styles.card}>
-      <TouchableOpacity style={styles.cardMain} onPress={() => setDetailId(item.id)} activeOpacity={0.75}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.cardTitle}>{item.name}</Text>
-          {item.is_default ? <Text style={styles.badge}>template default</Text> : null}
-        </View>
-        <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
-      </TouchableOpacity>
-      {defaultId === item.id ? (
-        <Text style={styles.defaultLbl}>tenant default</Text>
-      ) : (
-        <Protected anyPermissions={[PERMS.ACADEMICS_MANAGE, PERMS.CLASS_MANAGE]}>
-          <TouchableOpacity onPress={() => setDefault(item.id)} style={styles.setDefWrap}>
-            <Text style={styles.link}>Set default</Text>
-          </TouchableOpacity>
-        </Protected>
-      )}
-    </View>
-  );
+  if (selectedId) {
+    return (
+      <BellDetailScreen
+        id={selectedId}
+        onBack={() => setSelectedId(null)}
+        isDefault={selectedId === defaultId}
+      />
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.back}>
-          <Ionicons name="arrow-back" size={24} color={Colors.text} />
+        <TouchableOpacity onPress={() => router.back()} style={styles.headerBack}>
+          <Ionicons name="arrow-back" size={22} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.title}>Bell schedules</Text>
-        <Protected anyPermissions={[PERMS.ACADEMICS_MANAGE, PERMS.TIMETABLE_MANAGE]}>
-          <TouchableOpacity onPress={() => setCreateOpen(true)}>
-            <Ionicons name="add-circle-outline" size={28} color={Colors.primary} />
-          </TouchableOpacity>
-        </Protected>
+        <Text style={styles.headerTitle}>Bell schedules</Text>
+        <View style={{ width: 38 }} />
       </View>
+
       {isLoading ? (
         <View style={styles.center}>
-          <ActivityIndicator color={Colors.primary} />
+          <ActivityIndicator color={Colors.textSecondary} />
+        </View>
+      ) : items.length === 0 ? (
+        <View style={styles.emptyState}>
+          <View style={styles.emptyIcon}>
+            <Ionicons name="alarm-outline" size={28} color={Colors.textTertiary} />
+          </View>
+          <Text style={styles.emptyTitle}>No bell schedules</Text>
+          <Text style={styles.emptyDesc}>
+            Bell schedules are managed in the admin panel.
+          </Text>
         </View>
       ) : (
         <FlatList
           data={items}
           keyExtractor={(i) => i.id}
-          contentContainerStyle={{ padding: Spacing.lg }}
-          renderItem={renderItem}
-          ListEmptyComponent={<Text style={styles.empty}>No bell schedules yet.</Text>}
+          contentContainerStyle={styles.listContent}
+          ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
+          renderItem={({ item }) => (
+            <ScheduleCard
+              item={item}
+              isDefault={item.id === defaultId}
+              onPress={() => setSelectedId(item.id)}
+            />
+          )}
+          ListHeaderComponent={
+            <Text style={styles.sectionHint}>
+              Tap a schedule to view its daily period breakdown.
+            </Text>
+          }
         />
-      )}
-
-      <Modal visible={createOpen} animationType="slide" presentationStyle="formSheet">
-        <View style={styles.modal}>
-          <Text style={styles.modalTitle}>New bell schedule</Text>
-          <TextInput style={styles.input} placeholder="Name" value={name} onChangeText={setName} />
-          <TouchableOpacity
-            style={styles.primaryBtn}
-            onPress={() => name.trim() && createMut.mutate()}
-            disabled={!name.trim() || createMut.isPending}
-          >
-            <Text style={styles.primaryTxt}>Create</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setCreateOpen(false)}>
-            <Text style={styles.cancel}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
-      </Modal>
-
-      {detailId && (
-        <BellDetailModal id={detailId} onClose={() => setDetailId(null)} />
       )}
     </SafeAreaView>
   );
 }
 
-function BellDetailModal({ id, onClose }: { id: string; onClose: () => void }) {
-  const qc = useQueryClient();
-  const { data, isLoading, refetch } = useQuery({
+// ── Schedule card ─────────────────────────────────────────────────────────────
+
+function ScheduleCard({
+  item,
+  isDefault,
+  onPress,
+}: {
+  item: BellScheduleListItem;
+  isDefault: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
+      <View style={styles.cardIconWrap}>
+        <Ionicons name="alarm-outline" size={18} color={Colors.text} />
+      </View>
+      <View style={styles.cardBody}>
+        <Text style={styles.cardTitle} numberOfLines={1}>{item.name}</Text>
+        <View style={styles.cardBadgeRow}>
+          {isDefault && (
+            <View style={styles.defaultBadge}>
+              <Ionicons name="star" size={9} color="#7A4E00" style={{ marginRight: 3 }} />
+              <Text style={styles.defaultBadgeText}>School default</Text>
+            </View>
+          )}
+        </View>
+      </View>
+      <Ionicons name="chevron-forward" size={16} color={Colors.textTertiary} />
+    </TouchableOpacity>
+  );
+}
+
+// ── Detail screen ─────────────────────────────────────────────────────────────
+
+function BellDetailScreen({
+  id,
+  onBack,
+  isDefault,
+}: {
+  id: string;
+  onBack: () => void;
+  isDefault: boolean;
+}) {
+  const { data, isLoading } = useQuery({
     queryKey: qk.bellSchedule(id),
     queryFn: () => bellScheduleApi.get(id),
   });
 
-  const [pOpen, setPOpen] = useState(false);
-  const [pNum, setPNum] = useState("1");
-  const [pKind, setPKind] = useState("lesson");
-  const [pLabel, setPLabel] = useState("");
-  const [pStart, setPStart] = useState("09:00");
-  const [pEnd, setPEnd] = useState("09:45");
+  const periods: BellSchedulePeriod[] = [...(data?.periods ?? [])].sort(
+    (a, b) => (a.sort_order ?? a.period_number) - (b.sort_order ?? b.period_number)
+  );
 
-  const addPeriod = async () => {
-    try {
-      await bellScheduleApi.createPeriod(id, {
-        period_number: parseInt(pNum, 10) || 1,
-        period_kind: pKind,
-        label: pLabel || null,
-        starts_at: pStart,
-        ends_at: pEnd,
-        sort_order: parseInt(pNum, 10) || 1,
-      });
-      await qc.invalidateQueries({ queryKey: qk.bellSchedule(id) });
-      setPOpen(false);
-      refetch();
-    } catch (e: any) {
-      Alert.alert("Error", e.message);
-    }
-  };
-
-  const removePeriod = (pid: string) => {
-    Alert.alert("Delete period", "Remove this period?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await bellScheduleApi.deletePeriod(id, pid);
-            await qc.invalidateQueries({ queryKey: qk.bellSchedule(id) });
-            refetch();
-          } catch (e: any) {
-            Alert.alert("Error", e.message);
-          }
-        },
-      },
-    ]);
-  };
+  const periodsWithTimes = periods.filter((p) => p.starts_at && p.ends_at);
+  const allMins = periodsWithTimes.flatMap((p) => [
+    parseMinutes(p.starts_at)!,
+    parseMinutes(p.ends_at)!,
+  ]);
+  const dayStart = allMins.length ? Math.min(...allMins) : null;
+  const dayEnd = allMins.length ? Math.max(...allMins) : null;
+  const daySpan = dayStart !== null && dayEnd !== null ? dayEnd - dayStart : 0;
 
   return (
-    <Modal visible animationType="slide" presentationStyle="pageSheet">
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={onClose}>
-            <Ionicons name="close" size={26} color={Colors.text} />
-          </TouchableOpacity>
-          <Text style={styles.title} numberOfLines={1}>
-            {data?.name ?? "Schedule"}
-          </Text>
-          <TouchableOpacity onPress={() => setPOpen(true)}>
-            <Ionicons name="add" size={26} color={Colors.primary} />
-          </TouchableOpacity>
-        </View>
-        {isLoading || !data ? (
-          <ActivityIndicator style={{ marginTop: 24 }} color={Colors.primary} />
-        ) : (
-          <ScrollView contentContainerStyle={{ padding: Spacing.lg }}>
-            {(data.periods ?? []).map((p: BellSchedulePeriod) => (
-              <View key={p.id} style={styles.periodRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.pTitle}>
-                    #{p.period_number} · {p.label || p.period_kind}
-                  </Text>
-                  <Text style={styles.pMeta}>
-                    {p.period_kind} · {String(p.starts_at).slice(11, 16) || p.starts_at} –{" "}
-                    {String(p.ends_at).slice(11, 16) || p.ends_at}
-                  </Text>
-                </View>
-                <TouchableOpacity onPress={() => removePeriod(p.id)}>
-                  <Ionicons name="trash-outline" size={20} color={Colors.error} />
-                </TouchableOpacity>
-              </View>
-            ))}
-          </ScrollView>
-        )}
-
-        <Modal visible={pOpen} transparent animationType="fade">
-          <View style={styles.pModalBg}>
-            <View style={styles.pModal}>
-              <Text style={styles.modalTitle}>Add period</Text>
-              <Text style={styles.label}>Number</Text>
-              <TextInput style={styles.input} keyboardType="number-pad" value={pNum} onChangeText={setPNum} />
-              <Text style={styles.label}>Kind (lesson/break/lunch/assembly)</Text>
-              <TextInput style={styles.input} value={pKind} onChangeText={setPKind} />
-              <Text style={styles.label}>Label</Text>
-              <TextInput style={styles.input} value={pLabel} onChangeText={setPLabel} />
-              <Text style={styles.label}>Start / End (HH:MM)</Text>
-              <View style={{ flexDirection: "row", gap: 8 }}>
-                <TextInput style={[styles.input, { flex: 1 }]} value={pStart} onChangeText={setPStart} />
-                <TextInput style={[styles.input, { flex: 1 }]} value={pEnd} onChangeText={setPEnd} />
-              </View>
-              <TouchableOpacity style={styles.primaryBtn} onPress={addPeriod}>
-                <Text style={styles.primaryTxt}>Add</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => setPOpen(false)}>
-                <Text style={styles.cancel}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={onBack} style={styles.headerBack}>
+          <Ionicons name="arrow-back" size={22} color={Colors.text} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle} numberOfLines={1}>
+          {isLoading ? "Loading…" : (data?.name ?? "Schedule")}
+        </Text>
+        {isDefault ? (
+          <View style={styles.defaultPill}>
+            <Ionicons name="star" size={10} color="#7A4E00" />
           </View>
-        </Modal>
-      </SafeAreaView>
-    </Modal>
+        ) : (
+          <View style={{ width: 38 }} />
+        )}
+      </View>
+
+      {isLoading || !data ? (
+        <View style={styles.center}>
+          <ActivityIndicator color={Colors.textSecondary} />
+        </View>
+      ) : (
+        <ScrollView contentContainerStyle={styles.detailContent} showsVerticalScrollIndicator={false}>
+          {/* Summary row */}
+          <View style={styles.summaryRow}>
+            <SummaryChip
+              icon="time-outline"
+              value={`${periods.length} period${periods.length !== 1 ? "s" : ""}`}
+            />
+            {dayStart !== null && dayEnd !== null && (
+              <SummaryChip
+                icon="calendar-outline"
+                value={`${minutesToTime(dayStart)} – ${minutesToTime(dayEnd)}`}
+              />
+            )}
+            {isDefault && (
+              <SummaryChip icon="star-outline" value="School default" />
+            )}
+          </View>
+
+          {/* Timeline */}
+          {periodsWithTimes.length > 0 && daySpan > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Day timeline</Text>
+              <TimelineBar
+                periods={periodsWithTimes}
+                dayStart={dayStart!}
+                daySpan={daySpan}
+              />
+              <View style={styles.timelineLabels}>
+                <Text style={styles.timelineLabel}>{minutesToTime(dayStart!)}</Text>
+                <Text style={styles.timelineLabel}>{minutesToTime(dayEnd!)}</Text>
+              </View>
+            </View>
+          )}
+
+          {/* Period list */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Periods</Text>
+            {periods.length === 0 ? (
+              <View style={styles.emptyPeriods}>
+                <Text style={styles.emptyDesc}>No periods defined.</Text>
+              </View>
+            ) : (
+              periods.map((p, idx) => (
+                <PeriodRow key={p.id} period={p} isLast={idx === periods.length - 1} />
+              ))
+            )}
+          </View>
+        </ScrollView>
+      )}
+    </SafeAreaView>
   );
 }
 
+// ── Timeline bar ──────────────────────────────────────────────────────────────
+
+function TimelineBar({
+  periods,
+  dayStart,
+  daySpan,
+}: {
+  periods: BellSchedulePeriod[];
+  dayStart: number;
+  daySpan: number;
+}) {
+  return (
+    <View style={styles.timeline}>
+      {periods.map((p) => {
+        const start = parseMinutes(p.starts_at)!;
+        const end = parseMinutes(p.ends_at)!;
+        const leftPct = ((start - dayStart) / daySpan) * 100;
+        const widthPct = ((end - start) / daySpan) * 100;
+        const meta = periodKindMeta(p.period_kind);
+
+        return (
+          <View
+            key={p.id}
+            style={[
+              styles.timelineSegment,
+              {
+                left: `${leftPct}%` as any,
+                width: `${widthPct}%` as any,
+                backgroundColor: meta.bg,
+              },
+            ]}
+          >
+            {widthPct > 8 && (
+              <Text
+                style={[styles.timelineSegmentLabel, { color: meta.color }]}
+                numberOfLines={1}
+              >
+                {p.label || `P${p.period_number}`}
+              </Text>
+            )}
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
+// ── Period row ────────────────────────────────────────────────────────────────
+
+function PeriodRow({ period, isLast }: { period: BellSchedulePeriod; isLast: boolean }) {
+  const meta = periodKindMeta(period.period_kind);
+  const startMins = parseMinutes(period.starts_at);
+  const endMins = parseMinutes(period.ends_at);
+  const durMins = startMins !== null && endMins !== null ? endMins - startMins : null;
+
+  return (
+    <View style={[styles.periodRow, !isLast && styles.periodRowBorder]}>
+      {/* Kind indicator strip */}
+      <View style={[styles.periodStrip, { backgroundColor: meta.bg }]} />
+
+      <View style={styles.periodMain}>
+        <View style={styles.periodLeft}>
+          <Text style={styles.periodNumber}>P{period.period_number}</Text>
+          <View style={[styles.periodKindBadge, { backgroundColor: meta.bg }]}>
+            <Text style={[styles.periodKindText, { color: meta.color }]}>
+              {meta.label}
+            </Text>
+          </View>
+          {period.label ? (
+            <Text style={styles.periodLabel} numberOfLines={1}>{period.label}</Text>
+          ) : null}
+        </View>
+        <View style={styles.periodRight}>
+          <Text style={styles.periodTime}>
+            {formatTime(period.starts_at)} – {formatTime(period.ends_at)}
+          </Text>
+          {durMins !== null && (
+            <Text style={styles.periodDur}>{durMins} min</Text>
+          )}
+        </View>
+      </View>
+    </View>
+  );
+}
+
+// ── Summary chip ──────────────────────────────────────────────────────────────
+
+function SummaryChip({ icon, value }: { icon: keyof typeof Ionicons.glyphMap; value: string }) {
+  return (
+    <View style={styles.summaryChip}>
+      <Ionicons name={icon} size={13} color={Colors.textSecondary} />
+      <Text style={styles.summaryChipText}>{value}</Text>
+    </View>
+  );
+}
+
+// ── Styles ────────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  // Header
   header: {
     flexDirection: "row",
     alignItems: "center",
-    padding: Spacing.lg,
-    borderBottomWidth: 1,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm + 4,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: Colors.borderLight,
-    gap: Spacing.md,
-  },
-  back: { padding: Spacing.sm },
-  title: { flex: 1, fontSize: 20, fontWeight: "700" },
-  center: { flex: 1, justifyContent: "center" },
-  card: {
-    borderRadius: Layout.borderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    marginBottom: Spacing.md,
-    overflow: "hidden",
-  },
-  cardMain: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: Spacing.md,
     gap: Spacing.sm,
   },
-  setDefWrap: { paddingHorizontal: Spacing.md, paddingBottom: Spacing.sm },
-  cardTitle: { fontSize: 16, fontWeight: "600" },
-  badge: { fontSize: 11, color: Colors.textTertiary },
-  defaultLbl: { fontSize: 12, color: Colors.success, fontWeight: "600" },
-  link: { fontSize: 13, color: Colors.primary, fontWeight: "600" },
-  empty: { textAlign: "center", color: Colors.textSecondary, marginTop: Spacing.xl },
-  modal: { padding: Spacing.xl, paddingTop: 60 },
-  modalTitle: { fontSize: 18, fontWeight: "700", marginBottom: Spacing.md },
-  input: {
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: Layout.borderRadius.sm,
-    padding: Spacing.md,
-    marginBottom: Spacing.md,
-    fontSize: 16,
-  },
-  primaryBtn: {
-    backgroundColor: Colors.primary,
-    padding: Spacing.md,
-    borderRadius: Layout.borderRadius.md,
+  headerBack: {
+    width: 38,
+    height: 38,
     alignItems: "center",
+    justifyContent: "center",
+    borderRadius: Layout.borderRadius.sm,
   },
-  primaryTxt: { color: "#fff", fontWeight: "700" },
-  cancel: { textAlign: "center", marginTop: Spacing.md, color: Colors.primary },
-  periodRow: {
+  headerTitle: {
+    flex: 1,
+    fontSize: 17,
+    fontWeight: "600",
+    color: Colors.text,
+    textAlign: "center",
+  },
+  defaultPill: {
+    width: 38,
+    height: 38,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  // List
+  listContent: {
+    padding: Spacing.md,
+    paddingTop: Spacing.sm,
+  },
+  sectionHint: {
+    fontSize: 12,
+    color: Colors.textTertiary,
+    marginBottom: Spacing.md,
+  },
+
+  // Card
+  card: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
+    backgroundColor: Colors.background,
+    borderRadius: Layout.borderRadius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: Colors.borderLight,
+    padding: Spacing.md,
+    gap: Spacing.md,
   },
-  pTitle: { fontSize: 15, fontWeight: "600" },
-  pMeta: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
-  pModalBg: {
-    flex: 1,
-    backgroundColor: "#0008",
+  cardIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: Layout.borderRadius.sm,
+    backgroundColor: Colors.backgroundSecondary,
+    alignItems: "center",
     justifyContent: "center",
-    padding: Spacing.lg,
   },
-  pModal: { backgroundColor: Colors.background, borderRadius: Layout.borderRadius.lg, padding: Spacing.lg },
-  label: { fontSize: 13, fontWeight: "600", marginBottom: 4 },
+  cardBody: {
+    flex: 1,
+    gap: 4,
+  },
+  cardTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: Colors.text,
+  },
+  cardBadgeRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 4,
+  },
+  defaultBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFF3D4",
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  defaultBadgeText: {
+    fontSize: 11,
+    color: "#7A4E00",
+    fontWeight: "600",
+  },
+
+  // Empty state
+  emptyState: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: Spacing.xl,
+    gap: Spacing.sm,
+  },
+  emptyIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.backgroundSecondary,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: Spacing.xs,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: Colors.text,
+  },
+  emptyDesc: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    textAlign: "center",
+    lineHeight: 18,
+  },
+
+  // Detail content
+  detailContent: {
+    padding: Spacing.md,
+    gap: Spacing.lg,
+  },
+
+  // Summary chips
+  summaryRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.sm,
+  },
+  summaryChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: Colors.backgroundSecondary,
+    borderRadius: Layout.borderRadius.sm,
+    paddingHorizontal: Spacing.sm + 2,
+    paddingVertical: 5,
+  },
+  summaryChipText: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    fontWeight: "500",
+  },
+
+  // Section
+  section: {
+    gap: Spacing.sm,
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: Colors.textSecondary,
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+    marginBottom: 2,
+  },
+
+  // Timeline
+  timeline: {
+    position: "relative",
+    height: 40,
+    backgroundColor: Colors.backgroundSecondary,
+    borderRadius: Layout.borderRadius.sm,
+    overflow: "hidden",
+  },
+  timelineSegment: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRightWidth: StyleSheet.hairlineWidth,
+    borderRightColor: Colors.borderLight,
+    paddingHorizontal: 2,
+  },
+  timelineSegmentLabel: {
+    fontSize: 9,
+    fontWeight: "700",
+  },
+  timelineLabels: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 4,
+  },
+  timelineLabel: {
+    fontSize: 10,
+    color: Colors.textTertiary,
+    fontFamily: "monospace",
+  },
+
+  // Period row
+  periodRow: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    backgroundColor: Colors.background,
+    borderRadius: Layout.borderRadius.sm,
+    overflow: "hidden",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: Colors.borderLight,
+    marginBottom: Spacing.xs,
+  },
+  periodRowBorder: {
+    // kept for structural clarity; border is on the card itself
+  },
+  periodStrip: {
+    width: 4,
+  },
+  periodMain: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm + 2,
+    gap: Spacing.sm,
+  },
+  periodLeft: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    flexWrap: "wrap",
+  },
+  periodNumber: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: Colors.textSecondary,
+    fontFamily: "monospace",
+    minWidth: 28,
+  },
+  periodKindBadge: {
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  periodKindText: {
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  periodLabel: {
+    fontSize: 13,
+    color: Colors.text,
+    fontWeight: "500",
+    flexShrink: 1,
+  },
+  periodRight: {
+    alignItems: "flex-end",
+    gap: 2,
+  },
+  periodTime: {
+    fontSize: 12,
+    color: Colors.text,
+    fontFamily: "monospace",
+    fontWeight: "500",
+  },
+  periodDur: {
+    fontSize: 11,
+    color: Colors.textTertiary,
+  },
+  emptyPeriods: {
+    paddingVertical: Spacing.lg,
+    alignItems: "center",
+  },
 });

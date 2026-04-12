@@ -34,7 +34,6 @@
   },
   "shortcuts": {
     "classes": "कक्षाएँ",
-    "timetables": "समय सारणी",
     "bellSchedules": "घंटी अनुसूची",
     "attendance": "उपस्थिति",
     "addStudent": "छात्र जोड़ें",
@@ -44,7 +43,6 @@
     "leaveRequests": "अवकाश अनुरोध",
     "holidays": "छुट्टियाँ",
     "todaysSchedule": "आज का कार्यक्रम",
-    "weeklyTimetable": "साप्ताहिक समय सारणी",
     "markAttendance": "उपस्थिति दर्ज करें",
     "leaveTracker": "अवकाश ट्रैकर",
     "academics": "शैक्षणिक",

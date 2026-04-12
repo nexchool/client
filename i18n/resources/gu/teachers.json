@@ -51,6 +51,7 @@
     "experienceYears": "{{years}} વર્ષ",
     "dateOfJoining": "જોડાણ તારીખ",
     "subjectExpertise": "વિષય નિપુણતા",
+    "subjectsReadOnlyHint": "એપમાં વિષય નિપુણતા માત્ર જોવા માટે છે. સંચાલન એડમિન વેબથી કરો.",
     "add": "ઉમેરો",
     "emptySubjects": "હજી કોઈ વિષય સોંપેલ નથી.",
     "assignSubjectTitle": "વિષય સોંપો",

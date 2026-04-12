@@ -216,7 +216,12 @@ export const academicsAdminApi = {
 };
 
 export const bellScheduleApi = {
-  list: () => apiGet<{ items: BellScheduleListItem[] }>("/api/academics/bell-schedules"),
+  list: () =>
+    apiGet<{
+      items: BellScheduleListItem[];
+      /** School-wide default from academic settings (not the same as row `is_default`). */
+      tenant_default_bell_schedule_id?: string | null;
+    }>("/api/academics/bell-schedules"),
   get: (id: string) => apiGet<BellScheduleDetail>(`/api/academics/bell-schedules/${enc(id)}`),
   create: (body: Partial<{ name: string; academic_year_id: string | null; is_default: boolean }>) =>
     apiPost<BellScheduleListItem>("/api/academics/bell-schedules", body),

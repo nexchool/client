@@ -26,8 +26,6 @@ import * as PERMS from "@/modules/permissions/constants/permissions";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
 import { CreateTeacherModal } from "../components/CreateTeacherModal";
-import { subjectService } from "@/modules/subjects/services/subjectService";
-import { Subject } from "@/modules/subjects/types";
 import { TeacherLeave, TeacherAvailability } from "../types";
 
 type TabKey = "info" | "subjects" | "availability" | "leaves" | "workload";
@@ -78,11 +76,7 @@ export default function TeacherDetailScreen() {
     subjects: teacherSubjects,
     loading: subjectsLoading,
     fetchSubjects,
-    addSubject,
-    removeSubject,
   } = useTeacherSubjects(teacherId);
-  const [allSubjects, setAllSubjects] = useState<Subject[]>([]);
-  const [showSubjectPicker, setShowSubjectPicker] = useState(false);
 
   // --- Availability tab ---
   const {
@@ -153,44 +147,6 @@ export default function TeacherDetailScreen() {
           } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : t("detail.deleteFailed");
             Alert.alert(t("detail.errorTitle"), msg);
-          }
-        },
-      },
-    ]);
-  };
-
-  // --- Subject helpers ---
-  const openSubjectPicker = async () => {
-    try {
-      const subs = await subjectService.getSubjects();
-      const assigned = new Set(teacherSubjects.map((s) => s.subject_id));
-      setAllSubjects(subs.filter((s) => !assigned.has(s.id)));
-      setShowSubjectPicker(true);
-    } catch {
-      Alert.alert(t("detail.errorTitle"), t("detail.loadSubjectsError"));
-    }
-  };
-
-  const handleAddSubject = async (subjectId: string) => {
-    try {
-      await addSubject(subjectId);
-      setShowSubjectPicker(false);
-    } catch (e: any) {
-      Alert.alert(t("detail.errorTitle"), e.message || t("detail.assignSubjectError"));
-    }
-  };
-
-  const handleRemoveSubject = (subjectId: string, name: string) => {
-    Alert.alert(t("detail.removeSubjectTitle"), t("detail.removeSubjectMessage", { name }), [
-      { text: t("detail.cancel"), style: "cancel" },
-      {
-        text: t("detail.delete"),
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await removeSubject(subjectId);
-          } catch (e: any) {
-            Alert.alert(t("detail.errorTitle"), e.message);
           }
         },
       },
@@ -398,13 +354,10 @@ export default function TeacherDetailScreen() {
         <View style={styles.tabContent}>
           <View style={styles.tabContentHeader}>
             <Text style={styles.tabContentTitle}>{t("detail.subjectExpertise")}</Text>
-            {canManage && (
-              <TouchableOpacity style={styles.addBtn} onPress={openSubjectPicker}>
-                <Ionicons name="add" size={20} color="#fff" />
-                <Text style={styles.addBtnText}>{t("detail.add")}</Text>
-              </TouchableOpacity>
-            )}
           </View>
+          <Text style={[styles.helperText, { paddingHorizontal: Spacing.md }]}>
+            {t("detail.subjectsReadOnlyHint")}
+          </Text>
           {subjectsLoading ? (
             <ActivityIndicator style={{ marginTop: Spacing.xl }} color={Colors.primary} />
           ) : teacherSubjects.length === 0 ? (
@@ -420,11 +373,6 @@ export default function TeacherDetailScreen() {
                     <Text style={styles.listItemName}>{item.subject_name}</Text>
                     {item.subject_code ? <Text style={styles.listItemDetail}>{item.subject_code}</Text> : null}
                   </View>
-                  {canManage && (
-                    <TouchableOpacity onPress={() => handleRemoveSubject(item.subject_id, item.subject_name || "")}>
-                      <Ionicons name="close-circle-outline" size={22} color={Colors.error} />
-                    </TouchableOpacity>
-                  )}
                 </View>
               )}
             />
@@ -568,32 +516,6 @@ export default function TeacherDetailScreen() {
           mode="edit"
         />
       )}
-
-      {/* Subject Picker Modal */}
-      <Modal visible={showSubjectPicker} animationType="slide" presentationStyle="pageSheet">
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>{t("detail.assignSubjectTitle")}</Text>
-            <TouchableOpacity onPress={() => setShowSubjectPicker(false)}>
-              <Ionicons name="close" size={24} color={Colors.text} />
-            </TouchableOpacity>
-          </View>
-          <FlatList
-            data={allSubjects}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={{ padding: Spacing.md }}
-            renderItem={({ item }) => (
-              <TouchableOpacity style={styles.pickerItem} onPress={() => handleAddSubject(item.id)}>
-                <Text style={styles.pickerName}>{item.name}</Text>
-                {item.code ? <Text style={styles.pickerDetail}>{item.code}</Text> : null}
-              </TouchableOpacity>
-            )}
-            ListEmptyComponent={
-              <Text style={styles.emptyText}>{t("detail.allSubjectsAssigned")}</Text>
-            }
-          />
-        </SafeAreaView>
-      </Modal>
 
       {/* Availability Modal */}
       <Modal visible={showAvailModal} animationType="slide" presentationStyle="formSheet">

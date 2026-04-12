@@ -51,6 +51,7 @@
     "experienceYears": "{{years}} वर्ष",
     "dateOfJoining": "जॉइनिंग तिथि",
     "subjectExpertise": "विषय विशेषज्ञता",
+    "subjectsReadOnlyHint": "ऐप में विषय विशेषज्ञता केवल देखने के लिए है। प्रबंधन वेब ऐडमिन से करें।",
     "add": "जोड़ें",
     "emptySubjects": "अभी कोई विषय नियुक्त नहीं।",
     "assignSubjectTitle": "विषय नियुक्त करें",

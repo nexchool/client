@@ -34,7 +34,6 @@
   },
   "shortcuts": {
     "classes": "વર્ગો",
-    "timetables": "સમયપત્રકો",
     "bellSchedules": "ઘંટડી સમય",
     "attendance": "હાજરી",
     "addStudent": "વિદ્યાર્થી ઉમેરો",
@@ -44,7 +43,6 @@
     "leaveRequests": "રજા વિનંતીઓ",
     "holidays": "રજાઓ",
     "todaysSchedule": "આજનું સમયપત્રક",
-    "weeklyTimetable": "સાપ્તાહિક સમયપત્રક",
     "markAttendance": "હાજરી નોંધો",
     "leaveTracker": "રજા ટ્રેકર",
     "academics": "શૈક્ષણિક",

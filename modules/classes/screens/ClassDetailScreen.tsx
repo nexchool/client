@@ -8,116 +8,56 @@ import {
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
-  Alert,
-  FlatList,
-  Modal,
-  TextInput,
+  RefreshControl,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useClasses } from "../hooks/useClasses";
-import { CreateClassModal } from "../components/CreateClassModal";
-import { CreateClassDTO } from "../types";
 import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
 import { useAuth } from "@/modules/auth/hooks/useAuth";
 import * as PERMS from "@/modules/permissions/constants/permissions";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
-import { Student } from "@/modules/students/types";
-import { Teacher } from "@/modules/teachers/types";
-import { subjectService } from "@/modules/subjects/services/subjectService";
-import { Subject } from "@/modules/subjects/types";
-import { ClassSubjectsPanel } from "@/modules/academics/components/class/ClassSubjectsPanel";
-import { SubjectTeachersPanel } from "@/modules/academics/components/class/SubjectTeachersPanel";
-import { ClassTeachersPanel } from "@/modules/academics/components/class/ClassTeachersPanel";
-import { ClassTimetableV2Panel } from "@/modules/academics/components/class/ClassTimetableV2Panel";
+import { ClassActiveTimetablePanel } from "@/modules/academics/components/class/ClassActiveTimetablePanel";
 import { ClassAttendancePanel } from "@/modules/academics/components/class/ClassAttendancePanel";
 
-type HubTab =
-  | "students"
-  // | "teachers"
-  | "subjects"
-  | "subjectTeachers"
-  | "classTeachers"
-  | "timetable"
-  | "attendance";
+type HubTab = "students" | "timetable" | "attendance";
+
+const TABS: { key: HubTab; label: string }[] = [
+  { key: "students", label: "Students" },
+  { key: "timetable", label: "Timetable" },
+  { key: "attendance", label: "Attendance" },
+];
 
 export default function ClassDetailScreen() {
   const { t } = useTranslation("classes");
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { isFeatureEnabled } = useAuth();
-  const {
-    currentClass,
-    loading,
-    fetchClassDetail,
-    updateClass,
-    assignStudent,
-    removeStudent,
-    assignTeacher,
-    removeTeacher,
-    fetchUnassignedStudents,
-    fetchUnassignedTeachers,
-    unassignedStudents,
-    unassignedTeachers,
-  } = useClasses();
+  const { currentClass, loading, fetchClassDetail } = useClasses();
   const { hasPermission } = usePermissions();
 
-  const canUpdate = hasPermission(PERMS.CLASS_UPDATE);
-  const canManage = hasPermission(PERMS.CLASS_MANAGE);
-  const canManageSubjects = canManage || hasPermission(PERMS.CLASS_SUBJECT_MANAGE);
-  const canViewSubjects =
-    hasPermission(PERMS.CLASS_SUBJECT_READ) || hasPermission(PERMS.CLASS_SUBJECT_MANAGE) || canManage;
-  const canSubjectTeachers =
-    isFeatureEnabled("timetable") && (hasPermission(PERMS.CLASS_SUBJECT_MANAGE) || canManage);
-  const canClassTeacherTab = hasPermission(PERMS.CLASS_READ) || hasPermission(PERMS.CLASS_TEACHER_MANAGE);
-  const canManageClassTeachers = hasPermission(PERMS.CLASS_TEACHER_MANAGE) || canManage;
-  const canTimetable = isFeatureEnabled("timetable") && (hasPermission(PERMS.TIMETABLE_READ) || hasPermission(PERMS.TIMETABLE_MANAGE));
-  const canManageTimetable = hasPermission(PERMS.TIMETABLE_MANAGE);
-  const canAttendanceMark = isFeatureEnabled("attendance") && hasPermission(PERMS.ATTENDANCE_MARK);
+  const canTimetable =
+    isFeatureEnabled("timetable") &&
+    (hasPermission(PERMS.TIMETABLE_READ) || hasPermission(PERMS.TIMETABLE_MANAGE));
+  const canAttendanceMark =
+    isFeatureEnabled("attendance") && hasPermission(PERMS.ATTENDANCE_MARK);
   const canAttendanceView =
     isFeatureEnabled("attendance") &&
     (hasPermission(PERMS.ATTENDANCE_READ_CLASS) ||
       hasPermission(PERMS.ATTENDANCE_READ_ALL) ||
       canAttendanceMark);
 
-  const tabDefinitions: { key: HubTab; label: string }[] = useMemo(
-    () => [
-      { key: "students", label: t("detail.tabs.students") },
-      { key: "subjects", label: t("detail.tabs.subjects") },
-      { key: "subjectTeachers", label: t("detail.tabs.subjectTeachers") },
-      { key: "classTeachers", label: t("detail.tabs.classTeachers") },
-      { key: "timetable", label: t("detail.tabs.timetable") },
-      { key: "attendance", label: t("detail.tabs.attendance") },
-    ],
-    [t],
-  );
-
   const visibleTabs = useMemo(() => {
-    return tabDefinitions.filter((tab) => {
-      if (tab.key === "subjects") return canViewSubjects;
-      if (tab.key === "subjectTeachers") return canSubjectTeachers;
-      if (tab.key === "classTeachers") return canClassTeacherTab;
+    return TABS.filter((tab) => {
       if (tab.key === "timetable") return canTimetable;
       if (tab.key === "attendance") return canAttendanceView;
       return true;
     });
-  }, [
-    tabDefinitions,
-    canViewSubjects,
-    canSubjectTeachers,
-    canClassTeacherTab,
-    canTimetable,
-    canAttendanceView,
-  ]);
+  }, [canTimetable, canAttendanceView]);
 
   const [tab, setTab] = useState<HubTab>("students");
-  const [showStudentPicker, setShowStudentPicker] = useState(false);
-  const [showTeacherPicker, setShowTeacherPicker] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [subjectsLoading, setSubjectsLoading] = useState(false);
-  const [selectedSubjectId, setSelectedSubjectId] = useState<string>("");
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     if (id) fetchClassDetail(id);
@@ -129,109 +69,14 @@ export default function ClassDetailScreen() {
     }
   }, [visibleTabs, tab]);
 
-  const handleAssignStudent = async (student: Student) => {
+  const onRefresh = async () => {
     if (!id) return;
+    setRefreshing(true);
     try {
-      await assignStudent(id, student.id);
-      setShowStudentPicker(false);
-      Alert.alert(t("list.success"), t("detail.studentAssigned", { name: student.name }));
-    } catch (err: any) {
-      Alert.alert(t("detail.errorTitle"), err.message || t("detail.assignStudentFailed"));
-    }
-  };
-
-  const handleRemoveStudent = (student: Student) => {
-    Alert.alert(
-      t("detail.removeStudentTitle"),
-      t("detail.removeStudentMessage", { name: student.name }),
-      [
-        { text: t("detail.cancel"), style: "cancel" },
-        {
-          text: t("detail.remove"),
-          style: "destructive",
-          onPress: async () => {
-            if (!id) return;
-            try {
-              await removeStudent(id, student.id);
-            } catch (err: any) {
-              Alert.alert(t("detail.errorTitle"), err.message);
-            }
-          },
-        },
-      ],
-    );
-  };
-
-  const handleAssignTeacher = async (teacher: Teacher) => {
-    if (!id) return;
-    if (!selectedSubjectId) {
-      Alert.alert(t("detail.selectSubjectTitle"), t("detail.selectSubjectFirst"));
-      return;
-    }
-    try {
-      await assignTeacher(id, teacher.id, selectedSubjectId);
-      setShowTeacherPicker(false);
-      setSelectedSubjectId("");
-      Alert.alert(t("list.success"), t("detail.teacherAssigned", { name: teacher.name }));
-    } catch (err: any) {
-      Alert.alert(t("detail.errorTitle"), err.message || t("detail.assignTeacherFailed"));
-    }
-  };
-
-  const handleRemoveTeacher = (teacherId: string, teacherName: string) => {
-    Alert.alert(
-      t("detail.removeTeacherTitle"),
-      t("detail.removeTeacherMessage", { name: teacherName }),
-      [
-        { text: t("detail.cancel"), style: "cancel" },
-        {
-          text: t("detail.remove"),
-          style: "destructive",
-          onPress: async () => {
-            if (!id) return;
-            try {
-              await removeTeacher(id, teacherId);
-            } catch (err: any) {
-              Alert.alert(t("detail.errorTitle"), err.message);
-            }
-          },
-        },
-      ],
-    );
-  };
-
-  const openStudentPicker = async () => {
-    if (!id) return;
-    await fetchUnassignedStudents(id);
-    setShowStudentPicker(true);
-  };
-
-  const handleUpdateClass = async (data: CreateClassDTO) => {
-    if (!id) return;
-    try {
-      await updateClass(id, data);
-      setShowEditModal(false);
-      Alert.alert(t("list.success"), t("detail.updated"));
-      fetchClassDetail(id);
-    } catch (err: any) {
-      throw err;
-    }
-  };
-
-  const openTeacherPicker = async () => {
-    if (!id) return;
-    setSelectedSubjectId("");
-    setSubjectsLoading(true);
-    try {
-      const subs = await subjectService.getSubjects();
-      setSubjects(subs);
-    } catch {
-      setSubjects([]);
+      await fetchClassDetail(id);
     } finally {
-      setSubjectsLoading(false);
+      setRefreshing(false);
     }
-    await fetchUnassignedTeachers(id);
-    setShowTeacherPicker(true);
   };
 
   if (loading && !currentClass) {
@@ -265,63 +110,60 @@ export default function ClassDetailScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backIcon}>
           <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{classLabel}</Text>
-        {canUpdate && (
-          <TouchableOpacity style={styles.editIcon} onPress={() => setShowEditModal(true)}>
-            <Ionicons name="create-outline" size={24} color={Colors.primary} />
-          </TouchableOpacity>
-        )}
+        <View style={styles.headerTextBlock}>
+          <Text style={styles.headerTitle}>{classLabel}</Text>
+          <Text style={styles.headerSub}>{currentClass.academic_year}</Text>
+        </View>
       </View>
 
-      <ScrollView style={styles.content} nestedScrollEnabled>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t("detail.classInfo")}</Text>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>{t("detail.academicYear")}</Text>
-            <Text style={styles.value}>{currentClass.academic_year}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>{t("detail.legacyClassTeacher")}</Text>
-            <Text style={styles.value}>{currentClass.teacher_name || t("detail.dash")}</Text>
-          </View>
-          <View style={styles.statsRow}>
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>{currentClass.student_count || 0}</Text>
-              <Text style={styles.statLabel}>{t("detail.students")}</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>{currentClass.teacher_count || 0}</Text>
-              <Text style={styles.statLabel}>{t("detail.teachers")}</Text>
-            </View>
+      <ScrollView
+        style={styles.content}
+        nestedScrollEnabled
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />
+        }
+      >
+        {/* Class teacher + grade level info */}
+        <View style={styles.infoRow}>
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Class Teacher</Text>
+            <Text style={styles.infoValue}>
+              {currentClass.teacher_name || "—"}
+            </Text>
           </View>
         </View>
 
+        {/* Stats row */}
+        <View style={styles.statsRow}>
+          <View style={styles.statCard}>
+            <Text style={styles.statNumber}>{currentClass.student_count || 0}</Text>
+            <Text style={styles.statLabel}>{t("detail.students")}</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statNumber}>{currentClass.teacher_count || 0}</Text>
+            <Text style={styles.statLabel}>{t("detail.teachers")}</Text>
+          </View>
+        </View>
+
+        {/* Tab bar */}
         <View style={styles.tabBar}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {visibleTabs.map((t) => (
-              <TouchableOpacity
-                key={t.key}
-                style={[styles.tabChip, tab === t.key && styles.tabChipActive]}
-                onPress={() => setTab(t.key)}
-              >
-                <Text style={[styles.tabChipTxt, tab === t.key && styles.tabChipTxtActive]}>{t.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+          {visibleTabs.map((tabDef) => (
+            <TouchableOpacity
+              key={tabDef.key}
+              style={[styles.tabChip, tab === tabDef.key && styles.tabChipActive]}
+              onPress={() => setTab(tabDef.key)}
+            >
+              <Text style={[styles.tabChipTxt, tab === tabDef.key && styles.tabChipTxtActive]}>
+                {tabDef.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
+        {/* Tab content */}
         <View style={styles.tabBody}>
           {tab === "students" && (
             <View>
-              <View style={styles.rowHeader}>
-                <Text style={styles.panelTitle}>{t("detail.panelStudents")}</Text>
-                {canUpdate && (
-                  <TouchableOpacity style={styles.addSmallBtn} onPress={openStudentPicker}>
-                    <Ionicons name="add" size={20} color={Colors.primary} />
-                    <Text style={styles.addSmallBtnText}>{t("detail.add")}</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
               {currentClass.students && currentClass.students.length > 0 ? (
                 currentClass.students.map((student) => (
                   <View key={student.id} style={styles.listItem}>
@@ -329,11 +171,6 @@ export default function ClassDetailScreen() {
                       <Text style={styles.listItemName}>{student.name}</Text>
                       <Text style={styles.listItemDetail}>{student.admission_number}</Text>
                     </View>
-                    {canUpdate && (
-                      <TouchableOpacity onPress={() => handleRemoveStudent(student)}>
-                        <Ionicons name="close-circle-outline" size={22} color={Colors.error} />
-                      </TouchableOpacity>
-                    )}
                   </View>
                 ))
               ) : (
@@ -342,53 +179,7 @@ export default function ClassDetailScreen() {
             </View>
           )}
 
-          {/* {tab === "teachers" && (
-            <View>
-              <View style={styles.rowHeader}>
-                <Text style={styles.panelTitle}>Teachers</Text>
-                {canUpdate && (
-                  <TouchableOpacity style={styles.addSmallBtn} onPress={openTeacherPicker}>
-                    <Ionicons name="add" size={20} color={Colors.primary} />
-                    <Text style={styles.addSmallBtnText}>Add</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-              {currentClass.teachers && currentClass.teachers.length > 0 ? (
-                currentClass.teachers.map((ct) => (
-                  <View key={ct.id} style={styles.listItem}>
-                    <View style={styles.listItemInfo}>
-                      <Text style={styles.listItemName}>{ct.teacher_name}</Text>
-                      <Text style={styles.listItemDetail}>
-                        {ct.teacher_employee_id}
-                        {ct.subject_name || ct.subject ? ` — ${ct.subject_name || ct.subject}` : ""}
-                      </Text>
-                    </View>
-                    {canUpdate && (
-                      <TouchableOpacity onPress={() => handleRemoveTeacher(ct.teacher_id, ct.teacher_name)}>
-                        <Ionicons name="close-circle-outline" size={22} color={Colors.error} />
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                ))
-              ) : (
-                <Text style={styles.emptyText}>No teachers assigned</Text>
-              )}
-            </View>
-          )} */}
-
-          {tab === "subjects" && id && (
-            <ClassSubjectsPanel classId={id} canManage={canManageSubjects} />
-          )}
-
-          {tab === "subjectTeachers" && id && (
-            <SubjectTeachersPanel classId={id} canManage={canSubjectTeachers} />
-          )}
-
-          {tab === "classTeachers" && id && (
-            <ClassTeachersPanel classId={id} canManage={canManageClassTeachers} />
-          )}
-
-          {tab === "timetable" && id && <ClassTimetableV2Panel classId={id} canManage={canManageTimetable} />}
+          {tab === "timetable" && id && <ClassActiveTimetablePanel classId={id} />}
 
           {tab === "attendance" && id && (
             <ClassAttendancePanel
@@ -400,114 +191,6 @@ export default function ClassDetailScreen() {
           )}
         </View>
       </ScrollView>
-
-      <Modal visible={showStudentPicker} animationType="slide" presentationStyle="pageSheet">
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>{t("detail.addStudentTitle")}</Text>
-            <TouchableOpacity onPress={() => setShowStudentPicker(false)}>
-              <Ionicons name="close" size={24} color={Colors.text} />
-            </TouchableOpacity>
-          </View>
-          <FlatList
-            data={unassignedStudents}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={{ padding: Spacing.md }}
-            renderItem={({ item }) => (
-              <TouchableOpacity style={styles.pickerItem} onPress={() => handleAssignStudent(item)}>
-                <Text style={styles.pickerName}>{item.name}</Text>
-                <Text style={styles.pickerDetail}>{item.admission_number}</Text>
-              </TouchableOpacity>
-            )}
-            ListEmptyComponent={
-              <View style={styles.center}>
-                <Text style={styles.emptyText}>{t("detail.noUnassignedStudents")}</Text>
-              </View>
-            }
-          />
-        </SafeAreaView>
-      </Modal>
-
-      {canUpdate && (
-        <CreateClassModal
-          visible={showEditModal}
-          onClose={() => setShowEditModal(false)}
-          onSubmit={handleUpdateClass}
-          initialData={{
-            name: currentClass.name,
-            section: currentClass.section,
-            academic_year_id: currentClass.academic_year_id ?? "",
-            teacher_id: currentClass.teacher_id,
-            start_date: currentClass.start_date,
-            end_date: currentClass.end_date,
-            grade_level: currentClass.grade_level ?? null,
-          }}
-          classId={id}
-        />
-      )}
-
-      <Modal visible={showTeacherPicker} animationType="slide" presentationStyle="pageSheet">
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>{t("detail.addTeacherTitle")}</Text>
-            <TouchableOpacity
-              onPress={() => {
-                setShowTeacherPicker(false);
-                setSelectedSubjectId("");
-              }}
-            >
-              <Ionicons name="close" size={24} color={Colors.text} />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.subjectSection}>
-            <Text style={styles.subjectLabel}>{t("detail.selectSubjectStep")}</Text>
-            {subjectsLoading ? (
-              <ActivityIndicator size="small" color={Colors.primary} style={{ marginVertical: Spacing.md }} />
-            ) : (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.subjectChips}>
-                {subjects.map((s) => (
-                  <TouchableOpacity
-                    key={s.id}
-                    style={[styles.subjectChip, selectedSubjectId === s.id && styles.subjectChipActive]}
-                    onPress={() => setSelectedSubjectId(s.id)}
-                  >
-                    <Text
-                      style={[styles.subjectChipText, selectedSubjectId === s.id && styles.subjectChipTextActive]}
-                    >
-                      {s.name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-                {!subjectsLoading && subjects.length === 0 && (
-                  <Text style={styles.subjectEmpty}>{t("detail.noSubjectsCreateFirst")}</Text>
-                )}
-              </ScrollView>
-            )}
-          </View>
-          <View style={styles.teacherSection}>
-            <Text style={styles.subjectLabel}>{t("detail.selectTeacherStep")}</Text>
-          </View>
-          <FlatList
-            data={unassignedTeachers}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={{ padding: Spacing.md }}
-            renderItem={({ item }) => (
-              <TouchableOpacity style={styles.pickerItem} onPress={() => handleAssignTeacher(item)}>
-                <Text style={styles.pickerName}>{item.name}</Text>
-                <Text style={styles.pickerDetail}>
-                  {item.employee_id}
-                  {item.department ? ` - ${item.department}` : ""}
-                </Text>
-              </TouchableOpacity>
-            )}
-            ListEmptyComponent={
-              <View style={styles.center}>
-                <Text style={styles.emptyText}>{t("detail.noAvailableTeachers")}</Text>
-              </View>
-            }
-          />
-        </SafeAreaView>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -518,85 +201,86 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    padding: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
   },
-  backIcon: { padding: Spacing.sm },
-  headerTitle: { flex: 1, fontSize: 20, fontWeight: "bold", color: Colors.text, marginLeft: Spacing.md },
-  editIcon: { padding: Spacing.sm },
-  content: { flex: 1, padding: Spacing.lg },
-  section: {
-    marginBottom: Spacing.lg,
-    backgroundColor: Colors.background,
-    borderRadius: Layout.borderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    padding: Spacing.lg,
+  backIcon: { padding: Spacing.sm, marginRight: Spacing.sm },
+  headerTextBlock: { flex: 1 },
+  headerTitle: { fontSize: 20, fontWeight: "700", color: Colors.text },
+  headerSub: { fontSize: 13, color: Colors.textSecondary, marginTop: 2 },
+  content: { flex: 1 },
+  infoRow: {
+    flexDirection: "row",
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
+    gap: Spacing.lg,
   },
-  sectionTitle: { fontSize: 16, fontWeight: "700", marginBottom: Spacing.md, color: Colors.text },
-  infoRow: { marginBottom: Spacing.sm },
-  label: { fontSize: 14, color: Colors.textSecondary, marginBottom: 4 },
-  value: { fontSize: 16, fontWeight: "500", color: Colors.text },
-  statsRow: { flexDirection: "row", gap: Spacing.md, marginTop: Spacing.sm },
+  infoItem: { flex: 1 },
+  infoLabel: { fontSize: 11, color: Colors.textSecondary, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 3 },
+  infoValue: { fontSize: 14, fontWeight: "600", color: Colors.text },
+  statsRow: {
+    flexDirection: "row",
+    gap: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.sm,
+  },
   statCard: {
     flex: 1,
     backgroundColor: Colors.backgroundSecondary,
     padding: Spacing.md,
     borderRadius: Layout.borderRadius.md,
     alignItems: "center",
-  },
-  statNumber: { fontSize: 24, fontWeight: "700", color: Colors.text },
-  statLabel: { fontSize: 13, color: Colors.textSecondary, marginTop: 4 },
-  tabBar: { marginBottom: Spacing.md },
-  tabChip: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: 20,
     borderWidth: 1,
     borderColor: Colors.borderLight,
-    marginRight: Spacing.sm,
-    backgroundColor: Colors.backgroundSecondary,
   },
-  tabChipActive: { borderColor: Colors.primary, backgroundColor: Colors.primary + "18" },
+  statNumber: { fontSize: 24, fontWeight: "700", color: Colors.text },
+  statLabel: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
+  tabBar: {
+    flexDirection: "row",
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    gap: Spacing.sm,
+  },
+  tabChip: {
+    flex: 1,
+    paddingVertical: Spacing.sm,
+    borderRadius: Layout.borderRadius.sm,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    backgroundColor: Colors.backgroundSecondary,
+    alignItems: "center",
+  },
+  tabChipActive: {
+    borderColor: Colors.primary,
+    backgroundColor: Colors.primary + "18",
+  },
   tabChipTxt: { fontSize: 13, fontWeight: "600", color: Colors.textSecondary },
   tabChipTxtActive: { color: Colors.primary },
   tabBody: {
-    minHeight: 420,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    borderRadius: Layout.borderRadius.md,
-    padding: Spacing.lg,
-    marginBottom: Spacing.xl,
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.xl + Spacing.lg,
+    minHeight: 400,
   },
-  rowHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+  panelTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: Colors.textSecondary,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
     marginBottom: Spacing.md,
   },
-  panelTitle: { fontSize: 16, fontWeight: "700" },
-  addSmallBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Colors.backgroundSecondary,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    borderRadius: Layout.borderRadius.sm,
-    gap: 4,
-  },
-  addSmallBtnText: { fontSize: 14, color: Colors.primary, fontWeight: "500" },
   listItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: Spacing.sm,
+    paddingVertical: Spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
   },
   listItemInfo: { flex: 1 },
   listItemName: { fontSize: 15, fontWeight: "500", color: Colors.text },
-  listItemDetail: { fontSize: 13, color: Colors.textSecondary },
-  emptyText: { fontSize: 14, color: Colors.textSecondary, fontStyle: "italic" },
+  listItemDetail: { fontSize: 13, color: Colors.textSecondary, marginTop: 2 },
+  emptyText: { fontSize: 14, color: Colors.textSecondary, fontStyle: "italic", marginTop: Spacing.lg },
   errorText: { fontSize: 16, color: Colors.error, textAlign: "center", marginBottom: Spacing.lg },
   backBtn: {
     backgroundColor: Colors.primary,
@@ -605,42 +289,4 @@ const styles = StyleSheet.create({
     borderRadius: Layout.borderRadius.md,
   },
   backBtnText: { color: "#FFFFFF", fontSize: 16, fontWeight: "600" },
-  modalContainer: { flex: 1, backgroundColor: Colors.background },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  modalTitle: { fontSize: 18, fontWeight: "600", color: Colors.text },
-  subjectSection: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  subjectLabel: { fontSize: 14, fontWeight: "500", color: Colors.text, marginBottom: Spacing.sm },
-  subjectChips: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.sm },
-  subjectChip: {
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    borderRadius: Layout.borderRadius.sm,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    backgroundColor: Colors.backgroundSecondary,
-  },
-  subjectChipActive: { borderColor: Colors.primary, backgroundColor: Colors.primary + "20" },
-  subjectChipText: { fontSize: 14, color: Colors.text },
-  subjectChipTextActive: { color: Colors.primary, fontWeight: "600" },
-  subjectEmpty: { fontSize: 14, color: Colors.textSecondary, fontStyle: "italic", paddingVertical: Spacing.sm },
-  teacherSection: { paddingHorizontal: Spacing.lg, paddingTop: Spacing.md },
-  pickerItem: {
-    padding: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  pickerName: { fontSize: 16, fontWeight: "500", color: Colors.text },
-  pickerDetail: { fontSize: 13, color: Colors.textSecondary, marginTop: 2 },
 });

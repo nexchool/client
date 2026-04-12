@@ -51,6 +51,7 @@
     "experienceYears": "{{years}} years",
     "dateOfJoining": "Date of joining",
     "subjectExpertise": "Subject expertise",
+    "subjectsReadOnlyHint": "Subject expertise is view-only in the app. Manage subjects in the admin web (Settings → Subject catalog) if you have access.",
     "add": "Add",
     "emptySubjects": "No subjects assigned yet.",
     "assignSubjectTitle": "Assign subject",

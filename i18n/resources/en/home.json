@@ -34,7 +34,6 @@
   },
   "shortcuts": {
     "classes": "Classes",
-    "timetables": "Timetables",
     "bellSchedules": "Bell schedules",
     "attendance": "Attendance",
     "addStudent": "Add student",
@@ -44,7 +43,6 @@
     "leaveRequests": "Leave requests",
     "holidays": "Holidays",
     "todaysSchedule": "Today's schedule",
-    "weeklyTimetable": "Weekly timetable",
     "markAttendance": "Mark attendance",
     "leaveTracker": "Leave tracker",
     "academics": "Academics",

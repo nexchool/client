@@ -214,16 +214,6 @@ export default function ProtectedHomeScreen() {
                 </Protected>
               )}
               {isFeatureEnabled("timetable") && (
-                <Protected anyPermissions={[PERMS.TIMETABLE_READ, PERMS.TIMETABLE_MANAGE]}>
-                  <ActionCard
-                    icon="calendar-outline"
-                    label={t("home:shortcuts.timetables")}
-                    onPress={() => router.push("/(protected)/timetable" as any)}
-                    color="#8b5cf6"
-                  />
-                </Protected>
-              )}
-              {isFeatureEnabled("timetable") && (
                 <Protected anyPermissions={[PERMS.ACADEMICS_MANAGE, PERMS.TIMETABLE_MANAGE]}>
                   <ActionCard
                     icon="alarm-outline"
@@ -254,24 +244,16 @@ export default function ProtectedHomeScreen() {
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>{t("home:sections.teachingToday")}</Text>
               <TeacherTodayStrip />
-              <View style={styles.actionsGrid}>
-                {isFeatureEnabled("timetable") && (
+              {isFeatureEnabled("timetable") && (
+                <View style={styles.actionsGrid}>
                   <ActionCard
                     icon="time-outline"
                     label={t("home:shortcuts.todaysSchedule")}
                     onPress={() => router.push("/(protected)/schedule/today" as any)}
                     color="#6366f1"
                   />
-                )}
-                {isFeatureEnabled("class_management") && (
-                  <ActionCard
-                    icon="calendar-outline"
-                    label={t("home:shortcuts.weeklyTimetable")}
-                    onPress={() => router.push("/(protected)/timetable" as any)}
-                    color="#8b5cf6"
-                  />
-                )}
-              </View>
+                </View>
+              )}
             </View>
           )}
         </Protected>

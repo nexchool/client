@@ -7,8 +7,6 @@ import enProfile from "./resources/en/profile.json";
 import enStudents from "./resources/en/students.json";
 import enTeachers from "./resources/en/teachers.json";
 import enClasses from "./resources/en/classes.json";
-import enSubjects from "./resources/en/subjects.json";
-import enTimetable from "./resources/en/timetable.json";
 import enAttendance from "./resources/en/attendance.json";
 import enTeacherLeaves from "./resources/en/teacherLeaves.json";
 import enFinance from "./resources/en/finance.json";
@@ -23,8 +21,6 @@ import guProfile from "./resources/gu/profile.json";
 import guStudents from "./resources/gu/students.json";
 import guTeachers from "./resources/gu/teachers.json";
 import guClasses from "./resources/gu/classes.json";
-import guSubjects from "./resources/gu/subjects.json";
-import guTimetable from "./resources/gu/timetable.json";
 import guAttendance from "./resources/gu/attendance.json";
 import guTeacherLeaves from "./resources/gu/teacherLeaves.json";
 import guFinance from "./resources/gu/finance.json";
@@ -39,8 +35,6 @@ import hiProfile from "./resources/hi/profile.json";
 import hiStudents from "./resources/hi/students.json";
 import hiTeachers from "./resources/hi/teachers.json";
 import hiClasses from "./resources/hi/classes.json";
-import hiSubjects from "./resources/hi/subjects.json";
-import hiTimetable from "./resources/hi/timetable.json";
 import hiAttendance from "./resources/hi/attendance.json";
 import hiTeacherLeaves from "./resources/hi/teacherLeaves.json";
 import hiFinance from "./resources/hi/finance.json";
@@ -65,8 +59,6 @@ export const I18N_NAMESPACES = [
   "students",
   "teachers",
   "classes",
-  "subjects",
-  "timetable",
   "attendance",
   "teacherLeaves",
   "finance",
@@ -86,8 +78,6 @@ export const resources = {
     students: enStudents,
     teachers: enTeachers,
     classes: enClasses,
-    subjects: enSubjects,
-    timetable: enTimetable,
     attendance: enAttendance,
     teacherLeaves: enTeacherLeaves,
     finance: enFinance,
@@ -104,8 +94,6 @@ export const resources = {
     students: guStudents,
     teachers: guTeachers,
     classes: guClasses,
-    subjects: guSubjects,
-    timetable: guTimetable,
     attendance: guAttendance,
     teacherLeaves: guTeacherLeaves,
     finance: guFinance,
@@ -122,8 +110,6 @@ export const resources = {
     students: hiStudents,
     teachers: hiTeachers,
     classes: hiClasses,
-    subjects: hiSubjects,
-    timetable: hiTimetable,
     attendance: hiAttendance,
     teacherLeaves: hiTeacherLeaves,
     finance: hiFinance,
