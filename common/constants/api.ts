@@ -43,6 +43,8 @@ export const API_ENDPOINTS = {
   PROTECTED: '/api/protected',
   /** Lightweight: returns only { enabled_features }. Use on app focus to reflect plan changes. */
   ENABLED_FEATURES: '/api/auth/enabled-features',
+  /** Full session snapshot: user, permissions, enabled_features (same as admin GET /profile). */
+  PROFILE: '/api/auth/profile',
 } as const;
 
 /**

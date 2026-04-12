@@ -37,8 +37,11 @@ import {
   unregisterDevicePushNotifications,
 } from "@/modules/devices/pushRegistration";
 
-/** Min interval (ms) between enabled-features refresh when app comes to foreground. Avoids overloading server. */
-const ENABLED_FEATURES_REFRESH_THROTTLE_MS = 60_000;
+/**
+ * Min interval (ms) between GET /profile refreshes when app is opened or returns to foreground.
+ * Keeps name, photo, permissions, and plan features in sync with server (e.g. admin updated profile on web).
+ */
+const AUTH_SNAPSHOT_REFRESH_THROTTLE_MS = 60_000;
 
 interface User {
   id: number | string;
@@ -97,29 +100,42 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   } | null>(null);
   const [tenantName, setTenantNameState] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const lastEnabledFeaturesRefreshRef = useRef(0);
+  const lastAuthSnapshotRefreshRef = useRef(0);
 
-  // Refresh enabled_features from server so plan changes in super admin panel take effect.
-  // 1) On every app load / reload (Expo or production): fetch once when user is set and app is active.
-  // 2) When app returns to foreground: fetch again (throttled) so changes made while in background apply.
+  // Refresh user + permissions + enabled_features from GET /profile so admin-side edits (name, photo)
+  // and plan/permission changes apply after cold start or when returning from background — without re-login.
   useEffect(() => {
     if (!user) return;
 
-    const refreshEnabledFeaturesIfNeeded = async () => {
+    const refreshAuthSnapshotIfNeeded = async () => {
       const now = Date.now();
-      if (lastEnabledFeaturesRefreshRef.current > 0 && now - lastEnabledFeaturesRefreshRef.current < ENABLED_FEATURES_REFRESH_THROTTLE_MS) {
+      if (
+        lastAuthSnapshotRefreshRef.current > 0 &&
+        now - lastAuthSnapshotRefreshRef.current < AUTH_SNAPSHOT_REFRESH_THROTTLE_MS
+      ) {
         return;
       }
       try {
-        const data = await apiGet<{ enabled_features?: string[] }>(
-          API_ENDPOINTS.ENABLED_FEATURES
-        );
-        const features = Array.isArray(data?.enabled_features) ? data.enabled_features : [];
-        lastEnabledFeaturesRefreshRef.current = now;
-        await setEnabledFeatures(features);
-        setEnabledFeaturesState(features);
+        const data = await apiGet<{
+          user?: User;
+          permissions?: string[];
+          enabled_features?: string[];
+        }>(API_ENDPOINTS.PROFILE);
+        lastAuthSnapshotRefreshRef.current = now;
+        if (data.user) {
+          await setUserData(data.user);
+          setUser(data.user);
+        }
+        if (Array.isArray(data.permissions)) {
+          await setPermissions(data.permissions);
+          setPermissionsState(data.permissions);
+        }
+        if (Array.isArray(data.enabled_features)) {
+          await setEnabledFeatures(data.enabled_features);
+          setEnabledFeaturesState(data.enabled_features);
+        }
       } catch {
-        // Ignore (offline, 401, etc.) – keep existing enabled_features
+        // Offline, 401, etc. — keep cached session
       }
     };
 
@@ -127,15 +143,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       "change",
       (nextState: AppStateStatus) => {
         if (nextState === "active") {
-          refreshEnabledFeaturesIfNeeded();
+          refreshAuthSnapshotIfNeeded();
         }
       }
     );
 
-    // On mount/reload app is already "active" – AppState "change" only fires when going background→foreground.
-    // So fetch once now so Expo reload / cold start gets latest enabled_features without logout.
     if (AppState.currentState === "active") {
-      refreshEnabledFeaturesIfNeeded();
+      refreshAuthSnapshotIfNeeded();
     }
 
     return () => subscription.remove();
@@ -204,8 +218,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     setTenantNameState(data.tenant_name ?? null);
     setPermissionsState(data.permissions || []);
     setEnabledFeaturesState(features);
-    // Avoid redundant enabled-features fetch right after login (we already have fresh data)
-    lastEnabledFeaturesRefreshRef.current = Date.now();
+    // Avoid redundant GET /profile right after login (response already has fresh user + features)
+    lastAuthSnapshotRefreshRef.current = Date.now();
   };
 
   const login = async (email: string, password: string) => {
