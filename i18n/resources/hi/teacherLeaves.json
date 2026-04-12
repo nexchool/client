@@ -97,6 +97,8 @@
     "addHoliday": "छुट्टी जोड़ें",
     "myData": "मेरा डेटा",
     "holidays": "छुट्टियाँ",
+    "holidaysReadOnlyTitle": "स्कूल कैलेंडर",
+    "holidaysReadOnlySub": "चुने हुए वर्ष की छुट्टियाँ और साप्ताहिक अवकाश। रिफ़्रेश करने के लिए नीचे खींचें।",
     "dataTabs": {
       "summary": "सारांश",
       "balance": "शेष",

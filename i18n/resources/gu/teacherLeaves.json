@@ -97,6 +97,8 @@
     "addHoliday": "રજા ઉમેરો",
     "myData": "મારો ડેટા",
     "holidays": "રજાઓ",
+    "holidaysReadOnlyTitle": "શાળા કૅલેન્ડર",
+    "holidaysReadOnlySub": "પસંદ કરેલ વર્ષ માટે રજાઓ અને સાપ્તાહિક રજા. રિફ્રેશ કરવા નીચે ખેંચો.",
     "dataTabs": {
       "summary": "સારાંશ",
       "balance": "બેલેન્સ",

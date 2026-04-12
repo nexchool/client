@@ -97,6 +97,8 @@
     "addHoliday": "Add Holiday",
     "myData": "My Data",
     "holidays": "Holidays",
+    "holidaysReadOnlyTitle": "School calendar",
+    "holidaysReadOnlySub": "Holidays and weekly offs for the selected year. Pull down to refresh.",
     "dataTabs": {
       "summary": "Summary",
       "balance": "Balance",

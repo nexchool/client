@@ -22,9 +22,8 @@ import { Spacing, Layout } from "@/common/constants/spacing";
 import { useTeacherLeaves } from "@/modules/teachers/hooks/useTeacherLeaves";
 import { TeacherLeave, LeaveBalance, LEAVE_TYPES } from "@/modules/teachers/types";
 import { holidayService } from "@/modules/holidays/services/holidayService";
-import { Holiday, CreateHolidayDTO } from "@/modules/holidays/types";
+import { Holiday } from "@/modules/holidays/types";
 import { useHolidays } from "@/modules/holidays/hooks/useHolidays";
-import { HolidayFormModal } from "@/modules/holidays/components/HolidayFormModal";
 import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
 import * as PERMS from "@/modules/permissions/constants/permissions";
 import { DateField } from "@/common/components/DateField";
@@ -283,12 +282,7 @@ const lr = StyleSheet.create({
 // ---------------------------------------------------------------------------
 // Holiday Row
 // ---------------------------------------------------------------------------
-interface HolidayRowProps {
-  h: Holiday;
-  onEdit?: (h: Holiday) => void;
-  onDelete?: (h: Holiday) => void;
-}
-function HolidayRow({ h, onEdit, onDelete }: HolidayRowProps) {
+function HolidayRow({ h }: { h: Holiday }) {
   const { t, i18n } = useTranslation("teacherLeaves");
   const dateLoc = calendarLocaleForLanguage(i18n.language ?? "en");
   const [c1] = avatarColors(h.name);
@@ -300,72 +294,53 @@ function HolidayRow({ h, onEdit, onDelete }: HolidayRowProps) {
     : `${fmtDate(h.start_date!, dateLoc)} – ${fmtDate(h.end_date!, dateLoc)}`;
 
   return (
-    <View style={hr.row}>
+    <View style={hr.card}>
       <View style={[hr.avatar, { backgroundColor: c1 }]}>
         <Text style={hr.avatarText}>{abbr}</Text>
       </View>
-      <View style={{ flex: 1 }}>
-        <Text style={hr.name}>{h.name}</Text>
+      <View style={hr.body}>
+        <Text style={hr.name} numberOfLines={2}>{h.name}</Text>
         <Text style={hr.date}>{dateLabel}</Text>
-      </View>
-      {onEdit || onDelete ? (
-        <View style={hr.actions}>
-          {onEdit && (
-            <TouchableOpacity style={hr.actionBtn} onPress={() => onEdit(h)}>
-              <Ionicons name="pencil-outline" size={15} color={Colors.textSecondary} />
-            </TouchableOpacity>
-          )}
-          {onDelete && (
-            <TouchableOpacity style={hr.actionBtn} onPress={() => onDelete(h)}>
-              <Ionicons name="trash-outline" size={15} color={Colors.error} />
-            </TouchableOpacity>
-          )}
-        </View>
-      ) : (
         <View style={hr.typeBadge}>
           <Text style={hr.typeText}>{t(`holidayForm.types.${h.holiday_type}`)}</Text>
         </View>
-      )}
+      </View>
     </View>
   );
 }
 const hr = StyleSheet.create({
-  row: {
+  card: {
     flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-    gap: Spacing.md,
+    alignItems: "flex-start",
+    marginHorizontal: Spacing.lg,
+    marginBottom: 10,
+    padding: 12,
+    borderRadius: Layout.borderRadius.md,
+    backgroundColor: Colors.background,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: Colors.borderLight,
+    gap: 12,
   },
+  body: { flex: 1, gap: 4 },
   avatar: {
-    width: 44,
-    height: 44,
+    width: 40,
+    height: 40,
     borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",
   },
-  avatarText: { fontSize: 14, fontWeight: "800", color: "#fff" },
-  name: { fontSize: 14, fontWeight: "600", color: Colors.text },
-  date: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
+  avatarText: { fontSize: 13, fontWeight: "700", color: "#fff" },
+  name: { fontSize: 15, fontWeight: "600", color: Colors.text, letterSpacing: -0.2 },
+  date: { fontSize: 13, color: Colors.textSecondary },
   typeBadge: {
+    alignSelf: "flex-start",
+    marginTop: 4,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 4,
+    borderRadius: 6,
     backgroundColor: Colors.backgroundSecondary,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
   },
-  typeText: { fontSize: 10, color: Colors.textSecondary, fontWeight: "600" },
-  actions: { flexDirection: "row", gap: 4 },
-  actionBtn: {
-    padding: 7,
-    borderRadius: 8,
-    backgroundColor: Colors.backgroundSecondary,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-  },
+  typeText: { fontSize: 11, color: Colors.textSecondary, fontWeight: "600" },
 });
 
 // ---------------------------------------------------------------------------
@@ -686,9 +661,7 @@ const am = StyleSheet.create({
 // ---------------------------------------------------------------------------
 export default function LeaveTrackerScreen() {
   const { t } = useTranslation("teacherLeaves");
-  const { hasAnyPermission, permissions: rawPerms } = usePermissions();
-  const canManageHolidays = hasAnyPermission([PERMS.HOLIDAY_MANAGE, PERMS.HOLIDAY_CREATE]);
-  const canDeleteHolidays = hasAnyPermission([PERMS.HOLIDAY_MANAGE, PERMS.HOLIDAY_DELETE]);
+  const { permissions: rawPerms } = usePermissions();
   // Use raw permissions (not hierarchical) — admins have system.manage which would otherwise
   // expand to grant teacher.leave.apply, wrongly showing them the leave-application flow.
   const canApplyLeave = rawPerms.includes(PERMS.TEACHER_LEAVE_APPLY) &&
@@ -708,7 +681,6 @@ export default function LeaveTrackerScreen() {
     loading: holLoading,
     fetchHolidays: hookFetchHolidays,
     fetchRecurring: hookFetchRecurring,
-    createHoliday, updateHoliday, deleteHoliday,
   } = useHolidays();
 
   // Top-level: My Data  |  Holidays
@@ -724,8 +696,6 @@ export default function LeaveTrackerScreen() {
 
   // Holidays
   const [holYear, setHolYear] = useState(new Date().getFullYear());
-  const [holModalVisible, setHolModalVisible] = useState(false);
-  const [holEditTarget, setHolEditTarget] = useState<Holiday | null>(null);
 
   // Combine + filter weekly_off for display
   const holidays = [...hookHolidays, ...hookRecurring].filter(h => h.holiday_type !== 'weekly_off');
@@ -754,35 +724,7 @@ export default function LeaveTrackerScreen() {
     hookFetchRecurring();
   }, [hookFetchHolidays, hookFetchRecurring]);
 
-  useEffect(() => { if (topTab === "holidays") loadHolidays(holYear); }, [topTab, holYear]);
-
-  const handleHolSubmit = async (data: CreateHolidayDTO) => {
-    try {
-      if (holEditTarget) {
-        const updated = await updateHoliday(holEditTarget.id, data);
-        if ((updated as any).warning) Alert.alert(t("tracker.alerts.holidayUpdated"), (updated as any).warning);
-      } else {
-        const created = await createHoliday(data);
-        if ((created as any).warning) Alert.alert(t("tracker.alerts.holidayAdded"), (created as any).warning);
-      }
-      setHolModalVisible(false);
-    } catch (err: any) { throw err; }
-  };
-
-  const handleHolDelete = (h: Holiday) => {
-    Alert.alert(
-      t("tracker.alerts.deleteHolidayTitle"),
-      t("tracker.alerts.deleteHolidayMessage", { name: h.name }),
-      [
-        { text: t("tracker.alerts.cancel"), style: "cancel" },
-        { text: t("tracker.alerts.delete"), style: "destructive", onPress: async () => {
-            try { await deleteHoliday(h.id, h.is_recurring); }
-            catch (err: any) { Alert.alert(t("tracker.alerts.error"), err.message || t("tracker.alerts.deleteFailed")); }
-          },
-        },
-      ]
-    );
-  };
+  useEffect(() => { if (topTab === "holidays") loadHolidays(holYear); }, [topTab, holYear, loadHolidays]);
 
   const handleCancel = (leave: TeacherLeave) => {
     Alert.alert(t("tracker.alerts.cancelLeaveTitle"), t("tracker.alerts.cancelLeaveBody"), [
@@ -823,12 +765,7 @@ export default function LeaveTrackerScreen() {
       {/* ══ HEADER ══ */}
       <View style={s.header}>
         <Text style={s.headerTitle}>{t("tracker.title")}</Text>
-        {topTab === "holidays" && canManageHolidays ? (
-          <TouchableOpacity style={s.applyBtn} onPress={() => { setHolEditTarget(null); setHolModalVisible(true); }}>
-            <Ionicons name="add" size={18} color="#fff" />
-            <Text style={s.applyBtnText}>{t("tracker.addHoliday")}</Text>
-          </TouchableOpacity>
-        ) : canApplyLeave ? (
+        {topTab === "mydata" && canApplyLeave ? (
           <TouchableOpacity style={s.applyBtn} onPress={() => setShowApply(true)}>
             <Ionicons name="add" size={18} color="#fff" />
             <Text style={s.applyBtnText}>{t("tracker.apply")}</Text>
@@ -1029,14 +966,17 @@ export default function LeaveTrackerScreen() {
       {/* ══ HOLIDAYS ══ */}
       {topTab === "holidays" && (
         <View style={{ flex: 1 }}>
-          {/* Year navigator */}
+          <View style={s.holIntro}>
+            <Text style={s.holIntroTitle}>{t("tracker.holidaysReadOnlyTitle")}</Text>
+            <Text style={s.holIntroSub}>{t("tracker.holidaysReadOnlySub")}</Text>
+          </View>
           <View style={s.yearNav}>
-            <TouchableOpacity onPress={() => setHolYear(y => y - 1)} style={s.yearArrow}>
-              <Ionicons name="chevron-back" size={20} color={Colors.text} />
+            <TouchableOpacity onPress={() => setHolYear(y => y - 1)} style={s.yearArrow} accessibilityRole="button">
+              <Ionicons name="chevron-back" size={20} color={Colors.textSecondary} />
             </TouchableOpacity>
             <Text style={s.yearLabel}>{holYearLabel}</Text>
-            <TouchableOpacity onPress={() => setHolYear(y => y + 1)} style={s.yearArrow}>
-              <Ionicons name="chevron-forward" size={20} color={Colors.text} />
+            <TouchableOpacity onPress={() => setHolYear(y => y + 1)} style={s.yearArrow} accessibilityRole="button">
+              <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
@@ -1046,24 +986,15 @@ export default function LeaveTrackerScreen() {
             <FlatList
               data={holidays}
               keyExtractor={h => h.id}
-              renderItem={({ item }) => (
-                <HolidayRow
-                  h={item}
-                  onEdit={canManageHolidays ? (h) => { setHolEditTarget(h); setHolModalVisible(true); } : undefined}
-                  onDelete={canDeleteHolidays ? handleHolDelete : undefined}
-                />
-              )}
+              renderItem={({ item }) => <HolidayRow h={item} />}
               refreshControl={<RefreshControl refreshing={holLoading} onRefresh={() => loadHolidays(holYear)} colors={[Colors.primary]} tintColor={Colors.primary} />}
-              contentContainerStyle={holidays.length === 0 ? s.emptyContainer : { paddingBottom: 80 }}
+              contentContainerStyle={holidays.length === 0 ? s.emptyContainer : { paddingBottom: Spacing.xl }}
               ListEmptyComponent={
                 <View style={s.center}>
-                  <Ionicons name="calendar-outline" size={48} color={Colors.borderLight} />
+                  <View style={s.holEmptyIcon}>
+                    <Ionicons name="calendar-outline" size={28} color={Colors.textTertiary} />
+                  </View>
                   <Text style={s.emptyText}>{t("tracker.emptyHolidaysYear", { year: holYear })}</Text>
-                  {canManageHolidays && (
-                    <TouchableOpacity style={s.emptyApplyBtn} onPress={() => { setHolEditTarget(null); setHolModalVisible(true); }}>
-                      <Text style={s.emptyApplyText}>{t("tracker.addHoliday")}</Text>
-                    </TouchableOpacity>
-                  )}
                 </View>
               }
             />
@@ -1071,27 +1002,11 @@ export default function LeaveTrackerScreen() {
         </View>
       )}
 
-      {/* ══ FAB ══ */}
-      {topTab === "holidays" ? (
-        canManageHolidays ? (
-          <TouchableOpacity style={s.fab} onPress={() => { setHolEditTarget(null); setHolModalVisible(true); }} activeOpacity={0.85}>
-            <Ionicons name="add" size={28} color="#fff" />
-          </TouchableOpacity>
-        ) : null
-      ) : canApplyLeave ? (
+      {topTab === "mydata" && canApplyLeave ? (
         <TouchableOpacity style={s.fab} onPress={() => setShowApply(true)} activeOpacity={0.85}>
           <Ionicons name="add" size={28} color="#fff" />
         </TouchableOpacity>
       ) : null}
-
-      {/* ══ HOLIDAY FORM MODAL ══ */}
-      <HolidayFormModal
-        visible={holModalVisible}
-        onClose={() => setHolModalVisible(false)}
-        onSubmit={handleHolSubmit}
-        initialData={holEditTarget}
-        mode={holEditTarget ? "edit" : "create"}
-      />
 
       {/* ══ APPLY MODAL ══ */}
       <ApplyModal
@@ -1254,20 +1169,52 @@ const s = StyleSheet.create({
   chipText: { fontSize: 13, color: Colors.textSecondary, fontWeight: "500" },
   chipTextActive: { color: "#fff", fontWeight: "600" },
 
+  holIntro: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.xs,
+  },
+  holIntroTitle: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: Colors.textSecondary,
+    letterSpacing: 0.2,
+  },
+  holIntroSub: {
+    fontSize: 12,
+    color: Colors.textTertiary,
+    marginTop: 4,
+    lineHeight: 17,
+  },
   // Year nav
   yearNav: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    paddingHorizontal: Spacing.md, paddingVertical: 12,
-    borderBottomWidth: 1, borderBottomColor: Colors.borderLight,
+    paddingHorizontal: Spacing.lg, paddingVertical: 10,
+    marginHorizontal: Spacing.lg,
+    marginBottom: Spacing.sm,
+    backgroundColor: Colors.backgroundSecondary,
+    borderRadius: Layout.borderRadius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: Colors.borderLight,
   },
-  yearArrow: { padding: 8 },
-  yearLabel: { fontSize: 14, fontWeight: "600", color: Colors.text },
+  yearArrow: { padding: 4 },
+  yearLabel: { fontSize: 14, fontWeight: "600", color: Colors.text, letterSpacing: -0.2 },
 
   // Shared
   center: { flex: 1, justifyContent: "center", alignItems: "center", padding: Spacing.xl },
   emptyContainer: { flex: 1, justifyContent: "center", alignItems: "center", padding: Spacing.xl },
   emptyBlock: { alignItems: "center", paddingVertical: Spacing.xl },
-  emptyText: { fontSize: 14, color: Colors.textSecondary, marginTop: Spacing.sm, textAlign: "center" },
+  emptyText: { fontSize: 14, color: Colors.textSecondary, marginTop: Spacing.md, textAlign: "center", maxWidth: 280, lineHeight: 20 },
+  holEmptyIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.backgroundSecondary,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: Colors.borderLight,
+  },
   emptyApplyBtn: { marginTop: Spacing.md, backgroundColor: Colors.primary, paddingHorizontal: Spacing.xl, paddingVertical: Spacing.sm, borderRadius: 20 },
   emptyApplyText: { color: "#fff", fontWeight: "600", fontSize: 14 },
   retryBtn: { marginTop: Spacing.md, backgroundColor: Colors.primary, paddingHorizontal: Spacing.xl, paddingVertical: Spacing.sm, borderRadius: Layout.borderRadius.sm },

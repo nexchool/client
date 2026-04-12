@@ -2,18 +2,15 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   View, Text, StyleSheet, SectionList, ActivityIndicator,
-  SafeAreaView, RefreshControl, TouchableOpacity, Alert, TextInput,
+  SafeAreaView, RefreshControl, TouchableOpacity, TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/common/constants/colors';
 import { Spacing, Layout } from '@/common/constants/spacing';
-import { usePermissions } from '@/modules/permissions/hooks/usePermissions';
 import { useAcademicYearContext } from '@/modules/academics/context/AcademicYearContext';
-import * as PERMS from '@/modules/permissions/constants/permissions';
 import { useHolidays } from '../hooks/useHolidays';
 import { HolidayListItem } from '../components/HolidayListItem';
-import { HolidayFormModal } from '../components/HolidayFormModal';
-import { Holiday, CreateHolidayDTO } from '../types';
+import { Holiday } from '../types';
 
 type FilterTab = 'all' | 'upcoming' | 'recurring';
 
@@ -28,33 +25,23 @@ function useDebounce<T>(value: T, delay: number): T {
 
 export default function HolidaysScreen() {
   const { t } = useTranslation('holidays');
-  const { hasAnyPermission } = usePermissions();
   const { selectedAcademicYearId } = useAcademicYearContext();
   const {
     holidays, recurringHolidays, loading, error,
     fetchHolidays, fetchRecurring,
-    createHoliday, updateHoliday, deleteHoliday,
   } = useHolidays();
-
-  const canManage = hasAnyPermission([PERMS.HOLIDAY_MANAGE, PERMS.HOLIDAY_CREATE]);
-  const canDelete = hasAnyPermission([PERMS.HOLIDAY_MANAGE, PERMS.HOLIDAY_DELETE]);
 
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 400);
-  const [typeFilter, setTypeFilter] = useState<string>('');
-
-  const [modalVisible, setModalVisible] = useState(false);
-  const [editTarget, setEditTarget] = useState<Holiday | null>(null);
 
   const loadData = useCallback(() => {
     fetchHolidays({
       search: debouncedSearch || undefined,
-      holiday_type: typeFilter || undefined,
       academic_year_id: selectedAcademicYearId || undefined,
     });
     fetchRecurring();
-  }, [debouncedSearch, typeFilter, selectedAcademicYearId]);
+  }, [debouncedSearch, selectedAcademicYearId, fetchHolidays, fetchRecurring]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -79,59 +66,11 @@ export default function HolidaysScreen() {
     return list;
   }, [activeTab, holidays, recurringHolidays, t]);
 
-  // ── Handlers ───────────────────────────────────────────────────────────────
-  const handleAdd = () => { setEditTarget(null); setModalVisible(true); };
-  const handleEdit = (h: Holiday) => { setEditTarget(h); setModalVisible(true); };
-
-  const handleDelete = (h: Holiday) => {
-    const recurringPart =
-      h.is_recurring && h.recurring_day_name
-        ? t('alerts.recurringPart', { day: h.recurring_day_name })
-        : '';
-    Alert.alert(
-      t('alerts.deleteTitle'),
-      t('alerts.deleteMessage', { name: h.name, recurringPart }),
-      [
-        { text: t('alerts.cancel'), style: 'cancel' },
-        {
-          text: t('alerts.delete'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteHoliday(h.id, h.is_recurring);
-            } catch (err: any) {
-              Alert.alert(t('alerts.error'), err.message || t('alerts.deleteFailed'));
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  const handleSubmit = async (data: CreateHolidayDTO) => {
-    try {
-      if (editTarget) {
-        const updated = await updateHoliday(editTarget.id, data);
-        if ((updated as any).warning) {
-          Alert.alert(t('alerts.holidayUpdated'), (updated as any).warning);
-        }
-      } else {
-        const created = await createHoliday(data);
-        if ((created as any).warning) {
-          Alert.alert(t('alerts.holidayAdded'), (created as any).warning);
-        }
-      }
-      setModalVisible(false);
-    } catch (err: any) {
-      throw err;
-    }
-  };
-
   // ── Render ─────────────────────────────────────────────────────────────────
   if (loading && !holidays.length && !recurringHolidays.length) {
     return (
       <SafeAreaView style={styles.container}>
-        <ScreenHeader canManage={canManage} onAdd={handleAdd} />
+        <ScreenHeader />
         <View style={styles.center}>
           <ActivityIndicator size="large" color={Colors.primary} />
         </View>
@@ -141,21 +80,21 @@ export default function HolidaysScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScreenHeader canManage={canManage} onAdd={handleAdd} />
+      <ScreenHeader />
 
       {/* Search */}
       <View style={styles.searchContainer}>
-        <Ionicons name="search" size={18} color={Colors.textSecondary} style={styles.searchIcon} />
+        <Ionicons name="search" size={17} color={Colors.textTertiary} style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
           placeholder={t('screen.searchPlaceholder')}
-          placeholderTextColor={Colors.textSecondary}
+          placeholderTextColor={Colors.textTertiary}
           value={search}
           onChangeText={setSearch}
         />
         {!!search && (
-          <TouchableOpacity onPress={() => setSearch('')}>
-            <Ionicons name="close-circle" size={18} color={Colors.textSecondary} />
+          <TouchableOpacity onPress={() => setSearch('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Ionicons name="close-circle" size={18} color={Colors.textTertiary} />
           </TouchableOpacity>
         )}
       </View>
@@ -167,6 +106,7 @@ export default function HolidaysScreen() {
             key={tab}
             style={[styles.tab, activeTab === tab && styles.tabActive]}
             onPress={() => setActiveTab(tab)}
+            activeOpacity={0.7}
           >
             <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
               {t(`tabs.${tab}`)}
@@ -186,8 +126,8 @@ export default function HolidaysScreen() {
       {/* Summary counts */}
       {!error && (
         <View style={styles.summaryRow}>
-          <SummaryChip icon="calendar-outline" count={holidays.length} label={t('summary.holidays')} />
-          <SummaryChip icon="repeat-outline" count={recurringHolidays.length} label={t('summary.weeklyOff')} />
+          <SummaryChip count={holidays.length} label={t('summary.holidays')} />
+          <SummaryChip count={recurringHolidays.length} label={t('summary.weeklyOff')} />
         </View>
       )}
 
@@ -195,20 +135,11 @@ export default function HolidaysScreen() {
       <SectionList
         sections={sections}
         keyExtractor={(item) => item?.id ?? Math.random().toString()}
-        renderItem={({ item }) => (
-          <HolidayListItem
-            holiday={item}
-            canManage={canManage || canDelete}
-            onEdit={canManage ? handleEdit : undefined}
-            onDelete={canDelete ? handleDelete : undefined}
-          />
-        )}
+        renderItem={({ item }) => <HolidayListItem holiday={item} />}
         renderSectionHeader={({ section }) => (
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>{section.title}</Text>
-            <View style={styles.sectionCount}>
-              <Text style={styles.sectionCountText}>{section.data.length}</Text>
-            </View>
+            <Text style={styles.sectionCountText}>{section.data.length}</Text>
           </View>
         )}
         contentContainerStyle={styles.listContent}
@@ -217,23 +148,14 @@ export default function HolidaysScreen() {
         }
         ListEmptyComponent={
           <View style={styles.center}>
-            <Ionicons name="calendar-outline" size={48} color={Colors.textTertiary} />
+            <View style={styles.emptyIconWrap}>
+              <Ionicons name="calendar-outline" size={32} color={Colors.textTertiary} />
+            </View>
             <Text style={styles.emptyTitle}>{t('empty.title')}</Text>
-            <Text style={styles.emptySubtitle}>
-              {canManage ? t('empty.hintManage') : t('empty.hintReadOnly')}
-            </Text>
+            <Text style={styles.emptySubtitle}>{t('empty.hintReadOnly')}</Text>
           </View>
         }
         stickySectionHeadersEnabled={false}
-      />
-
-      {/* Form Modal */}
-      <HolidayFormModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        onSubmit={handleSubmit}
-        initialData={editTarget}
-        mode={editTarget ? 'edit' : 'create'}
       />
     </SafeAreaView>
   );
@@ -241,27 +163,19 @@ export default function HolidaysScreen() {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function ScreenHeader({ canManage, onAdd }: { canManage: boolean; onAdd: () => void }) {
+function ScreenHeader() {
   const { t } = useTranslation('holidays');
   return (
     <View style={styles.header}>
-      <View>
-        <Text style={styles.headerTitle}>{t('screen.title')}</Text>
-        <Text style={styles.headerSubtitle}>{t('screen.subtitle')}</Text>
-      </View>
-      {canManage && (
-        <TouchableOpacity style={styles.addBtn} onPress={onAdd}>
-          <Ionicons name="add" size={22} color={Colors.primary} />
-        </TouchableOpacity>
-      )}
+      <Text style={styles.headerTitle}>{t('screen.title')}</Text>
+      <Text style={styles.headerSubtitle}>{t('screen.subtitle')}</Text>
     </View>
   );
 }
 
-function SummaryChip({ icon, count, label }: { icon: any; count: number; label: string }) {
+function SummaryChip({ count, label }: { count: number; label: string }) {
   return (
     <View style={styles.summaryChip}>
-      <Ionicons name={icon} size={14} color={Colors.textSecondary} />
       <Text style={styles.summaryCount}>{count}</Text>
       <Text style={styles.summaryLabel}>{label}</Text>
     </View>
@@ -271,105 +185,98 @@ function SummaryChip({ icon, count, label }: { icon: any; count: number; label: 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1, backgroundColor: Colors.backgroundTertiary },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: Spacing.xl },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.md,
+    backgroundColor: Colors.background,
   },
-  headerTitle: { fontSize: 24, fontWeight: 'bold', color: Colors.text },
-  headerSubtitle: { fontSize: 13, color: Colors.textSecondary, marginTop: 1 },
-  addBtn: {
-    padding: Spacing.sm,
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-  },
+  headerTitle: { fontSize: 28, fontWeight: '600', color: Colors.text, letterSpacing: -0.5 },
+  headerSubtitle: { fontSize: 14, color: Colors.textSecondary, marginTop: 4, lineHeight: 20 },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.backgroundSecondary,
+    backgroundColor: Colors.background,
     borderRadius: Layout.borderRadius.md,
     paddingHorizontal: Spacing.md,
-    marginHorizontal: Spacing.md,
-    marginTop: Spacing.md,
-    marginBottom: Spacing.xs,
-    borderWidth: 1,
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.xs,
+    marginBottom: Spacing.sm,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: Colors.borderLight,
   },
   searchIcon: { marginRight: Spacing.sm },
-  searchInput: { flex: 1, fontSize: 15, color: Colors.text, paddingVertical: Spacing.sm },
-  // Filter tabs
+  searchInput: { flex: 1, fontSize: 16, color: Colors.text, paddingVertical: 12 },
   tabRow: {
     flexDirection: 'row',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    gap: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.sm,
+    gap: 8,
   },
   tab: {
-    paddingVertical: Spacing.xs + 2,
-    paddingHorizontal: Spacing.md,
-    borderRadius: Layout.borderRadius.sm,
-    borderWidth: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 100,
+    backgroundColor: Colors.background,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: Colors.borderLight,
-    backgroundColor: Colors.backgroundSecondary,
   },
-  tabActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  tabText: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
+  tabActive: {
+    backgroundColor: Colors.text,
+    borderColor: Colors.text,
+  },
+  tabText: { fontSize: 13, fontWeight: '500', color: Colors.textSecondary },
   tabTextActive: { color: Colors.background },
-  // Summary
   summaryRow: {
     flexDirection: 'row',
-    paddingHorizontal: Spacing.md,
-    gap: Spacing.sm,
-    marginBottom: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    gap: Spacing.md,
+    marginBottom: Spacing.md,
   },
   summaryChip: {
+    flex: 1,
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: Colors.backgroundSecondary,
-    paddingVertical: Spacing.xs,
-    paddingHorizontal: Spacing.sm,
-    borderRadius: Layout.borderRadius.sm,
-    borderWidth: 1,
+    alignItems: 'baseline',
+    gap: 6,
+    backgroundColor: Colors.background,
+    paddingVertical: 12,
+    paddingHorizontal: Spacing.md,
+    borderRadius: Layout.borderRadius.md,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: Colors.borderLight,
   },
-  summaryCount: { fontSize: 13, fontWeight: '700', color: Colors.text },
-  summaryLabel: { fontSize: 12, color: Colors.textSecondary },
-  // Section
+  summaryCount: { fontSize: 20, fontWeight: '600', color: Colors.text, letterSpacing: -0.3 },
+  summaryLabel: { fontSize: 13, color: Colors.textSecondary, fontWeight: '400' },
   sectionHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Spacing.sm,
-    marginTop: Spacing.sm,
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+    marginTop: Spacing.md,
+    paddingHorizontal: 2,
   },
-  sectionTitle: { fontSize: 14, fontWeight: '700', color: Colors.text, textTransform: 'uppercase', letterSpacing: 0.5 },
-  sectionCount: {
-    marginLeft: Spacing.sm,
-    backgroundColor: Colors.backgroundSecondary,
-    paddingHorizontal: 7,
-    paddingVertical: 1,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-  },
-  sectionCountText: { fontSize: 11, fontWeight: '700', color: Colors.textSecondary },
-  listContent: { padding: Spacing.md, paddingTop: 0, flexGrow: 1 },
+  sectionTitle: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary, letterSpacing: 0.2 },
+  sectionCountText: { fontSize: 12, fontWeight: '500', color: Colors.textTertiary },
+  listContent: { paddingHorizontal: Spacing.lg, paddingBottom: Spacing.xl, flexGrow: 1 },
   errorBanner: {
     flexDirection: 'row', alignItems: 'center', gap: Spacing.xs,
-    backgroundColor: '#FFF0F0', margin: Spacing.md,
-    padding: Spacing.sm, borderRadius: Layout.borderRadius.sm,
-    borderWidth: 1, borderColor: Colors.error + '30',
+    backgroundColor: '#FFF5F5', marginHorizontal: Spacing.lg, marginBottom: Spacing.sm,
+    padding: Spacing.sm, borderRadius: Layout.borderRadius.md,
+    borderWidth: StyleSheet.hairlineWidth, borderColor: Colors.error + '35',
   },
   errorText: { fontSize: 13, color: Colors.error, flex: 1 },
-  emptyTitle: { fontSize: 17, fontWeight: '600', color: Colors.textSecondary, marginTop: Spacing.md },
-  emptySubtitle: { fontSize: 14, color: Colors.textTertiary, textAlign: 'center', marginTop: Spacing.sm },
+  emptyIconWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: Colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: Colors.borderLight,
+  },
+  emptyTitle: { fontSize: 17, fontWeight: '600', color: Colors.text, marginTop: Spacing.lg },
+  emptySubtitle: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center', marginTop: 8, lineHeight: 20, maxWidth: 280 },
 });

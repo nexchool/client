@@ -1,8 +1,8 @@
 {
   "screen": {
     "title": "Holidays",
-    "subtitle": "School calendar & weekly off",
-    "searchPlaceholder": "Search holidays…"
+    "subtitle": "View the school calendar and weekly offs",
+    "searchPlaceholder": "Search…"
   },
   "tabs": {
     "all": "All",
