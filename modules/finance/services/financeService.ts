@@ -157,6 +157,7 @@ export const financeService = {
       amount: data.amount,
       method: data.method || "cash",
       reference_number: data.reference_number || null,
+      method_detail: data.method_detail?.trim() || null,
       notes: data.notes || null,
     };
     if (data.allocations && data.allocations.length > 0) {

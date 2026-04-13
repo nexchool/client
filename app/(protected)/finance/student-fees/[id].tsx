@@ -53,6 +53,7 @@ export default function StudentFeeDetailPage() {
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState("cash");
   const [referenceNumber, setReferenceNumber] = useState("");
+  const [otherMethodDetail, setOtherMethodDetail] = useState("");
   const [notes, setNotes] = useState("");
   const [allocations, setAllocations] = useState<AllocationState>({});
   const [refundModalOpen, setRefundModalOpen] = useState(false);
@@ -78,11 +79,16 @@ export default function StudentFeeDetailPage() {
   );
   const useAllocations = allocationSum > 0;
   const allocationMismatch = useAllocations && Math.abs(allocationSum - amountNum) > 0.01;
+  const refRequired = method !== "cash";
+  const refOk = !refRequired || referenceNumber.trim().length > 0;
+  const otherOk = method !== "other" || otherMethodDetail.trim().length > 0;
   const canSubmitPayment =
     !recordMut.isPending &&
     amountNum > 0 &&
     amountNum <= remaining &&
-    (!useAllocations || !allocationMismatch);
+    (!useAllocations || !allocationMismatch) &&
+    refOk &&
+    otherOk;
 
   const handleQuickAmount = (ratio: number) => {
     const amt = Math.round(remaining * ratio);
@@ -136,7 +142,8 @@ export default function StudentFeeDetailPage() {
         student_fee_id: id,
         amount: amt,
         method,
-        reference_number: referenceNumber || undefined,
+        reference_number: referenceNumber.trim() || undefined,
+        method_detail: method === "other" ? otherMethodDetail.trim() : undefined,
         notes: notes || undefined,
       };
       if (useAllocations) {
@@ -151,6 +158,7 @@ export default function StudentFeeDetailPage() {
       setPaymentModalOpen(false);
       setAmount("");
       setReferenceNumber("");
+      setOtherMethodDetail("");
       setNotes("");
       setAllocations({});
     } catch (e: any) {
@@ -432,12 +440,20 @@ export default function StudentFeeDetailPage() {
       {/* Payment history */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t("studentFeeDetail.paymentHistory")}</Text>
-        {(data.payments ?? []).map((p) => (
+        {(data.payments ?? []).map((p) => {
+          const methodLabel = t(`studentFeeDetail.paymentMethods.${p.method}`, {
+            defaultValue: p.method,
+          });
+          const methodLine =
+            p.method === "other" && p.method_detail
+              ? `${methodLabel} (${p.method_detail})`
+              : methodLabel;
+          return (
           <View key={p.id} style={styles.paymentRow}>
             <View style={styles.paymentMain}>
               <Text style={styles.paymentAmount}>{formatCurrency(p.amount)}</Text>
               <Text style={styles.paymentMeta}>
-                {p.method} • {formatDate(p.created_at, locale)}
+                {methodLine} • {formatDate(p.created_at, locale)}
                 {p.reference_number ? ` • ${p.reference_number}` : ""}
               </Text>
             </View>
@@ -482,7 +498,8 @@ export default function StudentFeeDetailPage() {
               )}
             </View>
           </View>
-        ))}
+        );
+        })}
         {(data.payments ?? []).length === 0 && (
           <Text style={styles.emptyText}>{t("studentFeeDetail.noPaymentsYet")}</Text>
         )}
@@ -498,6 +515,7 @@ export default function StudentFeeDetailPage() {
                 onPress={() => {
                   setPaymentModalOpen(false);
                   setAllocations({});
+                  setOtherMethodDetail("");
                 }}
               >
                 <Ionicons name="close" size={24} color={Colors.text} />
@@ -634,8 +652,10 @@ export default function StudentFeeDetailPage() {
                 {(
                   [
                     { id: "cash" as const, icon: "cash-outline" },
-                    { id: "online" as const, icon: "phone-portrait-outline" },
+                    { id: "upi" as const, icon: "phone-portrait-outline" },
                     { id: "bank_transfer" as const, icon: "business-outline" },
+                    { id: "cheque" as const, icon: "document-text-outline" },
+                    { id: "other" as const, icon: "ellipsis-horizontal-outline" },
                   ] as const
                 ).map((m) => (
                   <TouchableOpacity
@@ -659,7 +679,24 @@ export default function StudentFeeDetailPage() {
                   </TouchableOpacity>
                 ))}
               </View>
-              <Text style={styles.inputLabel}>{t("studentFeeDetail.paymentModal.referenceOptional")}</Text>
+              {method === "other" && (
+                <>
+                  <Text style={styles.inputLabel}>
+                    {t("studentFeeDetail.paymentModal.otherDetailLabel")}
+                  </Text>
+                  <TextInput
+                    style={styles.input}
+                    value={otherMethodDetail}
+                    onChangeText={setOtherMethodDetail}
+                    placeholder={t("studentFeeDetail.paymentModal.otherDetailPlaceholder")}
+                  />
+                </>
+              )}
+              <Text style={styles.inputLabel}>
+                {method === "cash"
+                  ? t("studentFeeDetail.paymentModal.referenceOptional")
+                  : t("studentFeeDetail.paymentModal.referenceRequired")}
+              </Text>
               <TextInput
                 style={styles.input}
                 value={referenceNumber}
@@ -680,6 +717,7 @@ export default function StudentFeeDetailPage() {
                 onPress={() => {
                   setPaymentModalOpen(false);
                   setAllocations({});
+                  setOtherMethodDetail("");
                 }}
               >
                 <Text style={styles.cancelBtnText}>{t("studentFeeDetail.paymentModal.cancel")}</Text>
@@ -987,7 +1025,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: Spacing.md,
   },
-  methodRow: { flexDirection: "row", gap: Spacing.sm, marginBottom: Spacing.md },
+  methodRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
   methodChip: {
     flexDirection: "row",
     alignItems: "center",

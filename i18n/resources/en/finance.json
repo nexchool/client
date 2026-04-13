@@ -122,6 +122,9 @@
       "allocationMismatch": "Allocation sum ({{sum}}) must equal total ({{total}})",
       "paymentMethod": "Payment method",
       "referenceOptional": "Reference (optional)",
+      "referenceRequired": "Reference / transaction ID (required)",
+      "otherDetailLabel": "How was it paid? (required)",
+      "otherDetailPlaceholder": "e.g. Card machine, school wallet",
       "referencePlaceholder": "Transaction ID or receipt number",
       "notesOptional": "Notes (optional)",
       "notesPlaceholder": "Add a note for your records",
@@ -130,8 +133,12 @@
     },
     "paymentMethods": {
       "cash": "Cash",
+      "upi": "UPI",
+      "bank_transfer": "Bank transfer",
+      "cheque": "Cheque",
+      "other": "Other",
       "online": "Online",
-      "bank_transfer": "Bank"
+      "bank": "Bank transfer"
     },
     "refundModal": {
       "title": "Refund Payment",
@@ -242,8 +249,11 @@
     },
     "paymentMethods": {
       "cash": "Cash",
-      "bank": "Bank",
       "upi": "UPI",
+      "bank_transfer": "Bank transfer",
+      "cheque": "Cheque",
+      "other": "Other",
+      "bank": "Bank transfer",
       "online": "Online"
     },
     "alerts": {

@@ -20,6 +20,23 @@ function resolveEntityHrefFromData(data: Record<string, string>): string | null 
   const studentFeeId = (data.student_fee_id || "").trim();
   const entityId = (data.entity_id || "").trim();
 
+  // Teacher leave notifications
+  if (
+    typeUpper === "TEACHER_LEAVE_APPROVED" ||
+    typeUpper === "TEACHER_LEAVE_REJECTED" ||
+    screen === "my_leaves"
+  ) {
+    return "/(protected)/my-leaves";
+  }
+  if (
+    typeUpper === "TEACHER_LEAVE_REQUEST" ||
+    typeUpper === "TEACHER_UNAVAILABILITY_ADDED" ||
+    screen === "teacher_leaves"
+  ) {
+    // Admin viewing teacher leave requests in mobile app
+    return "/(protected)/my-leaves";
+  }
+
   if (studentFeeId) {
     return `/(protected)/finance/student-fees/${studentFeeId}`;
   }

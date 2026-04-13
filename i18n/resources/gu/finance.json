@@ -122,6 +122,9 @@
       "allocationMismatch": "વિભાજન સરવાળો ({{sum}}) કુલ ({{total}}) સમાન હોવો જોઈએ",
       "paymentMethod": "ચુકવણી પદ્ધતિ",
       "referenceOptional": "સંદર્ભ (વૈકલ્પિક)",
+      "referenceRequired": "સંદર્ભ / વ્યવહાર ID (જરૂરી)",
+      "otherDetailLabel": "કેવી રીતે ચૂકવ્યું? (જરૂરી)",
+      "otherDetailPlaceholder": "જેમ કે કાર્ડ મશીન, સ્કૂલ વૉલેટ",
       "referencePlaceholder": "વ્યવહાર ID અથવા રસીદ નંબર",
       "notesOptional": "નોંધ (વૈકલ્પિક)",
       "notesPlaceholder": "તમારા રેકોર્ડ માટે નોંધ ઉમેરો",
@@ -130,8 +133,12 @@
     },
     "paymentMethods": {
       "cash": "રોકડ",
+      "upi": "UPI",
+      "bank_transfer": "બેંક ટ્રાન્સફર",
+      "cheque": "ચેક",
+      "other": "અન્ય",
       "online": "ઓનલાઇન",
-      "bank_transfer": "બેંક"
+      "bank": "બેંક ટ્રાન્સફર"
     },
     "refundModal": {
       "title": "ચુકવણી પરત",
@@ -242,8 +249,11 @@
     },
     "paymentMethods": {
       "cash": "રોકડ",
-      "bank": "બેંક",
       "upi": "UPI",
+      "bank_transfer": "બેંક ટ્રાન્સફર",
+      "cheque": "ચેક",
+      "other": "અન્ય",
+      "bank": "બેંક ટ્રાન્સફર",
       "online": "ઓનલાઇન"
     },
     "alerts": {

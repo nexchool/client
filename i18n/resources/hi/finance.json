@@ -122,6 +122,9 @@
       "allocationMismatch": "आवंटन योग ({{sum}}) कुल ({{total}}) के बराबर होना चाहिए",
       "paymentMethod": "भुगतान विधि",
       "referenceOptional": "संदर्भ (वैकल्पिक)",
+      "referenceRequired": "संदर्भ / लेनदेन ID (आवश्यक)",
+      "otherDetailLabel": "भुगतान कैसे किया? (आवश्यक)",
+      "otherDetailPlaceholder": "जैसे कार्ड मशीन, स्कूल वॉलेट",
       "referencePlaceholder": "लेनदेन ID या रसीद नंबर",
       "notesOptional": "नोट (वैकल्पिक)",
       "notesPlaceholder": "अपने रिकॉर्ड के लिए नोट",
@@ -130,8 +133,12 @@
     },
     "paymentMethods": {
       "cash": "नकद",
+      "upi": "UPI",
+      "bank_transfer": "बैंक ट्रांसफर",
+      "cheque": "चेक",
+      "other": "अन्य",
       "online": "ऑनलाइन",
-      "bank_transfer": "बैंक"
+      "bank": "बैंक ट्रांसफर"
     },
     "refundModal": {
       "title": "भुगतान वापसी",
@@ -242,8 +249,11 @@
     },
     "paymentMethods": {
       "cash": "नकद",
-      "bank": "बैंक",
       "upi": "UPI",
+      "bank_transfer": "बैंक ट्रांसफर",
+      "cheque": "चेक",
+      "other": "अन्य",
+      "bank": "बैंक ट्रांसफर",
       "online": "ऑनलाइन"
     },
     "alerts": {

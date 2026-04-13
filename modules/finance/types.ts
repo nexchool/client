@@ -40,6 +40,8 @@ export interface Payment {
   method: string;
   status: 'success' | 'failed' | 'refunded';
   reference_number: string | null;
+  /** When method is `other`, describes how the payment was made */
+  method_detail?: string | null;
   notes: string | null;
   created_at: string;
   updated_at?: string;
@@ -89,6 +91,7 @@ export interface RecordPaymentInput {
   amount: number;
   method?: string;
   reference_number?: string;
+  method_detail?: string;
   notes?: string;
   allocations?: PaymentAllocation[];
 }
