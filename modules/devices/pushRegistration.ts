@@ -26,6 +26,19 @@ async function getNotifications(): Promise<NotificationsModule | null> {
   if (_notifications !== null) return _notifications;
   try {
     const mod = (await import("expo-notifications")) as NotificationsModule;
+    if (Platform.OS === "android") {
+      try {
+        await mod.setNotificationChannelAsync("default", {
+          name: "Default",
+          importance: mod.AndroidImportance.HIGH,
+          sound: "default",
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: "#FF231F7C",
+        });
+      } catch {
+        /* channel creation not supported / unavailable */
+      }
+    }
     mod.setNotificationHandler({
       handleNotification: async () => ({
         shouldShowAlert: true,
