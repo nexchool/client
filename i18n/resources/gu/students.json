@@ -134,6 +134,7 @@
     "fullName": "પૂરું નામ",
     "fullNameRequired": "પૂરું નામ *",
     "admissionNumber": "પ્રવેશ નંબર",
+    "admissionReadOnly": "આ મૂલ્ય શાળા દ્વારા સેટ થયેલું છે; અહીં બદલાતું નથી.",
     "admissionHint": "ખાલી છોડો તો આપમેળે બને (દા.ત. ADM2026001)",
     "admissionPlaceholder": "ખાલી હોય તો આપમેળે",
     "gender": "લિંગ",

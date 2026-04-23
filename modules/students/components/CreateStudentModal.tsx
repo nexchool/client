@@ -45,7 +45,6 @@ export const CreateStudentModal: React.FC<CreateStudentModalProps> = ({
     guardian_name: "",
     guardian_relationship: "",
     guardian_phone: "",
-    admission_number: "",
     email: "",
     phone: "",
     date_of_birth: "",
@@ -135,7 +134,6 @@ export const CreateStudentModal: React.FC<CreateStudentModalProps> = ({
         guardian_name: initialData.guardian_name || "",
         guardian_relationship: initialData.guardian_relationship || "",
         guardian_phone: initialData.guardian_phone || "",
-        admission_number: initialData.admission_number || "",
         email: initialData.email || "",
         phone: initialData.phone || "",
         date_of_birth: initialData.date_of_birth || "",
@@ -217,7 +215,6 @@ export const CreateStudentModal: React.FC<CreateStudentModalProps> = ({
         guardian_name: "",
         guardian_relationship: "",
         guardian_phone: "",
-        admission_number: "",
         email: "",
         phone: "",
         date_of_birth: "",
@@ -326,7 +323,6 @@ export const CreateStudentModal: React.FC<CreateStudentModalProps> = ({
         guardian_name: formData.guardian_name.trim(),
         guardian_relationship: formData.guardian_relationship.trim(),
         guardian_phone: formData.guardian_phone.trim(),
-        admission_number: formData.admission_number?.trim() || undefined,
         email: formData.email?.trim() || undefined,
         phone: formData.phone?.trim() || undefined,
         date_of_birth: formData.date_of_birth || undefined,
@@ -411,7 +407,6 @@ export const CreateStudentModal: React.FC<CreateStudentModalProps> = ({
           guardian_name: "",
           guardian_relationship: "",
           guardian_phone: "",
-          admission_number: "",
           email: "",
           phone: "",
           date_of_birth: "",
@@ -546,30 +541,13 @@ export const CreateStudentModal: React.FC<CreateStudentModalProps> = ({
               <Text style={styles.fieldError}>{trField(fieldErrors.name)}</Text>
             )}
 
-            <Text style={styles.label}>{t("modal.admissionNumber")}</Text>
-            <Text style={styles.helperText}>{t("modal.admissionHint")}</Text>
-            <TextInput
-              style={[styles.input, fieldErrors.admission_number && styles.inputError]}
-              value={formData.admission_number}
-              onChangeText={(text) => {
-                setFormData((prev) => ({ ...prev, admission_number: text }));
-                if (fieldErrors.admission_number) {
-                  setFieldErrors((prev) => {
-                    const next = { ...prev };
-                    delete next.admission_number;
-                    return next;
-                  });
-                }
-              }}
-              placeholder={t("modal.admissionPlaceholder")}
-              placeholderTextColor={Colors.textSecondary}
-              editable={mode === "create"} // Cannot edit admission number
-            />
-            {fieldErrors.admission_number && (
-              <Text style={styles.fieldError}>
-                {trField(fieldErrors.admission_number)}
-              </Text>
-            )}
+            {mode === "edit" && initialData?.admission_number ? (
+              <View style={{ marginBottom: Spacing.md }}>
+                <Text style={styles.label}>{t("modal.admissionNumber")}</Text>
+                <Text style={styles.readOnlyValue}>{initialData.admission_number}</Text>
+                <Text style={styles.helperText}>{t("modal.admissionReadOnly")}</Text>
+              </View>
+            ) : null}
 
             <View style={styles.row}>
               <View style={styles.col}>
@@ -1411,6 +1389,12 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     marginBottom: Spacing.xs,
     fontStyle: "italic",
+  },
+  readOnlyValue: {
+    fontSize: 16,
+    fontFamily: "monospace",
+    color: Colors.text,
+    marginBottom: Spacing.xs,
   },
   input: {
     backgroundColor: Colors.backgroundSecondary,

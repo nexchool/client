@@ -21,7 +21,8 @@ export const studentService = {
       const queryString = query.toString();
       if (queryString) url += `?${queryString}`;
     }
-    return await apiGet<Student[]>(url);
+    const res = await apiGet<{ items: Student[] } | Student[]>(url);
+    return Array.isArray(res) ? res : res?.items ?? [];
   },
 
   // Get single student

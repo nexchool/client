@@ -27,10 +27,6 @@ const studentBaseSchema = {
     .optional()
     .or(z.literal("")),
 
-  admission_number: z
-    .string()
-    .max(20, "admissionNumberTooLong")
-    .optional(),
   email: z
     .string()
     .email("invalidEmail")

@@ -134,6 +134,7 @@
     "fullName": "पूरा नाम",
     "fullNameRequired": "पूरा नाम *",
     "admissionNumber": "प्रवेश संख्या",
+    "admissionReadOnly": "यह मान विद्यालय द्वारा निर्धारित है और यहाँ बदला नहीं जा सकता।",
     "admissionHint": "खाली छोड़ें तो स्वतः बनेगा (जैसे ADM2026001)",
     "admissionPlaceholder": "खाली होने पर स्वतः",
     "gender": "लिंग",

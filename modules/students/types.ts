@@ -125,7 +125,6 @@ export interface CreateStudentDTO {
   academic_year_id?: string;
   
   // Optional fields
-  admission_number?: string; // Auto-generated if not provided
   email?: string;
   phone?: string;
   date_of_birth?: string;

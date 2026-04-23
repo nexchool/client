@@ -134,6 +134,7 @@
     "fullName": "Full name",
     "fullNameRequired": "Full name *",
     "admissionNumber": "Admission number",
+    "admissionReadOnly": "This value is set by the school and cannot be changed here.",
     "admissionHint": "Leave empty to auto-generate (e.g. ADM2026001)",
     "admissionPlaceholder": "Auto-generated if empty",
     "gender": "Gender",
