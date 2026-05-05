@@ -15,7 +15,7 @@ export interface TabConfig {
   requiredPermissions?: string[];  // If any of these permissions exist, show tab
   hideForRoles?: string[];  // Explicitly hide for certain roles
   /** Plan feature key (e.g. student_management). Tab hidden when this feature is disabled for the tenant's plan. */
-  requiredPlanFeature?: string;
+  requiredFeature?: string;
 }
 
 export const ALL_TABS: TabConfig[] = [
@@ -36,7 +36,7 @@ export const ALL_TABS: TabConfig[] = [
       PERMS.STUDENT_READ_CLASS,
       PERMS.STUDENT_MANAGE,
     ],
-    requiredPlanFeature: 'student_management',
+    requiredFeature: 'student_management',
   },
   {
     name: 'teachers',
@@ -47,7 +47,7 @@ export const ALL_TABS: TabConfig[] = [
       PERMS.TEACHER_READ,
       PERMS.TEACHER_MANAGE,
     ],
-    requiredPlanFeature: 'teacher_management',
+    requiredFeature: 'teacher_management',
   },
   {
     name: 'classes',
@@ -58,7 +58,7 @@ export const ALL_TABS: TabConfig[] = [
       PERMS.CLASS_READ,
       PERMS.CLASS_MANAGE,
     ],
-    requiredPlanFeature: 'class_management',
+    requiredFeature: 'class_management',
   },
   // {
   //   name: 'academics',
@@ -86,7 +86,7 @@ export const ALL_TABS: TabConfig[] = [
     icon: 'wallet',
     iconOutline: 'wallet-outline',
     requiredPermissions: [PERMS.FINANCE_READ, PERMS.FINANCE_MANAGE],
-    requiredPlanFeature: 'fees_management',
+    requiredFeature: 'fees_management',
   },
   {
     // Teachers see their own leaves here (requires teacher.leave.apply, NOT teacher.leave.manage)
@@ -95,7 +95,7 @@ export const ALL_TABS: TabConfig[] = [
     icon: 'calendar',
     iconOutline: 'calendar-outline',
     requiredPermissions: [PERMS.TEACHER_LEAVE_APPLY],
-    requiredPlanFeature: 'teacher_management',
+    requiredFeature: 'teacher_management',
   },
   {
     // Admins manage all teacher leaves (requires teacher.leave.manage)
@@ -104,7 +104,7 @@ export const ALL_TABS: TabConfig[] = [
     icon: 'document-text',
     iconOutline: 'document-text-outline',
     requiredPermissions: [PERMS.TEACHER_LEAVE_MANAGE],
-    requiredPlanFeature: 'teacher_management',
+    requiredFeature: 'teacher_management',
   },
   {
     name: 'profile',
@@ -125,8 +125,8 @@ export const getVisibleTabs = (
 ): TabConfig[] => {
   return ALL_TABS.filter(tab => {
     // Plan feature: hide tab if this feature is disabled for the tenant's plan
-    if (tab.requiredPlanFeature) {
-      if (enabledFeatures.length > 0 && !enabledFeatures.includes(tab.requiredPlanFeature)) {
+    if (tab.requiredFeature) {
+      if (enabledFeatures.length > 0 && !enabledFeatures.includes(tab.requiredFeature)) {
         return false;
       }
     }
