@@ -1,25 +1,33 @@
+/**
+ * @deprecated Use `useTheme()` from `@/common/theme` and read tokens from
+ * `palette.*`. This shim re-exports semantic equivalents so unrefactored
+ * screens keep compiling during the nexchool design-system migration.
+ * Will be deleted once all consumers are migrated.
+ */
+import { lightPalette } from '@/common/theme';
+
 export const Colors = {
-  primary: '#000000',
-  primaryDark: '#000000',
-  primaryLight: '#333333',
-  
-  background: '#FFFFFF',
-  backgroundSecondary: '#F5F5F7',
-  backgroundTertiary: '#FAFAFA',
-  
-  text: '#1D1D1F',
-  textSecondary: '#86868B',
-  textTertiary: '#AEAEB2',
-  
-  success: '#34C759',
-  error: '#FF3B30',
-  warning: '#FF9500',
-  info: '#000000',
-  
-  border: '#D2D2D7',
-  borderLight: '#E5E5EA',
-  
-  shadow: 'rgba(0, 0, 0, 0.1)',
-  shadowLight: 'rgba(0, 0, 0, 0.05)',
-  overlay: 'rgba(0, 0, 0, 0.4)',
+  primary: lightPalette.primary,
+  primaryDark: lightPalette.primary,
+  primaryLight: lightPalette.primaryContainer,
+
+  background: lightPalette.surface,
+  backgroundSecondary: lightPalette.surfaceContainerLow,
+  backgroundTertiary: lightPalette.surfaceContainer,
+
+  text: lightPalette.onSurface,
+  textSecondary: lightPalette.onSurfaceVariant,
+  textTertiary: lightPalette.outline,
+
+  success: lightPalette.success,
+  error: lightPalette.error,
+  warning: lightPalette.warning,
+  info: lightPalette.primary,
+
+  border: lightPalette.outlineVariant,
+  borderLight: lightPalette.outlineVariant,
+
+  shadow: 'rgba(11, 28, 48, 0.10)',
+  shadowLight: 'rgba(11, 28, 48, 0.05)',
+  overlay: 'rgba(11, 28, 48, 0.40)',
 } as const;

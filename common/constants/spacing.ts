@@ -1,27 +1,26 @@
 /**
- * Spacing System
- * Use ONLY these values for margins, padding, and gaps
- * This ensures consistent spacing throughout the app
+ * @deprecated Use `useTheme().spacing` and `useTheme().radius` from
+ * `@/common/theme`. This shim re-exports the same numeric scale so
+ * unrefactored screens keep compiling during the migration.
  */
+import { Spacing as ThemeSpacing, Radius } from '@/common/theme';
+
 export const Spacing = {
-  xs: 4,
-  sm: 8,
-  md: 16,
-  lg: 24,
-  xl: 32,
-  xxl: 48,
+  xs: ThemeSpacing.xs,
+  sm: ThemeSpacing.sm,
+  md: ThemeSpacing.md,
+  lg: ThemeSpacing.lg,
+  xl: ThemeSpacing.xl,
+  xxl: 48, // not in theme scale; preserved for legacy callers
 } as const;
 
-/**
- * Layout constants
- */
 export const Layout = {
   headerHeight: 60,
   bottomTabHeight: 56,
   borderRadius: {
-    sm: 8,
-    md: 12,
-    lg: 16,
-    xl: 20,
+    sm: Radius.DEFAULT,
+    md: Radius.md,
+    lg: Radius.lg,
+    xl: Radius.xl,
   },
 } as const;
