@@ -1,32 +1,27 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Image,
-  TouchableOpacity,
-  ActivityIndicator,
-} from "react-native";
-import { Link, router } from "expo-router";
-import { useTranslation } from "react-i18next";
-import SafeScreenWrapper from "@/common/components/SafeScreenWrapper";
-import AuthInput from "@/common/components/AuthInput";
-import AuthButton from "@/common/components/AuthButton";
-import { useLogin } from "@/modules/auth/hooks/useLogin";
-import { useAuth } from "@/modules/auth/hooks/useAuth";
-import { Colors } from "@/common/constants/colors";
-import { isLoginFieldError } from "@/modules/auth/errors/LoginFieldError";
-
-const loginIcon = require("@/assets/images/auth/login.jpg");
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
+import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import { useTheme } from '@/common/theme';
+import { ScreenContainer } from '@/common/components/ScreenContainer';
+import { Logo } from '@/common/components/Logo';
+import { Input } from '@/common/components/Input';
+import { Button } from '@/common/components/Button';
+import { Link } from '@/common/components/Link';
+import { useLogin } from '@/modules/auth/hooks/useLogin';
+import { useAuth } from '@/modules/auth/hooks/useAuth';
+import { isLoginFieldError } from '@/modules/auth/errors/LoginFieldError';
 
 export default function LoginScreen() {
-  const { t } = useTranslation("auth");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
+  const { t } = useTranslation('auth');
+  const { palette, spacing, typography } = useTheme();
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [choosingTenant, setChoosingTenant] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { login, loading, error } = useLogin();
   const {
@@ -38,19 +33,19 @@ export default function LoginScreen() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace("/(protected)/home");
+      router.replace('/(protected)/home');
     }
   }, [isAuthenticated]);
 
   const handleLogin = async () => {
-    setEmailError("");
-    setPasswordError("");
+    setEmailError('');
+    setPasswordError('');
 
     try {
       await login(email, password);
     } catch (err: unknown) {
       if (isLoginFieldError(err)) {
-        if (err.field === "email") {
+        if (err.field === 'email') {
           setEmailError(err.message);
         } else {
           setPasswordError(err.message);
@@ -63,240 +58,190 @@ export default function LoginScreen() {
     setChoosingTenant(true);
     try {
       await loginWithTenant(tenantId);
-      router.replace("/(protected)/home");
+      router.replace('/(protected)/home');
     } catch {
-      // Error surfaced by auth
+      // Error surfaced by auth context
     } finally {
       setChoosingTenant(false);
     }
   };
 
+  // Tenant-choice sub-state — preserves existing multi-tenant flow.
   if (pendingTenantChoice?.tenants?.length) {
     return (
-      <SafeScreenWrapper backgroundColor={Colors.background}>
-        <ScrollView
-          style={styles.container}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.content}>
-            <View style={styles.header}>
-              <Text style={styles.title}>{t("whichSchool")}</Text>
-              <Text style={styles.subtitle}>{t("tenantSubtitle")}</Text>
-            </View>
-            <TouchableOpacity
-              style={styles.backLink}
-              onPress={clearPendingTenantChoice}
-              disabled={choosingTenant}
-              accessibilityRole="button"
-              accessibilityLabel={t("backToLogin")}
-            >
-              <Text style={styles.forgotPasswordText}>{t("backToLogin")}</Text>
-            </TouchableOpacity>
-            {choosingTenant ? (
-              <ActivityIndicator size="large" style={styles.tenantLoader} color={Colors.primary} />
-            ) : (
-              <View style={styles.tenantList}>
-                {pendingTenantChoice.tenants.map((tenant) => (
-                  <TouchableOpacity
-                    key={tenant.id}
-                    style={styles.tenantItem}
-                    onPress={() => handleChooseSchool(tenant.id)}
-                    activeOpacity={0.7}
-                    accessibilityRole="button"
-                    accessibilityLabel={tenant.name}
-                  >
-                    <Text style={styles.tenantName}>{tenant.name}</Text>
-                    {tenant.subdomain ? (
-                      <Text style={styles.tenantSubdomain}>{tenant.subdomain}</Text>
-                    ) : null}
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
+      <ScreenContainer>
+        <View style={{ paddingTop: spacing.xl }}>
+          <Text style={[typography.headlineLg, { color: palette.onSurface }]}>
+            {t('whichSchool')}
+          </Text>
+          <Text
+            style={[
+              typography.bodyMd,
+              { color: palette.onSurfaceVariant, marginTop: spacing.xs },
+            ]}
+          >
+            {t('tenantSubtitle')}
+          </Text>
+
+          <View style={{ marginTop: spacing.lg, marginBottom: spacing.lg }}>
+            <Link onPress={clearPendingTenantChoice}>{t('backToLogin')}</Link>
           </View>
-        </ScrollView>
-      </SafeScreenWrapper>
+
+          {choosingTenant ? (
+            <ActivityIndicator
+              size="large"
+              color={palette.primary}
+              style={{ marginTop: spacing.xl }}
+            />
+          ) : (
+            <View style={{ gap: spacing.sm }}>
+              {pendingTenantChoice.tenants.map((tenant) => (
+                <Pressable
+                  key={tenant.id}
+                  onPress={() => handleChooseSchool(tenant.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={tenant.name}
+                  style={({ pressed }) => [
+                    {
+                      backgroundColor: palette.surfaceContainerLowest,
+                      borderRadius: 12,
+                      borderWidth: 1,
+                      borderColor: palette.outlineVariant,
+                      paddingVertical: spacing.md,
+                      paddingHorizontal: spacing.lg,
+                      opacity: pressed ? 0.85 : 1,
+                    },
+                  ]}
+                >
+                  <Text style={[typography.bodyLg, { color: palette.onSurface }]}>
+                    {tenant.name}
+                  </Text>
+                  {tenant.subdomain ? (
+                    <Text
+                      style={[
+                        typography.labelSm,
+                        { color: palette.onSurfaceVariant, marginTop: spacing.xs },
+                      ]}
+                    >
+                      {tenant.subdomain}
+                    </Text>
+                  ) : null}
+                </Pressable>
+              ))}
+            </View>
+          )}
+        </View>
+      </ScreenContainer>
     );
   }
 
   return (
-    <SafeScreenWrapper backgroundColor={Colors.background}>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
+    <ScreenContainer>
+      <View style={styles.header}>
+        <Logo size="lg" />
+      </View>
+
+      <Text
+        style={[
+          typography.display,
+          {
+            color: palette.onSurface,
+            textAlign: 'center',
+            marginTop: spacing.xl,
+          },
+        ]}
       >
-        <View style={styles.content}>
-          <View style={styles.illustrationContainer}>
-            <Image
-              source={loginIcon}
-              style={styles.illustration}
-              resizeMode="contain"
-              accessibilityIgnoresInvertColors
-            />
-          </View>
+        {t('welcomeBack')}
+      </Text>
+      <Text
+        style={[
+          typography.bodyMd,
+          {
+            color: palette.onSurfaceVariant,
+            textAlign: 'center',
+            marginTop: spacing.xs,
+          },
+        ]}
+      >
+        {t('signInSubtitle')}
+      </Text>
 
-          <View style={styles.header}>
-            <Text style={styles.title}>{t("welcomeBack")}</Text>
-            <Text style={styles.subtitle}>{t("signInSubtitle")}</Text>
-          </View>
+      <View style={{ marginTop: spacing.xl, gap: spacing.md }}>
+        <Input
+          label={t('emailLabel')}
+          placeholder={t('emailPlaceholder')}
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoComplete="email"
+          autoCapitalize="none"
+          error={emailError}
+        />
 
-          <View style={styles.form}>
-            <AuthInput
-              label={t("emailLabel")}
-              placeholder={t("emailPlaceholder")}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-              icon="mail-outline"
-              error={emailError}
-            />
+        <Input
+          label={t('passwordLabel')}
+          placeholder={t('passwordPlaceholder')}
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry={!showPassword}
+          autoComplete="password"
+          autoCapitalize="none"
+          error={passwordError}
+          rightSlot={
+            <Link onPress={() => setShowPassword((s) => !s)}>
+              {showPassword
+                ? t('hide', { defaultValue: 'Hide' })
+                : t('show', { defaultValue: 'Show' })}
+            </Link>
+          }
+        />
 
-            <AuthInput
-              label={t("passwordLabel")}
-              placeholder={t("passwordPlaceholder")}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              showPasswordToggle
-              autoCapitalize="none"
-              autoComplete="password"
-              icon="lock-closed-outline"
-              error={passwordError}
-            />
-
-            <View style={styles.forgotPasswordContainer}>
-              <Link href="/(auth)/forgot-password" asChild>
-                <TouchableOpacity accessibilityRole="button" accessibilityLabel={t("forgotPassword")}>
-                  <Text style={styles.forgotPasswordText}>{t("forgotPassword")}</Text>
-                </TouchableOpacity>
-              </Link>
-            </View>
-
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-            <AuthButton
-              title={t("signIn")}
-              onPress={handleLogin}
-              loading={loading}
-              style={styles.loginButton}
-            />
-
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>{t("noAccountPrefix")} </Text>
-              <Link href="/(auth)/register" asChild>
-                <TouchableOpacity accessibilityRole="button" accessibilityLabel={t("signUp")}>
-                  <Text style={styles.linkText}>{t("signUp")}</Text>
-                </TouchableOpacity>
-              </Link>
-            </View>
-          </View>
+        <View style={{ alignItems: 'flex-end' }}>
+          <Link onPress={() => router.push('/(auth)/forgot-password')}>
+            {t('forgotPassword')}
+          </Link>
         </View>
-      </ScrollView>
-    </SafeScreenWrapper>
+      </View>
+
+      {error ? (
+        <Text
+          style={[
+            typography.bodyMd,
+            {
+              color: palette.error,
+              textAlign: 'center',
+              marginTop: spacing.md,
+            },
+          ]}
+        >
+          {error}
+        </Text>
+      ) : null}
+
+      <View style={{ marginTop: spacing.lg }}>
+        <Button variant="primary" fullWidth loading={loading} onPress={handleLogin}>
+          {t('signIn')}
+        </Button>
+      </View>
+
+      <View style={styles.footer}>
+        <Text style={[typography.bodyMd, { color: palette.onSurfaceVariant }]}>
+          {t('noAccountPrefix')}{' '}
+        </Text>
+        <Link onPress={() => router.push('/(auth)/register')}>{t('signUp')}</Link>
+      </View>
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingBottom: 100,
-  },
-  content: {
-    paddingHorizontal: 24,
-    paddingTop: 40,
-    paddingBottom: 32,
-  },
-  illustrationContainer: {
-    alignItems: "center",
-    marginBottom: 32,
-  },
-  illustration: {
-    width: 200,
-    height: 200,
-  },
-  header: {
-    marginBottom: 32,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "700",
-    color: Colors.text,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: Colors.textSecondary,
-  },
-  form: {
-    flex: 1,
-  },
-  forgotPasswordContainer: {
-    alignItems: "flex-end",
-    marginBottom: 24,
-  },
-  forgotPasswordText: {
-    fontSize: 14,
-    color: Colors.primary,
-    fontWeight: "600",
-  },
-  loginButton: {
-    marginTop: 8,
-  },
-  errorText: {
-    fontSize: 14,
-    color: Colors.error,
-    marginBottom: 16,
-    textAlign: "center",
-  },
+  header: { alignItems: 'center', paddingTop: 32 },
   footer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
     marginTop: 24,
-    flexWrap: "wrap",
-  },
-  footerText: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-  },
-  linkText: {
-    fontSize: 14,
-    color: Colors.primary,
-    fontWeight: "600",
-  },
-  backLink: {
-    marginBottom: 24,
-  },
-  tenantList: {
-    gap: 12,
-  },
-  tenantItem: {
-    backgroundColor: Colors.backgroundSecondary,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  tenantName: {
-    fontSize: 17,
-    fontWeight: "600",
-    color: Colors.text,
-  },
-  tenantSubdomain: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    marginTop: 4,
-  },
-  tenantLoader: {
-    marginTop: 24,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    paddingBottom: 32,
   },
 });
