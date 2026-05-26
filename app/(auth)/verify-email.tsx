@@ -1,66 +1,69 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Image, ActivityIndicator } from "react-native";
-import { useLocalSearchParams, router } from "expo-router";
-import SafeScreenWrapper from "@/common/components/SafeScreenWrapper";
-import AuthButton from "@/common/components/AuthButton";
-import { useAuthContext } from "@/modules/auth/context/AuthContext";
-import { Colors } from "@/common/constants/colors";
-import { Ionicons } from "@expo/vector-icons";
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { useLocalSearchParams, router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import { useTheme } from '@/common/theme';
+import { ScreenContainer } from '@/common/components/ScreenContainer';
+import { Logo } from '@/common/components/Logo';
+import { Button } from '@/common/components/Button';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { useAuthContext } from '@/modules/auth/context/AuthContext';
 
-const registerImage = require("@/assets/images/auth/register.jpg");
-
-type VerificationStatus = "processing" | "success" | "error";
+type VerificationStatus = 'processing' | 'success' | 'error';
 
 export default function VerifyEmailScreen() {
+  const { t } = useTranslation('auth');
+  const { palette, spacing, typography } = useTheme();
   const params = useLocalSearchParams();
 
-  // URL params from backend redirect
-  const status = (params.status as string) || "";
-  const accessToken = (params.access_token as string) || "";
-  const refreshToken = (params.refresh_token as string) || "";
-  const userId = (params.user_id as string) || "";
-  const email = (params.email as string) || "";
-  const errorMessage = (params.error as string) || "";
+  // URL params from backend redirect (preserved deep-link callback contract)
+  const status = (params.status as string) || '';
+  const accessToken = (params.access_token as string) || '';
+  const refreshToken = (params.refresh_token as string) || '';
+  const userId = (params.user_id as string) || '';
+  const email = (params.email as string) || '';
+  const errorMessage = (params.error as string) || '';
 
   const [verificationStatus, setVerificationStatus] =
-    useState<VerificationStatus>("processing");
+    useState<VerificationStatus>('processing');
   const [error, setError] = useState<string | null>(null);
   const { setAuthData } = useAuthContext();
 
   useEffect(() => {
     const processVerification = async () => {
-      if (status === "error") {
+      if (status === 'error') {
         setError(decodeURIComponent(errorMessage));
-        setVerificationStatus("error");
+        setVerificationStatus('error');
         return;
       }
 
-      if (status === "success" && accessToken && refreshToken) {
+      if (status === 'success' && accessToken && refreshToken) {
         try {
-          // Set auth data to log the user in
-          // Note: Permissions will be fetched on next API call or app restart
           await setAuthData({
             access_token: accessToken,
             refresh_token: refreshToken,
             user: {
               id: parseInt(userId) || 0,
               email,
-              name: email.split("@")[0],
+              name: email.split('@')[0],
               email_verified: true,
             },
-            permissions: [], // Will be populated from backend on next authenticated request
+            permissions: [],
           });
-          setVerificationStatus("success");
+          setVerificationStatus('success');
         } catch {
-          setError("Failed to complete login");
-          setVerificationStatus("error");
+          setError(
+            t('verifyLoginFailed', { defaultValue: 'Failed to complete login' }),
+          );
+          setVerificationStatus('error');
         }
         return;
       }
 
-      // No valid params - show error
-      setError("Invalid verification link");
-      setVerificationStatus("error");
+      setError(
+        t('verifyInvalidLink', { defaultValue: 'Invalid verification link' }),
+      );
+      setVerificationStatus('error');
     };
 
     processVerification();
@@ -72,122 +75,166 @@ export default function VerifyEmailScreen() {
     email,
     errorMessage,
     setAuthData,
+    t,
   ]);
 
-  if (verificationStatus === "processing") {
+  if (verificationStatus === 'processing') {
     return (
-      <SafeScreenWrapper backgroundColor={Colors.background}>
-        <View style={styles.centerContainer}>
-          <Image
-            source={registerImage}
-            style={styles.illustration}
-            resizeMode="contain"
-          />
+      <ScreenContainer>
+        <View style={styles.centered}>
+          <Logo size="lg" />
           <ActivityIndicator
             size="large"
-            color={Colors.primary}
-            style={styles.spinner}
+            color={palette.primary}
+            style={{ marginTop: spacing.xl }}
           />
-          <Text style={styles.title}>Completing Verification</Text>
-          <Text style={styles.message}>
-            Please wait while we complete your email verification...
+          <Text
+            style={[
+              typography.headlineMd,
+              { color: palette.onSurface, marginTop: spacing.lg, textAlign: 'center' },
+            ]}
+          >
+            {t('verifyProcessingTitle', { defaultValue: 'Completing verification' })}
+          </Text>
+          <Text
+            style={[
+              typography.bodyMd,
+              {
+                color: palette.onSurfaceVariant,
+                marginTop: spacing.sm,
+                textAlign: 'center',
+                paddingHorizontal: spacing.lg,
+              },
+            ]}
+          >
+            {t('verifyProcessingHelp', {
+              defaultValue: 'Please wait while we complete your email verification.',
+            })}
           </Text>
         </View>
-      </SafeScreenWrapper>
+      </ScreenContainer>
     );
   }
 
-  if (verificationStatus === "success") {
+  if (verificationStatus === 'success') {
     return (
-      <SafeScreenWrapper backgroundColor={Colors.background}>
-        <View style={styles.centerContainer}>
-          <View style={styles.iconContainer}>
-            <Ionicons
-              name="checkmark-circle"
-              size={80}
-              color={Colors.success}
-            />
+      <ScreenContainer>
+        <View style={styles.centered}>
+          <View
+            style={{
+              width: 72,
+              height: 72,
+              borderRadius: 36,
+              backgroundColor: `${palette.success}22`,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Ionicons name="checkmark" size={36} color={palette.success} />
           </View>
-          <Text style={styles.title}>Email Verified!</Text>
-          <Text style={styles.message}>
-            Your email has been successfully verified. You&apos;re now logged in
-            and ready to go!
+          <Text
+            style={[
+              typography.headlineLg,
+              { color: palette.onSurface, marginTop: spacing.lg, textAlign: 'center' },
+            ]}
+          >
+            {t('verifySuccessTitle', { defaultValue: 'Email verified' })}
           </Text>
-          <AuthButton
-            title="Continue to Home"
-            onPress={() => router.replace("/(protected)/home")}
-            style={styles.button}
-          />
+          <Text
+            style={[
+              typography.bodyMd,
+              {
+                color: palette.onSurfaceVariant,
+                marginTop: spacing.sm,
+                textAlign: 'center',
+                paddingHorizontal: spacing.lg,
+              },
+            ]}
+          >
+            {t('verifySuccessHelp', {
+              defaultValue: "You're signed in and ready to go.",
+            })}
+          </Text>
+          <View style={{ marginTop: spacing.xl, width: '100%' }}>
+            <Button
+              variant="primary"
+              fullWidth
+              onPress={() => router.replace('/(protected)/home')}
+            >
+              {t('continueToHome', { defaultValue: 'Continue to home' })}
+            </Button>
+          </View>
         </View>
-      </SafeScreenWrapper>
+      </ScreenContainer>
     );
   }
 
-  // Error state
   return (
-    <SafeScreenWrapper backgroundColor={Colors.background}>
-      <View style={styles.centerContainer}>
-        <View style={styles.iconContainer}>
-          <Ionicons name="close-circle" size={80} color={Colors.error} />
+    <ScreenContainer>
+      <View style={styles.centered}>
+        <View
+          style={{
+            width: 72,
+            height: 72,
+            borderRadius: 36,
+            backgroundColor: `${palette.error}22`,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Ionicons name="close" size={36} color={palette.error} />
         </View>
-        <Text style={styles.title}>Verification Failed</Text>
-        <Text style={styles.message}>
-          {error ||
-            "The verification link is invalid or has expired. Please try registering again or request a new verification email."}
+        <Text
+          style={[
+            typography.headlineLg,
+            { color: palette.onSurface, marginTop: spacing.lg, textAlign: 'center' },
+          ]}
+        >
+          {t('verifyFailedTitle', { defaultValue: 'Verification failed' })}
         </Text>
-        <AuthButton
-          title="Go to Login"
-          onPress={() => router.replace("/(auth)/login")}
-          style={styles.button}
-        />
-        <AuthButton
-          title="Register Again"
-          onPress={() => router.replace("/(auth)/register")}
-          style={styles.secondaryButton}
-          variant="outline"
-        />
+        <Text
+          style={[
+            typography.bodyMd,
+            {
+              color: palette.onSurfaceVariant,
+              marginTop: spacing.sm,
+              textAlign: 'center',
+              paddingHorizontal: spacing.lg,
+            },
+          ]}
+        >
+          {error ||
+            t('verifyFailedHelp', {
+              defaultValue:
+                'The verification link is invalid or has expired. Try registering again or request a new email.',
+            })}
+        </Text>
+        <View style={{ marginTop: spacing.xl, width: '100%', gap: spacing.sm }}>
+          <Button
+            variant="primary"
+            fullWidth
+            onPress={() => router.replace('/(auth)/login')}
+          >
+            {t('goToLogin', { defaultValue: 'Go to sign in' })}
+          </Button>
+          <Button
+            variant="secondary"
+            fullWidth
+            onPress={() => router.replace('/(auth)/register')}
+          >
+            {t('registerAgain', { defaultValue: 'Register again' })}
+          </Button>
+        </View>
       </View>
-    </SafeScreenWrapper>
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  centerContainer: {
+  centered: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     paddingHorizontal: 24,
-  },
-  illustration: {
-    width: 180,
-    height: 180,
-    marginBottom: 24,
-  },
-  spinner: {
-    marginBottom: 24,
-  },
-  iconContainer: {
-    marginBottom: 24,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: Colors.text,
-    marginBottom: 16,
-    textAlign: "center",
-  },
-  message: {
-    fontSize: 16,
-    color: Colors.textSecondary,
-    textAlign: "center",
-    marginBottom: 32,
-    lineHeight: 24,
-  },
-  button: {
-    width: "100%",
-  },
-  secondaryButton: {
-    width: "100%",
-    marginTop: 12,
   },
 });
