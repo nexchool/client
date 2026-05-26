@@ -1,18 +1,19 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
   FlatList,
-  TouchableOpacity,
+  Pressable,
   RefreshControl,
-  ActivityIndicator,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "@/common/constants/colors";
-import { Spacing } from "@/common/constants/spacing";
+import { useTheme } from "@/common/theme";
+import { EmptyState } from "@/common/components/EmptyState";
+import { Link } from "@/common/components/Link";
+import { Skeleton } from "@/common/components/Skeleton";
 import { useAuth } from "@/modules/auth/hooks/useAuth";
 import {
   useMarkAllNotificationsRead,
@@ -24,29 +25,46 @@ import { canOpenFinanceDeepLinks } from "@/modules/notifications/financeDeepLink
 import { stripHtmlToPlainText } from "@/modules/notifications/formatNotificationBody";
 import type { AppNotification } from "@/modules/notifications/types";
 
-function formatWhen(iso: string | null | undefined, locale: string): string {
-  if (!iso) return "";
-  try {
-    const d = new Date(iso);
-    return d.toLocaleString(locale, {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
-  } catch {
-    return iso;
-  }
+type Filter = "all" | "unread";
+
+function relativeTime(dateStr: string | null | undefined): string {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  const diff = Date.now() - d.getTime();
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return "now";
+  if (min < 60) return `${min}m`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}h`;
+  const day = Math.floor(hr / 24);
+  if (day < 7) return `${day}d`;
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
 export default function NotificationsListScreen() {
-  const { t, i18n } = useTranslation("notifications");
+  const { t } = useTranslation("notifications");
   const router = useRouter();
+  const { palette, spacing, radius, typography, elevation } = useTheme();
   const { isFeatureEnabled, hasAnyPermission } = useAuth();
   const canUse = isFeatureEnabled("notifications");
   const canFinanceDeepLink = canOpenFinanceDeepLinks(isFeatureEnabled, hasAnyPermission);
 
-  const { data, isLoading, isRefetching, refetch, error } = useNotificationsList(false);
+  const [filter, setFilter] = useState<Filter>("all");
+  const listQuery = useNotificationsList(filter === "unread");
   const markRead = useMarkNotificationRead();
   const markAll = useMarkAllNotificationsRead();
+
+  const items: AppNotification[] = useMemo(
+    () => listQuery.data ?? [],
+    [listQuery.data]
+  );
+
+  const filtered = useMemo(() => {
+    if (filter === "unread") return items.filter((n) => !n.read_at);
+    return items;
+  }, [items, filter]);
+
+  const hasUnread = items.some((n) => !n.read_at);
 
   const onPressItem = useCallback(
     (item: AppNotification) => {
@@ -69,179 +87,221 @@ export default function NotificationsListScreen() {
 
   if (!canUse) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.muted}>{t("unavailable")}</Text>
+      <View
+        style={{
+          flex: 1,
+          padding: spacing.marginMobile,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Text style={[typography.bodyMd, { color: palette.onSurfaceVariant }]}>
+          {t("unavailable", { defaultValue: "Notifications are unavailable." })}
+        </Text>
       </View>
     );
   }
 
-  const list = data ?? [];
-  const unreadCount = list.filter((n) => !n.read_at).length;
+  const isInitialLoading = listQuery.isLoading && items.length === 0;
 
   return (
-    <View style={styles.container}>
-      <View style={styles.toolbar}>
-        <Text style={styles.title}>{t("title")}</Text>
-        {unreadCount > 0 && (
-          <TouchableOpacity
-            onPress={() => markAll.mutate()}
-            disabled={markAll.isPending}
-            hitSlop={8}
-          >
-            <Text style={styles.markAll}>
-              {markAll.isPending ? t("markingAll") : t("markAllRead")}
-            </Text>
-          </TouchableOpacity>
-        )}
+    <View style={{ flex: 1, padding: spacing.marginMobile, gap: spacing.lg }}>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <Text style={[typography.display, { color: palette.onSurface }]}>
+          {t("title", { defaultValue: "Notifications" })}
+        </Text>
+        {hasUnread ? (
+          <Link onPress={() => markAll.mutate()}>
+            {markAll.isPending
+              ? t("markingAll", { defaultValue: "Marking…" })
+              : t("markAllRead", { defaultValue: "Mark all read" })}
+          </Link>
+        ) : null}
       </View>
 
-      {isLoading && !list.length ? (
-        <View style={styles.centered}>
-          <ActivityIndicator color={Colors.primary} />
+      <View style={{ flexDirection: "row", gap: spacing.sm }}>
+        {(["all", "unread"] as Filter[]).map((f) => {
+          const isActive = filter === f;
+          return (
+            <Text
+              key={f}
+              onPress={() => setFilter(f)}
+              style={[
+                typography.labelMd,
+                {
+                  paddingHorizontal: spacing.md,
+                  paddingVertical: spacing.sm,
+                  borderRadius: radius.full,
+                  backgroundColor: isActive
+                    ? palette.primaryContainer
+                    : palette.surfaceContainerLowest,
+                  color: isActive ? palette.onPrimaryContainer : palette.onSurfaceVariant,
+                  overflow: "hidden",
+                  fontFamily: isActive ? "Inter_600SemiBold" : "Inter_500Medium",
+                },
+              ]}
+            >
+              {t(`filter.${f}`, { defaultValue: f[0].toUpperCase() + f.slice(1) })}
+            </Text>
+          );
+        })}
+      </View>
+
+      {isInitialLoading ? (
+        <View style={{ gap: spacing.sm }}>
+          <Skeleton width="100%" height={72} radius={radius.lg} />
+          <Skeleton width="100%" height={72} radius={radius.lg} />
+          <Skeleton width="100%" height={72} radius={radius.lg} />
         </View>
-      ) : error ? (
-        <View style={styles.centered}>
-          <Text style={styles.error}>{t("loadError")}</Text>
-          <TouchableOpacity onPress={() => refetch()} style={styles.retryBtn}>
-            <Text style={styles.retryText}>{t("retry")}</Text>
-          </TouchableOpacity>
-        </View>
+      ) : listQuery.error ? (
+        <EmptyState
+          icon={<Ionicons name="alert-circle-outline" size={36} color={palette.error} />}
+          title={t("loadError", { defaultValue: "Could not load notifications" })}
+          action={{
+            label: t("retry", { defaultValue: "Retry" }),
+            onPress: () => listQuery.refetch(),
+          }}
+        />
       ) : (
         <FlatList
-          data={list}
+          data={filtered}
           keyExtractor={(item) => item.id}
-          refreshControl={
-            <RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} />
+          renderItem={({ item, index }) => (
+            <NotifRow
+              item={item}
+              isLast={index === filtered.length - 1}
+              onPress={onPressItem}
+            />
+          )}
+          ListEmptyComponent={
+            <EmptyState
+              icon={<Ionicons name="mail-open-outline" size={36} color={palette.onSurfaceVariant} />}
+              title={t("empty.title", {
+                defaultValue: "You're all caught up",
+              })}
+            />
           }
-          contentContainerStyle={list.length === 0 ? styles.emptyList : styles.listContent}
-          ListEmptyComponent={<Text style={styles.muted}>{t("empty")}</Text>}
-          renderItem={({ item }) => {
-            const preview = stripHtmlToPlainText(item.body);
-            return (
-              <TouchableOpacity
-                style={[styles.row, !item.read_at && styles.rowUnread]}
-                onPress={() => onPressItem(item)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.rowIcon}>
-                  <Ionicons
-                    name={item.read_at ? "notifications-outline" : "notifications"}
-                    size={22}
-                    color={item.read_at ? Colors.textSecondary : Colors.primary}
-                  />
-                </View>
-                <View style={styles.rowBody}>
-                  <Text style={styles.rowTitle} numberOfLines={2}>
-                    {item.title}
-                  </Text>
-                  {preview ? (
-                    <Text style={styles.rowBodyText} numberOfLines={1}>
-                      {preview}
-                    </Text>
-                  ) : null}
-                  <Text style={styles.rowMeta}>
-                    {formatWhen(item.created_at, i18n.language)}
-                  </Text>
-                </View>
-                <Ionicons
-                  name="chevron-forward"
-                  size={18}
-                  color={Colors.textSecondary}
-                />
-              </TouchableOpacity>
-            );
-          }}
+          refreshControl={
+            <RefreshControl
+              refreshing={!!listQuery.isRefetching}
+              onRefresh={() => listQuery.refetch()}
+            />
+          }
+          contentContainerStyle={
+            filtered.length > 0
+              ? [
+                  elevation.card,
+                  {
+                    backgroundColor: palette.surfaceContainerLowest,
+                    borderRadius: radius.xl,
+                    overflow: "hidden" as const,
+                  },
+                ]
+              : { paddingTop: spacing.lg }
+          }
+          ItemSeparatorComponent={() => null}
         />
       )}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  toolbar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: Colors.text,
-  },
-  markAll: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: Colors.primary,
-  },
-  listContent: {
-    paddingVertical: Spacing.sm,
-  },
-  emptyList: {
-    flexGrow: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: Spacing.xl,
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.borderLight,
-    gap: Spacing.sm,
-  },
-  rowUnread: {
-    backgroundColor: Colors.primary + "0D",
-  },
-  rowIcon: { width: 32, alignItems: "center" },
-  rowBody: { flex: 1, minWidth: 0 },
-  rowTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: Colors.text,
-  },
-  rowBodyText: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    marginTop: 4,
-  },
-  rowMeta: {
-    fontSize: 12,
-    color: Colors.textSecondary,
-    marginTop: 6,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: Spacing.xl,
-  },
-  muted: {
-    fontSize: 15,
-    color: Colors.textSecondary,
-    textAlign: "center",
-  },
-  error: {
-    fontSize: 15,
-    color: Colors.error,
-    textAlign: "center",
-    marginBottom: Spacing.md,
-  },
-  retryBtn: {
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.lg,
-  },
-  retryText: {
-    color: Colors.primary,
-    fontWeight: "600",
-  },
-});
+function NotifRow({
+  item,
+  isLast,
+  onPress,
+}: {
+  item: AppNotification;
+  isLast: boolean;
+  onPress: (item: AppNotification) => void;
+}) {
+  const { palette, spacing, typography } = useTheme();
+  const isUnread = !item.read_at;
+  const preview = stripHtmlToPlainText(item.body);
+  return (
+    <Pressable
+      onPress={() => onPress(item)}
+      style={({ pressed }) => ({
+        backgroundColor: pressed ? palette.surfaceContainer : "transparent",
+      })}
+    >
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "flex-start",
+          padding: spacing.md,
+          gap: spacing.md,
+          borderBottomWidth: isLast ? 0 : 1,
+          borderBottomColor: palette.surfaceContainerHigh,
+        }}
+      >
+        <View
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: palette.secondaryContainer,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Ionicons
+            name={isUnread ? "notifications" : "notifications-outline"}
+            size={20}
+            color={palette.onSecondaryContainer}
+          />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text
+            style={[
+              typography.labelMd,
+              {
+                color: palette.onSurface,
+                fontFamily: isUnread ? "Inter_600SemiBold" : "Inter_500Medium",
+              },
+            ]}
+            numberOfLines={1}
+          >
+            {item.title}
+          </Text>
+          {preview ? (
+            <Text
+              style={[
+                typography.bodyMd,
+                { color: palette.onSurfaceVariant, marginTop: 2 },
+              ]}
+              numberOfLines={2}
+            >
+              {preview}
+            </Text>
+          ) : null}
+        </View>
+        <View style={{ alignItems: "flex-end", gap: 4 }}>
+          {item.created_at ? (
+            <Text style={[typography.labelSm, { color: palette.outline }]}>
+              {relativeTime(item.created_at)}
+            </Text>
+          ) : null}
+          {isUnread ? (
+            <View
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: 4,
+                backgroundColor: palette.primary,
+              }}
+            />
+          ) : null}
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+const styles = StyleSheet.create({});
