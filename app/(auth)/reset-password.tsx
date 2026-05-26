@@ -1,233 +1,182 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Image,
-  TouchableOpacity,
-} from "react-native";
-import { useLocalSearchParams, router } from "expo-router";
-import SafeScreenWrapper from "@/common/components/SafeScreenWrapper";
-import AuthInput from "@/common/components/AuthInput";
-import AuthButton from "@/common/components/AuthButton";
-import { useResetPassword } from "@/modules/auth/hooks/useResetPassword";
-import { Colors } from "@/common/constants/colors";
-import { Ionicons } from "@expo/vector-icons";
-
-const resetPasswordIcon = require("@/assets/images/auth/reset-password.jpg");
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import { useTheme } from '@/common/theme';
+import { ScreenContainer } from '@/common/components/ScreenContainer';
+import { Input } from '@/common/components/Input';
+import { Button } from '@/common/components/Button';
+import { Link } from '@/common/components/Link';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { useResetPassword } from '@/modules/auth/hooks/useResetPassword';
 
 export default function ResetPasswordScreen() {
-  const params = useLocalSearchParams();
-  const token = (params.token as string) || "";
-  const email = (params.email as string) || "";
+  const { t } = useTranslation('auth');
+  const { palette, spacing, typography } = useTheme();
+  const params = useLocalSearchParams<{ token?: string; email?: string }>();
+  const token = params.token || '';
+  const email = params.email || '';
 
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordError, setPasswordError] = useState("");
-  const [confirmPasswordError, setConfirmPasswordError] = useState("");
-  const [success, setSuccess] = useState(false);
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [confirmError, setConfirmError] = useState('');
+  const [submitted, setSubmitted] = useState(false);
 
   const { resetPassword, loading, error } = useResetPassword();
 
   useEffect(() => {
     if (!token || !email) {
-      router.replace("/(auth)/forgot-password");
+      router.replace('/(auth)/forgot-password');
     }
   }, [token, email]);
 
-  const handleResetPassword = async () => {
-    setPasswordError("");
-    setConfirmPasswordError("");
-
+  const handleSubmit = async () => {
+    setPasswordError('');
+    setConfirmError('');
+    if (password.length < 8) {
+      setPasswordError(t('passwordRule', { defaultValue: '8+ characters, one number' }));
+      return;
+    }
+    if (password !== confirm) {
+      setConfirmError(t('passwordsDontMatch', { defaultValue: 'Passwords do not match' }));
+      return;
+    }
     try {
-      await resetPassword(email, token, newPassword, confirmPassword);
-      setSuccess(true);
+      await resetPassword(email, token, password, confirm);
+      setSubmitted(true);
     } catch (err: any) {
-      const message = err?.message || "";
-      if (message.includes("match")) {
-        setConfirmPasswordError(message);
-      } else if (message.includes("password")) {
+      const message = err?.message || '';
+      if (message.includes('match')) {
+        setConfirmError(message);
+      } else if (message.includes('password')) {
         setPasswordError(message);
       }
     }
   };
 
-  if (success) {
-    return (
-      <SafeScreenWrapper backgroundColor={Colors.background}>
-        <View style={styles.successContainer}>
-          <View style={styles.successIconContainer}>
-            <Ionicons
-              name="checkmark-circle"
-              size={80}
-              color={Colors.success}
-            />
-          </View>
-          <Text style={styles.successTitle}>Password Reset!</Text>
-          <Text style={styles.successMessage}>
-            Your password has been successfully reset. You can now sign in with
-            your new password.
-          </Text>
-          <AuthButton
-            title="Go to Sign In"
-            onPress={() => router.replace("/(auth)/login")}
-            style={styles.backButton}
-          />
-        </View>
-      </SafeScreenWrapper>
-    );
-  }
-
   return (
-    <SafeScreenWrapper backgroundColor={Colors.background}>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.content}>
-          <View style={styles.illustrationContainer}>
-            <Image
-              source={resetPasswordIcon}
-              style={styles.illustration}
-              resizeMode="contain"
-            />
+    <ScreenContainer>
+      <Pressable onPress={() => router.back()} hitSlop={12} style={styles.back}>
+        <Ionicons name="chevron-back" size={24} color={palette.onSurface} />
+      </Pressable>
+
+      {submitted ? (
+        <View style={{ alignItems: 'center', marginTop: spacing.xl * 2 }}>
+          <View
+            style={{
+              width: 72,
+              height: 72,
+              borderRadius: 36,
+              backgroundColor: `${palette.success}22`,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Ionicons name="checkmark" size={36} color={palette.success} />
           </View>
-
-          <View style={styles.header}>
-            <Text style={styles.title}>Reset Password</Text>
-            <Text style={styles.subtitle}>Enter your new password below</Text>
-          </View>
-
-          <View style={styles.form}>
-            <AuthInput
-              label="New Password"
-              placeholder="Enter new password"
-              value={newPassword}
-              onChangeText={setNewPassword}
-              secureTextEntry
-              showPasswordToggle
-              autoCapitalize="none"
-              autoComplete="password-new"
-              icon="lock-closed-outline"
-              error={passwordError}
-            />
-
-            <AuthInput
-              label="Confirm Password"
-              placeholder="Confirm new password"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry
-              showPasswordToggle
-              autoCapitalize="none"
-              autoComplete="password-new"
-              icon="lock-closed-outline"
-              error={confirmPasswordError}
-            />
-
-            {error && <Text style={styles.errorText}>{error}</Text>}
-
-            <AuthButton
-              title="Reset Password"
-              onPress={handleResetPassword}
-              loading={loading}
-              style={styles.resetButton}
-            />
-
-            <View style={styles.footer}>
-              <TouchableOpacity onPress={() => router.push("/(auth)/login")}>
-                <Text style={styles.linkText}>Back to Sign In</Text>
-              </TouchableOpacity>
-            </View>
+          <Text
+            style={[
+              typography.headlineMd,
+              { color: palette.onSurface, marginTop: spacing.lg, textAlign: 'center' },
+            ]}
+          >
+            {t('passwordUpdated', { defaultValue: 'Password updated' })}
+          </Text>
+          <Text
+            style={[
+              typography.bodyMd,
+              {
+                color: palette.onSurfaceVariant,
+                marginTop: spacing.sm,
+                textAlign: 'center',
+                paddingHorizontal: spacing.lg,
+              },
+            ]}
+          >
+            {t('passwordUpdatedHelp', {
+              defaultValue: 'Sign in with your new password to continue.',
+            })}
+          </Text>
+          <View style={{ marginTop: spacing.xl, width: '100%' }}>
+            <Button variant="primary" fullWidth onPress={() => router.replace('/(auth)/login')}>
+              {t('backToSignIn', { defaultValue: 'Back to sign in' })}
+            </Button>
           </View>
         </View>
-      </ScrollView>
-    </SafeScreenWrapper>
+      ) : (
+        <>
+          <Text
+            style={[
+              typography.headlineLg,
+              { color: palette.onSurface, marginTop: spacing.xl },
+            ]}
+          >
+            {t('createNewPassword', { defaultValue: 'Create new password' })}
+          </Text>
+          <Text
+            style={[
+              typography.bodyMd,
+              { color: palette.onSurfaceVariant, marginTop: spacing.xs },
+            ]}
+          >
+            {t('createNewPasswordHelp', {
+              defaultValue: 'Choose a strong password you have not used before.',
+            })}
+          </Text>
+
+          <View style={{ marginTop: spacing.xl, gap: spacing.md }}>
+            <Input
+              label={t('newPassword', { defaultValue: 'New password' })}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              autoComplete="new-password"
+              autoCapitalize="none"
+              error={passwordError}
+              helper={t('passwordRule', { defaultValue: '8+ characters, one number' })}
+              rightSlot={
+                <Link onPress={() => setShowPassword((s) => !s)}>
+                  {showPassword
+                    ? t('hide', { defaultValue: 'Hide' })
+                    : t('show', { defaultValue: 'Show' })}
+                </Link>
+              }
+            />
+            <Input
+              label={t('confirmPassword', { defaultValue: 'Confirm password' })}
+              value={confirm}
+              onChangeText={setConfirm}
+              secureTextEntry={!showPassword}
+              autoComplete="new-password"
+              autoCapitalize="none"
+              error={confirmError}
+            />
+          </View>
+
+          {error && !passwordError && !confirmError ? (
+            <Text
+              style={[
+                typography.bodyMd,
+                { color: palette.error, marginTop: spacing.sm, textAlign: 'center' },
+              ]}
+            >
+              {error}
+            </Text>
+          ) : null}
+
+          <View style={{ marginTop: spacing.lg }}>
+            <Button variant="primary" fullWidth loading={loading} onPress={handleSubmit}>
+              {t('updatePassword', { defaultValue: 'Update password' })}
+            </Button>
+          </View>
+        </>
+      )}
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingBottom: 100,
-  },
-  content: {
-    paddingHorizontal: 24,
-    paddingTop: 40,
-    paddingBottom: 32,
-  },
-  illustrationContainer: {
-    alignItems: "center",
-    marginBottom: 32,
-  },
-  illustration: {
-    width: 200,
-    height: 200,
-  },
-  header: {
-    marginBottom: 32,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "700",
-    color: Colors.text,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: Colors.textSecondary,
-  },
-  form: {
-    flex: 1,
-  },
-  resetButton: {
-    marginTop: 8,
-  },
-  errorText: {
-    fontSize: 14,
-    color: Colors.error,
-    marginBottom: 16,
-    textAlign: "center",
-  },
-  footer: {
-    alignItems: "center",
-    marginTop: 24,
-  },
-  linkText: {
-    fontSize: 14,
-    color: Colors.primary,
-    fontWeight: "600",
-  },
-  successContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 24,
-  },
-  successIconContainer: {
-    marginBottom: 24,
-  },
-  successTitle: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: Colors.text,
-    marginBottom: 16,
-    textAlign: "center",
-  },
-  successMessage: {
-    fontSize: 16,
-    color: Colors.textSecondary,
-    textAlign: "center",
-    marginBottom: 32,
-    lineHeight: 24,
-  },
-  backButton: {
-    width: "100%",
-  },
+  back: { width: 44, height: 44, justifyContent: 'center' },
 });
