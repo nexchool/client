@@ -1,179 +1,147 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Image,
-  TouchableOpacity,
-} from "react-native";
-import { Link, router } from "expo-router";
-import SafeScreenWrapper from "@/common/components/SafeScreenWrapper";
-import AuthInput from "@/common/components/AuthInput";
-import AuthButton from "@/common/components/AuthButton";
-import { useRegister } from "@/modules/auth/hooks/useRegister";
-import { Colors } from "@/common/constants/colors";
-
-const registerIcon = require("@/assets/images/auth/register.jpg");
+import React, { useState } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import { useTheme } from '@/common/theme';
+import { ScreenContainer } from '@/common/components/ScreenContainer';
+import { Logo } from '@/common/components/Logo';
+import { Input } from '@/common/components/Input';
+import { Button } from '@/common/components/Button';
+import { Link } from '@/common/components/Link';
+import { useRegister } from '@/modules/auth/hooks/useRegister';
 
 export default function RegisterScreen() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
+  const { t } = useTranslation('auth');
+  const { palette, spacing, typography } = useTheme();
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const { register, loading, error } = useRegister();
 
   const handleRegister = async () => {
-    setEmailError("");
-    setPasswordError("");
+    setEmailError('');
+    setPasswordError('');
 
     try {
       await register(email, password);
-      router.push("/(auth)/login");
+      router.push('/(auth)/login');
     } catch (err: any) {
-      const message = err?.message || "";
-      if (message.includes("email")) {
+      const message = err?.message || '';
+      if (message.includes('email')) {
         setEmailError(message);
-      } else if (message.includes("password")) {
+      } else if (message.includes('password')) {
         setPasswordError(message);
       }
     }
   };
 
   return (
-    <SafeScreenWrapper backgroundColor={Colors.background}>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
+    <ScreenContainer>
+      <View style={styles.header}>
+        <Logo size="lg" />
+      </View>
+
+      <Text
+        style={[
+          typography.display,
+          {
+            color: palette.onSurface,
+            textAlign: 'center',
+            marginTop: spacing.xl,
+          },
+        ]}
       >
-        <View style={styles.content}>
-          <View style={styles.illustrationContainer}>
-            <Image
-              source={registerIcon}
-              style={styles.illustration}
-              resizeMode="contain"
-            />
-          </View>
+        {t('createAccount', { defaultValue: 'Create your account' })}
+      </Text>
+      <Text
+        style={[
+          typography.bodyMd,
+          {
+            color: palette.onSurfaceVariant,
+            textAlign: 'center',
+            marginTop: spacing.xs,
+          },
+        ]}
+      >
+        {t('registerSubtitle', {
+          defaultValue: 'Sign up to get started with your account',
+        })}
+      </Text>
 
-          <View style={styles.header}>
-            <Text style={styles.title}>Create Account</Text>
-            <Text style={styles.subtitle}>
-              Sign up to get started with your account
-            </Text>
-          </View>
+      <View style={{ marginTop: spacing.xl, gap: spacing.md }}>
+        <Input
+          label={t('emailLabel')}
+          placeholder={t('emailPlaceholder')}
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoComplete="email"
+          autoCapitalize="none"
+          error={emailError}
+        />
 
-          <View style={styles.form}>
-            <AuthInput
-              label="Email"
-              placeholder="Enter your email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-              icon="mail-outline"
-              error={emailError}
-            />
+        <Input
+          label={t('passwordLabel')}
+          placeholder={t('passwordPlaceholder')}
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry={!showPassword}
+          autoComplete="password-new"
+          autoCapitalize="none"
+          error={passwordError}
+          rightSlot={
+            <Link onPress={() => setShowPassword((s) => !s)}>
+              {showPassword
+                ? t('hide', { defaultValue: 'Hide' })
+                : t('show', { defaultValue: 'Show' })}
+            </Link>
+          }
+        />
+      </View>
 
-            <AuthInput
-              label="Password"
-              placeholder="Create a password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              showPasswordToggle
-              autoCapitalize="none"
-              autoComplete="password-new"
-              icon="lock-closed-outline"
-              error={passwordError}
-            />
+      {error ? (
+        <Text
+          style={[
+            typography.bodyMd,
+            {
+              color: palette.error,
+              textAlign: 'center',
+              marginTop: spacing.md,
+            },
+          ]}
+        >
+          {error}
+        </Text>
+      ) : null}
 
-            {error && <Text style={styles.errorText}>{error}</Text>}
+      <View style={{ marginTop: spacing.lg }}>
+        <Button variant="primary" fullWidth loading={loading} onPress={handleRegister}>
+          {t('createAccountAction', { defaultValue: 'Create account' })}
+        </Button>
+      </View>
 
-            <AuthButton
-              title="Create Account"
-              onPress={handleRegister}
-              loading={loading}
-              style={styles.registerButton}
-            />
-
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>Already have an account? </Text>
-              <Link href="/(auth)/login" asChild>
-                <TouchableOpacity>
-                  <Text style={styles.linkText}>Sign In</Text>
-                </TouchableOpacity>
-              </Link>
-            </View>
-          </View>
-        </View>
-      </ScrollView>
-    </SafeScreenWrapper>
+      <View style={styles.footer}>
+        <Text style={[typography.bodyMd, { color: palette.onSurfaceVariant }]}>
+          {t('hasAccount', { defaultValue: 'Already have an account? ' })}
+        </Text>
+        <Link onPress={() => router.push('/(auth)/login')}>{t('signIn')}</Link>
+      </View>
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingBottom: 100,
-  },
-  content: {
-    paddingHorizontal: 24,
-    paddingTop: 40,
-    paddingBottom: 32,
-  },
-  illustrationContainer: {
-    alignItems: "center",
-    marginBottom: 32,
-  },
-  illustration: {
-    width: 200,
-    height: 200,
-  },
-  header: {
-    marginBottom: 32,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "700",
-    color: Colors.text,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: Colors.textSecondary,
-  },
-  form: {
-    flex: 1,
-  },
-  registerButton: {
-    marginTop: 8,
-  },
-  errorText: {
-    fontSize: 14,
-    color: Colors.error,
-    marginBottom: 16,
-    textAlign: "center",
-  },
+  header: { alignItems: 'center', paddingTop: 32 },
   footer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
     marginTop: 24,
-  },
-  footerText: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-  },
-  linkText: {
-    fontSize: 14,
-    color: Colors.primary,
-    fontWeight: "600",
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    paddingBottom: 32,
   },
 });
