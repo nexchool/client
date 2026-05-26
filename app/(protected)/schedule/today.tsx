@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -292,5 +292,3 @@ function AdminEvents() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({});
