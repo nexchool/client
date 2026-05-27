@@ -133,5 +133,60 @@
     "couldNotOpen": "Could not open",
     "storageUnavailable": "Storage is not available.",
     "couldNotOpenDocument": "Could not open document"
+  },
+  "unsupportedRole": {
+    "title": "Profile not available for your role"
+  },
+  "sections": {
+    "security": "Security",
+    "preferences": "Preferences",
+    "about": "About"
+  },
+  "preferences": {
+    "language": "Language",
+    "notifications": "Notifications",
+    "notificationsHint": "Manage in your device settings"
+  },
+  "about": {
+    "version": "App version"
+  },
+  "languageSheet": {
+    "title": "Language",
+    "subtitle": "Choose your preferred language.",
+    "cancel": "Cancel"
+  },
+  "logoutConfirm": {
+    "title": "Sign out",
+    "message": "Are you sure you want to sign out?",
+    "cancel": "Cancel",
+    "confirm": "Sign out"
+  },
+  "signOutAll": {
+    "title": "Sign out from all devices",
+    "message": "This will sign you out everywhere. You'll need to log in again on each device.",
+    "confirm": "Sign out",
+    "row": "Sign out from all devices"
+  },
+  "changePassword": {
+    "title": "Change password",
+    "subtitle": "Choose a strong password you haven't used before",
+    "currentLabel": "Current password",
+    "newLabel": "New password",
+    "confirmLabel": "Confirm new password",
+    "passwordRule": "8+ characters, one number",
+    "show": "Show",
+    "hide": "Hide",
+    "submit": "Update password",
+    "successTitle": "Password updated",
+    "successBody": "Use your new password from now on.",
+    "backToProfile": "Back to profile",
+    "errors": {
+      "currentRequired": "Enter your current password",
+      "mismatch": "Passwords do not match",
+      "same": "New password must differ from current",
+      "currentInvalid": "Current password doesn't match",
+      "weak": "Password is too weak",
+      "unknown": "Could not update password"
+    }
   }
 }
