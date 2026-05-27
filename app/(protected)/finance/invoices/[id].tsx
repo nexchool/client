@@ -1,31 +1,24 @@
-import React, { useState } from "react";
+import React from "react";
 import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
-  TextInput,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
+  Pressable,
   Alert,
   Platform,
+  SafeAreaView,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  useInvoice,
-  useRecordPayment,
-  useSendReminder,
-} from "@/modules/fees/hooks/useFees";
+import { useInvoice, useSendReminder } from "@/modules/fees/hooks/useFees";
 import { feesService } from "@/modules/fees/services/feesService";
 import { calendarLocaleForLanguage } from "@/i18n";
-import { Colors } from "@/common/constants/colors";
-import { Spacing, Layout } from "@/common/constants/spacing";
-
-function formatCurrency(n: number) {
-  return `₹${n.toLocaleString("en-IN")}`;
-}
+import { useTheme } from "@/common/theme";
+import { Skeleton } from "@/common/components/Skeleton";
+import { EmptyState } from "@/common/components/EmptyState";
+import { formatCurrency } from "@/common/utils/formatCurrency";
 
 function formatDate(s: string, locale: string) {
   try {
@@ -44,14 +37,15 @@ export default function InvoiceDetailPage() {
   const locale = calendarLocaleForLanguage(i18n.language ?? "en");
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const [showRecordPayment, setShowRecordPayment] = useState(false);
-  const [paymentAmount, setPaymentAmount] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "bank" | "upi" | "online">("cash");
+  const { palette, spacing, radius, typography, elevation } = useTheme();
 
   const { data: invoice, isLoading, error } = useInvoice(id);
-  const recordMut = useRecordPayment(id);
   const sendReminderMut = useSendReminder(id);
 
+  // PRESERVED: blob-based PDF download flow.
+  //   Service: `feesService.downloadInvoicePdf(id)` / `feesService.downloadReceiptPdf(paymentId)`
+  //   Web: createObjectURL + anchor click. Native: Alert (informational; download not supported in-app).
+  //   This is NOT `react-native-pdf`; just remote PDF fetch as Blob.
   const handleDownloadInvoice = async () => {
     try {
       const blob = await feesService.downloadInvoicePdf(id!);
@@ -69,7 +63,10 @@ export default function InvoiceDetailPage() {
         );
       }
     } catch (e) {
-      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("invoiceDetail.alerts.downloadFailed"));
+      Alert.alert(
+        t("common.error"),
+        e instanceof Error ? e.message : t("invoiceDetail.alerts.downloadFailed")
+      );
     }
   };
 
@@ -90,359 +87,543 @@ export default function InvoiceDetailPage() {
         );
       }
     } catch (e) {
-      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("invoiceDetail.alerts.downloadFailed"));
-    }
-  };
-
-  const handleRecordPayment = async () => {
-    const amt = parseFloat(paymentAmount);
-    if (!amt || amt <= 0) {
-      Alert.alert(t("common.error"), t("invoiceDetail.alerts.validAmount"));
-      return;
-    }
-    try {
-      await recordMut.mutateAsync({
-        invoice_id: id!,
-        amount: amt,
-        payment_method: paymentMethod,
-      });
-      setShowRecordPayment(false);
-      setPaymentAmount("");
-    } catch (e) {
-      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("invoiceDetail.alerts.recordFailed"));
+      Alert.alert(
+        t("common.error"),
+        e instanceof Error ? e.message : t("invoiceDetail.alerts.downloadFailed")
+      );
     }
   };
 
   const handleSendReminder = async () => {
     try {
       await sendReminderMut.mutateAsync(id!);
-      Alert.alert(t("invoiceDetail.alerts.reminderSentTitle"), t("invoiceDetail.alerts.reminderSentBody"));
+      Alert.alert(
+        t("invoiceDetail.alerts.reminderSentTitle"),
+        t("invoiceDetail.alerts.reminderSentBody")
+      );
     } catch (e) {
-      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("invoiceDetail.alerts.reminderFailed"));
+      Alert.alert(
+        t("common.error"),
+        e instanceof Error
+          ? e.message
+          : t("invoiceDetail.alerts.reminderFailed")
+      );
     }
+  };
+
+  const handleShare = () => {
+    Alert.alert(
+      t("invoiceDetail.share", { defaultValue: "Share" }),
+      "Coming soon"
+    );
   };
 
   if (isLoading && !invoice) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-      </View>
+      <SafeAreaView style={{ flex: 1, backgroundColor: palette.surface }}>
+        <BackHeader title={""} />
+        <View style={{ padding: spacing.marginMobile, gap: spacing.md }}>
+          <Skeleton width="100%" height={180} radius={radius.xl} />
+          <Skeleton width="100%" height={140} radius={radius.xl} />
+          <Skeleton width="100%" height={140} radius={radius.xl} />
+        </View>
+      </SafeAreaView>
     );
   }
 
   if (error || !invoice) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.errorText}>{t("invoiceDetail.notFound")}</Text>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Text style={styles.backBtnText}>{t("common.goBack")}</Text>
-        </TouchableOpacity>
-      </View>
+      <SafeAreaView style={{ flex: 1, backgroundColor: palette.surface }}>
+        <BackHeader title={""} />
+        <EmptyState
+          icon={
+            <Ionicons
+              name="document-text-outline"
+              size={36}
+              color={palette.onSurfaceVariant}
+            />
+          }
+          title={t("invoiceDetail.notFound")}
+          action={{
+            label: t("common.goBack"),
+            onPress: () => router.back(),
+          }}
+        />
+      </SafeAreaView>
     );
   }
 
-  const canRecordPayment = invoice.status !== "paid" && invoice.status !== "cancelled";
-  const canSendReminder = invoice.status !== "paid" && invoice.status !== "cancelled";
+  const canSendReminder =
+    invoice.status !== "paid" && invoice.status !== "cancelled";
+
+  const heroAccent =
+    invoice.status === "paid"
+      ? palette.success
+      : invoice.status === "unpaid"
+        ? palette.error
+        : invoice.status === "partial"
+          ? palette.warning
+          : palette.primary;
+
+  const subtotal =
+    invoice.items?.reduce(
+      (sum, it: any) => sum + (it.amount ?? it.net_amount ?? 0),
+      0
+    ) ?? invoice.total_amount;
+  const discount = Math.max(0, subtotal - (invoice.total_amount ?? 0));
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backIcon}>
-          <Ionicons name="arrow-back" size={24} color={Colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{invoice.invoice_number}</Text>
-      </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: palette.surface }}>
+      <BackHeader title={invoice.invoice_number} />
 
-      <View style={styles.section}>
-        <View style={styles.summaryRow}>
-          <Text style={styles.label}>{t("invoiceDetail.totalInvoice")}</Text>
-          <Text style={styles.value}>{formatCurrency(invoice.total_amount)}</Text>
-        </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.label}>{t("invoiceDetail.amountPaid")}</Text>
-          <Text style={[styles.value, styles.valueSuccess]}>
-            {formatCurrency(invoice.amount_paid)}
-          </Text>
-        </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.label}>{t("invoiceDetail.remainingBalance")}</Text>
-          <Text style={[styles.value, styles.valueBold]}>
-            {formatCurrency(invoice.remaining_balance)}
-          </Text>
-        </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.label}>{t("invoiceDetail.dueDate")}</Text>
-          <Text style={styles.value}>{formatDate(invoice.due_date, locale)}</Text>
-        </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.label}>{t("invoiceDetail.status")}</Text>
-          <Text style={styles.value}>{t(`invoiceStatuses.${invoice.status}`)}</Text>
-        </View>
-      </View>
-
-      {invoice.items && invoice.items.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t("invoiceDetail.feeBreakdown")}</Text>
-          {invoice.items.map((it) => (
-            <View key={it.id} style={styles.itemRow}>
-              <Text style={styles.itemName}>{it.fee_head}</Text>
-              <Text style={styles.itemAmount}>{formatCurrency(it.net_amount)}</Text>
-            </View>
-          ))}
-        </View>
-      )}
-
-      {invoice.payments && invoice.payments.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t("invoiceDetail.paymentHistory")}</Text>
-          {invoice.payments.map((p) => (
-            <View key={p.id} style={styles.paymentRow}>
-              <View style={styles.paymentInfo}>
-                <Text style={styles.paymentDate}>{formatDate(p.payment_date || p.created_at, locale)}</Text>
-                <Text style={styles.paymentMethod}>{p.payment_method}</Text>
-                {p.payment_reference && (
-                  <Text style={styles.paymentRef}>{t("invoiceDetail.refPrefix")} {p.payment_reference}</Text>
-                )}
-              </View>
-              <View style={styles.paymentActions}>
-                <Text style={styles.paymentAmount}>{formatCurrency(p.amount)}</Text>
-                <TouchableOpacity
-                  style={styles.downloadReceiptBtn}
-                  onPress={() => handleDownloadReceipt(p.id)}
-                >
-                  <Ionicons name="download-outline" size={18} color={Colors.primary} />
-                  <Text style={styles.downloadReceiptText}>{t("invoiceDetail.receipt")}</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))}
-        </View>
-      )}
-
-      <View style={styles.actions}>
-        <TouchableOpacity
-          style={styles.primaryBtn}
-          onPress={handleDownloadInvoice}
+      <ScrollView
+        contentContainerStyle={{
+          padding: spacing.marginMobile,
+          paddingBottom: spacing.xl * 3,
+          gap: spacing.lg,
+        }}
+      >
+        {/* Hero */}
+        <View
+          style={[
+            elevation.card,
+            {
+              backgroundColor: palette.surfaceContainerLowest,
+              borderRadius: radius.xl,
+              padding: spacing.lg,
+              borderLeftWidth: 4,
+              borderLeftColor: heroAccent,
+            },
+          ]}
         >
-          <Ionicons name="document-text-outline" size={20} color="#fff" />
-          <Text style={styles.primaryBtnText}>{t("invoiceDetail.downloadInvoice")}</Text>
-        </TouchableOpacity>
-
-        {canRecordPayment && (
-          <TouchableOpacity
-            style={styles.secondaryBtn}
-            onPress={() => setShowRecordPayment(true)}
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
           >
-            <Ionicons name="card-outline" size={20} color={Colors.primary} />
-            <Text style={styles.secondaryBtnText}>{t("invoiceDetail.recordPayment")}</Text>
-          </TouchableOpacity>
-        )}
-
-        {canSendReminder && (
-          <TouchableOpacity
-            style={styles.secondaryBtn}
-            onPress={handleSendReminder}
-            disabled={sendReminderMut.isPending}
-          >
-            <Ionicons name="notifications-outline" size={20} color={Colors.primary} />
-            <Text style={styles.secondaryBtnText}>{t("invoiceDetail.sendReminder")}</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {showRecordPayment && (
-        <View style={styles.modalOverlay}>
-          <View style={styles.modal}>
-            <Text style={styles.modalTitle}>{t("invoiceDetail.recordModal.title")}</Text>
-            <Text style={styles.modalHint}>
-              {t("invoiceDetail.recordModal.remaining", { amount: formatCurrency(invoice.remaining_balance) })}
+            <Text
+              style={[typography.labelSm, { color: palette.onSurfaceVariant }]}
+            >
+              {invoice.invoice_number}
             </Text>
-            <Text style={styles.inputLabel}>{t("invoiceDetail.recordModal.amount")}</Text>
-            <View style={styles.inputRow}>
-              <Text style={styles.currencyPrefix}>₹</Text>
-              <TextInput
-                style={styles.amountInput}
-                value={paymentAmount}
-                onChangeText={setPaymentAmount}
-                placeholder="0"
-                keyboardType="decimal-pad"
-                placeholderTextColor={Colors.textTertiary}
-              />
-            </View>
-            <Text style={styles.inputLabel}>{t("invoiceDetail.recordModal.method")}</Text>
-            <View style={styles.methodRow}>
-              {(["cash", "bank", "upi", "online"] as const).map((m) => (
-                <TouchableOpacity
-                  key={m}
-                  style={[styles.methodChip, paymentMethod === m && styles.methodChipActive]}
-                  onPress={() => setPaymentMethod(m)}
-                >
-                  <Text
-                    style={[
-                      styles.methodChipText,
-                      paymentMethod === m && styles.methodChipTextActive,
-                    ]}
-                  >
-                    {t(`invoiceDetail.paymentMethods.${m}`)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.cancelBtn}
-                onPress={() => setShowRecordPayment(false)}
+            <StatusPill status={invoice.status} />
+          </View>
+          <Text
+            style={[
+              typography.display,
+              { color: palette.onSurface, marginTop: spacing.md },
+            ]}
+          >
+            {formatCurrency(invoice.total_amount)}
+          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              marginTop: spacing.md,
+            }}
+          >
+            <View>
+              <Text
+                style={[
+                  typography.labelSm,
+                  { color: palette.onSurfaceVariant },
+                ]}
               >
-                <Text style={styles.cancelBtnText}>{t("invoiceDetail.recordModal.cancel")}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.submitBtn, recordMut.isPending && styles.submitBtnDisabled]}
-                onPress={handleRecordPayment}
-                disabled={recordMut.isPending || !paymentAmount}
+                {t("invoiceDetail.issueDate", { defaultValue: "Issued" })}
+              </Text>
+              <Text
+                style={[
+                  typography.labelMd,
+                  { color: palette.onSurface, marginTop: 2 },
+                ]}
               >
-                {recordMut.isPending ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Text style={styles.submitBtnText}>{t("invoiceDetail.recordModal.record")}</Text>
-                )}
-              </TouchableOpacity>
+                {invoice.created_at
+                  ? formatDate(invoice.created_at, locale)
+                  : "—"}
+              </Text>
+            </View>
+            <View style={{ alignItems: "flex-end" }}>
+              <Text
+                style={[
+                  typography.labelSm,
+                  { color: palette.onSurfaceVariant },
+                ]}
+              >
+                {t("invoiceDetail.dueDate")}
+              </Text>
+              <Text
+                style={[
+                  typography.labelMd,
+                  { color: palette.onSurface, marginTop: 2 },
+                ]}
+              >
+                {formatDate(invoice.due_date, locale)}
+              </Text>
             </View>
           </View>
         </View>
-      )}
-    </ScrollView>
+
+        {/* Line items */}
+        {invoice.items && invoice.items.length > 0 && (
+          <View
+            style={[
+              elevation.card,
+              {
+                backgroundColor: palette.surfaceContainerLowest,
+                borderRadius: radius.xl,
+                padding: spacing.lg,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                typography.headlineMd,
+                { color: palette.onSurface, marginBottom: spacing.md },
+              ]}
+            >
+              {t("invoiceDetail.feeBreakdown")}
+            </Text>
+            {invoice.items.map((it, idx) => (
+              <View
+                key={it.id}
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  paddingVertical: spacing.sm,
+                  borderTopWidth: idx === 0 ? 0 : 1,
+                  borderTopColor: palette.outlineVariant,
+                }}
+              >
+                <Text
+                  style={[typography.bodyMd, { color: palette.onSurface, flex: 1 }]}
+                  numberOfLines={1}
+                >
+                  {it.fee_head}
+                </Text>
+                <Text
+                  style={[typography.labelMd, { color: palette.onSurface }]}
+                >
+                  {formatCurrency(it.net_amount)}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* Summary */}
+        <View
+          style={[
+            elevation.card,
+            {
+              backgroundColor: palette.surfaceContainerLowest,
+              borderRadius: radius.xl,
+              padding: spacing.lg,
+              gap: spacing.sm,
+            },
+          ]}
+        >
+          <SummaryRow
+            label={t("invoiceDetail.totalInvoice")}
+            value={formatCurrency(subtotal)}
+          />
+          {discount > 0 && (
+            <SummaryRow
+              label={t("invoiceDetail.discount", { defaultValue: "Discount" })}
+              value={`- ${formatCurrency(discount)}`}
+              valueColor={palette.success}
+            />
+          )}
+          <SummaryRow
+            label={t("invoiceDetail.amountPaid")}
+            value={formatCurrency(invoice.amount_paid)}
+            valueColor={palette.success}
+          />
+          <View
+            style={{
+              height: 1,
+              backgroundColor: palette.outlineVariant,
+              marginVertical: spacing.xs,
+            }}
+          />
+          <SummaryRow
+            label={t("invoiceDetail.remainingBalance")}
+            value={formatCurrency(invoice.remaining_balance)}
+            bold
+          />
+        </View>
+
+        {/* Payment history (timeline) */}
+        {invoice.payments && invoice.payments.length > 0 && (
+          <View
+            style={[
+              elevation.card,
+              {
+                backgroundColor: palette.surfaceContainerLowest,
+                borderRadius: radius.xl,
+                padding: spacing.lg,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                typography.headlineMd,
+                { color: palette.onSurface, marginBottom: spacing.md },
+              ]}
+            >
+              {t("invoiceDetail.paymentHistory")}
+            </Text>
+            {invoice.payments.map((p, idx) => (
+              <View
+                key={p.id}
+                style={{
+                  flexDirection: "row",
+                  paddingVertical: spacing.sm,
+                  borderTopWidth: idx === 0 ? 0 : 1,
+                  borderTopColor: palette.outlineVariant,
+                }}
+              >
+                <View
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 16,
+                    backgroundColor: palette.primaryContainer,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginRight: spacing.md,
+                  }}
+                >
+                  <Ionicons
+                    name="checkmark"
+                    size={18}
+                    color={palette.onPrimaryContainer}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={[
+                      typography.labelMd,
+                      { color: palette.onSurface },
+                    ]}
+                  >
+                    {formatCurrency(p.amount)}
+                  </Text>
+                  <Text
+                    style={[
+                      typography.labelSm,
+                      { color: palette.onSurfaceVariant, marginTop: 2 },
+                    ]}
+                  >
+                    {formatDate(p.payment_date || p.created_at, locale)} •{" "}
+                    {p.payment_method}
+                    {p.payment_reference
+                      ? ` • ${t("invoiceDetail.refPrefix")} ${p.payment_reference}`
+                      : ""}
+                  </Text>
+                  <Pressable
+                    onPress={() => handleDownloadReceipt(p.id)}
+                    style={({ pressed }) => ({
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 4,
+                      marginTop: spacing.xs,
+                      opacity: pressed ? 0.7 : 1,
+                    })}
+                  >
+                    <Ionicons
+                      name="download-outline"
+                      size={14}
+                      color={palette.primary}
+                    />
+                    <Text
+                      style={[typography.labelSm, { color: palette.primary }]}
+                    >
+                      {t("invoiceDetail.receipt")}
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* PRESERVED: PDF actions (download + share) — no in-app payment CTA */}
+        <View style={{ gap: spacing.md }}>
+          <Pressable
+            onPress={handleDownloadInvoice}
+            style={({ pressed }) => ({
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: spacing.sm,
+              backgroundColor: palette.primary,
+              padding: spacing.md,
+              borderRadius: radius.md,
+              opacity: pressed ? 0.85 : 1,
+            })}
+          >
+            <Ionicons
+              name="download-outline"
+              size={20}
+              color={palette.onPrimary}
+            />
+            <Text style={[typography.labelMd, { color: palette.onPrimary }]}>
+              {t("invoiceDetail.downloadInvoice")}
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={handleShare}
+            style={({ pressed }) => ({
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: spacing.sm,
+              backgroundColor: palette.surfaceContainerLowest,
+              borderWidth: 1,
+              borderColor: palette.outlineVariant,
+              padding: spacing.md,
+              borderRadius: radius.md,
+              opacity: pressed ? 0.85 : 1,
+            })}
+          >
+            <Ionicons
+              name="share-outline"
+              size={20}
+              color={palette.onSurface}
+            />
+            <Text style={[typography.labelMd, { color: palette.onSurface }]}>
+              {t("invoiceDetail.share", { defaultValue: "Share" })}
+            </Text>
+          </Pressable>
+
+          {canSendReminder && (
+            <Pressable
+              onPress={handleSendReminder}
+              disabled={sendReminderMut.isPending}
+              style={({ pressed }) => ({
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: spacing.sm,
+                backgroundColor: palette.surfaceContainerLowest,
+                borderWidth: 1,
+                borderColor: palette.outlineVariant,
+                padding: spacing.md,
+                borderRadius: radius.md,
+                opacity: pressed || sendReminderMut.isPending ? 0.7 : 1,
+              })}
+            >
+              <Ionicons
+                name="notifications-outline"
+                size={20}
+                color={palette.primary}
+              />
+              <Text style={[typography.labelMd, { color: palette.primary }]}>
+                {t("invoiceDetail.sendReminder")}
+              </Text>
+            </Pressable>
+          )}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  content: { padding: Spacing.lg, paddingBottom: Spacing.xxl },
-  center: { flex: 1, justifyContent: "center", alignItems: "center", padding: Spacing.xl },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: Spacing.lg,
-  },
-  backIcon: { padding: Spacing.sm, marginRight: Spacing.sm },
-  headerTitle: { fontSize: 22, fontWeight: "bold", color: Colors.text },
-  section: {
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.lg,
-    padding: Spacing.lg,
-    marginBottom: Spacing.lg,
-  },
-  sectionTitle: { fontSize: 16, fontWeight: "600", color: Colors.text, marginBottom: Spacing.md },
-  summaryRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: Spacing.sm,
-  },
-  label: { fontSize: 14, color: Colors.textSecondary },
-  value: { fontSize: 14, fontWeight: "600", color: Colors.text },
-  valueSuccess: { color: Colors.success },
-  valueBold: { fontSize: 16, fontWeight: "700" },
-  itemRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: Spacing.xs,
-  },
-  itemName: { fontSize: 14, color: Colors.text },
-  itemAmount: { fontSize: 14, fontWeight: "500", color: Colors.text },
-  paymentRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  paymentInfo: { flex: 1 },
-  paymentDate: { fontSize: 14, fontWeight: "500", color: Colors.text },
-  paymentMethod: { fontSize: 12, color: Colors.textSecondary },
-  paymentRef: { fontSize: 12, color: Colors.textSecondary },
-  paymentActions: { alignItems: "flex-end" },
-  paymentAmount: { fontSize: 16, fontWeight: "600", color: Colors.success },
-  downloadReceiptBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: Spacing.xs,
-    gap: 4,
-  },
-  downloadReceiptText: { fontSize: 12, color: Colors.primary },
-  actions: { gap: Spacing.md },
-  primaryBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: Spacing.sm,
-    backgroundColor: Colors.primary,
-    padding: Spacing.md,
-    borderRadius: Layout.borderRadius.md,
-  },
-  primaryBtnText: { color: "#fff", fontWeight: "600", fontSize: 16 },
-  secondaryBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: Spacing.sm,
-    backgroundColor: Colors.backgroundSecondary,
-    padding: Spacing.md,
-    borderRadius: Layout.borderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.primary,
-  },
-  secondaryBtnText: { color: Colors.primary, fontWeight: "600", fontSize: 16 },
-  errorText: { color: Colors.error, marginBottom: Spacing.md },
-  backBtn: { padding: Spacing.md },
-  backBtnText: { color: Colors.primary, fontWeight: "600" },
-  modalOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    padding: Spacing.lg,
-  },
-  modal: {
-    backgroundColor: Colors.background,
-    borderRadius: Layout.borderRadius.lg,
-    padding: Spacing.lg,
-  },
-  modalTitle: { fontSize: 18, fontWeight: "700", color: Colors.text },
-  modalHint: { fontSize: 14, color: Colors.textSecondary, marginTop: Spacing.xs },
-  inputLabel: { fontSize: 14, fontWeight: "600", color: Colors.text, marginTop: Spacing.md },
-  inputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: Layout.borderRadius.md,
-    padding: Spacing.md,
-  },
-  currencyPrefix: { fontSize: 18, color: Colors.textSecondary },
-  amountInput: { flex: 1, fontSize: 18, color: Colors.text },
-  methodRow: { flexDirection: "row", gap: Spacing.sm, marginTop: Spacing.sm },
-  methodChip: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: Layout.borderRadius.md,
-    backgroundColor: Colors.backgroundSecondary,
-  },
-  methodChipActive: { backgroundColor: Colors.primary },
-  methodChipText: { fontSize: 14, color: Colors.text },
-  methodChipTextActive: { fontSize: 14, color: "#fff", fontWeight: "600" },
-  modalActions: { flexDirection: "row", gap: Spacing.md, marginTop: Spacing.xl },
-  cancelBtn: { flex: 1, padding: Spacing.md, alignItems: "center" },
-  cancelBtnText: { fontSize: 16, color: Colors.textSecondary },
-  submitBtn: {
-    flex: 1,
-    backgroundColor: Colors.primary,
-    padding: Spacing.md,
-    borderRadius: Layout.borderRadius.md,
-    alignItems: "center",
-  },
-  submitBtnDisabled: { opacity: 0.7 },
-  submitBtnText: { color: "#fff", fontWeight: "600", fontSize: 16 },
-});
+function BackHeader({ title }: { title: string }) {
+  const { palette, spacing, typography } = useTheme();
+  const router = useRouter();
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: spacing.marginMobile,
+        paddingTop: spacing.md,
+        paddingBottom: spacing.sm,
+        gap: spacing.sm,
+      }}
+    >
+      <TouchableOpacity
+        onPress={() => router.back()}
+        hitSlop={12}
+        style={{ padding: spacing.xs }}
+      >
+        <Ionicons name="chevron-back" size={26} color={palette.onSurface} />
+      </TouchableOpacity>
+      <Text
+        style={[typography.headlineLg, { color: palette.onSurface, flex: 1 }]}
+        numberOfLines={1}
+      >
+        {title}
+      </Text>
+    </View>
+  );
+}
+
+function SummaryRow({
+  label,
+  value,
+  valueColor,
+  bold,
+}: {
+  label: string;
+  value: string;
+  valueColor?: string;
+  bold?: boolean;
+}) {
+  const { palette, typography } = useTheme();
+  const valueStyle = bold ? typography.headlineMd : typography.labelMd;
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+      }}
+    >
+      <Text style={[typography.labelMd, { color: palette.onSurfaceVariant }]}>
+        {label}
+      </Text>
+      <Text
+        style={[valueStyle, { color: valueColor ?? palette.onSurface }]}
+        numberOfLines={1}
+      >
+        {value}
+      </Text>
+    </View>
+  );
+}
+
+function StatusPill({ status }: { status: string }) {
+  const { t } = useTranslation("finance");
+  const { palette, typography, spacing, radius } = useTheme();
+  const colorMap: Record<string, string> = {
+    draft: palette.onSurfaceVariant,
+    unpaid: palette.error,
+    partial: palette.warning,
+    paid: palette.success,
+    cancelled: palette.onSurfaceVariant,
+  };
+  const color = colorMap[status] ?? palette.onSurfaceVariant;
+  return (
+    <View
+      style={{
+        paddingHorizontal: spacing.sm,
+        paddingVertical: 2,
+        borderRadius: radius.full,
+        borderWidth: 1,
+        borderColor: color,
+        backgroundColor: `${color}15`,
+      }}
+    >
+      <Text style={[typography.labelSm, { color }]}>
+        {t(`invoiceStatuses.${status}`, { defaultValue: status })}
+      </Text>
+    </View>
+  );
+}
