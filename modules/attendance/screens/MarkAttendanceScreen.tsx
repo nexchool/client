@@ -57,6 +57,13 @@ export default function MarkAttendanceScreen() {
   const [search, setSearch] = useState('');
   const [editingStudent, setEditingStudent] = useState<AttendanceRecord | null>(null);
   const dateScrollRef = useRef<ScrollView>(null);
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Holiday awareness — preserved from original
   const [holidayMap, setHolidayMap] = useState<Record<string, Holiday>>({});
@@ -255,19 +262,25 @@ export default function MarkAttendanceScreen() {
         records,
       });
       // After success, invalidate v2 React Query caches so Session and MyClasses
-      // reflect the new state when the user navigates back.
+      // reflect the new state when the user navigates back. Cache invalidation
+      // is safe even after unmount — fire-and-forget.
       void queryClient.invalidateQueries({ queryKey: qk.classSession(classId, selectedDate) });
       void queryClient.invalidateQueries({ queryKey: qk.eligibleClasses(selectedDate) });
       void queryClient.invalidateQueries({ queryKey: qk.classAttendanceHistory(classId) });
+      if (!isMountedRef.current) {
+        // User navigated away. Cache invalidation already fired; skip Alert + refetch.
+        return;
+      }
       // Also re-fetch the local legacy state.
       Alert.alert(t('mark.successTitle'), t('mark.successBody'), [
         { text: t('mark.ok'), onPress: () => fetchClassAttendance(classId, selectedDate) },
       ]);
       // ===== END PRESERVED MUTATION =====
     } catch (err: any) {
+      if (!isMountedRef.current) return;
       Alert.alert(t('mark.errorTitle'), err?.message || t('mark.saveError'));
     } finally {
-      setSubmitting(false);
+      if (isMountedRef.current) setSubmitting(false);
     }
   };
 
