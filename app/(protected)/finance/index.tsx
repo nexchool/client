@@ -9,19 +9,40 @@ import {
   Pressable,
   ActivityIndicator,
   RefreshControl,
+  Alert,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { router, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { calendarLocaleForLanguage } from "@/i18n";
 import { useFinanceDashboard } from "@/modules/finance/hooks/useFinance";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
+import { useTheme } from "@/common/theme";
+import { useUiRole } from "@/modules/permissions/hooks/useUiRole";
+import { HomeKpiCard } from "@/modules/home/components/HomeKpiCard";
+import { HomeQuickActionCard } from "@/modules/home/components/HomeQuickActionCard";
+import { HomeSectionHeader } from "@/modules/home/components/HomeSectionHeader";
+import { Skeleton } from "@/common/components/Skeleton";
+import { EmptyState } from "@/common/components/EmptyState";
+import { formatCurrency } from "@/common/utils/formatCurrency";
+import { useStudentAcademicDashboard } from "@/modules/academics/hooks/useAcademicQueries";
 
-function formatCurrency(n: number) {
+function formatAdminCurrency(n: number) {
   return `₹${n.toLocaleString("en-IN")}`;
 }
 
-export default function FinanceDashboardPage() {
+function comingSoon(label: string) {
+  Alert.alert(label, "Coming soon");
+}
+
+export default function FinanceIndex() {
+  const { isStudent } = useUiRole();
+  if (isStudent) return <StudentFinanceLanding />;
+  return <AdminFinanceDashboard />;
+}
+
+// PRESERVED: prior admin dashboard body verbatim, wrapped in component for role-dispatch.
+function AdminFinanceDashboard() {
   const { t, i18n } = useTranslation("finance");
   const locale = calendarLocaleForLanguage(i18n.language ?? "en");
   const router = useRouter();
@@ -78,7 +99,7 @@ export default function FinanceDashboardPage() {
                   <Ionicons name="document-text-outline" size={24} color={Colors.primary} />
                 </View>
                 <Text style={styles.statValue} numberOfLines={1}>
-                  {formatCurrency(stats.totalExpected)}
+                  {formatAdminCurrency(stats.totalExpected)}
                 </Text>
                 <Text style={styles.statLabel}>{t("dashboard.totalExpected")}</Text>
               </View>
@@ -87,7 +108,7 @@ export default function FinanceDashboardPage() {
                   <Ionicons name="checkmark-circle-outline" size={24} color={Colors.success} />
                 </View>
                 <Text style={styles.statValue} numberOfLines={1}>
-                  {formatCurrency(stats.totalCollected)}
+                  {formatAdminCurrency(stats.totalCollected)}
                 </Text>
                 <Text style={styles.statLabel}>{t("dashboard.totalCollected")}</Text>
               </View>
@@ -98,7 +119,7 @@ export default function FinanceDashboardPage() {
                   <Ionicons name="hourglass-outline" size={24} color={Colors.warning} />
                 </View>
                 <Text style={styles.statValue} numberOfLines={1}>
-                  {formatCurrency(stats.totalOutstanding)}
+                  {formatAdminCurrency(stats.totalOutstanding)}
                 </Text>
                 <Text style={styles.statLabel}>{t("dashboard.totalOutstanding")}</Text>
               </View>
@@ -219,7 +240,7 @@ export default function FinanceDashboardPage() {
                         })}
                       </Text>
                     </View>
-                    <Text style={styles.paymentAmount}>{formatCurrency(p.amount)}</Text>
+                    <Text style={styles.paymentAmount}>{formatAdminCurrency(p.amount)}</Text>
                   </View>
                 ))}
               </View>
@@ -227,6 +248,210 @@ export default function FinanceDashboardPage() {
           </View>
         </View>
       )}
+    </ScrollView>
+  );
+}
+
+function StudentFinanceLanding() {
+  const { t } = useTranslation("finance");
+  const { palette, spacing, radius, typography, elevation } = useTheme();
+  const { data, isLoading, isRefetching, refetch } = useStudentAcademicDashboard();
+
+  const fees = (data as any)?.fees ?? {};
+  const totalDue: number = fees.pending_amount ?? 0;
+  const dueInDays: number | undefined = fees.days_until_due;
+  const recentInvoices: any[] = fees.recent_invoices ?? [];
+  const components: any[] = fees.fee_components ?? [];
+
+  const heroAccent: "error" | "success" = totalDue > 0 ? "error" : "success";
+
+  return (
+    <ScrollView
+      contentContainerStyle={{
+        padding: spacing.marginMobile,
+        gap: spacing.lg,
+        paddingBottom: spacing.xl * 3,
+      }}
+      refreshControl={
+        <RefreshControl refreshing={!!isRefetching} onRefresh={() => refetch()} />
+      }
+      showsVerticalScrollIndicator={false}
+    >
+      <View>
+        <Text style={[typography.display, { color: palette.onSurface }]}>
+          {t("student.title", { defaultValue: "Finance" })}
+        </Text>
+        <Text
+          style={[
+            typography.bodyMd,
+            { color: palette.onSurfaceVariant, marginTop: spacing.xs },
+          ]}
+        >
+          {t("student.subtitle", { defaultValue: "Your fees and invoices" })}
+        </Text>
+      </View>
+
+      {isLoading && !data ? (
+        <Skeleton width="100%" height={120} radius={radius.xl} />
+      ) : (
+        <HomeKpiCard
+          label={
+            totalDue > 0
+              ? t("student.pendingFees", { defaultValue: "Pending Fees" })
+              : t("student.allPaid", { defaultValue: "Fees Clear" })
+          }
+          value={
+            totalDue > 0
+              ? formatCurrency(totalDue)
+              : t("student.noFeesDue", { defaultValue: "All paid" })
+          }
+          accent={heroAccent}
+          iconName="wallet-outline"
+          iconBgToken={totalDue > 0 ? "errorContainer" : "primaryContainer"}
+          secondaryText={
+            totalDue > 0 && dueInDays != null
+              ? t("student.dueInDays", {
+                  defaultValue: "Due in {{n}} days",
+                  n: dueInDays,
+                })
+              : undefined
+          }
+        />
+      )}
+
+      <View style={{ flexDirection: "row", gap: spacing.md }}>
+        <View style={{ flex: 1 }}>
+          <HomeQuickActionCard
+            label={t("student.payNow", { defaultValue: "Pay Now" })}
+            iconName="card"
+            iconBgToken="primaryContainer"
+            iconFgToken="onPrimaryContainer"
+            onPress={() =>
+              comingSoon(t("student.payNow", { defaultValue: "Pay Now" }))
+            }
+          />
+        </View>
+        <View style={{ flex: 1 }}>
+          <HomeQuickActionCard
+            label={t("student.statement", { defaultValue: "Statement" })}
+            iconName="document-text"
+            iconBgToken="secondaryContainer"
+            iconFgToken="onSurface"
+            onPress={() =>
+              comingSoon(t("student.statement", { defaultValue: "Statement" }))
+            }
+          />
+        </View>
+      </View>
+
+      {components.length > 0 ? (
+        <View style={{ gap: spacing.md }}>
+          <HomeSectionHeader
+            title={t("student.breakdown", { defaultValue: "Fee Breakdown" })}
+          />
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              gap: spacing.md,
+              paddingRight: spacing.lg,
+            }}
+          >
+            {components.map((c: any) => {
+              const paid = c.paid_amount ?? 0;
+              const total = c.total_amount ?? 0;
+              const accent: "success" | "tertiary" =
+                paid >= total && total > 0 ? "success" : "tertiary";
+              return (
+                <View key={String(c.id ?? c.name)} style={{ width: 180 }}>
+                  <HomeKpiCard
+                    label={c.name ?? "—"}
+                    value={formatCurrency(paid)}
+                    accent={accent}
+                    iconName="pricetags-outline"
+                    iconBgToken="tertiaryContainer"
+                    secondaryText={t("student.ofTotal", {
+                      defaultValue: "of {{total}}",
+                      total: formatCurrency(total),
+                    })}
+                  />
+                </View>
+              );
+            })}
+          </ScrollView>
+        </View>
+      ) : null}
+
+      <View style={{ gap: spacing.md }}>
+        <HomeSectionHeader
+          title={t("student.recentInvoices", {
+            defaultValue: "Recent Invoices",
+          })}
+          viewAllLabel={t("viewAll", { defaultValue: "View All" })}
+          onViewAll={() => router.push("/(protected)/finance/invoices" as any)}
+        />
+        <View
+          style={[
+            elevation.card,
+            {
+              backgroundColor: palette.surfaceContainerLowest,
+              borderRadius: radius.xl,
+              overflow: "hidden",
+            },
+          ]}
+        >
+          {recentInvoices.length === 0 ? (
+            <EmptyState
+              icon={
+                <Ionicons
+                  name="receipt-outline"
+                  size={36}
+                  color={palette.onSurfaceVariant}
+                />
+              }
+              title={t("student.noInvoices", {
+                defaultValue: "No invoices yet",
+              })}
+            />
+          ) : (
+            recentInvoices.slice(0, 3).map((inv: any, idx: number) => {
+              const isLast = idx >= Math.min(recentInvoices.length, 3) - 1;
+              return (
+                <Pressable
+                  key={inv.id ?? idx}
+                  onPress={() =>
+                    inv.id
+                      ? router.push(
+                          `/(protected)/finance/invoices/${inv.id}` as any
+                        )
+                      : undefined
+                  }
+                  style={({ pressed }) => ({
+                    padding: spacing.md,
+                    borderBottomWidth: isLast ? 0 : 1,
+                    borderBottomColor: palette.surfaceContainerHigh,
+                    opacity: pressed ? 0.85 : 1,
+                  })}
+                >
+                  <Text
+                    style={[typography.labelMd, { color: palette.onSurface }]}
+                  >
+                    {inv.invoice_number ?? "—"}
+                  </Text>
+                  <Text
+                    style={[
+                      typography.bodyMd,
+                      { color: palette.onSurfaceVariant, marginTop: 2 },
+                    ]}
+                  >
+                    {formatCurrency(inv.amount_due ?? inv.total ?? 0)}
+                  </Text>
+                </Pressable>
+              );
+            })
+          )}
+        </View>
+      </View>
     </ScrollView>
   );
 }
