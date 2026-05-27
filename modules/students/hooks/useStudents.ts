@@ -1,6 +1,13 @@
 import { useState, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { studentService } from '../services/studentService';
 import { Student, CreateStudentDTO, UpdateStudentDTO, CreateStudentResponse } from '../types';
+
+export const studentsKeys = {
+  all: ['students'] as const,
+  list: () => ['students', 'list'] as const,
+  detail: (id: string) => ['students', 'detail', id] as const,
+};
 
 export const useStudents = () => {
   const [students, setStudents] = useState<Student[]>([]);
@@ -111,3 +118,38 @@ export const useStudents = () => {
     deleteStudent,
   };
 };
+
+// TanStack Query hooks for student detail + mutations.
+// These coexist with the useState-based useStudents above.
+// Mutations invalidate by key prefix so any list/detail subscriber is refreshed.
+
+export function useStudent(id: string | undefined, enabled = true) {
+  return useQuery({
+    queryKey: studentsKeys.detail(id ?? ''),
+    queryFn: () => studentService.getStudent(id!),
+    enabled: enabled && !!id,
+  });
+}
+
+export function useCreateStudent() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateStudentDTO): Promise<CreateStudentResponse> =>
+      studentService.createStudent(input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: studentsKeys.list() });
+    },
+  });
+}
+
+export function useUpdateStudent(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: UpdateStudentDTO): Promise<Student> =>
+      studentService.updateStudent(id, input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: studentsKeys.list() });
+      qc.invalidateQueries({ queryKey: studentsKeys.detail(id) });
+    },
+  });
+}
