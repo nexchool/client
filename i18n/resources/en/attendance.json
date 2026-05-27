@@ -3,7 +3,9 @@
     "title": "Attendance classes",
     "open": "Open",
     "empty": "No eligible classes for attendance today.",
-    "emptySub": "You need to be assigned as a class teacher with attendance authority, or receive a delegated session."
+    "emptySub": "You need to be assigned as a class teacher with attendance authority, or receive a delegated session.",
+    "students": "students",
+    "viewPast": "View past"
   },
   "myAttendance": {
     "title": "My Attendance",
@@ -29,7 +31,10 @@
     "cancel": "Cancel",
     "doneTitle": "Done",
     "finalizedMsg": "Attendance finalized.",
-    "errorTitle": "Error"
+    "errorTitle": "Error",
+    "editAttendance": "Edit attendance",
+    "markAttendance": "Mark attendance",
+    "noMatching": "No students match this filter"
   },
   "admin": {
     "title": "Attendance Overview",
@@ -89,7 +94,8 @@
     "monthSep": "Sep",
     "monthOct": "Oct",
     "monthNov": "Nov",
-    "monthDec": "Dec"
+    "monthDec": "Dec",
+    "searchPlaceholder": "Search by name, roll, or admission #"
   },
   "status": {
     "present": "Present",
@@ -101,5 +107,19 @@
     "active": "Active",
     "inactive": "Inactive",
     "unmarked": "Unmarked"
-  }
+  },
+  "cancel": "Cancel",
+  "class": {
+    "mark": "Mark",
+    "view": "View"
+  },
+  "counts": {
+    "absent": "Absent",
+    "late": "Late",
+    "present": "Present",
+    "unmarked": "Unmarked"
+  },
+  "remarks": "Remarks",
+  "remarksPlaceholder": "Optional note...",
+  "save": "Save"
 }
