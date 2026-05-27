@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  View, Text, StyleSheet, Modal, TextInput,
+  View, Text, Modal, TextInput,
   TouchableOpacity, ScrollView, KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '@/common/constants/colors';
-import { Spacing, Layout } from '@/common/constants/spacing';
+import { useTheme } from '@/common/theme';
+import { Button } from '@/common/components/Button';
+import { Link } from '@/common/components/Link';
 import { Holiday, CreateHolidayDTO, HolidayType } from '../types';
 import { validateHolidayData } from '../validation/schemas';
 import { DateField } from '@/common/components/DateField';
@@ -61,6 +62,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
   visible, onClose, onSubmit, initialData = null, mode = 'create',
 }) => {
   const { t } = useTranslation('teacherLeaves');
+  const { palette, spacing, radius, typography } = useTheme();
   const trZod = useCallback((msg: string) => {
     const key = ZOD_MSG_KEYS[msg];
     return key ? t(key) : msg;
@@ -170,64 +172,165 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
     }
   };
 
+  const sectionLabelStyle = [
+    typography.labelSm,
+    {
+      color: palette.onSurfaceVariant,
+      textTransform: 'uppercase' as const,
+      letterSpacing: 0.5,
+      marginBottom: spacing.sm,
+    },
+  ];
+
+  const fieldLabelStyle = [
+    typography.labelMd,
+    {
+      color: palette.onSurface,
+      marginBottom: spacing.xs,
+      marginTop: spacing.sm,
+    },
+  ];
+
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.overlay}
+        style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}
       >
-        <View style={styles.sheet}>
+        <View
+          style={{
+            backgroundColor: palette.surfaceContainerLowest,
+            borderTopLeftRadius: radius.xl,
+            borderTopRightRadius: radius.xl,
+            height: '90%',
+            paddingHorizontal: spacing.lg,
+            paddingBottom: spacing.lg,
+          }}
+        >
+          {/* Drag handle */}
+          <View style={{ alignItems: 'center', paddingTop: spacing.sm, paddingBottom: spacing.md }}>
+            <View
+              style={{
+                width: 40,
+                height: 4,
+                borderRadius: 2,
+                backgroundColor: palette.outlineVariant,
+              }}
+            />
+          </View>
+
           {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.title}>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: spacing.md,
+            }}
+          >
+            <Text style={[typography.headlineMd, { color: palette.onSurface }]}>
               {mode === 'edit' ? t('holidayForm.titleEdit') : t('holidayForm.titleAdd')}
             </Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={24} color={Colors.text} />
+            <TouchableOpacity onPress={onClose} style={{ padding: spacing.xs }}>
+              <Ionicons name="close" size={24} color={palette.onSurface} />
             </TouchableOpacity>
           </View>
 
           {/* Error banner */}
           {submitError && (
-            <View style={styles.errorBanner}>
-              <Ionicons name="alert-circle-outline" size={16} color={Colors.error} />
-              <Text style={styles.errorBannerText}>{submitError}</Text>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: spacing.xs,
+                backgroundColor: palette.errorContainer,
+                padding: spacing.sm,
+                borderRadius: radius.sm,
+                marginBottom: spacing.sm,
+                borderWidth: 1,
+                borderColor: palette.error + '30',
+              }}
+            >
+              <Ionicons name="alert-circle-outline" size={16} color={palette.error} />
+              <Text style={[typography.labelSm, { color: palette.error, flex: 1 }]}>
+                {submitError}
+              </Text>
             </View>
           )}
 
-          <ScrollView style={styles.form} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
             {/* ─── Holiday Mode Tabs ─────────────────────────────── */}
-            <Text style={styles.sectionLabel}>{t('holidayForm.sectionSchedule')}</Text>
-            <View style={styles.modeTabs}>
-              {(['single', 'range', 'recurring'] as HolidayMode[]).map((m) => (
-                <TouchableOpacity
-                  key={m}
-                  style={[styles.modeTab, holidayMode === m && styles.modeTabActive]}
-                  onPress={() => handleModeChange(m)}
-                >
-                  <Ionicons
-                    name={m === 'single' ? 'today-outline' : m === 'range' ? 'calendar-outline' : 'repeat-outline'}
-                    size={15}
-                    color={holidayMode === m ? Colors.background : Colors.textSecondary}
-                  />
-                  <Text style={[styles.modeTabText, holidayMode === m && styles.modeTabTextActive]}>
-                    {m === 'single' ? t('holidayForm.modeSingle') : m === 'range' ? t('holidayForm.modeRange') : t('holidayForm.modeRecurring')}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+            <Text style={sectionLabelStyle}>{t('holidayForm.sectionSchedule')}</Text>
+            <View
+              style={{
+                flexDirection: 'row',
+                backgroundColor: palette.surfaceContainerLow,
+                borderRadius: radius.md,
+                padding: 3,
+                marginBottom: spacing.lg,
+              }}
+            >
+              {(['single', 'range', 'recurring'] as HolidayMode[]).map((m) => {
+                const active = holidayMode === m;
+                return (
+                  <TouchableOpacity
+                    key={m}
+                    style={{
+                      flex: 1,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      paddingVertical: spacing.sm,
+                      borderRadius: radius.sm,
+                      gap: 4,
+                      backgroundColor: active ? palette.primary : 'transparent',
+                    }}
+                    onPress={() => handleModeChange(m)}
+                  >
+                    <Ionicons
+                      name={m === 'single' ? 'today-outline' : m === 'range' ? 'calendar-outline' : 'repeat-outline'}
+                      size={15}
+                      color={active ? palette.onPrimary : palette.onSurfaceVariant}
+                    />
+                    <Text
+                      style={[
+                        typography.labelSm,
+                        {
+                          fontWeight: '600',
+                          color: active ? palette.onPrimary : palette.onSurfaceVariant,
+                        },
+                      ]}
+                    >
+                      {m === 'single' ? t('holidayForm.modeSingle') : m === 'range' ? t('holidayForm.modeRange') : t('holidayForm.modeRecurring')}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
 
             {/* ─── Name ─────────────────────────────────────────── */}
-            <Text style={styles.label}>{t('holidayForm.nameLabel')}</Text>
+            <Text style={fieldLabelStyle}>{t('holidayForm.nameLabel')}</Text>
             <TextInput
-              style={[styles.input, fieldErrors.name && styles.inputError]}
+              style={{
+                backgroundColor: palette.surfaceContainerLow,
+                borderWidth: fieldErrors.name ? 2 : 1,
+                borderColor: fieldErrors.name ? palette.error : palette.outlineVariant,
+                borderRadius: radius.md,
+                padding: spacing.md,
+                color: palette.onSurface,
+                fontSize: 16,
+              }}
               value={form.name}
               onChangeText={(v) => setField('name', v)}
               placeholder={t('holidayForm.namePlaceholder')}
-              placeholderTextColor={Colors.textSecondary}
+              placeholderTextColor={palette.outline}
             />
-            {fieldErrors.name && <Text style={styles.fieldError}>{fieldErrors.name}</Text>}
+            {fieldErrors.name && (
+              <Text style={[typography.labelSm, { color: palette.error, marginTop: 3, marginBottom: 4 }]}>
+                {fieldErrors.name}
+              </Text>
+            )}
 
             {/* ─── Date inputs ──────────────────────────────────── */}
             {holidayMode === 'single' && (
@@ -244,8 +347,8 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
             )}
 
             {holidayMode === 'range' && (
-              <View style={styles.row}>
-                <View style={styles.col}>
+              <View style={{ flexDirection: 'row' }}>
+                <View style={{ flex: 1 }}>
                   <DateField
                     label={t('holidayForm.startDateLabel')}
                     value={form.start_date}
@@ -255,7 +358,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
                     useOverlayInsideModal
                   />
                 </View>
-                <View style={[styles.col, { marginLeft: Spacing.md }]}>
+                <View style={{ flex: 1, marginLeft: spacing.md }}>
                   <DateField
                     label={t('holidayForm.endDateLabel')}
                     value={form.end_date}
@@ -270,14 +373,21 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
 
             {holidayMode === 'recurring' && (
               <>
-                <Text style={styles.label}>{t('holidayForm.repeatsEvery')}</Text>
-                <View style={styles.dayGrid}>
+                <Text style={fieldLabelStyle}>{t('holidayForm.repeatsEvery')}</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.xs }}>
                   {([0, 1, 2, 3, 4, 5, 6] as const).map((dow) => {
                     const active = form.recurring_day_of_week === dow;
                     return (
                       <TouchableOpacity
                         key={dow}
-                        style={[styles.dayChip, active && styles.dayChipActive]}
+                        style={{
+                          paddingVertical: spacing.sm,
+                          paddingHorizontal: spacing.md,
+                          borderRadius: radius.sm,
+                          borderWidth: 1,
+                          borderColor: active ? palette.primary : palette.outlineVariant,
+                          backgroundColor: active ? palette.primary : palette.surfaceContainerLow,
+                        }}
                         onPress={() => {
                           setField('recurring_day_of_week', dow);
                           if (fieldErrors.recurring_day_of_week) {
@@ -285,7 +395,15 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
                           }
                         }}
                       >
-                        <Text style={[styles.dayChipText, active && styles.dayChipTextActive]}>
+                        <Text
+                          style={[
+                            typography.labelSm,
+                            {
+                              fontWeight: '600',
+                              color: active ? palette.onPrimary : palette.onSurface,
+                            },
+                          ]}
+                        >
                           {t(`holidayForm.daysShort.${dow}`)}
                         </Text>
                       </TouchableOpacity>
@@ -293,11 +411,27 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
                   })}
                 </View>
                 {fieldErrors.recurring_day_of_week && (
-                  <Text style={styles.fieldError}>{fieldErrors.recurring_day_of_week}</Text>
+                  <Text style={[typography.labelSm, { color: palette.error, marginTop: 3, marginBottom: 4 }]}>
+                    {fieldErrors.recurring_day_of_week}
+                  </Text>
                 )}
-                <View style={styles.infoBox}>
-                  <Ionicons name="information-circle-outline" size={14} color={Colors.textSecondary} />
-                  <Text style={styles.infoText}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'flex-start',
+                    gap: spacing.xs,
+                    backgroundColor: palette.surfaceContainerLow,
+                    padding: spacing.sm,
+                    borderRadius: radius.sm,
+                    marginTop: spacing.xs,
+                    borderWidth: 1,
+                    borderColor: palette.outlineVariant,
+                  }}
+                >
+                  <Ionicons name="information-circle-outline" size={14} color={palette.onSurfaceVariant} />
+                  <Text
+                    style={[typography.labelSm, { color: palette.onSurfaceVariant, flex: 1, lineHeight: 18 }]}
+                  >
                     {t('holidayForm.recurringInfo')}
                   </Text>
                 </View>
@@ -305,239 +439,180 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
             )}
 
             {/* ─── Holiday Category ─────────────────────────────── */}
-            <Text style={styles.label}>{t('holidayForm.categoryLabel')}</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.typeRow}>
-              {HOLIDAY_TYPES.map((ht) => (
-                <TouchableOpacity
-                  key={ht}
-                  style={[styles.typeChip, form.holiday_type === ht && styles.typeChipActive]}
-                  onPress={() => setField('holiday_type', ht)}
-                >
-                  <Ionicons
-                    name={TYPE_ICONS[ht]}
-                    size={14}
-                    color={form.holiday_type === ht ? Colors.background : Colors.textSecondary}
-                    style={{ marginRight: 4 }}
-                  />
-                  <Text style={[styles.typeChipText, form.holiday_type === ht && styles.typeChipTextActive]}>
-                    {t(`holidayForm.types.${ht}`)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+            <Text style={fieldLabelStyle}>{t('holidayForm.categoryLabel')}</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.xs }}>
+              {HOLIDAY_TYPES.map((ht) => {
+                const active = form.holiday_type === ht;
+                return (
+                  <TouchableOpacity
+                    key={ht}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingVertical: spacing.sm,
+                      paddingHorizontal: spacing.md,
+                      marginRight: spacing.sm,
+                      borderRadius: radius.sm,
+                      borderWidth: 1,
+                      borderColor: active ? palette.primary : palette.outlineVariant,
+                      backgroundColor: active ? palette.primary : palette.surfaceContainerLow,
+                    }}
+                    onPress={() => setField('holiday_type', ht)}
+                  >
+                    <Ionicons
+                      name={TYPE_ICONS[ht]}
+                      size={14}
+                      color={active ? palette.onPrimary : palette.onSurfaceVariant}
+                      style={{ marginRight: 4 }}
+                    />
+                    <Text
+                      style={[
+                        typography.labelSm,
+                        {
+                          fontWeight: '600',
+                          color: active ? palette.onPrimary : palette.onSurface,
+                        },
+                      ]}
+                    >
+                      {t(`holidayForm.types.${ht}`)}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
-            {fieldErrors.holiday_type && <Text style={styles.fieldError}>{fieldErrors.holiday_type}</Text>}
+            {fieldErrors.holiday_type && (
+              <Text style={[typography.labelSm, { color: palette.error, marginTop: 3, marginBottom: 4 }]}>
+                {fieldErrors.holiday_type}
+              </Text>
+            )}
 
             {/* ─── Academic Year ────────────────────────────────── */}
             {academicYears.length > 0 && (
               <>
-                <Text style={styles.label}>{t('holidayForm.academicYear')}</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.typeRow}>
-                  <TouchableOpacity
-                    style={[styles.typeChip, !form.academic_year_id && styles.typeChipActive]}
-                    onPress={() => setField('academic_year_id', '')}
-                  >
-                    <Text style={[styles.typeChipText, !form.academic_year_id && styles.typeChipTextActive]}>
-                      {t('holidayForm.allYears')}
-                    </Text>
-                  </TouchableOpacity>
-                  {academicYears.map((ay: any) => (
-                    <TouchableOpacity
-                      key={ay.id}
-                      style={[styles.typeChip, form.academic_year_id === ay.id && styles.typeChipActive]}
-                      onPress={() => setField('academic_year_id', ay.id)}
-                    >
-                      <Text style={[styles.typeChipText, form.academic_year_id === ay.id && styles.typeChipTextActive]}>
-                        {ay.name}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                <Text style={fieldLabelStyle}>{t('holidayForm.academicYear')}</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.xs }}>
+                  {(() => {
+                    const active = !form.academic_year_id;
+                    return (
+                      <TouchableOpacity
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          paddingVertical: spacing.sm,
+                          paddingHorizontal: spacing.md,
+                          marginRight: spacing.sm,
+                          borderRadius: radius.sm,
+                          borderWidth: 1,
+                          borderColor: active ? palette.primary : palette.outlineVariant,
+                          backgroundColor: active ? palette.primary : palette.surfaceContainerLow,
+                        }}
+                        onPress={() => setField('academic_year_id', '')}
+                      >
+                        <Text
+                          style={[
+                            typography.labelSm,
+                            {
+                              fontWeight: '600',
+                              color: active ? palette.onPrimary : palette.onSurface,
+                            },
+                          ]}
+                        >
+                          {t('holidayForm.allYears')}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })()}
+                  {academicYears.map((ay: any) => {
+                    const active = form.academic_year_id === ay.id;
+                    return (
+                      <TouchableOpacity
+                        key={ay.id}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          paddingVertical: spacing.sm,
+                          paddingHorizontal: spacing.md,
+                          marginRight: spacing.sm,
+                          borderRadius: radius.sm,
+                          borderWidth: 1,
+                          borderColor: active ? palette.primary : palette.outlineVariant,
+                          backgroundColor: active ? palette.primary : palette.surfaceContainerLow,
+                        }}
+                        onPress={() => setField('academic_year_id', ay.id)}
+                      >
+                        <Text
+                          style={[
+                            typography.labelSm,
+                            {
+                              fontWeight: '600',
+                              color: active ? palette.onPrimary : palette.onSurface,
+                            },
+                          ]}
+                        >
+                          {ay.name}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </ScrollView>
               </>
             )}
 
             {/* ─── Description ─────────────────────────────────── */}
-            <Text style={styles.label}>{t('holidayForm.descriptionLabel')}</Text>
+            <Text style={fieldLabelStyle}>{t('holidayForm.descriptionLabel')}</Text>
             <TextInput
-              style={[styles.input, styles.textArea, fieldErrors.description && styles.inputError]}
+              style={{
+                backgroundColor: palette.surfaceContainerLow,
+                borderWidth: fieldErrors.description ? 2 : 1,
+                borderColor: fieldErrors.description ? palette.error : palette.outlineVariant,
+                borderRadius: radius.md,
+                padding: spacing.md,
+                color: palette.onSurface,
+                fontSize: 16,
+                minHeight: 80,
+                paddingTop: spacing.sm,
+              }}
               value={form.description}
               onChangeText={(v) => setField('description', v)}
               placeholder={t('holidayForm.descriptionPlaceholder')}
-              placeholderTextColor={Colors.textSecondary}
+              placeholderTextColor={palette.outline}
               multiline
               numberOfLines={3}
               textAlignVertical="top"
             />
-            {fieldErrors.description && <Text style={styles.fieldError}>{fieldErrors.description}</Text>}
+            {fieldErrors.description && (
+              <Text style={[typography.labelSm, { color: palette.error, marginTop: 3, marginBottom: 4 }]}>
+                {fieldErrors.description}
+              </Text>
+            )}
 
-            <View style={{ height: Spacing.xl }} />
+            <View style={{ height: spacing.xl }} />
           </ScrollView>
 
           {/* Footer */}
-          <View style={styles.footer}>
-            <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
-              <Text style={styles.cancelText}>{t('holidayForm.cancel')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.submitBtn, loading && styles.disabledBtn]}
-              onPress={handleSubmit}
-              disabled={loading}
-            >
-              <Text style={styles.submitText}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              paddingTop: spacing.md,
+              borderTopWidth: 1,
+              borderTopColor: palette.outlineVariant,
+              gap: spacing.md,
+            }}
+          >
+            <View style={{ flex: 1, alignItems: 'center' }}>
+              <Link onPress={onClose}>{t('holidayForm.cancel')}</Link>
+            </View>
+            <View style={{ flex: 2 }}>
+              <Button variant="primary" loading={loading} onPress={handleSubmit} fullWidth>
                 {loading
                   ? (mode === 'edit' ? t('holidayForm.saving') : t('holidayForm.adding'))
                   : (mode === 'edit' ? t('holidayForm.saveChanges') : t('holidayForm.addHoliday'))}
-              </Text>
-            </TouchableOpacity>
+              </Button>
+            </View>
           </View>
         </View>
       </KeyboardAvoidingView>
     </Modal>
   );
 };
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: Colors.background,
-    borderTopLeftRadius: Layout.borderRadius.xl,
-    borderTopRightRadius: Layout.borderRadius.xl,
-    height: '90%',
-    padding: Spacing.lg,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.md,
-  },
-  title: { fontSize: 20, fontWeight: 'bold', color: Colors.text },
-  closeBtn: { padding: Spacing.xs },
-  errorBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    backgroundColor: '#FFF0F0',
-    padding: Spacing.sm,
-    borderRadius: Layout.borderRadius.sm,
-    marginBottom: Spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.error + '30',
-  },
-  errorBannerText: { fontSize: 13, color: Colors.error, flex: 1 },
-  form: { flex: 1 },
-  sectionLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: Colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: Spacing.sm,
-  },
-  // Mode tabs
-  modeTabs: {
-    flexDirection: 'row',
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.md,
-    padding: 3,
-    marginBottom: Spacing.lg,
-  },
-  modeTab: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Spacing.sm,
-    borderRadius: Layout.borderRadius.sm,
-    gap: 4,
-  },
-  modeTabActive: { backgroundColor: Colors.primary },
-  modeTabText: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
-  modeTabTextActive: { color: Colors.background },
-  // Fields
-  label: {
-    fontSize: 14, fontWeight: '500', color: Colors.text,
-    marginBottom: Spacing.xs, marginTop: Spacing.sm,
-  },
-  input: {
-    backgroundColor: Colors.backgroundSecondary,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    borderRadius: Layout.borderRadius.md,
-    padding: Spacing.md,
-    color: Colors.text,
-    fontSize: 16,
-  },
-  inputError: { borderColor: Colors.error, borderWidth: 2 },
-  textArea: { minHeight: 80, paddingTop: Spacing.sm },
-  fieldError: { color: Colors.error, fontSize: 12, marginTop: 3, marginBottom: 4 },
-  row: { flexDirection: 'row' },
-  col: { flex: 1 },
-  // Day grid (recurring)
-  dayGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-    marginBottom: Spacing.xs,
-  },
-  dayChip: {
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    borderRadius: Layout.borderRadius.sm,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    backgroundColor: Colors.backgroundSecondary,
-  },
-  dayChipActive: { borderColor: Colors.primary, backgroundColor: Colors.primary },
-  dayChipText: { fontSize: 13, fontWeight: '600', color: Colors.text },
-  dayChipTextActive: { color: Colors.background },
-  // Type chips
-  typeRow: { marginBottom: Spacing.xs },
-  typeChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    marginRight: Spacing.sm,
-    borderRadius: Layout.borderRadius.sm,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    backgroundColor: Colors.backgroundSecondary,
-  },
-  typeChipActive: { borderColor: Colors.primary, backgroundColor: Colors.primary },
-  typeChipText: { fontSize: 13, fontWeight: '600', color: Colors.text },
-  typeChipTextActive: { color: Colors.background },
-  // Info box
-  infoBox: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.xs,
-    backgroundColor: Colors.backgroundSecondary,
-    padding: Spacing.sm,
-    borderRadius: Layout.borderRadius.sm,
-    marginTop: Spacing.xs,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-  },
-  infoText: { fontSize: 12, color: Colors.textSecondary, flex: 1, lineHeight: 18 },
-  // Footer
-  footer: {
-    flexDirection: 'row',
-    paddingTop: Spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: Colors.borderLight,
-  },
-  cancelBtn: {
-    flex: 1, padding: Spacing.md, alignItems: 'center', marginRight: Spacing.md,
-  },
-  cancelText: { fontSize: 16, color: Colors.textSecondary, fontWeight: '600' },
-  submitBtn: {
-    flex: 2, backgroundColor: Colors.primary, padding: Spacing.md,
-    borderRadius: Layout.borderRadius.md, alignItems: 'center',
-  },
-  disabledBtn: { opacity: 0.65 },
-  submitText: { fontSize: 16, color: '#FFFFFF', fontWeight: '600' },
-});

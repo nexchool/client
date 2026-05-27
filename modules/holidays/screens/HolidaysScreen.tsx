@@ -2,15 +2,19 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   View, Text, StyleSheet, SectionList, ActivityIndicator,
-  SafeAreaView, RefreshControl, TouchableOpacity, TextInput,
+  SafeAreaView, RefreshControl, TouchableOpacity, TextInput, Pressable,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/common/constants/colors';
 import { Spacing, Layout } from '@/common/constants/spacing';
+import { useTheme } from '@/common/theme';
+import { Protected } from '@/modules/permissions/components/Protected';
+import * as PERMS from '@/modules/permissions/constants/permissions';
 import { useAcademicYearContext } from '@/modules/academics/context/AcademicYearContext';
 import { useHolidays } from '../hooks/useHolidays';
 import { HolidayListItem } from '../components/HolidayListItem';
-import { Holiday } from '../types';
+import { HolidayFormModal } from '../components/HolidayFormModal';
+import { Holiday, CreateHolidayDTO } from '../types';
 
 type FilterTab = 'all' | 'upcoming' | 'recurring';
 
@@ -25,15 +29,22 @@ function useDebounce<T>(value: T, delay: number): T {
 
 export default function HolidaysScreen() {
   const { t } = useTranslation('holidays');
+  const { palette, elevation } = useTheme();
   const { selectedAcademicYearId } = useAcademicYearContext();
   const {
     holidays, recurringHolidays, loading, error,
-    fetchHolidays, fetchRecurring,
+    fetchHolidays, fetchRecurring, createHoliday,
   } = useHolidays();
 
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
   const [search, setSearch] = useState('');
+  const [showFormModal, setShowFormModal] = useState(false);
   const debouncedSearch = useDebounce(search, 400);
+
+  const handleCreateSubmit = useCallback(async (data: CreateHolidayDTO) => {
+    await createHoliday(data);
+    setShowFormModal(false);
+  }, [createHoliday]);
 
   const loadData = useCallback(() => {
     fetchHolidays({
@@ -156,6 +167,36 @@ export default function HolidaysScreen() {
           </View>
         }
         stickySectionHeadersEnabled={false}
+      />
+
+      <Protected permission={PERMS.HOLIDAY_CREATE}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Add holiday"
+          onPress={() => setShowFormModal(true)}
+          style={({ pressed }) => ({
+            position: 'absolute',
+            bottom: 96,
+            right: 20,
+            width: 56,
+            height: 56,
+            borderRadius: 28,
+            backgroundColor: palette.primary,
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: pressed ? 0.85 : 1,
+            ...elevation.card,
+          })}
+        >
+          <Ionicons name="add" size={28} color={palette.onPrimary} />
+        </Pressable>
+      </Protected>
+
+      <HolidayFormModal
+        visible={showFormModal}
+        onClose={() => setShowFormModal(false)}
+        onSubmit={handleCreateSubmit}
+        mode="create"
       />
     </SafeAreaView>
   );
