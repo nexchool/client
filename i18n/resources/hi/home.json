@@ -48,5 +48,52 @@
     "academics": "शैक्षणिक",
     "myAttendance": "मेरी उपस्थिति",
     "profile": "प्रोफ़ाइल"
-  }
+  },
+  "admin": {
+    "action": {
+      "addStudent": "छात्र जोड़ें",
+      "reports": "रिपोर्ट देखें",
+      "sendNotice": "सूचना भेजें",
+      "takeAttendance": "उपस्थिति लें"
+    },
+    "conflicts": "आज के संघर्ष",
+    "kpi": {
+      "attendance": "आज की उपस्थिति",
+      "fees": "आज का संग्रह",
+      "students": "कुल छात्र",
+      "teachers": "कुल शिक्षक"
+    },
+    "noConflicts": "आज कोई संघर्ष नहीं",
+    "quickActions": "त्वरित क्रियाएँ",
+    "title": "स्कूल अवलोकन"
+  },
+  "student": {
+    "attendance": "उपस्थिति",
+    "feesClear": "फीस चुका दी",
+    "noFeesDue": "सब चुका दिया",
+    "noMoreClasses": "आज और कक्षाएँ नहीं",
+    "noUpdates": "कोई नई अपडेट नहीं",
+    "pendingFees": "बकाया फीस",
+    "recentUpdates": "हाल की अपडेट",
+    "upNext": "आगे",
+    "viewResources": "शेड्यूल देखें",
+    "welcomeBack": "वापसी पर स्वागत है,"
+  },
+  "teacher": {
+    "action": {
+      "addAssignment": "असाइनमेंट जोड़ें",
+      "markAttendance": "उपस्थिति दर्ज करें",
+      "more": "और क्रियाएँ",
+      "mySchedule": "मेरा शेड्यूल"
+    },
+    "noPeriods": "आज कोई कक्षा नहीं",
+    "startLesson": "पाठ शुरू करें",
+    "subtitle": "यहाँ आज का आपका शेड्यूल और कार्य हैं।",
+    "todaysPeriods": "आज के पीरियड"
+  },
+  "unsupportedRole": {
+    "body": "आपके खाते का प्रकार अभी nexchool मोबाइल ऐप पर समर्थित नहीं है। कृपया वेब डैशबोर्ड का उपयोग करें या अपने स्कूल प्रशासक से संपर्क करें।",
+    "title": "आपकी भूमिका के लिए मोबाइल ऐप जल्द आ रहा है"
+  },
+  "viewAll": "सभी देखें"
 }

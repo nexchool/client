@@ -48,5 +48,52 @@
     "academics": "શૈક્ષણિક",
     "myAttendance": "મારી હાજરી",
     "profile": "પ્રોફાઇલ"
-  }
+  },
+  "admin": {
+    "action": {
+      "addStudent": "વિદ્યાર્થી ઉમેરો",
+      "reports": "અહેવાલો જુઓ",
+      "sendNotice": "સૂચના મોકલો",
+      "takeAttendance": "હાજરી લો"
+    },
+    "conflicts": "આજના સંઘર્ષો",
+    "kpi": {
+      "attendance": "આજની હાજરી",
+      "fees": "આજનો સંગ્રહ",
+      "students": "કુલ વિદ્યાર્થીઓ",
+      "teachers": "કુલ શિક્ષકો"
+    },
+    "noConflicts": "આજે કોઈ સંઘર્ષ નથી",
+    "quickActions": "ઝડપી ક્રિયાઓ",
+    "title": "શાળાનું વિહંગાવલોકન"
+  },
+  "student": {
+    "attendance": "હાજરી",
+    "feesClear": "ફી ચૂકવાઈ",
+    "noFeesDue": "બધું ચૂકવ્યું",
+    "noMoreClasses": "આજે વધુ વર્ગો નથી",
+    "noUpdates": "કોઈ નવી અપડેટ નથી",
+    "pendingFees": "બાકી ફી",
+    "recentUpdates": "તાજેતરની અપડેટ",
+    "upNext": "આગળ",
+    "viewResources": "શેડ્યૂલ જુઓ",
+    "welcomeBack": "પાછા આવવા પર સ્વાગત છે,"
+  },
+  "teacher": {
+    "action": {
+      "addAssignment": "અસાઇનમેન્ટ ઉમેરો",
+      "markAttendance": "હાજરી નોંધો",
+      "more": "વધુ ક્રિયાઓ",
+      "mySchedule": "મારું શેડ્યૂલ"
+    },
+    "noPeriods": "આજે કોઈ વર્ગ નથી",
+    "startLesson": "પાઠ શરૂ કરો",
+    "subtitle": "અહીં તમારું આજનું શેડ્યૂલ અને કાર્યો છે.",
+    "todaysPeriods": "આજના પીરિયડ"
+  },
+  "unsupportedRole": {
+    "body": "તમારા ખાતાનો પ્રકાર હજુ nexchool મોબાઇલ એપ પર સપોર્ટેડ નથી. કૃપા કરી વેબ ડેશબોર્ડ વાપરો અથવા તમારા શાળા સંચાલકનો સંપર્ક કરો.",
+    "title": "તમારી ભૂમિકા માટે મોબાઇલ એપ ટૂંક સમયમાં આવશે"
+  },
+  "viewAll": "બધું જુઓ"
 }

@@ -48,5 +48,52 @@
     "academics": "Academics",
     "myAttendance": "My attendance",
     "profile": "Profile"
-  }
+  },
+  "admin": {
+    "action": {
+      "addStudent": "Add Student",
+      "reports": "View Reports",
+      "sendNotice": "Send Notice",
+      "takeAttendance": "Take Attendance"
+    },
+    "conflicts": "Today's Conflicts",
+    "kpi": {
+      "attendance": "Attendance Today",
+      "fees": "Today's Collection",
+      "students": "Total Students",
+      "teachers": "Total Teachers"
+    },
+    "noConflicts": "No conflicts today",
+    "quickActions": "Quick Actions",
+    "title": "School Overview"
+  },
+  "student": {
+    "attendance": "Attendance",
+    "feesClear": "Fees Clear",
+    "noFeesDue": "All paid",
+    "noMoreClasses": "No more classes today",
+    "noUpdates": "No new updates",
+    "pendingFees": "Pending Fees",
+    "recentUpdates": "Recent Updates",
+    "upNext": "Up Next",
+    "viewResources": "View Schedule",
+    "welcomeBack": "Welcome back,"
+  },
+  "teacher": {
+    "action": {
+      "addAssignment": "Add Assignment",
+      "markAttendance": "Mark Attendance",
+      "more": "More Actions",
+      "mySchedule": "My Schedule"
+    },
+    "noPeriods": "No classes today",
+    "startLesson": "Start Lesson",
+    "subtitle": "Here is your schedule and tasks for today.",
+    "todaysPeriods": "Today's Periods"
+  },
+  "unsupportedRole": {
+    "body": "Your account type is not yet supported on the nexchool mobile app. Please use the web dashboard or contact your school administrator.",
+    "title": "Mobile app coming soon for your role"
+  },
+  "viewAll": "View All"
 }
