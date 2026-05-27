@@ -1,0 +1,112 @@
+{
+  "inbox": {
+    "title": "Announcements",
+    "empty": {
+      "title": "No announcements yet",
+      "body": "When admins send announcements, they'll show up here."
+    }
+  },
+  "list": {
+    "title": "Announcements",
+    "empty": {
+      "published": {
+        "title": "No sent announcements",
+        "body": "Tap + to compose a new announcement."
+      },
+      "scheduled": {
+        "title": "No scheduled announcements",
+        "body": "Tap + to compose a new announcement."
+      },
+      "draft": {
+        "title": "No drafts",
+        "body": "Tap + to compose a new announcement."
+      }
+    }
+  },
+  "compose": {
+    "newTitle": "New announcement",
+    "editTitle": "Edit announcement"
+  },
+  "section": {
+    "content": "Content",
+    "audience": "Audience",
+    "attachments": "Attachments"
+  },
+  "field": {
+    "title": "Title",
+    "titlePlaceholder": "School closure tomorrow",
+    "body": "Body (markdown)",
+    "bodyPlaceholder": "Use **bold**, lists, links…"
+  },
+  "preview": {
+    "show": "Preview",
+    "edit": "Edit"
+  },
+  "templates": {
+    "link": "Templates"
+  },
+  "template": {
+    "confirm": {
+      "title": "Replace draft?",
+      "body": "This will overwrite your current title + body.",
+      "cancel": "Cancel",
+      "replace": "Replace"
+    }
+  },
+  "action": {
+    "saveDraft": "Save draft",
+    "schedule": "Schedule",
+    "reschedule": "Reschedule",
+    "unschedule": "Unschedule",
+    "sendNow": "Send now",
+    "saveChanges": "Save changes"
+  },
+  "schedule": {
+    "confirm": "Confirm"
+  },
+  "discard": {
+    "title": "Discard?",
+    "body": "Your unsaved changes will be lost.",
+    "keep": "Keep editing",
+    "confirm": "Discard"
+  },
+  "error": {
+    "save": "Could not save",
+    "send": "Could not send",
+    "unschedule": "Could not unschedule",
+    "schedule": {
+      "title": "Pick a future time",
+      "body": "Schedule must be at least 1 minute in the future."
+    }
+  },
+  "readonly": {
+    "recalled": "This announcement has been recalled and cannot be edited."
+  },
+  "back": "Back",
+  "detail": {
+    "edit": "Edit",
+    "recall": "Recall",
+    "edited": "Edited",
+    "recalled": "Recalled",
+    "attachments": "Attachments",
+    "viewRecipients": "View recipients",
+    "revisions": "Revisions"
+  },
+  "attachment": {
+    "error": "Could not open file"
+  },
+  "recall": {
+    "title": "Recall announcement",
+    "body": "A recall notification will be sent to all recipients.",
+    "reasonLabel": "Reason (optional)",
+    "reasonPlaceholder": "Sent in error / Updated event details",
+    "cancel": "Cancel",
+    "confirm": "Recall",
+    "error": "Could not recall"
+  },
+  "recipients": {
+    "title": "Recipients",
+    "readAt": "Read",
+    "unread": "Unread"
+  }
+}

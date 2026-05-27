@@ -57,6 +57,13 @@ export const STUDENT_LEAVE_APPROVE_CLASS = 'student.leave.approve.class';
 export const STUDENT_LEAVE_APPROVE_ALL = 'student.leave.approve.all';
 export const STUDENT_LEAVE_REQUEST_CANCEL = 'student.leave.request_cancel';
 
+// Announcements
+export const ANNOUNCEMENT_CREATE = 'announcement.create';
+export const ANNOUNCEMENT_UPDATE = 'announcement.update';
+export const ANNOUNCEMENT_RECALL = 'announcement.recall';
+export const ANNOUNCEMENT_READ_OWN = 'announcement.read.own';
+export const ANNOUNCEMENT_READ_ALL = 'announcement.read.all';
+
 // Grade Management
 export const GRADE_CREATE = 'grade.create';
 export const GRADE_READ_SELF = 'grade.read.self';
