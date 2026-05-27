@@ -21,8 +21,7 @@ import {
 } from "../hooks/useStudentDocuments";
 import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
 import * as PERMS from "@/modules/permissions/constants/permissions";
-import { Colors } from "@/common/constants/colors";
-import { Spacing, Layout } from "@/common/constants/spacing";
+import { useTheme } from "@/common/theme";
 import {
   StudentDocument,
   DOCUMENT_TYPE_LABELS,
@@ -35,8 +34,47 @@ interface StudentDocumentsSectionProps {
   studentId: string;
 }
 
+function FileTypeIcon({
+  mimeType,
+  documentType,
+  palette,
+}: {
+  mimeType?: string | null;
+  documentType?: string | null;
+  palette: ReturnType<typeof useTheme>["palette"];
+}) {
+  const mime = (mimeType || "").toLowerCase();
+  const dt = (documentType || "").toLowerCase();
+  let iconName: keyof typeof Ionicons.glyphMap = "document-outline";
+  if (mime.startsWith("image") || dt.includes("photo") || dt.includes("image")) {
+    iconName = "image-outline";
+  } else if (
+    mime.includes("pdf") ||
+    dt.includes("pdf") ||
+    dt.includes("certificate") ||
+    dt.includes("id")
+  ) {
+    iconName = "document-text-outline";
+  }
+  return (
+    <View
+      style={{
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+        backgroundColor: palette.tertiaryContainer,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Ionicons name={iconName} size={22} color={palette.onTertiaryContainer} />
+    </View>
+  );
+}
+
 export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionProps) {
   const { t } = useTranslation("profile");
+  const { palette, spacing, radius, typography, elevation } = useTheme();
   const {
     data: documents,
     isLoading,
@@ -88,42 +126,304 @@ export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionPr
     refetch();
   };
 
+  const sectionWrapperStyle = [
+    elevation.card,
+    {
+      backgroundColor: palette.surfaceContainerLowest,
+      borderRadius: radius.xl,
+      padding: spacing.lg,
+      gap: spacing.md,
+    },
+  ];
+
+  const list = Array.isArray(documents) ? documents : [];
+
   if (isLoading) {
     return (
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t("documents.title")}</Text>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="small" color={Colors.primary} />
+      <View style={sectionWrapperStyle}>
+        <Text style={[typography.headlineMd, { color: palette.onSurface }]}>
+          {t("documents.title")}
+        </Text>
+        <View style={[styles.centerPad, { padding: spacing.xl }]}>
+          <ActivityIndicator size="small" color={palette.primary} />
         </View>
       </View>
     );
   }
 
-  const list = Array.isArray(documents) ? documents : [];
-
   if (isError) {
     return (
       <Fragment>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t("documents.title")}</Text>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorMessage}>{t("documents.errorMessage")}</Text>
-          <View style={styles.errorActions}>
-            <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
-              <Ionicons name="refresh" size={18} color={Colors.primary} />
-              <Text style={styles.retryButtonText}>{t("documents.retry")}</Text>
+        <View style={sectionWrapperStyle}>
+          <Text style={[typography.headlineMd, { color: palette.onSurface }]}>
+            {t("documents.title")}
+          </Text>
+          <View style={[styles.centerPad, { padding: spacing.xl, gap: spacing.md }]}>
+            <Text
+              style={[
+                typography.bodyMd,
+                { color: palette.onSurfaceVariant, textAlign: "center" },
+              ]}
+            >
+              {t("documents.errorMessage")}
+            </Text>
+            <View style={[styles.actionsRow, { gap: spacing.sm }]}>
+              <TouchableOpacity
+                style={[
+                  styles.iconActionBtn,
+                  {
+                    gap: spacing.xs,
+                    paddingHorizontal: spacing.md,
+                    paddingVertical: spacing.sm,
+                    backgroundColor: palette.surfaceContainer,
+                    borderRadius: radius.DEFAULT,
+                  },
+                ]}
+                onPress={() => refetch()}
+              >
+                <Ionicons name="refresh" size={18} color={palette.primary} />
+                <Text
+                  style={[
+                    typography.labelMd,
+                    { color: palette.primary, fontFamily: "Inter_600SemiBold" },
+                  ]}
+                >
+                  {t("documents.retry")}
+                </Text>
+              </TouchableOpacity>
+              {canManage && (
+                <TouchableOpacity
+                  style={[
+                    styles.iconActionBtn,
+                    {
+                      gap: spacing.xs,
+                      paddingHorizontal: spacing.md,
+                      paddingVertical: spacing.sm,
+                      backgroundColor: palette.surfaceContainer,
+                      borderRadius: radius.DEFAULT,
+                    },
+                  ]}
+                  onPress={() => setUploadModalVisible(true)}
+                >
+                  <Ionicons name="add" size={18} color={palette.primary} />
+                  <Text
+                    style={[
+                      typography.labelMd,
+                      { color: palette.primary, fontFamily: "Inter_600SemiBold" },
+                    ]}
+                  >
+                    {t("documents.addDocument")}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+          <UploadDocumentModal
+            visible={uploadModalVisible}
+            onClose={() => setUploadModalVisible(false)}
+            onSuccess={handleUploadSuccess}
+            studentId={studentId}
+            uploadMutation={uploadMutation}
+          />
+        </View>
+        <StudentDocumentViewerModal
+          visible={viewerDoc !== null}
+          onClose={() => setViewerDoc(null)}
+          document={viewerDoc}
+        />
+      </Fragment>
+    );
+  }
+
+  return (
+    <Fragment>
+      <View style={sectionWrapperStyle}>
+        <View style={styles.headerRow}>
+          <View style={[styles.titleWithCount, { gap: spacing.sm }]}>
+            <Text style={[typography.headlineMd, { color: palette.onSurface }]}>
+              {t("documents.title")}
+            </Text>
+            {list.length > 0 ? (
+              <View
+                style={{
+                  paddingHorizontal: spacing.sm,
+                  paddingVertical: 2,
+                  borderRadius: radius.full,
+                  backgroundColor: palette.surfaceContainer,
+                  minWidth: 24,
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={[typography.labelSm, { color: palette.onSurfaceVariant }]}
+                >
+                  {list.length}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+          {canManage && (
+            <TouchableOpacity
+              style={[
+                styles.addButton,
+                {
+                  gap: spacing.xs,
+                  paddingHorizontal: spacing.sm,
+                  paddingVertical: spacing.xs,
+                },
+              ]}
+              onPress={() => setUploadModalVisible(true)}
+              hitSlop={8}
+            >
+              <Ionicons name="add" size={20} color={palette.primary} />
+              <Text
+                style={[
+                  typography.labelMd,
+                  { color: palette.primary, fontFamily: "Inter_600SemiBold" },
+                ]}
+              >
+                {t("documents.addDocument")}
+              </Text>
             </TouchableOpacity>
+          )}
+        </View>
+
+        {list.length === 0 ? (
+          <View style={[styles.emptyState, { paddingVertical: spacing.xl, gap: spacing.md }]}>
+            <View
+              style={{
+                width: 72,
+                height: 72,
+                borderRadius: 36,
+                backgroundColor: palette.surfaceContainer,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Ionicons
+                name="document-outline"
+                size={36}
+                color={palette.onSurfaceVariant}
+              />
+            </View>
+            <Text
+              style={[
+                typography.bodyMd,
+                { color: palette.onSurfaceVariant, textAlign: "center" },
+              ]}
+            >
+              {t("documents.emptyState")}
+            </Text>
             {canManage && (
               <TouchableOpacity
-                style={styles.addFromErrorButton}
+                style={{
+                  marginTop: spacing.xs,
+                  paddingHorizontal: spacing.lg,
+                  paddingVertical: spacing.sm,
+                  backgroundColor: palette.primary,
+                  borderRadius: radius.DEFAULT,
+                }}
                 onPress={() => setUploadModalVisible(true)}
               >
-                <Ionicons name="add" size={18} color={Colors.primary} />
-                <Text style={styles.retryButtonText}>{t("documents.addDocument")}</Text>
+                <Text
+                  style={[
+                    typography.labelMd,
+                    {
+                      color: palette.onPrimary,
+                      fontFamily: "Inter_600SemiBold",
+                    },
+                  ]}
+                >
+                  {t("documents.addDocument")}
+                </Text>
               </TouchableOpacity>
             )}
           </View>
-        </View>
+        ) : (
+          <View style={{ gap: spacing.sm }}>
+            {list.map((doc) => {
+              const label =
+                doc.document_type_label ||
+                t(`documentTypes.${doc.document_type}`, {
+                  defaultValue:
+                    DOCUMENT_TYPE_LABELS[doc.document_type as DocumentType] ??
+                    doc.document_type,
+                });
+              const dateText = doc.created_at
+                ? new Date(doc.created_at).toLocaleDateString()
+                : "";
+              return (
+                <TouchableOpacity
+                  key={doc.id}
+                  style={[
+                    styles.docCard,
+                    {
+                      padding: spacing.md,
+                      gap: spacing.md,
+                      backgroundColor: palette.surfaceContainerLowest,
+                      borderRadius: radius.lg,
+                      borderColor: palette.outlineVariant,
+                    },
+                  ]}
+                  onPress={() => handleOpenDocument(doc)}
+                  onLongPress={() => canManage && handleDeleteDocument(doc)}
+                  activeOpacity={0.7}
+                  delayLongPress={400}
+                >
+                  <FileTypeIcon
+                    mimeType={doc.mime_type}
+                    documentType={doc.document_type}
+                    palette={palette}
+                  />
+                  <View style={styles.docCardContent}>
+                    <Text
+                      style={[typography.labelMd, { color: palette.onSurface }]}
+                      numberOfLines={1}
+                    >
+                      {doc.original_filename}
+                    </Text>
+                    <Text
+                      style={[
+                        typography.labelSm,
+                        {
+                          color: palette.onSurfaceVariant,
+                          marginTop: 2,
+                          fontFamily: "Inter_400Regular",
+                        },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {label}
+                      {dateText ? ` · ${dateText}` : ""}
+                    </Text>
+                  </View>
+                  {canManage && (
+                    <TouchableOpacity
+                      style={{ padding: spacing.xs }}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        handleDeleteDocument(doc);
+                      }}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                      <Ionicons
+                        name="trash-outline"
+                        size={20}
+                        color={palette.error}
+                      />
+                    </TouchableOpacity>
+                  )}
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={palette.onSurfaceVariant}
+                  />
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
+
         <UploadDocumentModal
           visible={uploadModalVisible}
           onClose={() => setUploadModalVisible(false)}
@@ -137,251 +437,46 @@ export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionPr
         onClose={() => setViewerDoc(null)}
         document={viewerDoc}
       />
-      </Fragment>
-    );
-  }
-
-  return (
-    <Fragment>
-    <View style={styles.section}>
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>{t("documents.title")}</Text>
-        {canManage && (
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => setUploadModalVisible(true)}
-          >
-            <Ionicons name="add" size={20} color={Colors.primary} />
-            <Text style={styles.addButtonText}>{t("documents.addDocument")}</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {list.length === 0 ? (
-        <View style={styles.emptyState}>
-          <Ionicons name="document-outline" size={48} color={Colors.textSecondary} />
-          <Text style={styles.emptyText}>{t("documents.emptyState")}</Text>
-          {canManage && (
-            <TouchableOpacity
-              style={styles.emptyAddButton}
-              onPress={() => setUploadModalVisible(true)}
-            >
-              <Text style={styles.emptyAddButtonText}>{t("documents.addDocument")}</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      ) : (
-        <View style={styles.docList}>
-          {list.map((doc) => (
-            <TouchableOpacity
-              key={doc.id}
-              style={styles.docCard}
-              onPress={() => handleOpenDocument(doc)}
-              onLongPress={() => canManage && handleDeleteDocument(doc)}
-              activeOpacity={0.7}
-              delayLongPress={400}
-            >
-              <Ionicons
-                name={doc.mime_type?.startsWith("image") ? "image-outline" : "document-outline"}
-                size={24}
-                color={Colors.primary}
-              />
-              <View style={styles.docCardContent}>
-                <Text style={styles.docCardLabel}>
-                  {doc.document_type_label ||
-                    t(`documentTypes.${doc.document_type}`, {
-                      defaultValue:
-                        DOCUMENT_TYPE_LABELS[doc.document_type as DocumentType] ??
-                        doc.document_type,
-                    })}
-                </Text>
-                <Text style={styles.docCardFilename} numberOfLines={1}>
-                  {doc.original_filename}
-                </Text>
-                <Text style={styles.docCardDate}>
-                  {doc.created_at
-                    ? new Date(doc.created_at).toLocaleDateString()
-                    : ""}
-                </Text>
-              </View>
-              {canManage && (
-                <TouchableOpacity
-                  style={styles.deleteIconButton}
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    handleDeleteDocument(doc);
-                  }}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <Ionicons name="trash-outline" size={20} color={Colors.error} />
-                </TouchableOpacity>
-              )}
-              <Ionicons name="open-outline" size={20} color={Colors.textSecondary} />
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
-
-      <UploadDocumentModal
-        visible={uploadModalVisible}
-        onClose={() => setUploadModalVisible(false)}
-        onSuccess={handleUploadSuccess}
-        studentId={studentId}
-        uploadMutation={uploadMutation}
-      />
-    </View>
-    <StudentDocumentViewerModal
-      visible={viewerDoc !== null}
-      onClose={() => setViewerDoc(null)}
-      document={viewerDoc}
-    />
     </Fragment>
   );
 }
 
 const styles = StyleSheet.create({
-  section: {
-    marginBottom: Spacing.xl,
-    backgroundColor: Colors.background,
-    borderRadius: Layout.borderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    padding: Spacing.lg,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+  centerPad: {
+    alignItems: "center",
+    justifyContent: "center",
   },
-  sectionHeader: {
+  actionsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+  },
+  iconActionBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: Spacing.md,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: Colors.text,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-    paddingBottom: Spacing.sm,
+  titleWithCount: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   addButton: {
     flexDirection: "row",
     alignItems: "center",
-    gap: Spacing.xs,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-  },
-  addButtonText: {
-    fontSize: 14,
-    color: Colors.primary,
-    fontWeight: "500",
-  },
-  loadingContainer: {
-    padding: Spacing.xl,
-    alignItems: "center",
-  },
-  errorContainer: {
-    padding: Spacing.xl,
-    alignItems: "center",
-  },
-  errorMessage: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    textAlign: "center",
-    marginBottom: Spacing.md,
-  },
-  errorActions: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    gap: Spacing.sm,
-  },
-  addFromErrorButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.xs,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.sm,
-  },
-  errorText: {
-    fontSize: 14,
-    color: Colors.error,
-    marginBottom: Spacing.md,
-  },
-  retryButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.xs,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.sm,
-  },
-  retryButtonText: {
-    fontSize: 14,
-    color: Colors.primary,
-    fontWeight: "500",
   },
   emptyState: {
     alignItems: "center",
-    paddingVertical: Spacing.xl,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    textAlign: "center",
-    marginTop: Spacing.md,
-  },
-  emptyAddButton: {
-    marginTop: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    backgroundColor: Colors.primary,
-    borderRadius: Layout.borderRadius.sm,
-  },
-  emptyAddButtonText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  docList: {
-    gap: Spacing.sm,
   },
   docCard: {
     flexDirection: "row",
     alignItems: "center",
-    padding: Spacing.md,
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.sm,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
   },
   docCardContent: {
     flex: 1,
-    marginLeft: Spacing.md,
-  },
-  docCardLabel: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: Colors.text,
-  },
-  docCardFilename: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  docCardDate: {
-    fontSize: 12,
-    color: Colors.textTertiary,
-    marginTop: 2,
-  },
-  deleteIconButton: {
-    padding: Spacing.xs,
-    marginRight: Spacing.sm,
   },
 });
