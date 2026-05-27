@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { Controller, type Control, type FieldPath, type FieldValues } from 'react-hook-form';
 import { useTheme } from '@/common/theme';
 
@@ -67,6 +67,9 @@ export function FormSelect<TForm extends FieldValues>({
                       borderWidth: active ? 0 : 1,
                       borderColor: palette.outlineVariant,
                       opacity: pressed ? 0.85 : 1,
+                      minHeight: 44,
+                      alignItems: 'center',
+                      justifyContent: 'center',
                     })}
                   >
                     <Text
@@ -103,5 +106,3 @@ export function FormSelect<TForm extends FieldValues>({
     />
   );
 }
-
-const styles = StyleSheet.create({});

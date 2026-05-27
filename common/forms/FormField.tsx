@@ -13,7 +13,6 @@ type Props<TForm extends FieldValues> = {
   autoComplete?: TextInputProps['autoComplete'];
   autoCapitalize?: TextInputProps['autoCapitalize'];
   secureTextEntry?: boolean;
-  multiline?: boolean;
   disabled?: boolean;
   rules?: object;
 };

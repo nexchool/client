@@ -1,5 +1,5 @@
 import React, { type ReactNode } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { useTheme } from '@/common/theme';
 
 type Props = {
@@ -30,5 +30,3 @@ export function FormSection({ title, children }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({});

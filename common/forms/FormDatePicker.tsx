@@ -37,7 +37,8 @@ export function FormDatePicker<TForm extends FieldValues>({
       name={name}
       render={({ field: { value, onChange }, fieldState: { error } }) => {
         const stringValue = (value as string) ?? '';
-        const dateValue = stringValue ? new Date(stringValue) : null;
+        const parsed = stringValue ? new Date(stringValue) : null;
+        const dateValue = parsed && !Number.isNaN(parsed.getTime()) ? parsed : null;
 
         const handleChange = (_: DateTimePickerEvent, d?: Date) => {
           setShowAndroidPicker(false);
