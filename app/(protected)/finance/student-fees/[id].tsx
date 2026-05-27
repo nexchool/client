@@ -26,12 +26,10 @@ import {
 import { financeService } from "@/modules/finance/services/financeService";
 import type { RecordPaymentInput } from "@/modules/finance/types";
 import { calendarLocaleForLanguage } from "@/i18n";
-import { Colors } from "@/common/constants/colors";
-import { Spacing, Layout } from "@/common/constants/spacing";
-
-function formatCurrency(n: number) {
-  return `₹${n.toLocaleString("en-IN")}`;
-}
+import { useTheme } from "@/common/theme";
+import { Skeleton } from "@/common/components/Skeleton";
+import { EmptyState } from "@/common/components/EmptyState";
+import { formatCurrency } from "@/common/utils/formatCurrency";
 
 function formatDate(s: string, locale: string) {
   try {
@@ -41,7 +39,16 @@ function formatDate(s: string, locale: string) {
   }
 }
 
-// Allocation state: { item_id: amount_string }
+function daysUntil(dateStr: string): number | null {
+  try {
+    const due = new Date(dateStr).getTime();
+    const now = Date.now();
+    return Math.ceil((due - now) / (1000 * 60 * 60 * 24));
+  } catch {
+    return null;
+  }
+}
+
 type AllocationState = Record<string, string>;
 
 export default function StudentFeeDetailPage() {
@@ -49,6 +56,8 @@ export default function StudentFeeDetailPage() {
   const locale = calendarLocaleForLanguage(i18n.language ?? "en");
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { palette, spacing, radius, typography, elevation } = useTheme();
+
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState("cash");
@@ -72,13 +81,15 @@ export default function StudentFeeDetailPage() {
   );
 
   const amountNum = parseFloat(amount) || 0;
-  const amountExceedsRemaining = amountNum > remaining && amount.trim() !== "";
+  const amountExceedsRemaining =
+    amountNum > remaining && amount.trim() !== "";
   const allocationSum = itemsWithRemaining.reduce(
     (sum, item) => sum + (parseFloat(allocations[item.id] ?? "0") || 0),
     0
   );
   const useAllocations = allocationSum > 0;
-  const allocationMismatch = useAllocations && Math.abs(allocationSum - amountNum) > 0.01;
+  const allocationMismatch =
+    useAllocations && Math.abs(allocationSum - amountNum) > 0.01;
   const refRequired = method !== "cash";
   const refOk = !refRequired || referenceNumber.trim().length > 0;
   const otherOk = method !== "other" || otherMethodDetail.trim().length > 0;
@@ -95,12 +106,19 @@ export default function StudentFeeDetailPage() {
     setAmount(String(amt));
   };
 
-  const handlePayFullForItem = (item: { id: string; amount?: number; paid_amount?: number }) => {
+  const handlePayFullForItem = (item: {
+    id: string;
+    amount?: number;
+    paid_amount?: number;
+  }) => {
     const itemRemaining = (item.amount ?? 0) - (item.paid_amount ?? 0);
     if (itemRemaining > 0) {
       setAllocations((prev) => {
         const next = { ...prev, [item.id]: String(itemRemaining) };
-        const sum = Object.values(next).reduce((s, v) => s + (parseFloat(v) || 0), 0);
+        const sum = Object.values(next).reduce(
+          (s, v) => s + (parseFloat(v) || 0),
+          0
+        );
         setAmount(String(sum));
         return next;
       });
@@ -130,11 +148,12 @@ export default function StudentFeeDetailPage() {
       Alert.alert(t("common.error"), t("studentFeeDetail.alerts.validAmount"));
       return;
     }
-    if (amt > remaining) {
-      return; // Handled by disabled state and inline error
-    }
+    if (amt > remaining) return;
     if (useAllocations && allocationMismatch) {
-      Alert.alert(t("common.error"), t("studentFeeDetail.alerts.allocationSum"));
+      Alert.alert(
+        t("common.error"),
+        t("studentFeeDetail.alerts.allocationSum")
+      );
       return;
     }
     try {
@@ -143,7 +162,8 @@ export default function StudentFeeDetailPage() {
         amount: amt,
         method,
         reference_number: referenceNumber.trim() || undefined,
-        method_detail: method === "other" ? otherMethodDetail.trim() : undefined,
+        method_detail:
+          method === "other" ? otherMethodDetail.trim() : undefined,
         notes: notes || undefined,
       };
       if (useAllocations) {
@@ -162,7 +182,10 @@ export default function StudentFeeDetailPage() {
       setNotes("");
       setAllocations({});
     } catch (e: any) {
-      Alert.alert(t("common.error"), e?.message ?? t("studentFeeDetail.alerts.recordFailed"));
+      Alert.alert(
+        t("common.error"),
+        e?.message ?? t("studentFeeDetail.alerts.recordFailed")
+      );
     }
   };
 
@@ -183,7 +206,10 @@ export default function StudentFeeDetailPage() {
       setRefundPaymentId(null);
       setRefundReason("");
     } catch (e: any) {
-      Alert.alert(t("common.error"), e?.message ?? t("studentFeeDetail.alerts.refundFailed"));
+      Alert.alert(
+        t("common.error"),
+        e?.message ?? t("studentFeeDetail.alerts.refundFailed")
+      );
     }
   };
 
@@ -200,10 +226,18 @@ export default function StudentFeeDetailPage() {
         a.click();
         URL.revokeObjectURL(url);
       } else {
-        Alert.alert(t("studentFeeDetail.alerts.pdfInvoiceTitle"), t("studentFeeDetail.alerts.pdfInvoiceBody"));
+        Alert.alert(
+          t("studentFeeDetail.alerts.pdfInvoiceTitle"),
+          t("studentFeeDetail.alerts.pdfInvoiceBody")
+        );
       }
     } catch (e) {
-      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("studentFeeDetail.alerts.downloadInvoiceFailed"));
+      Alert.alert(
+        t("common.error"),
+        e instanceof Error
+          ? e.message
+          : t("studentFeeDetail.alerts.downloadInvoiceFailed")
+      );
     } finally {
       setDownloading(null);
     }
@@ -221,10 +255,18 @@ export default function StudentFeeDetailPage() {
         a.click();
         URL.revokeObjectURL(url);
       } else {
-        Alert.alert(t("studentFeeDetail.alerts.pdfReceiptTitle"), t("studentFeeDetail.alerts.pdfReceiptBody"));
+        Alert.alert(
+          t("studentFeeDetail.alerts.pdfReceiptTitle"),
+          t("studentFeeDetail.alerts.pdfReceiptBody")
+        );
       }
     } catch (e) {
-      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("studentFeeDetail.alerts.downloadReceiptFailed"));
+      Alert.alert(
+        t("common.error"),
+        e instanceof Error
+          ? e.message
+          : t("studentFeeDetail.alerts.downloadReceiptFailed")
+      );
     } finally {
       setDownloading(null);
     }
@@ -250,13 +292,18 @@ export default function StudentFeeDetailPage() {
                   {
                     text: t("common.ok"),
                     onPress: () =>
-                      router.replace("/(protected)/finance/student-fees" as any),
+                      router.replace(
+                        "/(protected)/finance/student-fees" as any
+                      ),
                   },
                 ],
                 { cancelable: false }
               );
             } catch (e: any) {
-              Alert.alert(t("common.error"), e?.message ?? t("studentFeeDetail.alerts.removeFailed"));
+              Alert.alert(
+                t("common.error"),
+                e?.message ?? t("studentFeeDetail.alerts.removeFailed")
+              );
             }
           },
         },
@@ -266,21 +313,37 @@ export default function StudentFeeDetailPage() {
 
   if (error) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.center}>
-          <Text style={styles.errorText}>
-            {error instanceof Error ? error.message : t("common.failedToLoad")}
-          </Text>
-        </View>
+      <SafeAreaView style={{ flex: 1, backgroundColor: palette.surface }}>
+        <BackHeader title={t("studentFeeDetail.title")} />
+        <EmptyState
+          icon={
+            <Ionicons
+              name="alert-circle-outline"
+              size={36}
+              color={palette.error}
+            />
+          }
+          title={
+            error instanceof Error ? error.message : t("common.failedToLoad")
+          }
+        />
       </SafeAreaView>
     );
   }
 
   if (isLoading && !data) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+      <SafeAreaView style={{ flex: 1, backgroundColor: palette.surface }}>
+        <BackHeader title={t("studentFeeDetail.title")} />
+        <View
+          style={{
+            padding: spacing.marginMobile,
+            gap: spacing.md,
+          }}
+        >
+          <Skeleton width="100%" height={180} radius={radius.xl} />
+          <Skeleton width="100%" height={120} radius={radius.xl} />
+          <Skeleton width="100%" height={120} radius={radius.xl} />
         </View>
       </SafeAreaView>
     );
@@ -288,229 +351,511 @@ export default function StudentFeeDetailPage() {
 
   if (!data) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.center}>
-          <Text style={styles.errorText}>{t("common.notFound")}</Text>
-        </View>
+      <SafeAreaView style={{ flex: 1, backgroundColor: palette.surface }}>
+        <BackHeader title={t("studentFeeDetail.title")} />
+        <EmptyState
+          icon={
+            <Ionicons
+              name="document-text-outline"
+              size={36}
+              color={palette.onSurfaceVariant}
+            />
+          }
+          title={t("common.notFound")}
+        />
       </SafeAreaView>
     );
   }
 
+  const heroAccent: "error" | "success" | "primary" =
+    data.status === "paid"
+      ? "success"
+      : data.status === "overdue"
+        ? "error"
+        : "primary";
+  const heroAccentColor =
+    heroAccent === "success"
+      ? palette.success
+      : heroAccent === "error"
+        ? palette.error
+        : palette.primary;
+  const dueDays = daysUntil(data.due_date);
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backIcon}>
-          <Ionicons name="arrow-back" size={24} color={Colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t("studentFeeDetail.title")}</Text>
-      </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: palette.surface }}>
+      <BackHeader title={t("studentFeeDetail.title")} />
 
       <ScrollView
-        style={styles.content}
-        contentContainerStyle={styles.contentContainer}
+        contentContainerStyle={{
+          padding: spacing.marginMobile,
+          paddingBottom: spacing.xl * 3,
+          gap: spacing.lg,
+        }}
         refreshControl={
           <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
         }
       >
-      {/* Summary card */}
-      <View style={styles.section}>
-        <View style={styles.summaryHeaderRow}>
-          <Text style={styles.sectionTitle}>{t("studentFeeDetail.summary")}</Text>
-          <TouchableOpacity
-            onPress={handleRemoveFromStructure}
-            style={styles.removeFeeBtn}
-          >
-            <Ionicons name="trash-outline" size={18} color={Colors.error} />
-            <Text style={styles.removeFeeBtnText}>{t("studentFeeDetail.removeFromStructure")}</Text>
-          </TouchableOpacity>
-        </View>
-      <View style={styles.card}>
-        <Text style={styles.summaryName}>{data.student_name ?? "—"}</Text>
-        <Text style={styles.summaryStructure}>{data.fee_structure_name ?? "—"}</Text>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>{t("studentFeeDetail.total")}</Text>
-          <Text style={[styles.summaryValue, styles.summaryValueFlex]}>
-            {formatCurrency(data.total_amount)}
-          </Text>
-        </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>{t("studentFeeDetail.paid")}</Text>
-          <Text style={[styles.summaryValue, { color: Colors.success }, styles.summaryValueFlex]}>
-            {formatCurrency(data.paid_amount)}
-          </Text>
-        </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>{t("studentFeeDetail.remaining")}</Text>
-          <Text style={[styles.summaryValue, { color: Colors.warning }, styles.summaryValueFlex]}>
-            {formatCurrency(remaining)}
-          </Text>
-        </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>{t("studentFeeDetail.status")}</Text>
-          <View
-            style={[
-              styles.statusBadge,
-              {
-                backgroundColor:
-                  data.status === "paid"
-                    ? Colors.success
-                    : data.status === "overdue"
-                      ? Colors.error
-                      : data.status === "partial"
-                        ? Colors.warning
-                        : Colors.textSecondary,
-              },
-            ]}
-          >
-            <Text style={styles.statusText}>{t(`studentFeeStatuses.${data.status}`)}</Text>
-          </View>
-        </View>
-        <TouchableOpacity
-          style={[styles.recordBtn, styles.downloadInvoiceBtn]}
-          onPress={handleDownloadInvoice}
-          disabled={!!downloading}
+        {/* Hero card */}
+        <View
+          style={[
+            elevation.card,
+            {
+              backgroundColor: palette.surfaceContainerLowest,
+              borderRadius: radius.xl,
+              padding: spacing.lg,
+              borderLeftWidth: 4,
+              borderLeftColor: heroAccentColor,
+            },
+          ]}
         >
-          {downloading === "invoice" ? (
-            <ActivityIndicator size="small" color={Colors.primary} />
-          ) : (
-            <Ionicons name="document-text-outline" size={20} color={Colors.primary} />
-          )}
-          <Text style={styles.downloadInvoiceBtnText}>{t("studentFeeDetail.downloadInvoice")}</Text>
-        </TouchableOpacity>
-        {remaining > 0 && (
-          <TouchableOpacity
-            style={styles.recordBtn}
-            onPress={() => setPaymentModalOpen(true)}
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+            }}
           >
-            <Ionicons name="card-outline" size={20} color={Colors.background} />
-            <Text style={styles.recordBtnText}>{t("studentFeeDetail.recordPayment")}</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-      </View>
-
-      {/* Fee items table */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t("studentFeeDetail.feeItems")}</Text>
-        {(data.items ?? []).map((item) => {
-          const itemAmount = item.amount ?? 0;
-          const itemPaid = item.paid_amount ?? 0;
-          const itemRemaining = itemAmount - itemPaid;
-          const itemStatus: "paid" | "partial" | "unpaid" =
-            itemPaid >= itemAmount ? "paid" : itemPaid > 0 ? "partial" : "unpaid";
-          return (
-            <View key={item.id} style={styles.itemRow}>
-              <View style={styles.itemMain}>
-                <Text style={styles.itemName}>{item.component_name ?? "—"}</Text>
-                <Text style={styles.itemMeta}>
-                  {t("studentFeeDetail.itemMeta", {
-                    total: formatCurrency(item.amount),
-                    paid: formatCurrency(item.paid_amount),
-                  })}
-                </Text>
-              </View>
-              <View style={styles.itemRight}>
-                <Text style={styles.itemRemaining}>
-                  {t("studentFeeDetail.itemLeft", { amount: formatCurrency(itemRemaining) })}
-                </Text>
-                <View
-                  style={[
-                    styles.itemStatusBadge,
-                    {
-                      backgroundColor:
-                        itemStatus === "paid"
-                          ? Colors.success
-                          : itemStatus === "partial"
-                            ? Colors.warning
-                            : Colors.textSecondary,
-                    },
-                  ]}
-                >
-                  <Text style={styles.itemStatusText}>{t(`studentFeeStatuses.${itemStatus}`)}</Text>
-                </View>
-              </View>
-            </View>
-          );
-        })}
-        {(data.items ?? []).length === 0 && (
-          <Text style={styles.emptyText}>{t("studentFeeDetail.noFeeItems")}</Text>
-        )}
-      </View>
-
-      {/* Payment history */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t("studentFeeDetail.paymentHistory")}</Text>
-        {(data.payments ?? []).map((p) => {
-          const methodLabel = t(`studentFeeDetail.paymentMethods.${p.method}`, {
-            defaultValue: p.method,
-          });
-          const methodLine =
-            p.method === "other" && p.method_detail
-              ? `${methodLabel} (${p.method_detail})`
-              : methodLabel;
-          return (
-          <View key={p.id} style={styles.paymentRow}>
-            <View style={styles.paymentMain}>
-              <Text style={styles.paymentAmount}>{formatCurrency(p.amount)}</Text>
-              <Text style={styles.paymentMeta}>
-                {methodLine} • {formatDate(p.created_at, locale)}
-                {p.reference_number ? ` • ${p.reference_number}` : ""}
+            <View style={{ flex: 1 }}>
+              <Text
+                style={[typography.labelSm, { color: palette.onSurfaceVariant }]}
+                numberOfLines={1}
+              >
+                {data.fee_structure_name ?? "—"}
+              </Text>
+              <Text
+                style={[
+                  typography.headlineLg,
+                  { color: palette.onSurface, marginTop: 2 },
+                ]}
+                numberOfLines={1}
+              >
+                {data.student_name ?? "—"}
               </Text>
             </View>
-            <View style={styles.paymentRight}>
-              <View
-                style={[
-                  styles.paymentStatus,
-                  {
-                    backgroundColor:
-                      p.status === "success"
-                        ? Colors.success
-                        : p.status === "refunded"
-                          ? Colors.textSecondary
-                          : Colors.error,
-                  },
-                ]}
-              >
-                <Text style={styles.paymentStatusText}>{t(`paymentTxnStatuses.${p.status}`)}</Text>
-              </View>
-              {p.status === "success" && (
-                <>
-                  <TouchableOpacity
-                    onPress={() => handleDownloadReceipt(p.id)}
-                    disabled={!!downloading}
-                    style={styles.receiptBtn}
-                  >
-                    {downloading === p.id ? (
-                      <ActivityIndicator size="small" color={Colors.primary} />
-                    ) : (
-                      <Ionicons name="receipt-outline" size={18} color={Colors.primary} />
-                    )}
-                    <Text style={styles.receiptBtnText}>{t("studentFeeDetail.receipt")}</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => openRefundModal(p.id)}
-                    style={styles.refundBtn}
-                  >
-                    <Ionicons name="arrow-undo-outline" size={18} color={Colors.error} />
-                    <Text style={styles.refundBtnText}>{t("studentFeeDetail.refund")}</Text>
-                  </TouchableOpacity>
-                </>
-              )}
-            </View>
+            <StatusPill status={data.status} />
           </View>
-        );
-        })}
-        {(data.payments ?? []).length === 0 && (
-          <Text style={styles.emptyText}>{t("studentFeeDetail.noPaymentsYet")}</Text>
-        )}
-      </View>
 
-      {/* Record Payment Modal */}
+          <Text
+            style={[
+              typography.display,
+              { color: palette.onSurface, marginTop: spacing.md },
+            ]}
+          >
+            {formatCurrency(data.total_amount)}
+          </Text>
+          <Text
+            style={[
+              typography.labelMd,
+              { color: palette.onSurfaceVariant, marginTop: 2 },
+            ]}
+          >
+            {t("studentFeeDetail.total", { defaultValue: "Total" })}
+          </Text>
+
+          <View
+            style={{
+              flexDirection: "row",
+              gap: spacing.md,
+              marginTop: spacing.md,
+            }}
+          >
+            <Pressable
+              onPress={handleDownloadInvoice}
+              disabled={!!downloading}
+              style={({ pressed }) => ({
+                flex: 1,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: spacing.xs,
+                paddingVertical: spacing.sm,
+                borderRadius: radius.md,
+                borderWidth: 1,
+                borderColor: palette.primary,
+                backgroundColor: palette.surfaceContainerLowest,
+                opacity: pressed ? 0.85 : 1,
+              })}
+            >
+              {downloading === "invoice" ? (
+                <ActivityIndicator size="small" color={palette.primary} />
+              ) : (
+                <Ionicons
+                  name="document-text-outline"
+                  size={18}
+                  color={palette.primary}
+                />
+              )}
+              <Text style={[typography.labelMd, { color: palette.primary }]}>
+                {t("studentFeeDetail.downloadInvoice")}
+              </Text>
+            </Pressable>
+            {remaining > 0 && (
+              <Pressable
+                onPress={() => setPaymentModalOpen(true)}
+                style={({ pressed }) => ({
+                  flex: 1,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: spacing.xs,
+                  paddingVertical: spacing.sm,
+                  borderRadius: radius.md,
+                  backgroundColor: palette.primary,
+                  opacity: pressed ? 0.85 : 1,
+                })}
+              >
+                <Ionicons
+                  name="card-outline"
+                  size={18}
+                  color={palette.onPrimary}
+                />
+                <Text style={[typography.labelMd, { color: palette.onPrimary }]}>
+                  {t("studentFeeDetail.recordPayment")}
+                </Text>
+              </Pressable>
+            )}
+          </View>
+        </View>
+
+        {/* Detail rows card */}
+        <View
+          style={[
+            elevation.card,
+            {
+              backgroundColor: palette.surfaceContainerLowest,
+              borderRadius: radius.xl,
+              padding: spacing.lg,
+              gap: spacing.sm,
+            },
+          ]}
+        >
+          <DetailRow
+            label={t("studentFeeDetail.paid", { defaultValue: "Paid" })}
+            value={formatCurrency(data.paid_amount)}
+            valueColor={palette.success}
+          />
+          <DetailRow
+            label={t("studentFeeDetail.remaining", {
+              defaultValue: "Remaining",
+            })}
+            value={formatCurrency(remaining)}
+            valueColor={remaining > 0 ? palette.warning : palette.onSurface}
+          />
+          <DetailRow
+            label={t("studentFeeDetail.dueDate", { defaultValue: "Due date" })}
+            value={`${formatDate(data.due_date, locale)}${
+              dueDays != null && remaining > 0
+                ? dueDays >= 0
+                  ? ` · ${t("studentFeeDetail.dueInDays", {
+                      defaultValue: "{{n}} days",
+                      n: dueDays,
+                    })}`
+                  : ` · ${t("studentFeeDetail.overdueByDays", {
+                      defaultValue: "Overdue by {{n}} days",
+                      n: Math.abs(dueDays),
+                    })}`
+                : ""
+            }`}
+          />
+          <Pressable
+            onPress={handleRemoveFromStructure}
+            style={({ pressed }) => ({
+              flexDirection: "row",
+              alignItems: "center",
+              alignSelf: "flex-start",
+              gap: spacing.xs,
+              paddingVertical: spacing.xs,
+              marginTop: spacing.sm,
+              opacity: pressed ? 0.7 : 1,
+            })}
+          >
+            <Ionicons name="trash-outline" size={16} color={palette.error} />
+            <Text style={[typography.labelSm, { color: palette.error }]}>
+              {t("studentFeeDetail.removeFromStructure")}
+            </Text>
+          </Pressable>
+        </View>
+
+        {/* Fee items */}
+        <View
+          style={[
+            elevation.card,
+            {
+              backgroundColor: palette.surfaceContainerLowest,
+              borderRadius: radius.xl,
+              padding: spacing.lg,
+            },
+          ]}
+        >
+          <Text
+            style={[
+              typography.headlineMd,
+              { color: palette.onSurface, marginBottom: spacing.md },
+            ]}
+          >
+            {t("studentFeeDetail.feeItems")}
+          </Text>
+          {(data.items ?? []).length === 0 ? (
+            <Text
+              style={[typography.bodyMd, { color: palette.onSurfaceVariant }]}
+            >
+              {t("studentFeeDetail.noFeeItems")}
+            </Text>
+          ) : (
+            (data.items ?? []).map((item, idx) => {
+              const itemAmount = item.amount ?? 0;
+              const itemPaid = item.paid_amount ?? 0;
+              const itemRemaining = itemAmount - itemPaid;
+              const itemStatus: "paid" | "partial" | "unpaid" =
+                itemPaid >= itemAmount
+                  ? "paid"
+                  : itemPaid > 0
+                    ? "partial"
+                    : "unpaid";
+              return (
+                <View
+                  key={item.id}
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    paddingVertical: spacing.sm,
+                    borderTopWidth: idx === 0 ? 0 : 1,
+                    borderTopColor: palette.outlineVariant,
+                  }}
+                >
+                  <View style={{ flex: 1, marginRight: spacing.sm }}>
+                    <Text
+                      style={[
+                        typography.labelMd,
+                        { color: palette.onSurface },
+                      ]}
+                    >
+                      {item.component_name ?? "—"}
+                    </Text>
+                    <Text
+                      style={[
+                        typography.labelSm,
+                        { color: palette.onSurfaceVariant, marginTop: 2 },
+                      ]}
+                    >
+                      {t("studentFeeDetail.itemMeta", {
+                        total: formatCurrency(item.amount),
+                        paid: formatCurrency(item.paid_amount),
+                      })}
+                    </Text>
+                  </View>
+                  <View style={{ alignItems: "flex-end", gap: 4 }}>
+                    <Text
+                      style={[typography.labelSm, { color: palette.warning }]}
+                    >
+                      {t("studentFeeDetail.itemLeft", {
+                        amount: formatCurrency(itemRemaining),
+                      })}
+                    </Text>
+                    <StatusPill status={itemStatus} />
+                  </View>
+                </View>
+              );
+            })
+          )}
+        </View>
+
+        {/* Payment history */}
+        <View
+          style={[
+            elevation.card,
+            {
+              backgroundColor: palette.surfaceContainerLowest,
+              borderRadius: radius.xl,
+              padding: spacing.lg,
+            },
+          ]}
+        >
+          <Text
+            style={[
+              typography.headlineMd,
+              { color: palette.onSurface, marginBottom: spacing.md },
+            ]}
+          >
+            {t("studentFeeDetail.paymentHistory")}
+          </Text>
+          {(data.payments ?? []).length === 0 ? (
+            <Text
+              style={[typography.bodyMd, { color: palette.onSurfaceVariant }]}
+            >
+              {t("studentFeeDetail.noPaymentsYet")}
+            </Text>
+          ) : (
+            (data.payments ?? []).map((p, idx) => {
+              const methodLabel = t(
+                `studentFeeDetail.paymentMethods.${p.method}`,
+                { defaultValue: p.method }
+              );
+              const methodLine =
+                p.method === "other" && p.method_detail
+                  ? `${methodLabel} (${p.method_detail})`
+                  : methodLabel;
+              return (
+                <View
+                  key={p.id}
+                  style={{
+                    paddingVertical: spacing.sm,
+                    borderTopWidth: idx === 0 ? 0 : 1,
+                    borderTopColor: palette.outlineVariant,
+                  }}
+                >
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text
+                      style={[
+                        typography.labelMd,
+                        { color: palette.onSurface },
+                      ]}
+                    >
+                      {formatCurrency(p.amount)}
+                    </Text>
+                    <StatusPill status={p.status} kind="payment" />
+                  </View>
+                  <Text
+                    style={[
+                      typography.labelSm,
+                      { color: palette.onSurfaceVariant, marginTop: 2 },
+                    ]}
+                  >
+                    {methodLine} • {formatDate(p.created_at, locale)}
+                    {p.reference_number ? ` • ${p.reference_number}` : ""}
+                  </Text>
+                  {p.status === "success" && (
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        gap: spacing.md,
+                        marginTop: spacing.xs,
+                      }}
+                    >
+                      <Pressable
+                        onPress={() => handleDownloadReceipt(p.id)}
+                        disabled={!!downloading}
+                        style={({ pressed }) => ({
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 4,
+                          opacity: pressed ? 0.7 : 1,
+                        })}
+                      >
+                        {downloading === p.id ? (
+                          <ActivityIndicator
+                            size="small"
+                            color={palette.primary}
+                          />
+                        ) : (
+                          <Ionicons
+                            name="receipt-outline"
+                            size={16}
+                            color={palette.primary}
+                          />
+                        )}
+                        <Text
+                          style={[
+                            typography.labelSm,
+                            { color: palette.primary },
+                          ]}
+                        >
+                          {t("studentFeeDetail.receipt")}
+                        </Text>
+                      </Pressable>
+                      <Pressable
+                        onPress={() => openRefundModal(p.id)}
+                        style={({ pressed }) => ({
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 4,
+                          opacity: pressed ? 0.7 : 1,
+                        })}
+                      >
+                        <Ionicons
+                          name="arrow-undo-outline"
+                          size={16}
+                          color={palette.error}
+                        />
+                        <Text
+                          style={[
+                            typography.labelSm,
+                            { color: palette.error },
+                          ]}
+                        >
+                          {t("studentFeeDetail.refund")}
+                        </Text>
+                      </Pressable>
+                    </View>
+                  )}
+                </View>
+              );
+            })
+          )}
+        </View>
+
+        {/* Statement CTA */}
+        <Pressable
+          onPress={() =>
+            Alert.alert(
+              t("studentFeeDetail.viewStatement", {
+                defaultValue: "View statement",
+              }),
+              "Coming soon"
+            )
+          }
+          style={({ pressed }) => ({
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: spacing.xs,
+            paddingVertical: spacing.md,
+            borderRadius: radius.md,
+            borderWidth: 1,
+            borderColor: palette.outlineVariant,
+            opacity: pressed ? 0.85 : 1,
+          })}
+        >
+          <Ionicons
+            name="bar-chart-outline"
+            size={18}
+            color={palette.onSurface}
+          />
+          <Text style={[typography.labelMd, { color: palette.onSurface }]}>
+            {t("studentFeeDetail.viewStatement", {
+              defaultValue: "View statement",
+            })}
+          </Text>
+        </Pressable>
+      </ScrollView>
+
+      {/* PRESERVED: Record Payment Modal verbatim */}
       <Modal visible={paymentModalOpen} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{t("studentFeeDetail.paymentModal.title")}</Text>
+        <View style={modalStyles.overlay}>
+          <View
+            style={[
+              modalStyles.content,
+              { backgroundColor: palette.surface },
+            ]}
+          >
+            <View
+              style={[
+                modalStyles.header,
+                { borderBottomColor: palette.outlineVariant },
+              ]}
+            >
+              <Text
+                style={[typography.headlineMd, { color: palette.onSurface }]}
+              >
+                {t("studentFeeDetail.paymentModal.title")}
+              </Text>
               <TouchableOpacity
                 onPress={() => {
                   setPaymentModalOpen(false);
@@ -518,127 +863,270 @@ export default function StudentFeeDetailPage() {
                   setOtherMethodDetail("");
                 }}
               >
-                <Ionicons name="close" size={24} color={Colors.text} />
+                <Ionicons name="close" size={24} color={palette.onSurface} />
               </TouchableOpacity>
             </View>
-            <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
-              <View style={styles.remainingCard}>
-                <Text style={styles.remainingLabel}>{t("studentFeeDetail.paymentModal.remainingBalance")}</Text>
-                <Text style={styles.remainingAmount}>{formatCurrency(remaining)}</Text>
+            <ScrollView style={{ padding: spacing.lg, maxHeight: 420 }}>
+              <View
+                style={{
+                  backgroundColor: palette.surfaceContainer,
+                  borderRadius: radius.md,
+                  padding: spacing.md,
+                  marginBottom: spacing.lg,
+                }}
+              >
+                <Text
+                  style={[
+                    typography.labelSm,
+                    { color: palette.onSurfaceVariant },
+                  ]}
+                >
+                  {t("studentFeeDetail.paymentModal.remainingBalance")}
+                </Text>
+                <Text
+                  style={[
+                    typography.headlineLg,
+                    { color: palette.warning, marginTop: 2 },
+                  ]}
+                >
+                  {formatCurrency(remaining)}
+                </Text>
               </View>
-              <Text style={styles.inputLabel}>{t("studentFeeDetail.paymentModal.amount")}</Text>
-              <View style={styles.quickAmountRow}>
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.quickAmountBtn,
-                    pressed && styles.quickAmountBtnPressed,
-                  ]}
-                  onPress={() => handleQuickAmount(1)}
-                >
-                  <Text style={styles.quickAmountBtnText}>{t("studentFeeDetail.paymentModal.full")}</Text>
-                  <Text style={styles.quickAmountBtnSub}>{formatCurrency(remaining)}</Text>
-                </Pressable>
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.quickAmountBtn,
-                    pressed && styles.quickAmountBtnPressed,
-                  ]}
-                  onPress={() => handleQuickAmount(0.5)}
-                >
-                  <Text style={styles.quickAmountBtnText}>{t("studentFeeDetail.paymentModal.half")}</Text>
-                  <Text style={styles.quickAmountBtnSub}>
-                    {formatCurrency(Math.round(remaining * 0.5))}
-                  </Text>
-                </Pressable>
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.quickAmountBtn,
-                    pressed && styles.quickAmountBtnPressed,
-                  ]}
-                  onPress={() => handleQuickAmount(0.25)}
-                >
-                  <Text style={styles.quickAmountBtnText}>{t("studentFeeDetail.paymentModal.quarter")}</Text>
-                  <Text style={styles.quickAmountBtnSub}>
-                    {formatCurrency(Math.round(remaining * 0.25))}
-                  </Text>
-                </Pressable>
+              <Text style={[typography.labelMd, { color: palette.onSurface, marginBottom: spacing.sm }]}>
+                {t("studentFeeDetail.paymentModal.amount")}
+              </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  gap: spacing.sm,
+                  marginBottom: spacing.md,
+                }}
+              >
+                {[
+                  { ratio: 1, key: "full" },
+                  { ratio: 0.5, key: "half" },
+                  { ratio: 0.25, key: "quarter" },
+                ].map(({ ratio, key }) => (
+                  <Pressable
+                    key={key}
+                    onPress={() => handleQuickAmount(ratio)}
+                    style={({ pressed }) => ({
+                      flex: 1,
+                      paddingVertical: spacing.sm,
+                      borderRadius: radius.md,
+                      backgroundColor: palette.surfaceContainerLow,
+                      borderWidth: 1,
+                      borderColor: palette.outlineVariant,
+                      alignItems: "center",
+                      opacity: pressed ? 0.85 : 1,
+                    })}
+                  >
+                    <Text style={[typography.labelMd, { color: palette.onSurface }]}>
+                      {t(`studentFeeDetail.paymentModal.${key}`)}
+                    </Text>
+                    <Text
+                      style={[
+                        typography.labelSm,
+                        { color: palette.onSurfaceVariant, marginTop: 2 },
+                      ]}
+                    >
+                      {formatCurrency(Math.round(remaining * ratio))}
+                    </Text>
+                  </Pressable>
+                ))}
               </View>
               <TextInput
-                style={[
-                  styles.input,
-                  amountExceedsRemaining && styles.inputError,
-                ]}
+                style={{
+                  borderWidth: 1,
+                  borderColor: amountExceedsRemaining
+                    ? palette.error
+                    : palette.outlineVariant,
+                  borderRadius: radius.md,
+                  padding: spacing.md,
+                  fontSize: 16,
+                  color: palette.onSurface,
+                  marginBottom: spacing.md,
+                }}
                 value={amount}
                 onChangeText={setAmount}
-                placeholder={t("studentFeeDetail.paymentModal.placeholderAmount", {
-                  max: formatCurrency(remaining),
-                })}
+                placeholder={t(
+                  "studentFeeDetail.paymentModal.placeholderAmount",
+                  { max: formatCurrency(remaining) }
+                )}
+                placeholderTextColor={palette.onSurfaceVariant}
                 keyboardType="decimal-pad"
               />
               {amountExceedsRemaining && (
-                <Text style={styles.validationError}>
+                <Text
+                  style={[
+                    typography.labelSm,
+                    { color: palette.error, marginTop: -spacing.sm, marginBottom: spacing.md },
+                  ]}
+                >
                   {t("studentFeeDetail.paymentModal.amountExceeds")}
                 </Text>
               )}
               {itemsWithRemaining.length > 0 && amountNum > 0 && (
                 <>
-                  <View style={styles.allocationHeader}>
-                    <Text style={styles.inputLabel}>{t("studentFeeDetail.paymentModal.splitTitle")}</Text>
-                    <Text style={styles.allocationHint}>
+                  <View style={{ marginBottom: spacing.sm }}>
+                    <Text
+                      style={[
+                        typography.labelMd,
+                        { color: palette.onSurface },
+                      ]}
+                    >
+                      {t("studentFeeDetail.paymentModal.splitTitle")}
+                    </Text>
+                    <Text
+                      style={[
+                        typography.labelSm,
+                        { color: palette.onSurfaceVariant, marginTop: 2 },
+                      ]}
+                    >
                       {t("studentFeeDetail.paymentModal.splitHint")}
                     </Text>
-                    <View style={styles.allocationActions}>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        gap: spacing.md,
+                        marginTop: spacing.xs,
+                      }}
+                    >
                       <TouchableOpacity
                         onPress={handleAutoAllocate}
-                        style={styles.allocationLink}
+                        style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
                       >
-                        <Ionicons name="flash-outline" size={16} color={Colors.primary} />
-                        <Text style={styles.linkText}>{t("studentFeeDetail.paymentModal.autoFill")}</Text>
+                        <Ionicons
+                          name="flash-outline"
+                          size={16}
+                          color={palette.primary}
+                        />
+                        <Text
+                          style={[
+                            typography.labelMd,
+                            { color: palette.primary },
+                          ]}
+                        >
+                          {t("studentFeeDetail.paymentModal.autoFill")}
+                        </Text>
                       </TouchableOpacity>
                       {Object.keys(allocations).length > 0 && (
-                        <TouchableOpacity onPress={clearAllocations} style={styles.allocationLink}>
-                          <Ionicons name="close-circle-outline" size={16} color={Colors.textSecondary} />
-                          <Text style={styles.linkTextSecondary}>{t("studentFeeDetail.paymentModal.clear")}</Text>
+                        <TouchableOpacity
+                          onPress={clearAllocations}
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 4,
+                          }}
+                        >
+                          <Ionicons
+                            name="close-circle-outline"
+                            size={16}
+                            color={palette.onSurfaceVariant}
+                          />
+                          <Text
+                            style={[
+                              typography.labelMd,
+                              { color: palette.onSurfaceVariant },
+                            ]}
+                          >
+                            {t("studentFeeDetail.paymentModal.clear")}
+                          </Text>
                         </TouchableOpacity>
                       )}
                     </View>
                   </View>
                   {itemsWithRemaining.map((item) => {
-                    const itemRemaining = (item.amount ?? 0) - (item.paid_amount ?? 0);
+                    const itemRemaining =
+                      (item.amount ?? 0) - (item.paid_amount ?? 0);
                     return (
-                      <View key={item.id} style={styles.allocationItemRow}>
-                        <View style={styles.allocationItemLeft}>
-                          <Text style={styles.allocationItemName} numberOfLines={1}>
+                      <View
+                        key={item.id}
+                        style={{
+                          flexDirection: "row",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          marginBottom: spacing.sm,
+                        }}
+                      >
+                        <View style={{ flex: 1 }}>
+                          <Text
+                            style={[
+                              typography.labelMd,
+                              { color: palette.onSurface },
+                            ]}
+                            numberOfLines={1}
+                          >
                             {item.component_name ?? "—"}
                           </Text>
-                          <Text style={styles.allocationItemMeta}>
+                          <Text
+                            style={[
+                              typography.labelSm,
+                              { color: palette.onSurfaceVariant, marginTop: 2 },
+                            ]}
+                          >
                             {t("studentFeeDetail.paymentModal.left", {
                               amount: formatCurrency(itemRemaining),
                             })}
                           </Text>
                         </View>
-                        <View style={styles.allocationItemRight}>
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: spacing.sm,
+                          }}
+                        >
                           <TextInput
-                            style={styles.allocationInput}
+                            style={{
+                              width: 70,
+                              borderWidth: 1,
+                              borderColor: palette.outlineVariant,
+                              borderRadius: radius.sm,
+                              paddingHorizontal: spacing.sm,
+                              paddingVertical: spacing.xs,
+                              color: palette.onSurface,
+                            }}
                             value={allocations[item.id] ?? ""}
                             onChangeText={(v) =>
-                              setAllocations((prev) => ({ ...prev, [item.id]: v }))
+                              setAllocations((prev) => ({
+                                ...prev,
+                                [item.id]: v,
+                              }))
                             }
                             placeholder="0"
+                            placeholderTextColor={palette.onSurfaceVariant}
                             keyboardType="decimal-pad"
                           />
                           <TouchableOpacity
-                            style={styles.payFullBtn}
+                            style={{
+                              paddingHorizontal: spacing.sm,
+                              paddingVertical: spacing.xs,
+                              backgroundColor: palette.primary,
+                              borderRadius: radius.sm,
+                            }}
                             onPress={() => handlePayFullForItem(item)}
                           >
-                            <Text style={styles.payFullBtnText}>{t("studentFeeDetail.paymentModal.payFull")}</Text>
+                            <Text
+                              style={[
+                                typography.labelSm,
+                                { color: palette.onPrimary },
+                              ]}
+                            >
+                              {t("studentFeeDetail.paymentModal.payFull")}
+                            </Text>
                           </TouchableOpacity>
                         </View>
                       </View>
                     );
                   })}
                   {useAllocations && allocationMismatch && (
-                    <Text style={styles.validationError}>
+                    <Text
+                      style={[
+                        typography.labelSm,
+                        { color: palette.error, marginBottom: spacing.md },
+                      ]}
+                    >
                       {t("studentFeeDetail.paymentModal.allocationMismatch", {
                         sum: formatCurrency(allocationSum),
                         total: formatCurrency(amountNum),
@@ -647,93 +1135,199 @@ export default function StudentFeeDetailPage() {
                   )}
                 </>
               )}
-              <Text style={styles.inputLabel}>{t("studentFeeDetail.paymentModal.paymentMethod")}</Text>
-              <View style={styles.methodRow}>
+              <Text
+                style={[
+                  typography.labelMd,
+                  { color: palette.onSurface, marginBottom: spacing.sm },
+                ]}
+              >
+                {t("studentFeeDetail.paymentModal.paymentMethod")}
+              </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                  gap: spacing.sm,
+                  marginBottom: spacing.md,
+                }}
+              >
                 {(
                   [
-                    { id: "cash" as const, icon: "cash-outline" },
-                    { id: "upi" as const, icon: "phone-portrait-outline" },
-                    { id: "bank_transfer" as const, icon: "business-outline" },
-                    { id: "cheque" as const, icon: "document-text-outline" },
-                    { id: "other" as const, icon: "ellipsis-horizontal-outline" },
+                    { id: "cash", icon: "cash-outline" },
+                    { id: "upi", icon: "phone-portrait-outline" },
+                    { id: "bank_transfer", icon: "business-outline" },
+                    { id: "cheque", icon: "document-text-outline" },
+                    { id: "other", icon: "ellipsis-horizontal-outline" },
                   ] as const
-                ).map((m) => (
-                  <TouchableOpacity
-                    key={m.id}
-                    style={[styles.methodChip, method === m.id && styles.methodChipActive]}
-                    onPress={() => setMethod(m.id)}
-                  >
-                    <Ionicons
-                      name={m.icon as any}
-                      size={18}
-                      color={method === m.id ? "#fff" : Colors.textSecondary}
-                    />
-                    <Text
-                      style={[
-                        styles.methodChipText,
-                        method === m.id && styles.methodChipTextActive,
-                      ]}
+                ).map((m) => {
+                  const active = method === m.id;
+                  return (
+                    <Pressable
+                      key={m.id}
+                      onPress={() => setMethod(m.id)}
+                      style={({ pressed }) => ({
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 6,
+                        paddingHorizontal: spacing.md,
+                        paddingVertical: spacing.sm,
+                        borderRadius: radius.md,
+                        backgroundColor: active
+                          ? palette.primary
+                          : palette.surfaceContainerLow,
+                        opacity: pressed ? 0.85 : 1,
+                      })}
                     >
-                      {t(`studentFeeDetail.paymentMethods.${m.id}`)}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                      <Ionicons
+                        name={m.icon as any}
+                        size={18}
+                        color={
+                          active ? palette.onPrimary : palette.onSurfaceVariant
+                        }
+                      />
+                      <Text
+                        style={[
+                          typography.labelMd,
+                          {
+                            color: active
+                              ? palette.onPrimary
+                              : palette.onSurface,
+                          },
+                        ]}
+                      >
+                        {t(`studentFeeDetail.paymentMethods.${m.id}`)}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
               </View>
               {method === "other" && (
                 <>
-                  <Text style={styles.inputLabel}>
+                  <Text
+                    style={[
+                      typography.labelMd,
+                      { color: palette.onSurface, marginBottom: spacing.sm },
+                    ]}
+                  >
                     {t("studentFeeDetail.paymentModal.otherDetailLabel")}
                   </Text>
                   <TextInput
-                    style={styles.input}
+                    style={{
+                      borderWidth: 1,
+                      borderColor: palette.outlineVariant,
+                      borderRadius: radius.md,
+                      padding: spacing.md,
+                      color: palette.onSurface,
+                      marginBottom: spacing.md,
+                    }}
                     value={otherMethodDetail}
                     onChangeText={setOtherMethodDetail}
-                    placeholder={t("studentFeeDetail.paymentModal.otherDetailPlaceholder")}
+                    placeholder={t(
+                      "studentFeeDetail.paymentModal.otherDetailPlaceholder"
+                    )}
+                    placeholderTextColor={palette.onSurfaceVariant}
                   />
                 </>
               )}
-              <Text style={styles.inputLabel}>
+              <Text
+                style={[
+                  typography.labelMd,
+                  { color: palette.onSurface, marginBottom: spacing.sm },
+                ]}
+              >
                 {method === "cash"
                   ? t("studentFeeDetail.paymentModal.referenceOptional")
                   : t("studentFeeDetail.paymentModal.referenceRequired")}
               </Text>
               <TextInput
-                style={styles.input}
+                style={{
+                  borderWidth: 1,
+                  borderColor: palette.outlineVariant,
+                  borderRadius: radius.md,
+                  padding: spacing.md,
+                  color: palette.onSurface,
+                  marginBottom: spacing.md,
+                }}
                 value={referenceNumber}
                 onChangeText={setReferenceNumber}
-                placeholder={t("studentFeeDetail.paymentModal.referencePlaceholder")}
+                placeholder={t(
+                  "studentFeeDetail.paymentModal.referencePlaceholder"
+                )}
+                placeholderTextColor={palette.onSurfaceVariant}
               />
-              <Text style={styles.inputLabel}>{t("studentFeeDetail.paymentModal.notesOptional")}</Text>
+              <Text
+                style={[
+                  typography.labelMd,
+                  { color: palette.onSurface, marginBottom: spacing.sm },
+                ]}
+              >
+                {t("studentFeeDetail.paymentModal.notesOptional")}
+              </Text>
               <TextInput
-                style={[styles.input, styles.notesInput]}
+                style={{
+                  borderWidth: 1,
+                  borderColor: palette.outlineVariant,
+                  borderRadius: radius.md,
+                  padding: spacing.md,
+                  color: palette.onSurface,
+                  marginBottom: spacing.md,
+                  minHeight: 60,
+                }}
                 value={notes}
                 onChangeText={setNotes}
-                placeholder={t("studentFeeDetail.paymentModal.notesPlaceholder")}
+                placeholder={t(
+                  "studentFeeDetail.paymentModal.notesPlaceholder"
+                )}
+                placeholderTextColor={palette.onSurfaceVariant}
               />
             </ScrollView>
-            <View style={styles.modalFooter}>
+            <View
+              style={{
+                flexDirection: "row",
+                gap: spacing.md,
+                padding: spacing.lg,
+                borderTopWidth: 1,
+                borderTopColor: palette.outlineVariant,
+              }}
+            >
               <TouchableOpacity
-                style={styles.cancelBtn}
+                style={{ flex: 1, padding: spacing.md, alignItems: "center" }}
                 onPress={() => {
                   setPaymentModalOpen(false);
                   setAllocations({});
                   setOtherMethodDetail("");
                 }}
               >
-                <Text style={styles.cancelBtnText}>{t("studentFeeDetail.paymentModal.cancel")}</Text>
+                <Text
+                  style={[
+                    typography.labelMd,
+                    { color: palette.onSurfaceVariant },
+                  ]}
+                >
+                  {t("studentFeeDetail.paymentModal.cancel")}
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[
-                  styles.submitBtn,
-                  (!canSubmitPayment || recordMut.isPending) && styles.submitBtnDisabled,
-                ]}
+                style={{
+                  flex: 1,
+                  backgroundColor: palette.primary,
+                  padding: spacing.md,
+                  borderRadius: radius.md,
+                  alignItems: "center",
+                  opacity:
+                    !canSubmitPayment || recordMut.isPending ? 0.7 : 1,
+                }}
                 onPress={handleRecordPayment}
                 disabled={!canSubmitPayment || recordMut.isPending}
               >
                 {recordMut.isPending ? (
-                  <ActivityIndicator size="small" color={Colors.background} />
+                  <ActivityIndicator size="small" color={palette.onPrimary} />
                 ) : (
-                  <Text style={styles.submitBtnText}>{t("studentFeeDetail.paymentModal.record")}</Text>
+                  <Text
+                    style={[typography.labelMd, { color: palette.onPrimary }]}
+                  >
+                    {t("studentFeeDetail.paymentModal.record")}
+                  </Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -741,340 +1335,263 @@ export default function StudentFeeDetailPage() {
         </View>
       </Modal>
 
-      {/* Refund Confirmation Modal */}
+      {/* PRESERVED: Refund Modal */}
       <Modal visible={refundModalOpen} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{t("studentFeeDetail.refundModal.title")}</Text>
+        <View style={modalStyles.overlay}>
+          <View
+            style={[
+              modalStyles.content,
+              { backgroundColor: palette.surface },
+            ]}
+          >
+            <View
+              style={[
+                modalStyles.header,
+                { borderBottomColor: palette.outlineVariant },
+              ]}
+            >
+              <Text
+                style={[typography.headlineMd, { color: palette.onSurface }]}
+              >
+                {t("studentFeeDetail.refundModal.title")}
+              </Text>
               <TouchableOpacity
                 onPress={() => {
                   setRefundModalOpen(false);
                   setRefundPaymentId(null);
                 }}
               >
-                <Ionicons name="close" size={24} color={Colors.text} />
+                <Ionicons name="close" size={24} color={palette.onSurface} />
               </TouchableOpacity>
             </View>
-            <View style={styles.modalBody}>
-              <View style={styles.refundWarning}>
-                <Ionicons name="warning" size={32} color={Colors.error} />
-                <Text style={styles.refundWarningText}>
+            <View style={{ padding: spacing.lg }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "flex-start",
+                  backgroundColor: palette.errorContainer,
+                  padding: spacing.md,
+                  borderRadius: radius.md,
+                  marginBottom: spacing.lg,
+                }}
+              >
+                <Ionicons name="warning" size={28} color={palette.error} />
+                <Text
+                  style={[
+                    typography.bodyMd,
+                    {
+                      flex: 1,
+                      marginLeft: spacing.md,
+                      color: palette.onSurface,
+                    },
+                  ]}
+                >
                   {t("studentFeeDetail.refundModal.warning")}
                 </Text>
               </View>
-              <Text style={styles.inputLabel}>{t("studentFeeDetail.refundModal.reasonOptional")}</Text>
+              <Text
+                style={[
+                  typography.labelMd,
+                  { color: palette.onSurface, marginBottom: spacing.sm },
+                ]}
+              >
+                {t("studentFeeDetail.refundModal.reasonOptional")}
+              </Text>
               <TextInput
-                style={styles.input}
+                style={{
+                  borderWidth: 1,
+                  borderColor: palette.outlineVariant,
+                  borderRadius: radius.md,
+                  padding: spacing.md,
+                  color: palette.onSurface,
+                }}
                 value={refundReason}
                 onChangeText={setRefundReason}
-                placeholder={t("studentFeeDetail.refundModal.reasonPlaceholder")}
+                placeholder={t(
+                  "studentFeeDetail.refundModal.reasonPlaceholder"
+                )}
+                placeholderTextColor={palette.onSurfaceVariant}
                 multiline
               />
             </View>
-            <View style={styles.modalFooter}>
+            <View
+              style={{
+                flexDirection: "row",
+                gap: spacing.md,
+                padding: spacing.lg,
+                borderTopWidth: 1,
+                borderTopColor: palette.outlineVariant,
+              }}
+            >
               <TouchableOpacity
-                style={styles.cancelBtn}
+                style={{ flex: 1, padding: spacing.md, alignItems: "center" }}
                 onPress={() => {
                   setRefundModalOpen(false);
                   setRefundPaymentId(null);
                 }}
               >
-                <Text style={styles.cancelBtnText}>{t("studentFeeDetail.paymentModal.cancel")}</Text>
+                <Text
+                  style={[
+                    typography.labelMd,
+                    { color: palette.onSurfaceVariant },
+                  ]}
+                >
+                  {t("studentFeeDetail.paymentModal.cancel")}
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[
-                  styles.refundSubmitBtn,
-                  refundMut.isPending && styles.submitBtnDisabled,
-                ]}
+                style={{
+                  flex: 1,
+                  backgroundColor: palette.error,
+                  padding: spacing.md,
+                  borderRadius: radius.md,
+                  alignItems: "center",
+                  opacity: refundMut.isPending ? 0.7 : 1,
+                }}
                 onPress={handleRefund}
                 disabled={refundMut.isPending}
               >
                 {refundMut.isPending ? (
-                  <ActivityIndicator size="small" color={Colors.background} />
+                  <ActivityIndicator size="small" color={palette.onPrimary} />
                 ) : (
-                  <Text style={styles.refundSubmitBtnText}>{t("studentFeeDetail.refundModal.confirmRefund")}</Text>
+                  <Text
+                    style={[typography.labelMd, { color: palette.onPrimary }]}
+                  >
+                    {t("studentFeeDetail.refundModal.confirmRefund")}
+                  </Text>
                 )}
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
-      </ScrollView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  content: { flex: 1 },
-  contentContainer: { paddingBottom: Spacing.xxl },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  backIcon: { padding: Spacing.sm, marginRight: Spacing.sm },
-  headerTitle: { fontSize: 24, fontWeight: "bold", color: Colors.text },
-  section: { padding: Spacing.lg },
-  sectionTitle: { fontSize: 20, fontWeight: "600", color: Colors.text, marginBottom: Spacing.md },
-  summaryHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: Spacing.md,
-  },
-  card: {
-    padding: Spacing.lg,
-    backgroundColor: Colors.background,
-    borderRadius: Layout.borderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-  },
-  summaryName: { fontSize: 20, fontWeight: "700", color: Colors.text },
-  summaryStructure: { fontSize: 14, color: Colors.textSecondary, marginTop: 2 },
-  summaryRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: Spacing.md,
-  },
-  summaryLabel: { fontSize: 15, color: Colors.textSecondary },
-  summaryValue: { fontSize: 15, fontWeight: "600", color: Colors.text },
-  summaryValueFlex: { flex: 1, marginLeft: Spacing.sm, textAlign: "right" },
-  statusBadge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-    borderRadius: Layout.borderRadius.sm,
-  },
-  statusText: { fontSize: 12, fontWeight: "600", color: Colors.background },
-  recordBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: Colors.primary,
-    padding: Spacing.md,
-    borderRadius: Layout.borderRadius.md,
-    marginTop: Spacing.lg,
-  },
-  recordBtnText: { fontSize: 16, fontWeight: "600", color: Colors.background, marginLeft: Spacing.sm },
-  downloadInvoiceBtn: {
-    backgroundColor: Colors.background,
-    borderWidth: 1,
-    borderColor: Colors.primary,
-  },
-  downloadInvoiceBtnText: { fontSize: 16, fontWeight: "600", color: Colors.primary, marginLeft: Spacing.sm },
-  removeFeeBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    borderRadius: Layout.borderRadius.sm,
-  },
-  removeFeeBtnText: {
-    marginLeft: Spacing.xs,
-    fontSize: 13,
-    color: Colors.error,
-    fontWeight: "500",
-  },
-  itemRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  itemMain: {},
-  itemName: { fontSize: 15, fontWeight: "500", color: Colors.text },
-  itemMeta: { fontSize: 12, color: Colors.textSecondary },
-  itemRight: { alignItems: "flex-end", gap: Spacing.xs },
-  itemRemaining: { fontSize: 14, color: Colors.warning },
-  itemStatusBadge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-    borderRadius: Layout.borderRadius.sm,
-  },
-  itemStatusText: { fontSize: 11, fontWeight: "600", color: Colors.background },
-  paymentRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  paymentMain: {},
-  paymentAmount: { fontSize: 16, fontWeight: "600", color: Colors.text },
-  paymentMeta: { fontSize: 12, color: Colors.textSecondary },
-  paymentRight: { alignItems: "flex-end" },
-  paymentStatus: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-    borderRadius: Layout.borderRadius.sm,
-    marginBottom: Spacing.xs,
-  },
-  paymentStatusText: { fontSize: 11, fontWeight: "600", color: Colors.background },
-  receiptBtn: { flexDirection: "row", alignItems: "center", marginTop: Spacing.xs },
-  receiptBtnText: { fontSize: 13, color: Colors.primary, marginLeft: Spacing.xs },
-  refundBtn: { flexDirection: "row", alignItems: "center" },
-  refundBtnText: { fontSize: 13, color: Colors.error, marginLeft: Spacing.xs },
-  emptyText: { color: Colors.textSecondary, fontSize: 14 },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  errorText: { color: Colors.error, fontSize: 16 },
+function BackHeader({ title }: { title: string }) {
+  const { palette, spacing, typography } = useTheme();
+  const router = useRouter();
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: spacing.marginMobile,
+        paddingTop: spacing.md,
+        paddingBottom: spacing.sm,
+        gap: spacing.sm,
+      }}
+    >
+      <TouchableOpacity
+        onPress={() => router.back()}
+        hitSlop={12}
+        style={{ padding: spacing.xs }}
+      >
+        <Ionicons name="chevron-back" size={26} color={palette.onSurface} />
+      </TouchableOpacity>
+      <Text
+        style={[typography.headlineLg, { color: palette.onSurface, flex: 1 }]}
+        numberOfLines={1}
+      >
+        {title}
+      </Text>
+    </View>
+  );
+}
 
-  modalOverlay: {
+function DetailRow({
+  label,
+  value,
+  valueColor,
+}: {
+  label: string;
+  value: string;
+  valueColor?: string;
+}) {
+  const { palette, typography } = useTheme();
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+      }}
+    >
+      <Text
+        style={[typography.labelMd, { color: palette.onSurfaceVariant }]}
+      >
+        {label}
+      </Text>
+      <Text
+        style={[
+          typography.labelMd,
+          { color: valueColor ?? palette.onSurface },
+        ]}
+        numberOfLines={1}
+      >
+        {value}
+      </Text>
+    </View>
+  );
+}
+
+function StatusPill({
+  status,
+  kind = "fee",
+}: {
+  status: string;
+  kind?: "fee" | "payment";
+}) {
+  const { t } = useTranslation("finance");
+  const { palette, typography, spacing, radius } = useTheme();
+  const colorMap: Record<string, string> = {
+    paid: palette.success,
+    partial: palette.warning,
+    overdue: palette.error,
+    success: palette.success,
+    refunded: palette.onSurfaceVariant,
+    failed: palette.error,
+    unpaid: palette.onSurfaceVariant,
+  };
+  const color = colorMap[status] ?? palette.onSurfaceVariant;
+  const labelKey =
+    kind === "payment"
+      ? `paymentTxnStatuses.${status}`
+      : `studentFeeStatuses.${status}`;
+  return (
+    <View
+      style={{
+        paddingHorizontal: spacing.sm,
+        paddingVertical: 2,
+        borderRadius: radius.full,
+        borderWidth: 1,
+        borderColor: color,
+        backgroundColor: `${color}15`,
+      }}
+    >
+      <Text style={[typography.labelSm, { color }]}>
+        {t(labelKey, { defaultValue: status })}
+      </Text>
+    </View>
+  );
+}
+
+const modalStyles = StyleSheet.create({
+  overlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "flex-end",
   },
-  modalContent: {
-    backgroundColor: Colors.background,
-    borderTopLeftRadius: Layout.borderRadius.xl,
-    borderTopRightRadius: Layout.borderRadius.xl,
+  content: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
   },
-  modalHeader: {
+  header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: Spacing.lg,
+    padding: 24,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
   },
-  modalTitle: { fontSize: 18, fontWeight: "700", color: Colors.text },
-  modalBody: { padding: Spacing.lg, maxHeight: 420 },
-  modalFooter: {
-    flexDirection: "row",
-    gap: Spacing.md,
-    padding: Spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: Colors.borderLight,
-  },
-  remainingCard: {
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.md,
-    padding: Spacing.md,
-    marginBottom: Spacing.lg,
-  },
-  remainingLabel: { fontSize: 13, color: Colors.textSecondary },
-  remainingAmount: { fontSize: 22, fontWeight: "700", color: Colors.warning, marginTop: 2 },
-  quickAmountRow: {
-    flexDirection: "row",
-    gap: Spacing.sm,
-    marginBottom: Spacing.md,
-  },
-  quickAmountBtn: {
-    flex: 1,
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.md,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.sm,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-  },
-  quickAmountBtnPressed: { opacity: 0.8 },
-  quickAmountBtnText: { fontSize: 14, fontWeight: "600", color: Colors.text },
-  quickAmountBtnSub: { fontSize: 11, color: Colors.textSecondary, marginTop: 2 },
-  notesInput: { minHeight: 60 },
-  validationError: { fontSize: 13, color: Colors.error, marginTop: -Spacing.sm, marginBottom: Spacing.md },
-  inputError: { borderColor: Colors.error },
-  inputLabel: { fontSize: 14, fontWeight: "600", color: Colors.text, marginBottom: Spacing.sm },
-  allocationHeader: { marginTop: Spacing.md, marginBottom: Spacing.sm },
-  allocationHint: { fontSize: 12, color: Colors.textSecondary, marginTop: 2, marginBottom: Spacing.xs },
-  allocationActions: { flexDirection: "row", gap: Spacing.md, marginTop: Spacing.xs },
-  allocationLink: { flexDirection: "row", alignItems: "center", gap: 4 },
-  linkText: { fontSize: 14, color: Colors.primary, fontWeight: "600" },
-  linkTextSecondary: { fontSize: 14, color: Colors.textSecondary },
-  allocationItemRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: Spacing.xs,
-    marginBottom: Spacing.sm,
-  },
-  allocationItemLeft: { flex: 1 },
-  allocationItemName: { fontSize: 14, fontWeight: "500", color: Colors.text },
-  allocationItemMeta: { fontSize: 12, color: Colors.textSecondary },
-  allocationItemRight: { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
-  allocationInput: {
-    width: 70,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: Layout.borderRadius.sm,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    fontSize: 14,
-    color: Colors.text,
-  },
-  payFullBtn: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    backgroundColor: Colors.primary,
-    borderRadius: Layout.borderRadius.sm,
-  },
-  payFullBtnText: { fontSize: 12, fontWeight: "600", color: Colors.background },
-  input: {
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: Layout.borderRadius.md,
-    padding: Spacing.md,
-    fontSize: 16,
-    marginBottom: Spacing.md,
-  },
-  methodRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: Spacing.sm,
-    marginBottom: Spacing.md,
-  },
-  methodChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: Layout.borderRadius.md,
-    backgroundColor: Colors.backgroundSecondary,
-  },
-  methodChipActive: { backgroundColor: Colors.primary },
-  methodChipText: { fontSize: 14, color: Colors.text },
-  methodChipTextActive: { fontSize: 14, color: Colors.background, fontWeight: "600" },
-  cancelBtn: { flex: 1, padding: Spacing.md, alignItems: "center" },
-  cancelBtnText: { fontSize: 16, color: Colors.textSecondary },
-  submitBtn: {
-    flex: 1,
-    backgroundColor: Colors.primary,
-    padding: Spacing.md,
-    borderRadius: Layout.borderRadius.md,
-    alignItems: "center",
-  },
-  submitBtnDisabled: { opacity: 0.7 },
-  submitBtnText: { fontSize: 16, fontWeight: "600", color: Colors.background },
-  refundWarning: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    backgroundColor: "rgba(255,59,48,0.1)",
-    padding: Spacing.md,
-    borderRadius: Layout.borderRadius.md,
-    marginBottom: Spacing.lg,
-  },
-  refundWarningText: {
-    flex: 1,
-    marginLeft: Spacing.md,
-    fontSize: 14,
-    color: Colors.text,
-    lineHeight: 20,
-  },
-  refundSubmitBtn: {
-    flex: 1,
-    backgroundColor: Colors.error,
-    padding: Spacing.md,
-    borderRadius: Layout.borderRadius.md,
-    alignItems: "center",
-  },
-  refundSubmitBtnText: { fontSize: 16, fontWeight: "600", color: Colors.background },
 });
