@@ -4,19 +4,24 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   ActivityIndicator,
   Alert,
   Platform,
+  Modal,
+  Linking,
 } from "react-native";
+import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "@/common/constants/colors";
-import { Spacing, Layout } from "@/common/constants/spacing";
+import { useTheme } from "@/common/theme";
+import { ScreenContainer } from "@/common/components/ScreenContainer";
+import { Button } from "@/common/components/Button";
 import { useAuth } from "@/modules/auth/hooks/useAuth";
+import { useUiRole } from "@/modules/permissions/hooks/useUiRole";
 import { studentService } from "@/modules/students/services/studentService";
 import { teacherService } from "@/modules/teachers/services/teacherService";
 import type { Student } from "@/modules/students/types";
@@ -25,8 +30,13 @@ import { uploadProfilePicture } from "@/modules/auth/services/profileService";
 import { StudentDocumentsSection } from "@/modules/students/components/StudentDocumentsSection";
 import { ApiException } from "@/common/services/api";
 import { useTranslation } from "react-i18next";
+import { setAppLanguage, getAppLanguage } from "@/i18n/language";
+import { SUPPORTED_LANGUAGES, type SupportedLanguage } from "@/i18n/config";
 
 type ProfileKind = "student" | "teacher" | "account";
+
+const TERMS_URL = "https://nexchool.in/terms";
+const PRIVACY_URL = "https://nexchool.in/privacy";
 
 /**
  * After crop/edit, URIs are often content:// or short-lived file:// paths that
@@ -55,70 +65,294 @@ async function prepareImageForUploadUri(
   return { uri: dest, name: safeName, mimeType };
 }
 
-function TableRow({
-  label,
-  value,
-}: {
-  label: string;
-  value?: string | number | null;
-}) {
-  if (value === undefined || value === null || value === "") return null;
+const LANGUAGE_LABELS: Record<SupportedLanguage, string> = {
+  en: "English",
+  hi: "हिन्दी",
+  gu: "ગુજરાતી",
+};
+
+type CardSectionProps = {
+  title: string;
+  children: React.ReactNode;
+};
+
+function CardSection({ title, children }: CardSectionProps) {
+  const { palette, spacing, radius, typography } = useTheme();
   return (
-    <View style={rowStyles.row}>
-      <Text style={rowStyles.labelCell}>{label}</Text>
-      <Text style={rowStyles.valueCell}>{String(value)}</Text>
+    <View style={{ marginTop: spacing.lg }}>
+      <Text
+        style={[
+          typography.labelSm,
+          {
+            color: palette.onSurfaceVariant,
+            textTransform: "uppercase",
+            letterSpacing: 0.6,
+            marginBottom: spacing.sm,
+            includeFontPadding: false,
+          },
+        ]}
+      >
+        {title}
+      </Text>
+      <View
+        style={{
+          backgroundColor: palette.surfaceContainerLowest,
+          borderRadius: radius.lg,
+          borderWidth: 1,
+          borderColor: palette.outlineVariant,
+          overflow: "hidden",
+        }}
+      >
+        {children}
+      </View>
     </View>
   );
 }
 
-const rowStyles = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.borderLight,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.sm,
-    alignItems: "flex-start",
-    gap: Spacing.md,
-  },
-  labelCell: {
-    width: "38%",
-    fontSize: 13,
-    color: Colors.textSecondary,
-    fontWeight: "500",
-  },
-  valueCell: {
-    flex: 1,
-    fontSize: 15,
-    color: Colors.text,
-    fontWeight: "500",
-  },
-});
+type InfoRowProps = {
+  label: string;
+  value?: string | number | null;
+  isLast?: boolean;
+};
 
-function TableSection({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function InfoRow({ label, value, isLast }: InfoRowProps) {
+  const { palette, spacing, typography } = useTheme();
+  if (value === undefined || value === null || value === "") return null;
   return (
-    <View style={styles.tableSection}>
-      <Text style={styles.tableSectionTitle}>{title}</Text>
-      <View style={styles.tableCard}>{children}</View>
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "flex-start",
+        gap: spacing.md,
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.md,
+        borderBottomWidth: isLast ? 0 : StyleSheet.hairlineWidth,
+        borderBottomColor: palette.outlineVariant,
+      }}
+    >
+      <Text
+        style={[
+          typography.labelMd,
+          { color: palette.onSurfaceVariant, width: "40%", includeFontPadding: false },
+        ]}
+      >
+        {label}
+      </Text>
+      <Text
+        style={[
+          typography.bodyMd,
+          { color: palette.onSurface, flex: 1, includeFontPadding: false },
+        ]}
+      >
+        {String(value)}
+      </Text>
     </View>
+  );
+}
+
+type ActionRowProps = {
+  icon: React.ComponentProps<typeof Ionicons>["name"];
+  label: string;
+  hint?: string;
+  trailing?: React.ReactNode;
+  onPress?: () => void;
+  destructive?: boolean;
+  isLast?: boolean;
+};
+
+function ActionRow({
+  icon,
+  label,
+  hint,
+  trailing,
+  onPress,
+  destructive,
+  isLast,
+}: ActionRowProps) {
+  const { palette, spacing, typography } = useTheme();
+  const textColor = destructive ? palette.error : palette.onSurface;
+  return (
+    <Pressable
+      onPress={onPress}
+      android_ripple={{ color: palette.surfaceContainer }}
+      style={({ pressed }) => ({
+        flexDirection: "row",
+        alignItems: "center",
+        gap: spacing.md,
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.md,
+        backgroundColor: pressed ? palette.surfaceContainer : "transparent",
+        borderBottomWidth: isLast ? 0 : StyleSheet.hairlineWidth,
+        borderBottomColor: palette.outlineVariant,
+      })}
+    >
+      <View
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 18,
+          backgroundColor: destructive ? `${palette.error}1A` : palette.surfaceContainer,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Ionicons name={icon} size={20} color={textColor} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text
+          style={[
+            typography.bodyMd,
+            { color: textColor, includeFontPadding: false },
+          ]}
+        >
+          {label}
+        </Text>
+        {hint ? (
+          <Text
+            style={[
+              typography.labelSm,
+              { color: palette.onSurfaceVariant, marginTop: 2, includeFontPadding: false },
+            ]}
+          >
+            {hint}
+          </Text>
+        ) : null}
+      </View>
+      {trailing ?? (
+        <Ionicons name="chevron-forward" size={18} color={palette.onSurfaceVariant} />
+      )}
+    </Pressable>
+  );
+}
+
+function LanguageSheet({
+  visible,
+  onClose,
+  current,
+  onSelect,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  current: SupportedLanguage;
+  onSelect: (lng: SupportedLanguage) => void;
+}) {
+  const { palette, spacing, radius, typography } = useTheme();
+  const { t } = useTranslation("profile");
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+      statusBarTranslucent
+    >
+      <Pressable
+        style={[styles.backdrop, { backgroundColor: "rgba(11, 28, 48, 0.40)" }]}
+        onPress={onClose}
+      />
+      <View
+        style={[
+          styles.sheet,
+          {
+            backgroundColor: palette.surfaceContainerLowest,
+            borderTopLeftRadius: radius.xl,
+            borderTopRightRadius: radius.xl,
+            padding: spacing.lg,
+            paddingBottom: spacing.xl,
+          },
+        ]}
+      >
+        <View
+          style={[
+            styles.handle,
+            { backgroundColor: palette.outlineVariant, alignSelf: "center" },
+          ]}
+        />
+        <Text
+          style={[
+            typography.headlineMd,
+            { color: palette.onSurface, marginTop: spacing.md },
+          ]}
+        >
+          {t("languageSheet.title", { defaultValue: "Language" })}
+        </Text>
+        <Text
+          style={[
+            typography.bodyMd,
+            { color: palette.onSurfaceVariant, marginTop: spacing.xs },
+          ]}
+        >
+          {t("languageSheet.subtitle", {
+            defaultValue: "Choose your preferred language.",
+          })}
+        </Text>
+
+        <View style={{ marginTop: spacing.lg, gap: spacing.sm }}>
+          {SUPPORTED_LANGUAGES.map((lng) => {
+            const isSelected = lng === current;
+            return (
+              <Pressable
+                key={lng}
+                onPress={() => onSelect(lng)}
+                style={({ pressed }) => ({
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingVertical: 12,
+                  paddingHorizontal: spacing.md,
+                  borderRadius: radius.DEFAULT,
+                  backgroundColor: isSelected
+                    ? palette.primaryContainer
+                    : pressed
+                    ? palette.surfaceContainer
+                    : "transparent",
+                })}
+              >
+                <Text
+                  style={[
+                    typography.bodyLg,
+                    {
+                      color: isSelected ? palette.onPrimaryContainer : palette.onSurface,
+                      flex: 1,
+                    },
+                  ]}
+                >
+                  {LANGUAGE_LABELS[lng]}
+                </Text>
+                {isSelected ? (
+                  <Ionicons
+                    name="checkmark"
+                    size={20}
+                    color={palette.onPrimaryContainer}
+                  />
+                ) : null}
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <View style={{ marginTop: spacing.md }}>
+          <Button variant="ghost" fullWidth onPress={onClose}>
+            {t("languageSheet.cancel", { defaultValue: "Cancel" })}
+          </Button>
+        </View>
+      </View>
+    </Modal>
   );
 }
 
 export default function MyProfileScreen() {
-  const { t } = useTranslation("profile");
+  const { t } = useTranslation(["profile", "navigation"]);
   const router = useRouter();
-  const { user, enabledFeatures, updateLocalUser } = useAuth();
+  const { palette, spacing, radius, typography } = useTheme();
+  const { user, enabledFeatures, updateLocalUser, logout } = useAuth();
+  const { role: userRole } = useUiRole();
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [kind, setKind] = useState<ProfileKind>("account");
   const [student, setStudent] = useState<Student | null>(null);
   const [teacher, setTeacher] = useState<Teacher | null>(null);
+  const [languageSheetOpen, setLanguageSheetOpen] = useState(false);
+  const [currentLang, setCurrentLang] = useState<SupportedLanguage>(getAppLanguage());
 
   useEffect(() => {
     let cancelled = false;
@@ -147,9 +381,9 @@ export default function MyProfileScreen() {
         }
         if (allowTeacher) {
           try {
-            const t = await teacherService.getMyProfile();
+            const tch = await teacherService.getMyProfile();
             if (!cancelled) {
-              setTeacher(t);
+              setTeacher(tch);
               setStudent(null);
               setKind("teacher");
               return;
@@ -178,7 +412,7 @@ export default function MyProfileScreen() {
     if (student?.name) return student.name;
     if (teacher?.name) return teacher.name;
     if (user?.name) return user.name;
-    return user?.email?.split("@")[0] ?? t("myProfile.defaultDisplayName");
+    return user?.email?.split("@")[0] ?? t("profile:myProfile.defaultDisplayName");
   }, [student, teacher, user, t]);
 
   const avatarUri = useMemo(() => {
@@ -190,12 +424,19 @@ export default function MyProfileScreen() {
     );
   }, [user, student, teacher]);
 
+  const roleLabel = t(`navigation:roles.${userRole.toLowerCase()}`, {
+    defaultValue: userRole,
+  });
+
+  const schoolName =
+    (user as { tenant_name?: string | null } | null | undefined)?.tenant_name ?? null;
+
   const pickAndUpload = useCallback(async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
       Alert.alert(
-        t("myProfile.alerts.permissionTitle"),
-        t("myProfile.alerts.permissionMessage"),
+        t("profile:myProfile.alerts.permissionTitle"),
+        t("profile:myProfile.alerts.permissionMessage"),
       );
       return;
     }
@@ -215,8 +456,8 @@ export default function MyProfileScreen() {
         prepared = await prepareImageForUploadUri(asset);
       } catch {
         Alert.alert(
-          t("myProfile.alerts.readPhotoTitle"),
-          t("myProfile.alerts.readPhotoMessage"),
+          t("profile:myProfile.alerts.readPhotoTitle"),
+          t("profile:myProfile.alerts.readPhotoMessage"),
         );
         return;
       }
@@ -227,140 +468,378 @@ export default function MyProfileScreen() {
         setStudent(refreshed);
       }
       if (teacher) {
-        const t = await teacherService.getMyProfile();
-        setTeacher(t);
+        const refreshedTeacher = await teacherService.getMyProfile();
+        setTeacher(refreshedTeacher);
       }
     } catch (e) {
       const msg =
         e instanceof ApiException
           ? e.message
-          : t("myProfile.alerts.uploadFailedFallback");
-      Alert.alert(t("myProfile.alerts.uploadFailedTitle"), msg);
+          : t("profile:myProfile.alerts.uploadFailedFallback");
+      Alert.alert(t("profile:myProfile.alerts.uploadFailedTitle"), msg);
     } finally {
       setUploading(false);
     }
   }, [updateLocalUser, student, teacher, t]);
 
+  const handleLogout = useCallback(() => {
+    Alert.alert(
+      t("profile:logoutConfirm.title", { defaultValue: "Sign out" }),
+      t("profile:logoutConfirm.message", {
+        defaultValue: "Are you sure you want to sign out?",
+      }),
+      [
+        { text: t("profile:logoutConfirm.cancel", { defaultValue: "Cancel" }), style: "cancel" },
+        {
+          text: t("profile:logoutConfirm.confirm", { defaultValue: "Sign out" }),
+          style: "destructive",
+          onPress: () => {
+            void logout();
+          },
+        },
+      ],
+    );
+  }, [logout, t]);
+
+  const handleSignOutAllDevices = useCallback(() => {
+    Alert.alert(
+      t("profile:signOutAll.title", { defaultValue: "Sign out from all devices" }),
+      t("profile:signOutAll.message", {
+        defaultValue:
+          "This will sign you out everywhere. You'll need to log in again on each device.",
+      }),
+      [
+        { text: t("profile:logoutConfirm.cancel", { defaultValue: "Cancel" }), style: "cancel" },
+        {
+          text: t("profile:signOutAll.confirm", { defaultValue: "Sign out" }),
+          style: "destructive",
+          onPress: () => {
+            void logout();
+          },
+        },
+      ],
+    );
+  }, [logout, t]);
+
+  const handleSelectLanguage = useCallback(async (lng: SupportedLanguage) => {
+    setLanguageSheetOpen(false);
+    if (lng === currentLang) return;
+    await setAppLanguage(lng);
+    setCurrentLang(lng);
+  }, [currentLang]);
+
+  const appVersion = Constants.expoConfig?.version ?? "—";
+
+  // Build account info rows (read-only) — pulled from role-aware data.
+  const accountEmail = user?.email ?? undefined;
+  const accountPhone = student?.phone ?? teacher?.phone ?? undefined;
+  const accountDob = student?.date_of_birth ?? undefined;
+  const accountClass =
+    kind === "student" && student
+      ? [student.class_name, student.roll_number ? `Roll ${student.roll_number}` : null]
+          .filter(Boolean)
+          .join(" · ")
+      : undefined;
+
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color={Colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          {t("myProfile.screenTitle")}
+    <ScreenContainer>
+      {/* Top bar */}
+      <View style={styles.topBar}>
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={12}
+          style={{ width: 44, height: 44, justifyContent: "center" }}
+        >
+          <Ionicons name="chevron-back" size={24} color={palette.onSurface} />
+        </Pressable>
+        <Text
+          style={[
+            typography.headlineMd,
+            { color: palette.onSurface, flex: 1, textAlign: "center" },
+          ]}
+        >
+          {t("profile:myProfile.screenTitle")}
         </Text>
-        <View style={styles.headerSpacer} />
+        <View style={{ width: 44 }} />
       </View>
 
       {loading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingTop: spacing.xl }}>
+          <ActivityIndicator size="large" color={palette.primary} />
         </View>
       ) : (
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.hero}>
-            <TouchableOpacity
-              style={styles.avatarWrap}
+        <>
+          {/* Header card: avatar + name + role pill + school */}
+          <View
+            style={{
+              alignItems: "center",
+              backgroundColor: palette.surfaceContainerLow,
+              borderRadius: radius.lg,
+              paddingVertical: spacing.xl,
+              paddingHorizontal: spacing.lg,
+              marginTop: spacing.md,
+            }}
+          >
+            <Pressable
               onPress={() => void pickAndUpload()}
               disabled={uploading}
-              activeOpacity={0.85}
+              style={{ position: "relative", marginBottom: spacing.md }}
             >
               {avatarUri ? (
                 <Image
                   source={{ uri: avatarUri }}
-                  style={styles.avatarImg}
+                  style={{
+                    width: 96,
+                    height: 96,
+                    borderRadius: 48,
+                  }}
                   contentFit="cover"
                   transition={200}
                 />
               ) : (
-                <View style={styles.avatarPlaceholder}>
-                  <Ionicons name="person" size={56} color={Colors.primary} />
+                <View
+                  style={{
+                    width: 96,
+                    height: 96,
+                    borderRadius: 48,
+                    backgroundColor: palette.surfaceContainer,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Ionicons name="person" size={44} color={palette.primary} />
                 </View>
               )}
               {uploading ? (
-                <View style={styles.avatarOverlay}>
+                <View
+                  style={[
+                    StyleSheet.absoluteFillObject,
+                    {
+                      borderRadius: 48,
+                      backgroundColor: "rgba(0,0,0,0.45)",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    },
+                  ]}
+                >
                   <ActivityIndicator color="#fff" />
                 </View>
               ) : (
-                <View style={styles.cameraBadge}>
-                  <Ionicons name="camera" size={18} color={Colors.background} />
+                <View
+                  style={{
+                    position: "absolute",
+                    right: 0,
+                    bottom: 0,
+                    width: 30,
+                    height: 30,
+                    borderRadius: 15,
+                    backgroundColor: palette.primary,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderWidth: 2,
+                    borderColor: palette.surfaceContainerLow,
+                  }}
+                >
+                  <Ionicons name="camera" size={14} color={palette.onPrimary} />
                 </View>
               )}
-            </TouchableOpacity>
-            <Text style={styles.heroName}>{displayName}</Text>
-            <Text style={styles.heroHint}>{t("myProfile.heroHint")}</Text>
-          </View>
+            </Pressable>
 
-          <TableSection title={t("myProfile.sections.account")}>
-            <TableRow label={t("fields.loginEmail")} value={user?.email} />
-            <View style={rowStyles.row}>
-              <Text style={rowStyles.labelCell}>{t("fields.profilePhoto")}</Text>
-              <Text style={[rowStyles.valueCell, styles.mutedValue]}>
-                {t("fields.profilePhotoHint")}
+            <Text
+              style={[
+                typography.display,
+                { color: palette.onSurface, textAlign: "center", fontSize: 24, lineHeight: 30 },
+              ]}
+              numberOfLines={1}
+            >
+              {displayName}
+            </Text>
+
+            <View
+              style={{
+                marginTop: spacing.sm,
+                paddingHorizontal: 10,
+                paddingVertical: 4,
+                borderRadius: radius.full,
+                backgroundColor: palette.primaryContainer,
+              }}
+            >
+              <Text
+                style={[
+                  typography.labelSm,
+                  { color: palette.onPrimaryContainer, includeFontPadding: false },
+                ]}
+              >
+                {roleLabel}
               </Text>
             </View>
-          </TableSection>
+
+            {schoolName ? (
+              <Text
+                style={[
+                  typography.bodyMd,
+                  { color: palette.onSurfaceVariant, marginTop: spacing.xs, textAlign: "center" },
+                ]}
+                numberOfLines={1}
+              >
+                {schoolName}
+              </Text>
+            ) : null}
+          </View>
+
+          {/* Account section */}
+          <CardSection title={t("profile:myProfile.sections.account")}>
+            <InfoRow label={t("profile:fields.email")} value={accountEmail} />
+            <InfoRow label={t("profile:fields.phone")} value={accountPhone} />
+            <InfoRow label={t("profile:fields.dateOfBirth")} value={accountDob} />
+            <InfoRow
+              label={t("profile:fields.currentClass")}
+              value={accountClass}
+              isLast
+            />
+          </CardSection>
+
+          {/* Security section */}
+          <CardSection title={t("profile:sections.security", { defaultValue: "Security" })}>
+            <ActionRow
+              icon="lock-closed-outline"
+              label={t("profile:main.cards.changePassword")}
+              hint={t("profile:main.cards.changePasswordSubtitle")}
+              onPress={() =>
+                router.push("/(protected)/profile/change-password" as never)
+              }
+            />
+            <ActionRow
+              icon="log-out-outline"
+              label={t("profile:signOutAll.row", {
+                defaultValue: "Sign out from all devices",
+              })}
+              destructive
+              onPress={handleSignOutAllDevices}
+              isLast
+            />
+          </CardSection>
+
+          {/* Preferences section */}
+          <CardSection title={t("profile:sections.preferences", { defaultValue: "Preferences" })}>
+            <ActionRow
+              icon="language-outline"
+              label={t("profile:preferences.language", { defaultValue: "Language" })}
+              trailing={
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <Text style={[typography.bodyMd, { color: palette.onSurfaceVariant }]}>
+                    {LANGUAGE_LABELS[currentLang]}
+                  </Text>
+                  <Ionicons name="chevron-forward" size={18} color={palette.onSurfaceVariant} />
+                </View>
+              }
+              onPress={() => setLanguageSheetOpen(true)}
+            />
+            <ActionRow
+              icon="notifications-outline"
+              label={t("profile:preferences.notifications", {
+                defaultValue: "Notifications",
+              })}
+              hint={t("profile:preferences.notificationsHint", {
+                defaultValue: "Manage in your device settings",
+              })}
+              onPress={() => void Linking.openSettings()}
+              isLast
+            />
+          </CardSection>
+
+          {/* About section */}
+          <CardSection title={t("profile:sections.about", { defaultValue: "About" })}>
+            <ActionRow
+              icon="information-circle-outline"
+              label={t("profile:about.version", { defaultValue: "App version" })}
+              trailing={
+                <Text style={[typography.bodyMd, { color: palette.onSurfaceVariant }]}>
+                  {appVersion}
+                </Text>
+              }
+            />
+            <ActionRow
+              icon="document-text-outline"
+              label={t("profile:main.cards.terms")}
+              trailing={
+                <Ionicons name="open-outline" size={18} color={palette.onSurfaceVariant} />
+              }
+              onPress={() => void Linking.openURL(TERMS_URL)}
+            />
+            <ActionRow
+              icon="shield-checkmark-outline"
+              label={t("profile:main.cards.privacy")}
+              trailing={
+                <Ionicons name="open-outline" size={18} color={palette.onSurfaceVariant} />
+              }
+              onPress={() => void Linking.openURL(PRIVACY_URL)}
+              isLast
+            />
+          </CardSection>
 
           {kind === "account" && (
-            <View style={styles.notice}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "flex-start",
+                gap: spacing.sm,
+                marginTop: spacing.lg,
+                padding: spacing.md,
+                backgroundColor: palette.surfaceContainer,
+                borderRadius: radius.md,
+              }}
+            >
               <Ionicons
                 name="information-circle-outline"
-                size={22}
-                color={Colors.textSecondary}
+                size={20}
+                color={palette.onSurfaceVariant}
               />
-              <Text style={styles.noticeText}>{t("myProfile.notice")}</Text>
+              <Text
+                style={[
+                  typography.bodyMd,
+                  { color: palette.onSurfaceVariant, flex: 1 },
+                ]}
+              >
+                {t("profile:myProfile.notice")}
+              </Text>
             </View>
           )}
 
+          {/* Role-specific extra details */}
           {kind === "student" && student && (
             <>
-              <TableSection title={t("myProfile.sections.basicInformation")}>
-                <TableRow label={t("fields.fullName")} value={student.name} />
-                <TableRow
-                  label={t("fields.admissionNumber")}
+              <CardSection title={t("profile:myProfile.sections.basicInformation")}>
+                <InfoRow label={t("profile:fields.fullName")} value={student.name} />
+                <InfoRow
+                  label={t("profile:fields.admissionNumber")}
                   value={student.admission_number}
                 />
-                <TableRow
-                  label={t("fields.academicYear")}
-                  value={student.academic_year || t("myProfile.dash")}
+                <InfoRow
+                  label={t("profile:fields.academicYear")}
+                  value={student.academic_year || t("profile:myProfile.dash")}
                 />
-                <TableRow label={t("fields.gender")} value={student.gender} />
-                <TableRow
-                  label={t("fields.dateOfBirth")}
-                  value={student.date_of_birth}
-                />
-              </TableSection>
+                <InfoRow label={t("profile:fields.gender")} value={student.gender} isLast />
+              </CardSection>
 
-              <TableSection title={t("myProfile.sections.contact")}>
-                <TableRow label={t("fields.email")} value={student.email} />
-                <TableRow label={t("fields.phone")} value={student.phone} />
-                <TableRow label={t("fields.address")} value={student.address} />
-              </TableSection>
-
-              <TableSection title={t("myProfile.sections.guardian")}>
-                <TableRow label={t("fields.name")} value={student.guardian_name} />
-                <TableRow
-                  label={t("fields.relationship")}
+              <CardSection title={t("profile:myProfile.sections.guardian")}>
+                <InfoRow label={t("profile:fields.name")} value={student.guardian_name} />
+                <InfoRow
+                  label={t("profile:fields.relationship")}
                   value={student.guardian_relationship}
                 />
-                <TableRow label={t("fields.phone")} value={student.guardian_phone} />
-                <TableRow label={t("fields.email")} value={student.guardian_email} />
-              </TableSection>
-
-              <TableSection title={t("myProfile.sections.classInfo")}>
-                <TableRow
-                  label={t("fields.currentClass")}
-                  value={student.class_name || t("myProfile.notAssigned")}
+                <InfoRow
+                  label={t("profile:fields.phone")}
+                  value={student.guardian_phone}
                 />
-                <TableRow label={t("fields.rollNumber")} value={student.roll_number} />
-              </TableSection>
+                <InfoRow
+                  label={t("profile:fields.email")}
+                  value={student.guardian_email}
+                  isLast
+                />
+              </CardSection>
 
-              <View style={styles.documentsWrap}>
+              <View style={{ marginTop: spacing.lg }}>
                 <StudentDocumentsSection studentId={student.id} />
               </View>
             </>
@@ -368,189 +847,88 @@ export default function MyProfileScreen() {
 
           {kind === "teacher" && teacher && (
             <>
-              <TableSection title={t("myProfile.sections.basicInformation")}>
-                <TableRow label={t("fields.fullName")} value={teacher.name} />
-                <TableRow label={t("fields.employeeId")} value={teacher.employee_id} />
-                <TableRow label={t("fields.email")} value={teacher.email} />
-                <TableRow label={t("fields.phone")} value={teacher.phone} />
-                <TableRow label={t("fields.status")} value={teacher.status} />
-              </TableSection>
-
-              <TableSection title={t("myProfile.sections.professional")}>
-                <TableRow label={t("fields.designation")} value={teacher.designation} />
-                <TableRow label={t("fields.department")} value={teacher.department} />
-                <TableRow label={t("fields.qualification")} value={teacher.qualification} />
-                <TableRow
-                  label={t("fields.specialization")}
+              <CardSection title={t("profile:myProfile.sections.professional")}>
+                <InfoRow
+                  label={t("profile:fields.employeeId")}
+                  value={teacher.employee_id}
+                />
+                <InfoRow
+                  label={t("profile:fields.designation")}
+                  value={teacher.designation}
+                />
+                <InfoRow
+                  label={t("profile:fields.department")}
+                  value={teacher.department}
+                />
+                <InfoRow
+                  label={t("profile:fields.qualification")}
+                  value={teacher.qualification}
+                />
+                <InfoRow
+                  label={t("profile:fields.specialization")}
                   value={teacher.specialization}
                 />
-                <TableRow
-                  label={t("fields.experience")}
+                <InfoRow
+                  label={t("profile:fields.experience")}
                   value={
                     teacher.experience_years != null
-                      ? t("myProfile.experienceYears", {
+                      ? t("profile:myProfile.experienceYears", {
                           years: teacher.experience_years,
                         })
                       : undefined
                   }
                 />
-                <TableRow
-                  label={t("fields.dateOfJoining")}
+                <InfoRow
+                  label={t("profile:fields.dateOfJoining")}
                   value={teacher.date_of_joining}
+                  isLast
                 />
-              </TableSection>
+              </CardSection>
 
               {teacher.address ? (
-                <TableSection title={t("myProfile.sections.address")}>
-                  <TableRow label={t("fields.address")} value={teacher.address} />
-                </TableSection>
+                <CardSection title={t("profile:myProfile.sections.address")}>
+                  <InfoRow label={t("profile:fields.address")} value={teacher.address} isLast />
+                </CardSection>
               ) : null}
             </>
           )}
-        </ScrollView>
+
+          {/* Bottom destructive Sign out button */}
+          <View style={{ marginTop: spacing.xl, marginBottom: spacing.lg }}>
+            <Button variant="destructive" fullWidth onPress={handleLogout}>
+              {t("profile:main.logout")}
+            </Button>
+          </View>
+        </>
       )}
-    </View>
+
+      <LanguageSheet
+        visible={languageSheetOpen}
+        onClose={() => setLanguageSheetOpen(false)}
+        current={currentLang}
+        onSelect={(lng) => void handleSelectLanguage(lng)}
+      />
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  header: {
+  topBar: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-    backgroundColor: Colors.background,
   },
-  backBtn: {
-    padding: Spacing.sm,
-    marginLeft: -Spacing.sm,
-  },
-  headerTitle: {
-    flex: 1,
-    fontSize: 20,
-    fontWeight: "700",
-    color: Colors.text,
-    textAlign: "center",
-  },
-  headerSpacer: {
-    width: 40,
-  },
-  scroll: { flex: 1 },
-  scrollContent: {
-    paddingBottom: Spacing.xl,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  hero: {
-    alignItems: "center",
-    paddingVertical: Spacing.xl,
-    paddingHorizontal: Spacing.lg,
-  },
-  avatarWrap: {
-    position: "relative",
-    marginBottom: Spacing.md,
-  },
-  avatarImg: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 3,
-    borderColor: Colors.primary,
-  },
-  avatarPlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: Colors.backgroundSecondary,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 3,
-    borderColor: Colors.primary,
-  },
-  avatarOverlay: {
+  backdrop: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: 60,
-    backgroundColor: "rgba(0,0,0,0.45)",
-    alignItems: "center",
-    justifyContent: "center",
   },
-  cameraBadge: {
+  sheet: {
     position: "absolute",
+    left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: Colors.primary,
+  },
+  handle: {
     width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 2,
-    borderColor: Colors.background,
-  },
-  heroName: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: Colors.text,
-    marginBottom: Spacing.xs,
-  },
-  heroHint: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    textAlign: "center",
-    lineHeight: 18,
-    maxWidth: 320,
-  },
-  tableSection: {
-    marginHorizontal: Spacing.lg,
-    marginBottom: Spacing.lg,
-  },
-  tableSectionTitle: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: Colors.textSecondary,
-    textTransform: "uppercase",
-    letterSpacing: 0.6,
-    marginBottom: Spacing.sm,
-  },
-  tableCard: {
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    overflow: "hidden",
-  },
-  mutedValue: {
-    color: Colors.textSecondary,
-    fontWeight: "400",
-    fontSize: 14,
-  },
-  notice: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: Spacing.sm,
-    marginHorizontal: Spacing.lg,
-    padding: Spacing.md,
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-  },
-  noticeText: {
-    flex: 1,
-    fontSize: 14,
-    color: Colors.textSecondary,
-    lineHeight: 20,
-  },
-  documentsWrap: {
-    marginHorizontal: Spacing.lg,
+    height: 4,
+    borderRadius: 2,
   },
 });
