@@ -17,9 +17,8 @@ type Props = {
 export function AppHeader({ onMenuPress }: Props) {
   const { palette, spacing, radius, typography } = useTheme();
   const insets = useSafeAreaInsets();
-  const { user, isFeatureEnabled } = useAuth() as any;
-  const uiRole = useUiRole() as any;
-  const isStudent = !!uiRole?.isStudent;
+  const { user, isFeatureEnabled, tenantName } = useAuth();
+  const { isStudent } = useUiRole();
   const { academicYears, selectedAcademicYearId } = useAcademicYearContext();
   const showNotifBadge = isFeatureEnabled('notifications');
   const unreadBadge = useUnreadNotificationsBadge(showNotifBadge);
@@ -27,8 +26,9 @@ export function AppHeader({ onMenuPress }: Props) {
   const [ayOpen, setAyOpen] = useState(false);
 
   const schoolName =
-    user?.school?.name ??
-    user?.tenant?.name ??
+    (user as any)?.school?.name ??
+    (user as any)?.tenant?.name ??
+    tenantName ??
     'Nexchool';
 
   const activeAy = academicYears.find((ay) => ay.id === selectedAcademicYearId);

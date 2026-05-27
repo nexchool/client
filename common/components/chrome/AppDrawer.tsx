@@ -25,7 +25,7 @@ import { useAuth } from '@/modules/auth/hooks/useAuth';
 import { useUiRole } from '@/modules/permissions/hooks/useUiRole';
 import { ProfileAvatar } from '@/common/components/ProfileAvatar';
 
-type Role = 'admin' | 'teacher' | 'student';
+type Role = 'admin' | 'teacher' | 'student' | 'parent' | 'unknown';
 
 type DrawerItem = {
   key: string;
@@ -38,15 +38,15 @@ type DrawerItem = {
 };
 
 const ITEMS: readonly DrawerItem[] = [
-  { key: 'dashboard', label: 'Dashboard', icon: 'grid-outline', iconActive: 'grid', route: '/(protected)/home', roles: ['admin', 'teacher', 'student'] },
+  { key: 'dashboard', label: 'Dashboard', icon: 'grid-outline', iconActive: 'grid', route: '/(protected)/home', roles: ['admin', 'teacher', 'student', 'parent'] },
   { key: 'students', label: 'Students', icon: 'people-outline', iconActive: 'people', route: '/(protected)/students', roles: ['admin', 'teacher'] },
   { key: 'teachers', label: 'Teachers', icon: 'person-outline', iconActive: 'person', route: '/(protected)/teachers', roles: ['admin'] },
   { key: 'classes', label: 'Classes', icon: 'school-outline', iconActive: 'school', route: '/(protected)/classes', roles: ['admin', 'teacher'] },
   { key: 'subjects', label: 'Subjects', icon: 'book-outline', iconActive: 'book', route: '/(protected)/subjects', roles: ['admin', 'teacher'] },
   { key: 'academics', label: 'Academics', icon: 'library-outline', iconActive: 'library', route: '/(protected)/academics', roles: ['admin'] },
   { key: 'attendance', label: 'Attendance', icon: 'checkmark-done-outline', iconActive: 'checkmark-done', route: '/(protected)/attendance/overview', roles: ['admin', 'teacher'] },
-  { key: 'schedule', label: 'Schedule', icon: 'time-outline', iconActive: 'time', route: '/(protected)/schedule/today', roles: ['admin', 'teacher', 'student'] },
-  { key: 'holidays', label: 'Holidays', icon: 'flag-outline', iconActive: 'flag', route: '/(protected)/holidays', roles: ['admin', 'teacher', 'student'] },
+  { key: 'schedule', label: 'Schedule', icon: 'time-outline', iconActive: 'time', route: '/(protected)/schedule/today', roles: ['admin', 'teacher', 'student', 'parent'] },
+  { key: 'holidays', label: 'Holidays', icon: 'flag-outline', iconActive: 'flag', route: '/(protected)/holidays', roles: ['admin', 'teacher', 'student', 'parent'] },
   { key: 'leaves', label: 'Leaves', icon: 'briefcase-outline', iconActive: 'briefcase', route: '/(protected)/my-leaves', roles: ['admin', 'teacher'] },
   { key: 'finance', label: 'Finance', icon: 'wallet-outline', iconActive: 'wallet', route: '/(protected)/finance', roles: ['admin', 'student'], flag: 'finance' },
   { key: 'activities', label: 'Activities', icon: 'sparkles-outline', iconActive: 'sparkles', route: '/(protected)/activities', roles: ['admin', 'teacher', 'student'], flag: 'activities' },
@@ -65,9 +65,14 @@ export function AppDrawer({ visible, onClose }: Props) {
   const { t } = useTranslation('common');
   const { palette, spacing, radius, typography } = useTheme();
   const insets = useSafeAreaInsets();
-  const { user, isFeatureEnabled, logout } = useAuth() as any;
-  const uiRole = useUiRole() as any;
-  const currentRole: Role = uiRole.isAdmin ? 'admin' : uiRole.isTeacher ? 'teacher' : 'student';
+  const { user, isFeatureEnabled, logout, tenantName } = useAuth();
+  const { isAdmin, isTeacher, isStudent, isParent } = useUiRole();
+  const currentRole: Role =
+    isAdmin ? 'admin' :
+    isTeacher ? 'teacher' :
+    isStudent ? 'student' :
+    isParent ? 'parent' :
+    'unknown';
 
   const translateX = useSharedValue(-DRAWER_W);
   const backdropOpacity = useSharedValue(0);
@@ -90,12 +95,17 @@ export function AppDrawer({ visible, onClose }: Props) {
   }));
 
   const userName =
-    (user?.first_name && user?.last_name && `${user.first_name} ${user.last_name}`) ||
+    ((user as any)?.first_name && (user as any)?.last_name && `${(user as any).first_name} ${(user as any).last_name}`) ||
     user?.name ||
     user?.email ||
     'User';
-  const userRoleLabel = uiRole.isAdmin ? 'Admin' : uiRole.isTeacher ? 'Teacher' : 'Student';
-  const schoolName = user?.school?.name ?? user?.tenant?.name ?? '';
+  const userRoleLabel =
+    isAdmin ? 'Admin' :
+    isTeacher ? 'Teacher' :
+    isStudent ? 'Student' :
+    isParent ? 'Parent' :
+    '';
+  const schoolName = (user as any)?.school?.name ?? (user as any)?.tenant?.name ?? tenantName ?? '';
   const roleLine = schoolName ? `${userRoleLabel} · ${schoolName}` : userRoleLabel;
 
   const visibleItems = ITEMS.filter((item) => {
@@ -187,34 +197,44 @@ export function AppDrawer({ visible, onClose }: Props) {
           style={{ flex: 1 }}
           contentContainerStyle={{ paddingBottom: spacing.lg }}
         >
-          {visibleItems.map((item, idx) => (
-            <Pressable
-              key={item.key}
-              onPress={() => handleNav(item.route)}
-              style={({ pressed }) => [
-                styles.row,
-                {
-                  backgroundColor: pressed ? palette.surfaceContainerHigh : 'transparent',
-                  borderRadius: radius.lg,
-                  marginHorizontal: 8,
-                  paddingHorizontal: 16,
-                  paddingVertical: 12,
-                  gap: spacing.md,
-                  marginTop: idx > 0 && idx % 5 === 0 ? spacing.sm : 4,
-                },
-              ]}
-            >
-              <Ionicons name={item.icon} size={22} color={palette.onSurfaceVariant} />
-              <Text
-                style={[
-                  typography.labelMd,
-                  { color: palette.onSurfaceVariant, fontFamily: 'Inter_500Medium' },
+          {visibleItems.length === 0 ? (
+            <View style={{ paddingHorizontal: spacing.lg, paddingVertical: spacing.xl }}>
+              <Text style={[typography.bodyMd, { color: palette.onSurfaceVariant }]}>
+                {t('noModulesAvailable', {
+                  defaultValue: "Your account doesn't have any modules available yet.",
+                })}
+              </Text>
+            </View>
+          ) : (
+            visibleItems.map((item, idx) => (
+              <Pressable
+                key={item.key}
+                onPress={() => handleNav(item.route)}
+                style={({ pressed }) => [
+                  styles.row,
+                  {
+                    backgroundColor: pressed ? palette.surfaceContainerHigh : 'transparent',
+                    borderRadius: radius.lg,
+                    marginHorizontal: 8,
+                    paddingHorizontal: 16,
+                    paddingVertical: 12,
+                    gap: spacing.md,
+                    marginTop: idx > 0 && idx % 5 === 0 ? spacing.sm : 4,
+                  },
                 ]}
               >
-                {item.label}
-              </Text>
-            </Pressable>
-          ))}
+                <Ionicons name={item.icon} size={22} color={palette.onSurfaceVariant} />
+                <Text
+                  style={[
+                    typography.labelMd,
+                    { color: palette.onSurfaceVariant, fontFamily: 'Inter_500Medium' },
+                  ]}
+                >
+                  {item.label}
+                </Text>
+              </Pressable>
+            ))
+          )}
         </ScrollView>
 
         <View
