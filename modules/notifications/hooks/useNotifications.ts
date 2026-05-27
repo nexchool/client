@@ -12,10 +12,11 @@ export const notificationsQueryKeys = {
 
 const qk = notificationsQueryKeys;
 
-export function useNotificationsList(unreadOnly = false) {
+export function useNotificationsList(unreadOnly = false, enabled = true) {
   return useQuery({
     queryKey: qk.list(unreadOnly),
     queryFn: () => fetchNotifications({ unreadOnly, limit: 100, offset: 0 }),
+    enabled,
   });
 }
 

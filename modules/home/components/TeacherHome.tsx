@@ -233,8 +233,11 @@ export function TeacherHome() {
                   </Text>
                   {isOngoing ? (
                     <View style={{ marginTop: spacing.md }}>
+                      {/* Sits on the indigo primary card. Use `secondary` so the
+                          label inherits `palette.primary` (indigo) which
+                          contrasts against the white background override. */}
                       <Button
-                        variant="primary"
+                        variant="secondary"
                         size="md"
                         fullWidth
                         onPress={() => router.push('/(protected)/attendance/my-classes')}

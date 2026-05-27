@@ -21,6 +21,10 @@ export const Layout = {
     sm: Radius.DEFAULT,
     md: Radius.md,
     lg: Radius.lg,
-    xl: Radius.xl,
+    // Preserve the pre-shim value of 20 so unrefactored modals/sheets keep
+    // their original corner radius. The theme's `radius.xl` is 24 by design;
+    // a sweep-and-replace to migrate consumers should happen before this
+    // legacy constant changes.
+    xl: 20,
   },
 } as const;

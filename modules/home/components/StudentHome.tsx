@@ -47,9 +47,12 @@ function CircularProgress({ value, size, palette }: { value: number; size: numbe
 export function StudentHome() {
   const { t } = useTranslation('home');
   const { palette, spacing, radius, typography, elevation } = useTheme();
-  const { user } = useAuth() as any;
+  const { user, isFeatureEnabled } = useAuth() as any;
   const { data, isLoading, isRefetching, refetch } = useStudentAcademicDashboard();
-  const { data: notifsData } = useNotificationsList();
+  // Gate the notifications query on the feature flag so tenants with the
+  // module disabled don't fire wasted 4xx/empty fetches.
+  const notificationsEnabled = !!isFeatureEnabled?.('notifications');
+  const { data: notifsData } = useNotificationsList(false, notificationsEnabled);
 
   const fullName =
     [user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.name || '';
