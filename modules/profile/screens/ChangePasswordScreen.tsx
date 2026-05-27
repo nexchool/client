@@ -256,9 +256,15 @@ export default function ChangePasswordScreen() {
         {next.length > 0 ? (
           <View style={{ flexDirection: 'row', gap: 4, marginTop: -spacing.xs }}>
             {[0, 1, 2, 3].map((i) => {
-              const tones = [palette.error, palette.warning, palette.warning, palette.success];
+              // Server rule is length>=8 AND has digit. Meter colors must
+              // not say "warning" for a password that the server will accept.
+              const meetsServer = strength.rules.length && strength.rules.digit;
               const filled = i < strength.score;
-              const activeColor = tones[Math.min(strength.score - 1, 3)] ?? palette.success;
+              const activeColor = meetsServer
+                ? palette.success
+                : strength.score >= 2
+                ? palette.warning
+                : palette.error;
               return (
                 <View
                   key={i}
