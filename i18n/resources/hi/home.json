@@ -51,7 +51,8 @@
   },
   "admin": {
     "action": {
-      "addStudent": "छात्र जोड़ें",
+      "addStudent": "विद्यार्थी जोड़ें",
+      "recordPayment": "भुगतान दर्ज करें",
       "reports": "रिपोर्ट देखें",
       "sendNotice": "सूचना भेजें",
       "takeAttendance": "उपस्थिति लें"
@@ -60,12 +61,19 @@
     "kpi": {
       "attendance": "आज की उपस्थिति",
       "fees": "आज का संग्रह",
-      "students": "कुल छात्र",
+      "students": "कुल विद्यार्थी",
       "teachers": "कुल शिक्षक"
     },
     "noConflicts": "आज कोई संघर्ष नहीं",
     "quickActions": "त्वरित क्रियाएँ",
-    "title": "स्कूल अवलोकन"
+    "title": "विद्यालय अवलोकन",
+    "subtitle": "आज, {{date}} की वास्तविक-समय जानकारी।"
+  },
+  "recordPayment": {
+    "title": "भुगतान दर्ज करें",
+    "searchPlaceholder": "विद्यार्थी खोजें",
+    "empty": "कोई बकाया फीस नहीं",
+    "due": "{{amount}} बकाया"
   },
   "student": {
     "attendance": "उपस्थिति",

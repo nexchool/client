@@ -295,5 +295,36 @@
       "pdfReceiptBody": "PDF downloaded. Install expo-sharing for share/save on device.",
       "downloadFailed": "Failed to download"
     }
+  },
+  "cancel": "Cancel",
+  "discard": {
+    "title": "Discard changes?",
+    "body": "Your unsaved changes will be lost.",
+    "cancel": "Keep editing",
+    "confirm": "Discard"
+  },
+  "invoiceCreate": {
+    "title": "New invoice",
+    "successTitle": "Invoice created",
+    "successBody": "The invoice has been issued.",
+    "errorTitle": "Could not create invoice",
+    "ok": "OK",
+    "submit": "Create invoice",
+    "sectionStudent": "Student & period",
+    "sectionDates": "Dates",
+    "sectionItems": "Fee items",
+    "sectionNotes": "Notes",
+    "fieldStudent": "Student",
+    "fieldAcademicYear": "Academic year",
+    "fieldIssueDate": "Issue date",
+    "fieldDueDate": "Due date",
+    "fieldFeeHead": "Fee head",
+    "fieldPeriod": "Period (optional)",
+    "fieldAmount": "Amount",
+    "fieldNotes": "Notes",
+    "notesPlaceholder": "Internal note (not visible to student)",
+    "itemNumber": "Item {{n}}",
+    "removeItem": "Remove item",
+    "addItem": "+ Add another fee item"
   }
 }

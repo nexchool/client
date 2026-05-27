@@ -52,6 +52,7 @@
   "admin": {
     "action": {
       "addStudent": "Add Student",
+      "recordPayment": "Record Payment",
       "reports": "View Reports",
       "sendNotice": "Send Notice",
       "takeAttendance": "Take Attendance"
@@ -65,7 +66,14 @@
     },
     "noConflicts": "No conflicts today",
     "quickActions": "Quick Actions",
-    "title": "School Overview"
+    "title": "School Overview",
+    "subtitle": "Real-time insights for today, {{date}}."
+  },
+  "recordPayment": {
+    "title": "Record payment",
+    "searchPlaceholder": "Search students",
+    "empty": "No outstanding fees",
+    "due": "{{amount}} due"
   },
   "student": {
     "attendance": "Attendance",

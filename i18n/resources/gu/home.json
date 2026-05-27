@@ -52,6 +52,7 @@
   "admin": {
     "action": {
       "addStudent": "વિદ્યાર્થી ઉમેરો",
+      "recordPayment": "ચુકવણી નોંધો",
       "reports": "અહેવાલો જુઓ",
       "sendNotice": "સૂચના મોકલો",
       "takeAttendance": "હાજરી લો"
@@ -65,7 +66,14 @@
     },
     "noConflicts": "આજે કોઈ સંઘર્ષ નથી",
     "quickActions": "ઝડપી ક્રિયાઓ",
-    "title": "શાળાનું વિહંગાવલોકન"
+    "title": "શાળાનું વિહંગાવલોકન",
+    "subtitle": "આજે, {{date}} ની વાસ્તવિક-સમય માહિતી."
+  },
+  "recordPayment": {
+    "title": "ચુકવણી નોંધો",
+    "searchPlaceholder": "વિદ્યાર્થીઓ શોધો",
+    "empty": "કોઈ બાકી ફી નથી",
+    "due": "{{amount}} બાકી"
   },
   "student": {
     "attendance": "હાજરી",

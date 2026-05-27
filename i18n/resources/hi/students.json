@@ -298,5 +298,44 @@
     "rollNotPositive": "रोल धनात्मक होना चाहिए।",
     "classOrYearRequired": "कक्षा या शैक्षणिक वर्ष चुनें।",
     "emailEmptyIfProvided": "ईमेल दिया हो तो खाली नहीं हो सकता।"
+  },
+  "cancel": "रद्द करें",
+  "form": {
+    "editTitle": "विद्यार्थी संपादित करें",
+    "newTitle": "नया विद्यार्थी"
+  },
+  "section": {
+    "basic": "मूल जानकारी",
+    "classInfo": "कक्षा",
+    "guardian": "अभिभावक",
+    "contact": "संपर्क (वैकल्पिक)"
+  },
+  "field": {
+    "fullName": "पूरा नाम",
+    "gender": "लिंग",
+    "dob": "जन्म तिथि",
+    "class": "कक्षा",
+    "admissionDate": "प्रवेश तिथि",
+    "guardianName": "अभिभावक का नाम",
+    "guardianRelationship": "संबंध",
+    "guardianPhone": "अभिभावक फ़ोन",
+    "email": "विद्यार्थी का ईमेल",
+    "phone": "विद्यार्थी का फ़ोन"
+  },
+  "discard": {
+    "title": "बदलाव छोड़ दें?",
+    "body": "आपके सहेजे न गए बदलाव खो जाएँगे।",
+    "cancel": "संपादन जारी रखें",
+    "confirm": "रद्द करें"
+  },
+  "credentials": {
+    "title": "विद्यार्थी खाता बनाया गया",
+    "copy": "क्रेडेंशियल कॉपी करें",
+    "done": "पूर्ण"
+  },
+  "save": {
+    "errorTitle": "सहेजा नहीं जा सका",
+    "update": "विद्यार्थी अपडेट करें",
+    "create": "विद्यार्थी बनाएँ"
   }
 }

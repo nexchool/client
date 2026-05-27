@@ -295,5 +295,36 @@
       "pdfReceiptBody": "PDF ડાઉનલોડ થયું. ઉપકરણ પર શેર/સાચવવા expo-sharing ઇન્સ્ટોલ કરો.",
       "downloadFailed": "ડાઉનલોડ નિષ્ફળ"
     }
+  },
+  "cancel": "રદ કરો",
+  "discard": {
+    "title": "ફેરફારો છોડી દો?",
+    "body": "તમારા સાચવ્યા વગરના ફેરફારો ખોવાઈ જશે.",
+    "cancel": "સંપાદન ચાલુ રાખો",
+    "confirm": "છોડી દો"
+  },
+  "invoiceCreate": {
+    "title": "નવું બિલ",
+    "successTitle": "બિલ બનાવ્યું",
+    "successBody": "બિલ જારી કરી દેવાયું છે.",
+    "errorTitle": "બિલ બનાવી શકાયું નહીં",
+    "ok": "ઠીક",
+    "submit": "બિલ બનાવો",
+    "sectionStudent": "વિદ્યાર્થી અને સમયગાળો",
+    "sectionDates": "તારીખો",
+    "sectionItems": "ફી મુદ્દાઓ",
+    "sectionNotes": "નોંધો",
+    "fieldStudent": "વિદ્યાર્થી",
+    "fieldAcademicYear": "શૈક્ષણિક વર્ષ",
+    "fieldIssueDate": "જારી તારીખ",
+    "fieldDueDate": "બાકી તારીખ",
+    "fieldFeeHead": "ફી શીર્ષક",
+    "fieldPeriod": "સમયગાળો (વૈકલ્પિક)",
+    "fieldAmount": "રકમ",
+    "fieldNotes": "નોંધો",
+    "notesPlaceholder": "આંતરિક નોંધ (વિદ્યાર્થીને દેખાશે નહીં)",
+    "itemNumber": "મુદ્દો {{n}}",
+    "removeItem": "મુદ્દો દૂર કરો",
+    "addItem": "+ બીજો ફી મુદ્દો ઉમેરો"
   }
 }

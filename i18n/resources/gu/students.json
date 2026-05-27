@@ -298,5 +298,44 @@
     "rollNotPositive": "રોલ નંબર ધન હોવો જોઈએ.",
     "classOrYearRequired": "વર્ગ અથવા શૈક્ષણિક વર્ષ પસંદ કરો.",
     "emailEmptyIfProvided": "ઈમેલ આપો તો ખાલી ન હોઈ શકે."
+  },
+  "cancel": "રદ કરો",
+  "form": {
+    "editTitle": "વિદ્યાર્થી સંપાદિત કરો",
+    "newTitle": "નવો વિદ્યાર્થી"
+  },
+  "section": {
+    "basic": "મૂળ માહિતી",
+    "classInfo": "વર્ગ",
+    "guardian": "વાલી",
+    "contact": "સંપર્ક (વૈકલ્પિક)"
+  },
+  "field": {
+    "fullName": "પૂરું નામ",
+    "gender": "જાતિ",
+    "dob": "જન્મ તારીખ",
+    "class": "વર્ગ",
+    "admissionDate": "પ્રવેશ તારીખ",
+    "guardianName": "વાલીનું નામ",
+    "guardianRelationship": "સંબંધ",
+    "guardianPhone": "વાલીનો ફોન",
+    "email": "વિદ્યાર્થીનો ઈમેલ",
+    "phone": "વિદ્યાર્થીનો ફોન"
+  },
+  "discard": {
+    "title": "ફેરફારો છોડી દો?",
+    "body": "તમારા સાચવ્યા વગરના ફેરફારો ખોવાઈ જશે.",
+    "cancel": "સંપાદન ચાલુ રાખો",
+    "confirm": "છોડી દો"
+  },
+  "credentials": {
+    "title": "વિદ્યાર્થી ખાતું બનાવ્યું",
+    "copy": "પ્રમાણપત્રો નકલ કરો",
+    "done": "પૂર્ણ"
+  },
+  "save": {
+    "errorTitle": "સાચવી શકાયું નહીં",
+    "update": "વિદ્યાર્થી અપડેટ કરો",
+    "create": "વિદ્યાર્થી બનાવો"
   }
 }

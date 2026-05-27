@@ -6,5 +6,28 @@
   "comingSoon": "Coming soon",
   "noClasses": "No classes today",
   "noPeriods": "No classes today",
-  "title": "Schedule"
+  "title": "Schedule",
+  "override": {
+    "openButton": "Add schedule override",
+    "title": "Override period",
+    "savedTitle": "Override saved",
+    "savedMessage": "The schedule override has been saved.",
+    "errorTitle": "Could not save override",
+    "cancel": "Cancel",
+    "save": "Save override",
+    "type": {
+      "cancelled": "Cancelled",
+      "substitute": "Substitute teacher",
+      "activity": "Activity / event"
+    },
+    "fields": {
+      "type": "Override type",
+      "slot": "Class period",
+      "slotHelper": "Tap the period card on the schedule grid to pre-fill this",
+      "date": "Date",
+      "substituteTeacher": "Substitute teacher",
+      "activityNote": "Activity description",
+      "reason": "Reason (optional)"
+    }
+  }
 }

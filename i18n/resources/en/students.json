@@ -298,5 +298,44 @@
     "rollNotPositive": "Roll number must be positive.",
     "classOrYearRequired": "Select a class or academic year.",
     "emailEmptyIfProvided": "Email cannot be empty if provided."
+  },
+  "cancel": "Cancel",
+  "form": {
+    "editTitle": "Edit student",
+    "newTitle": "New student"
+  },
+  "section": {
+    "basic": "Basic info",
+    "classInfo": "Class",
+    "guardian": "Guardian",
+    "contact": "Contact (optional)"
+  },
+  "field": {
+    "fullName": "Full name",
+    "gender": "Gender",
+    "dob": "Date of birth",
+    "class": "Class",
+    "admissionDate": "Admission date",
+    "guardianName": "Guardian name",
+    "guardianRelationship": "Relationship",
+    "guardianPhone": "Guardian phone",
+    "email": "Student email",
+    "phone": "Student phone"
+  },
+  "discard": {
+    "title": "Discard changes?",
+    "body": "Your unsaved changes will be lost.",
+    "cancel": "Keep editing",
+    "confirm": "Discard"
+  },
+  "credentials": {
+    "title": "Student account created",
+    "copy": "Copy credentials",
+    "done": "Done"
+  },
+  "save": {
+    "errorTitle": "Could not save",
+    "update": "Update student",
+    "create": "Create student"
   }
 }

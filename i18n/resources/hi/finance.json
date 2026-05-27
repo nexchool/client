@@ -295,5 +295,36 @@
       "pdfReceiptBody": "PDF डाउनलोड। डिवाइस पर साझा/सहेजने हेतु expo-sharing स्थापित करें।",
       "downloadFailed": "डाउनलोड विफल"
     }
+  },
+  "cancel": "रद्द करें",
+  "discard": {
+    "title": "बदलाव छोड़ दें?",
+    "body": "आपके सहेजे न गए बदलाव खो जाएँगे।",
+    "cancel": "संपादन जारी रखें",
+    "confirm": "रद्द करें"
+  },
+  "invoiceCreate": {
+    "title": "नया बिल",
+    "successTitle": "बिल बनाया गया",
+    "successBody": "बिल जारी कर दिया गया है।",
+    "errorTitle": "बिल नहीं बना सके",
+    "ok": "ठीक",
+    "submit": "बिल बनाएँ",
+    "sectionStudent": "विद्यार्थी और अवधि",
+    "sectionDates": "तिथियाँ",
+    "sectionItems": "शुल्क मद",
+    "sectionNotes": "टिप्पणियाँ",
+    "fieldStudent": "विद्यार्थी",
+    "fieldAcademicYear": "शैक्षणिक वर्ष",
+    "fieldIssueDate": "जारी तिथि",
+    "fieldDueDate": "देय तिथि",
+    "fieldFeeHead": "शुल्क शीर्ष",
+    "fieldPeriod": "अवधि (वैकल्पिक)",
+    "fieldAmount": "राशि",
+    "fieldNotes": "टिप्पणियाँ",
+    "notesPlaceholder": "आंतरिक टिप्पणी (विद्यार्थी को नहीं दिखेगी)",
+    "itemNumber": "मद {{n}}",
+    "removeItem": "मद हटाएँ",
+    "addItem": "+ और शुल्क मद जोड़ें"
   }
 }

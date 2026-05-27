@@ -124,5 +124,39 @@
     "saveFailed": "Failed to save teacher.",
     "create": "Create teacher",
     "update": "Update teacher"
+  },
+  "cancel": "Cancel",
+  "form": {
+    "editTitle": "Edit teacher",
+    "newTitle": "New teacher"
+  },
+  "section": {
+    "personal": "Personal info",
+    "role": "Role"
+  },
+  "field": {
+    "fullName": "Full name",
+    "email": "Email",
+    "phone": "Phone",
+    "designation": "Designation",
+    "department": "Department",
+    "qualification": "Qualification",
+    "dateOfJoining": "Date of joining"
+  },
+  "discard": {
+    "title": "Discard changes?",
+    "body": "Your unsaved changes will be lost.",
+    "cancel": "Keep editing",
+    "confirm": "Discard"
+  },
+  "credentials": {
+    "title": "Teacher account created",
+    "copy": "Copy credentials",
+    "done": "Done"
+  },
+  "save": {
+    "errorTitle": "Could not save",
+    "update": "Update teacher",
+    "create": "Create teacher"
   }
 }
