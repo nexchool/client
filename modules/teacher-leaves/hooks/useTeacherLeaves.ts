@@ -1,10 +1,10 @@
 import { useState, useCallback } from 'react';
-import { TeacherLeave, CreateLeaveDTO, LeaveBalance, LeavePolicy, AdjustLeaveBalanceDTO, UpdateLeavePolicyDTO } from '../types';
+import { TeacherLeave, CreateLeaveDTO, LeaveBalance, LeavePolicy, AdjustLeaveBalanceDTO, UpdateLeavePolicyDTO } from '@/modules/teachers/types';
 import {
   teacherLeaveService,
   teacherLeaveBalanceService,
   leavePolicyService,
-} from '../services/teacherConstraintService';
+} from '@/modules/teachers/services/teacherConstraintService';
 
 export function useTeacherLeaves() {
   const [leaves, setLeaves] = useState<TeacherLeave[]>([]);

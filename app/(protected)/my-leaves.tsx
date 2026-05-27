@@ -19,7 +19,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
-import { useTeacherLeaves } from "@/modules/teachers/hooks/useTeacherLeaves";
+import { useTeacherLeaves } from "@/modules/teacher-leaves/hooks/useTeacherLeaves";
 import { TeacherLeave, LeaveBalance, LEAVE_TYPES } from "@/modules/teachers/types";
 import { holidayService } from "@/modules/holidays/services/holidayService";
 import { Holiday } from "@/modules/holidays/types";

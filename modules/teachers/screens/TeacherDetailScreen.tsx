@@ -19,7 +19,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTeachers } from "../hooks/useTeachers";
 import { useTeacherSubjects } from "../hooks/useTeacherSubjects";
 import { useTeacherAvailability } from "../hooks/useTeacherAvailability";
-import { useTeacherLeaves } from "../hooks/useTeacherLeaves";
+import { useTeacherLeaves } from "@/modules/teacher-leaves/hooks/useTeacherLeaves";
 import { useTeacherWorkload } from "../hooks/useTeacherWorkload";
 import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
 import * as PERMS from "@/modules/permissions/constants/permissions";
