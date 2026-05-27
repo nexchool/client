@@ -62,3 +62,15 @@ export const resetPassword = (data: {
 }) => {
   return apiPost<MessageResponse>(API_ENDPOINTS.RESET_PASSWORD, data);
 };
+
+export interface ChangePasswordResponse {
+  revoked_sessions: number;
+}
+
+export const changePassword = (data: {
+  current_password: string;
+  new_password: string;
+  revoke_other_sessions?: boolean;
+}) => {
+  return apiPost<ChangePasswordResponse>('/api/auth/password/change', data);
+};
