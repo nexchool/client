@@ -34,7 +34,7 @@ type DrawerItem = {
   iconActive: keyof typeof Ionicons.glyphMap;
   route: string;
   roles: Role[];
-  flag?: 'finance' | 'activities' | 'hostel' | 'transport' | 'notifications';
+  flag?: 'fees_management' | 'hostel' | 'transport' | 'notifications' | 'attendance' | 'timetable' | 'schedule_management' | 'holiday_management' | 'library' | 'inventory' | 'examinations' | 'reports' | 'search' | 'academics_advanced' | 'student_management' | 'teacher_management' | 'class_management';
 };
 
 const ITEMS: readonly DrawerItem[] = [
@@ -48,8 +48,10 @@ const ITEMS: readonly DrawerItem[] = [
   { key: 'schedule', label: 'Schedule', icon: 'time-outline', iconActive: 'time', route: '/(protected)/schedule/today', roles: ['admin', 'teacher', 'student', 'parent'] },
   { key: 'holidays', label: 'Holidays', icon: 'flag-outline', iconActive: 'flag', route: '/(protected)/holidays', roles: ['admin', 'teacher', 'student', 'parent'] },
   { key: 'leaves', label: 'Leaves', icon: 'briefcase-outline', iconActive: 'briefcase', route: '/(protected)/my-leaves', roles: ['admin', 'teacher'] },
-  { key: 'finance', label: 'Finance', icon: 'wallet-outline', iconActive: 'wallet', route: '/(protected)/finance', roles: ['admin', 'student'], flag: 'finance' },
-  { key: 'activities', label: 'Activities', icon: 'sparkles-outline', iconActive: 'sparkles', route: '/(protected)/activities', roles: ['admin', 'teacher', 'student'], flag: 'activities' },
+  { key: 'finance', label: 'Finance', icon: 'wallet-outline', iconActive: 'wallet', route: '/(protected)/finance', roles: ['admin', 'student'], flag: 'fees_management' },
+  // 'activities' is not a server-side plan feature key (see server/core/feature_flags.py).
+  // Leaving unflagged so the item shows whenever the tenant exists.
+  { key: 'activities', label: 'Activities', icon: 'sparkles-outline', iconActive: 'sparkles', route: '/(protected)/activities', roles: ['admin', 'teacher', 'student'] },
   { key: 'my-transport', label: 'My Transport', icon: 'bus-outline', iconActive: 'bus', route: '/(protected)/my-transport', roles: ['student'], flag: 'transport' },
 ];
 
