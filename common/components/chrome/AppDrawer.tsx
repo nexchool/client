@@ -50,6 +50,7 @@ const ITEMS: readonly DrawerItem[] = [
   { key: 'leaves', label: 'Leaves', icon: 'briefcase-outline', iconActive: 'briefcase', route: '/(protected)/my-leaves', roles: ['admin', 'teacher'] },
   { key: 'finance', label: 'Finance', icon: 'wallet-outline', iconActive: 'wallet', route: '/(protected)/finance', roles: ['admin', 'student'], flag: 'finance' },
   { key: 'activities', label: 'Activities', icon: 'sparkles-outline', iconActive: 'sparkles', route: '/(protected)/activities', roles: ['admin', 'teacher', 'student'], flag: 'activities' },
+  { key: 'my-transport', label: 'My Transport', icon: 'bus-outline', iconActive: 'bus', route: '/(protected)/my-transport', roles: ['student'], flag: 'transport' },
 ];
 
 type Props = {
