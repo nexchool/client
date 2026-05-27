@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { teacherService } from '../services/teacherService';
 import { Teacher, CreateTeacherDTO, UpdateTeacherDTO, CreateTeacherResponse } from '../types';
 
@@ -95,3 +96,43 @@ export const useTeachers = () => {
     deleteTeacher,
   };
 };
+
+export const teachersKeys = {
+  all: ['teachers'] as const,
+  list: () => ['teachers', 'list'] as const,
+  detail: (id: string) => ['teachers', 'detail', id] as const,
+};
+
+// TanStack Query hooks for teacher detail + mutations.
+// These coexist with the useState-based useTeachers above.
+
+export function useTeacher(id: string | undefined, enabled = true) {
+  return useQuery({
+    queryKey: teachersKeys.detail(id ?? ''),
+    queryFn: () => teacherService.getTeacher(id!),
+    enabled: enabled && !!id,
+  });
+}
+
+export function useCreateTeacher() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateTeacherDTO): Promise<CreateTeacherResponse> =>
+      teacherService.createTeacher(input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: teachersKeys.list() });
+    },
+  });
+}
+
+export function useUpdateTeacher(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: UpdateTeacherDTO): Promise<Teacher> =>
+      teacherService.updateTeacher(id, input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: teachersKeys.list() });
+      qc.invalidateQueries({ queryKey: teachersKeys.detail(id) });
+    },
+  });
+}
