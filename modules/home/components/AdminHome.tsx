@@ -16,6 +16,7 @@ import { useAdminAcademicDashboard } from '@/modules/academics/hooks/useAcademic
 import { HomeKpiCard } from './HomeKpiCard';
 import { HomeQuickActionCard } from './HomeQuickActionCard';
 import { HomeSectionHeader } from './HomeSectionHeader';
+import { RecordPaymentPicker } from './RecordPaymentPicker';
 import { Skeleton } from '@/common/components/Skeleton';
 import { EmptyState } from '@/common/components/EmptyState';
 
@@ -27,6 +28,7 @@ export function AdminHome() {
   const { t } = useTranslation('home');
   const { palette, spacing, radius, typography, elevation } = useTheme();
   const { data, isLoading, isRefetching, refetch } = useAdminAcademicDashboard();
+  const [recordPaymentVisible, setRecordPaymentVisible] = React.useState(false);
 
   const today = new Date().toLocaleDateString(undefined, {
     weekday: 'long',
@@ -139,7 +141,16 @@ export function AdminHome() {
               iconName="person-add"
               iconBgToken="secondaryContainer"
               iconFgToken="onSecondaryContainer"
-              onPress={() => showComingSoon(t('admin.action.addStudent', { defaultValue: 'Add Student' }))}
+              onPress={() => router.push('/(protected)/students/new')}
+            />
+          </View>
+          <View style={{ width: 140 }}>
+            <HomeQuickActionCard
+              label={t('admin.action.recordPayment', { defaultValue: 'Record Payment' })}
+              iconName="wallet-outline"
+              iconBgToken="tertiaryContainer"
+              iconFgToken="onTertiaryContainer"
+              onPress={() => setRecordPaymentVisible(true)}
             />
           </View>
           <View style={{ width: 140 }}>
@@ -222,6 +233,11 @@ export function AdminHome() {
           <ActivityIndicator color={palette.primary} />
         </View>
       ) : null}
+
+      <RecordPaymentPicker
+        visible={recordPaymentVisible}
+        onClose={() => setRecordPaymentVisible(false)}
+      />
     </ScrollView>
   );
 }

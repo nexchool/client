@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   View,
@@ -54,11 +54,18 @@ type AllocationState = Record<string, string>;
 export default function StudentFeeDetailPage() {
   const { t, i18n } = useTranslation("finance");
   const locale = calendarLocaleForLanguage(i18n.language ?? "en");
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, action } = useLocalSearchParams<{ id: string; action?: string }>();
   const router = useRouter();
   const { palette, spacing, radius, typography, elevation } = useTheme();
 
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (action === "record") {
+      setPaymentModalOpen(true);
+    }
+  }, [action]);
+
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState("cash");
   const [referenceNumber, setReferenceNumber] = useState("");
