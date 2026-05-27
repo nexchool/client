@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   Alert,
   TextInput,
+  Pressable,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -18,7 +19,9 @@ import { useTeachers } from "../hooks/useTeachers";
 import { TeacherListItem } from "../components/TeacherListItem";
 import { CreateTeacherModal } from "../components/CreateTeacherModal";
 import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
+import { Protected } from "@/modules/permissions/components/Protected";
 import * as PERMS from "@/modules/permissions/constants/permissions";
+import { useTheme } from "@/common/theme";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
 import { Teacher } from "../types";
@@ -37,6 +40,7 @@ export default function TeachersScreen() {
   const router = useRouter();
   const { teachers, loading, fetchTeachers, createTeacher } = useTeachers();
   const { hasPermission } = usePermissions();
+  const { palette, elevation } = useTheme();
 
   const [modalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -140,6 +144,29 @@ export default function TeachersScreen() {
           onSubmit={handleCreateTeacher}
         />
       )}
+
+      <Protected permission={PERMS.TEACHER_CREATE}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Add teacher"
+          onPress={() => router.push("/(protected)/teachers/new" as any)}
+          style={({ pressed }) => ({
+            position: "absolute",
+            bottom: 96,
+            right: 20,
+            width: 56,
+            height: 56,
+            borderRadius: 28,
+            backgroundColor: palette.primary,
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: pressed ? 0.85 : 1,
+            ...elevation.card,
+          })}
+        >
+          <Ionicons name="add" size={28} color={palette.onPrimary} />
+        </Pressable>
+      </Protected>
     </SafeAreaView>
   );
 }

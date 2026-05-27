@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   Alert,
   TextInput,
+  Pressable,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -19,7 +20,9 @@ import { StudentListItem } from "../components/StudentListItem";
 import { CreateStudentModal } from "../components/CreateStudentModal";
 import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
 import { useAcademicYearContext } from "@/modules/academics/context/AcademicYearContext";
+import { Protected } from "@/modules/permissions/components/Protected";
 import * as PERMS from "@/modules/permissions/constants/permissions";
+import { useTheme } from "@/common/theme";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
 import { Student } from "../types";
@@ -54,6 +57,7 @@ export default function StudentsScreen() {
   } = useStudents();
   const { hasPermission, hasAnyPermission } = usePermissions();
   const { selectedAcademicYearId } = useAcademicYearContext();
+  const { palette, elevation } = useTheme();
   const params = useLocalSearchParams();
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -230,6 +234,29 @@ export default function StudentsScreen() {
           onSubmit={handleCreateStudent}
         />
       )}
+
+      <Protected permission={PERMS.STUDENT_CREATE}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Add student"
+          onPress={() => router.push("/(protected)/students/new" as any)}
+          style={({ pressed }) => ({
+            position: "absolute",
+            bottom: 96,
+            right: 20,
+            width: 56,
+            height: 56,
+            borderRadius: 28,
+            backgroundColor: palette.primary,
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: pressed ? 0.85 : 1,
+            ...elevation.card,
+          })}
+        >
+          <Ionicons name="add" size={28} color={palette.onPrimary} />
+        </Pressable>
+      </Protected>
     </SafeAreaView>
   );
 }
