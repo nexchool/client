@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle } from 'react-native-svg';
@@ -108,6 +109,10 @@ export default function MyAttendanceScreen() {
         contentContainerStyle={{ padding: spacing.marginMobile, gap: spacing.lg, paddingBottom: spacing.xl * 3 }}
         refreshControl={<RefreshControl refreshing={!!isRefetching} onRefresh={() => refetch()} />}
       >
+        <Pressable onPress={() => router.back()} hitSlop={12} style={{ width: 44, height: 44, justifyContent: 'center' }}>
+          <Ionicons name="chevron-back" size={24} color={palette.onSurface} />
+        </Pressable>
+
         <View>
           <Text style={[typography.display, { color: palette.onSurface }]}>
             {t('myAttendance.title', { defaultValue: 'My Attendance' })}
