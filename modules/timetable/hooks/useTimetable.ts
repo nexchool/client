@@ -55,15 +55,25 @@ export function useClassWeeklyTimetable(classId: string, weekStartDate: string) 
 }
 
 function transformBundleToWeekly(bundle: any, weekStartDate: string): WeeklyTimetable {
-  // Bundle shape from existing endpoint varies. Defensively handle:
-  //   - { periods: [{ day_of_week, ... }] }
-  //   - { entries: [...] }
-  //   - { schedule: { mon: [...], tue: [...] } }
+  // Two known shapes from the existing per-class endpoint:
+  //   1. { periods: [{ day_of_week, ... }] }
+  //   2. { entries: [{ day_of_week, ... }] }
   // day_of_week is 0=Mon..6=Sun (per server convention).
+  // If the server response doesn't match either shape, render an empty grid
+  // and surface the drift in dev so it can be reconciled.
   const periods: any[] =
-    (bundle?.periods as any[]) ??
-    (bundle?.entries as any[]) ??
+    (Array.isArray(bundle?.periods) ? bundle.periods : undefined) ??
+    (Array.isArray(bundle?.entries) ? bundle.entries : undefined) ??
     [];
+  if (periods.length === 0 && bundle && Object.keys(bundle).length > 0) {
+    if (__DEV__) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        '[useTimetable] transformBundleToWeekly: unrecognized bundle shape',
+        Object.keys(bundle),
+      );
+    }
+  }
   const days: WeeklyPeriod[][] = Array.from({ length: 7 }, () => []);
   for (const p of periods) {
     const dow = Number(p.day_of_week);
