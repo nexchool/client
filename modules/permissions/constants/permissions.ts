@@ -48,6 +48,15 @@ export const STUDENT_UPDATE_SELF = 'student.update.self';
 export const STUDENT_DELETE = 'student.delete';
 export const STUDENT_MANAGE = 'student.manage';
 
+// Student Leave
+export const STUDENT_LEAVE_APPLY = 'student.leave.apply';
+export const STUDENT_LEAVE_READ_OWN = 'student.leave.read.own';
+export const STUDENT_LEAVE_READ_CLASS = 'student.leave.read.class';
+export const STUDENT_LEAVE_READ_ALL = 'student.leave.read.all';
+export const STUDENT_LEAVE_APPROVE_CLASS = 'student.leave.approve.class';
+export const STUDENT_LEAVE_APPROVE_ALL = 'student.leave.approve.all';
+export const STUDENT_LEAVE_REQUEST_CANCEL = 'student.leave.request_cancel';
+
 // Grade Management
 export const GRADE_CREATE = 'grade.create';
 export const GRADE_READ_SELF = 'grade.read.self';
