@@ -8,7 +8,9 @@ import { Button } from '@/common/components/Button';
 import { Input } from '@/common/components/Input';
 import { Link } from '@/common/components/Link';
 import { Skeleton } from '@/common/components/Skeleton';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAttendance } from '../hooks/useAttendance';
+import { qk } from '@/modules/academics/hooks/queryKeys';
 import { holidayService } from '@/modules/holidays/services/holidayService';
 import type { Holiday } from '@/modules/holidays/types';
 import type { AttendanceRecord } from '../types';
@@ -44,6 +46,9 @@ export default function MarkAttendanceScreen() {
   // After success we re-fetch the class attendance to sync server state back.
   const { classAttendance, loading, fetchClassAttendance, markAttendance } = useAttendance();
   // ===========================================================
+
+  // Invalidate v2 React Query caches so Session/MyClasses refresh after a save.
+  const queryClient = useQueryClient();
 
   const today = useMemo(() => new Date().toISOString().split('T')[0], []);
   const [selectedDate, setSelectedDate] = useState(today);
@@ -249,7 +254,12 @@ export default function MarkAttendanceScreen() {
         date: selectedDate,
         records,
       });
-      // After success, re-fetch to sync server state back into local state.
+      // After success, invalidate v2 React Query caches so Session and MyClasses
+      // reflect the new state when the user navigates back.
+      void queryClient.invalidateQueries({ queryKey: qk.classSession(classId, selectedDate) });
+      void queryClient.invalidateQueries({ queryKey: qk.eligibleClasses(selectedDate) });
+      void queryClient.invalidateQueries({ queryKey: qk.classAttendanceHistory(classId) });
+      // Also re-fetch the local legacy state.
       Alert.alert(t('mark.successTitle'), t('mark.successBody'), [
         { text: t('mark.ok'), onPress: () => fetchClassAttendance(classId, selectedDate) },
       ]);
