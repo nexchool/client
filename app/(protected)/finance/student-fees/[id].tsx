@@ -59,9 +59,11 @@ export default function StudentFeeDetailPage() {
   const { palette, spacing, radius, typography, elevation } = useTheme();
 
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const consumedActionRef = React.useRef(false);
 
   useEffect(() => {
-    if (action === "record") {
+    if (action === "record" && !consumedActionRef.current) {
+      consumedActionRef.current = true;
       setPaymentModalOpen(true);
     }
   }, [action]);

@@ -234,10 +234,12 @@ export function AdminHome() {
         </View>
       ) : null}
 
-      <RecordPaymentPicker
-        visible={recordPaymentVisible}
-        onClose={() => setRecordPaymentVisible(false)}
-      />
+      {recordPaymentVisible ? (
+        <RecordPaymentPicker
+          visible={recordPaymentVisible}
+          onClose={() => setRecordPaymentVisible(false)}
+        />
+      ) : null}
     </ScrollView>
   );
 }

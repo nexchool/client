@@ -92,17 +92,18 @@ export function ScheduleOverrideSheet({ visible, onClose, defaultDate, defaultSl
       onClose();
     } catch (err: any) {
       const details = err?.data?.error?.details;
-      if (Array.isArray(details)) {
+      if (Array.isArray(details) && details.length > 0) {
         for (const d of details) {
           if (d?.field) {
-            setError(d.field as any, { type: 'server', message: d.issue ?? d.message ?? 'Invalid' });
+            setError(d.field as any, { type: 'server', message: String(d.issue ?? d.message ?? 'Invalid') });
           }
         }
+      } else {
+        Alert.alert(
+          t('override.errorTitle', { defaultValue: 'Could not save override' }),
+          err?.message ?? 'Unknown error'
+        );
       }
-      Alert.alert(
-        t('override.errorTitle', { defaultValue: 'Could not save override' }),
-        err?.message ?? 'Unknown error'
-      );
     }
   };
 
