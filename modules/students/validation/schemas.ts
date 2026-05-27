@@ -218,6 +218,56 @@ export const updateStudentSchema = z
 export type CreateStudentInput = z.infer<typeof createStudentSchema>;
 export type UpdateStudentInput = z.infer<typeof updateStudentSchema>;
 
+/**
+ * Form-only schema for StudentFormScreen (RHF + zodResolver).
+ * Narrower than `createStudentSchema` above: enforces the 10 fields the
+ * Slice 5 admin "new student" UI collects. Field names match `CreateStudentDTO`.
+ * Messages are plain English (form is admin-only for now; i18n can wrap later).
+ */
+const formIsoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+const formPhoneRegex = /^\+?[0-9\s\-()]{7,20}$/;
+
+export const studentFormSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Full name is required")
+    .max(120, "Max 120 characters"),
+
+  gender: z.enum(["male", "female", "other"]),
+
+  date_of_birth: z
+    .string()
+    .regex(formIsoDateRegex, "Date of birth must be YYYY-MM-DD"),
+
+  class_id: z.string().min(1, "Class is required"),
+
+  admission_date: z
+    .string()
+    .regex(formIsoDateRegex, "Admission date must be YYYY-MM-DD"),
+
+  guardian_name: z
+    .string()
+    .min(1, "Guardian name is required")
+    .max(120, "Max 120 characters"),
+
+  guardian_relationship: z.enum(["father", "mother", "guardian", "other"]),
+
+  guardian_phone: z
+    .string()
+    .min(1, "Guardian phone is required")
+    .regex(formPhoneRegex, "Enter a valid phone number"),
+
+  email: z
+    .union([z.literal(""), z.string().email("Enter a valid email")])
+    .optional(),
+
+  phone: z
+    .union([z.literal(""), z.string().regex(formPhoneRegex, "Enter a valid phone number")])
+    .optional(),
+});
+
+export type StudentFormInput = z.infer<typeof studentFormSchema>;
+
 export function validateStudentData(data: unknown, isUpdate: boolean = false) {
   const schema = isUpdate ? updateStudentSchema : createStudentSchema;
   const result = schema.safeParse(data);
