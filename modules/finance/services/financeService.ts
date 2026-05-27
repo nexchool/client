@@ -18,6 +18,23 @@ import type {
   RecordPaymentInput,
 } from "../types";
 
+export type InvoiceItemInput = {
+  fee_head: string;
+  period?: string;
+  amount: number;
+  discount?: number;
+  fine?: number;
+};
+
+export type CreateInvoicePayload = {
+  student_id: string;
+  academic_year: string;
+  issue_date: string;
+  due_date: string;
+  items: InvoiceItemInput[];
+  notes?: string;
+};
+
 export const financeService = {
   // Fee structures
   getStructures: async (params?: {
@@ -236,6 +253,11 @@ export const financeService = {
     const w = window.open(blobUrl, "_blank");
     if (w) w.onload = () => { w.print(); setTimeout(() => URL.revokeObjectURL(blobUrl), 2000); };
     else { window.open(blobUrl); setTimeout(() => URL.revokeObjectURL(blobUrl), 5000); }
+  },
+
+  /** Create an invoice (fees module: POST /api/fees/invoices). */
+  createInvoice: async (payload: CreateInvoicePayload) => {
+    return await apiPost<{ invoice: { id: string } }>("/api/fees/invoices", payload);
   },
 
   /** Open receipt print page in a new window. Handles auth headers via blob fetch. */

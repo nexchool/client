@@ -18,6 +18,8 @@ import { useTheme } from "@/common/theme";
 import { Skeleton } from "@/common/components/Skeleton";
 import { EmptyState } from "@/common/components/EmptyState";
 import { formatCurrency } from "@/common/utils/formatCurrency";
+import { Protected } from "@/modules/permissions/components/Protected";
+import * as PERMS from "@/modules/permissions/constants/permissions";
 
 function formatDate(s: string, locale: string) {
   try {
@@ -371,6 +373,33 @@ export default function InvoicesListPage() {
           }
         />
       )}
+
+      <Protected permission={PERMS.FEES_INVOICE_CREATE}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("invoices.createFab", {
+            defaultValue: "Create invoice",
+          })}
+          onPress={() =>
+            router.push("/(protected)/finance/invoices/new" as never)
+          }
+          style={({ pressed }) => ({
+            position: "absolute",
+            bottom: 96,
+            right: 20,
+            width: 56,
+            height: 56,
+            borderRadius: 28,
+            backgroundColor: palette.primary,
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: pressed ? 0.85 : 1,
+            ...elevation.card,
+          })}
+        >
+          <Ionicons name="add" size={28} color={palette.onPrimary} />
+        </Pressable>
+      </Protected>
     </SafeAreaView>
   );
 }

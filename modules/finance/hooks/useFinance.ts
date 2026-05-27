@@ -3,7 +3,7 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { financeService } from "../services/financeService";
+import { financeService, type CreateInvoicePayload } from "../services/financeService";
 import { academicYearService } from "../services/academicYearService";
 import { financeClassService } from "../services/classService";
 import { studentService } from "@/modules/students/services/studentService";
@@ -220,6 +220,19 @@ export function useRefundPayment(studentFeeId?: string) {
       if (studentFeeId) {
         qc.invalidateQueries({ queryKey: KEYS.studentFee(studentFeeId) });
       }
+    },
+  });
+}
+
+export function useCreateInvoice() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: CreateInvoicePayload) => financeService.createInvoice(payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["invoices"] });
+      qc.invalidateQueries({ queryKey: ["fees"] });
+      qc.invalidateQueries({ queryKey: KEYS.summary });
+      qc.invalidateQueries({ queryKey: ["finance", "dashboard"] });
     },
   });
 }
