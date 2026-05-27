@@ -72,6 +72,21 @@
     "failed": "विफल",
     "pending": "लंबित"
   },
+  "viewAll": "सभी देखें",
+  "student": {
+    "title": "वित्त",
+    "subtitle": "आपका शुल्क और चालान",
+    "pendingFees": "लंबित शुल्क",
+    "allPaid": "शुल्क बकाया नहीं",
+    "noFeesDue": "सब भुगतान हो गया",
+    "dueInDays": "{{n}} दिनों में देय",
+    "payNow": "अभी भुगतान करें",
+    "statement": "विवरण",
+    "breakdown": "शुल्क विवरण",
+    "ofTotal": "{{total}} में से",
+    "recentInvoices": "हालिया चालान",
+    "noInvoices": "अभी कोई चालान नहीं"
+  },
   "studentFeesList": {
     "title": "छात्र शुल्क",
     "searchPlaceholder": "नाम या प्रवेश संख्या से खोजें…",
@@ -84,7 +99,9 @@
     "emptyNoFees": "अभी कोई छात्र शुल्क नहीं",
     "emptySearchHint": "अलग खोज आज़माएँ या फ़िल्टर साफ़ करें",
     "emptyNoFeesHint": "छात्रों को शुल्क संरचनाएँ असाइन करें ताकि वे यहाँ दिखें",
-    "goToStructures": "शुल्क संरचनाओं पर जाएँ"
+    "goToStructures": "शुल्क संरचनाओं पर जाएँ",
+    "totalFees": "कुल शुल्क",
+    "paidTotal": "भुगतान"
   },
   "studentFeeDetail": {
     "title": "शुल्क विवरण",
@@ -104,6 +121,10 @@
     "receipt": "रसीद",
     "refund": "वापसी",
     "noPaymentsYet": "अभी कोई भुगतान नहीं",
+    "dueDate": "देय तिथि",
+    "dueInDays": "{{n}} दिन",
+    "overdueByDays": "{{n}} दिन से अतिदेय",
+    "viewStatement": "विवरण देखें",
     "paymentModal": {
       "title": "भुगतान दर्ज करें",
       "remainingBalance": "शेष राशि",
@@ -220,6 +241,9 @@
     "filterUnpaid": "अवैतनिक",
     "filterPartial": "आंशिक",
     "filterPaid": "भुगतान",
+    "filterPending": "लंबित",
+    "filterOverdue": "अतिदेय",
+    "headerSubline": "{{n}} चालान · {{amount}} देय",
     "dueLine": "देय {{date}} • {{amount}}",
     "balance": "शेष: {{amount}}",
     "emptyTitle": "कोई चालान नहीं",
@@ -231,6 +255,9 @@
     "amountPaid": "भुगतान राशि",
     "remainingBalance": "शेष राशि",
     "dueDate": "देय तिथि",
+    "issueDate": "जारी",
+    "discount": "छूट",
+    "share": "साझा करें",
     "status": "स्थिति",
     "feeBreakdown": "शुल्क विवरण",
     "paymentHistory": "भुगतान इतिहास",

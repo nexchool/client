@@ -72,6 +72,21 @@
     "failed": "Failed",
     "pending": "Pending"
   },
+  "viewAll": "View All",
+  "student": {
+    "title": "Finance",
+    "subtitle": "Your fees and invoices",
+    "pendingFees": "Pending Fees",
+    "allPaid": "Fees Clear",
+    "noFeesDue": "All paid",
+    "dueInDays": "Due in {{n}} days",
+    "payNow": "Pay Now",
+    "statement": "Statement",
+    "breakdown": "Fee Breakdown",
+    "ofTotal": "of {{total}}",
+    "recentInvoices": "Recent Invoices",
+    "noInvoices": "No invoices yet"
+  },
   "studentFeesList": {
     "title": "Student Fees",
     "searchPlaceholder": "Search by name or admission number…",
@@ -84,7 +99,9 @@
     "emptyNoFees": "No student fees yet",
     "emptySearchHint": "Try a different search or clear filters",
     "emptyNoFeesHint": "Assign fee structures to students to see them here",
-    "goToStructures": "Go to Fee Structures"
+    "goToStructures": "Go to Fee Structures",
+    "totalFees": "Total fees",
+    "paidTotal": "Paid"
   },
   "studentFeeDetail": {
     "title": "Fee Detail",
@@ -104,6 +121,10 @@
     "receipt": "Receipt",
     "refund": "Refund",
     "noPaymentsYet": "No payments yet",
+    "dueDate": "Due date",
+    "dueInDays": "{{n}} days",
+    "overdueByDays": "Overdue by {{n}} days",
+    "viewStatement": "View statement",
     "paymentModal": {
       "title": "Record Payment",
       "remainingBalance": "Remaining balance",
@@ -220,6 +241,9 @@
     "filterUnpaid": "Unpaid",
     "filterPartial": "Partial",
     "filterPaid": "Paid",
+    "filterPending": "Pending",
+    "filterOverdue": "Overdue",
+    "headerSubline": "{{n}} invoices · {{amount}} due",
     "dueLine": "Due {{date}} • {{amount}}",
     "balance": "Balance: {{amount}}",
     "emptyTitle": "No invoices",
@@ -231,6 +255,9 @@
     "amountPaid": "Amount Paid",
     "remainingBalance": "Remaining Balance",
     "dueDate": "Due Date",
+    "issueDate": "Issued",
+    "discount": "Discount",
+    "share": "Share",
     "status": "Status",
     "feeBreakdown": "Fee Breakdown",
     "paymentHistory": "Payment History",

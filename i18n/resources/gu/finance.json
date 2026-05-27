@@ -72,6 +72,21 @@
     "failed": "નિષ્ફળ",
     "pending": "બાકી"
   },
+  "viewAll": "બધું જુઓ",
+  "student": {
+    "title": "નાણાં",
+    "subtitle": "તમારી ફી અને ઇન્વૉઇસ",
+    "pendingFees": "બાકી ફી",
+    "allPaid": "ફી બાકી નથી",
+    "noFeesDue": "બધું ચૂકવાઈ ગયું",
+    "dueInDays": "{{n}} દિવસમાં બાકી",
+    "payNow": "હવે ચૂકવો",
+    "statement": "વિવરણ",
+    "breakdown": "ફી વિગત",
+    "ofTotal": "{{total}} માંથી",
+    "recentInvoices": "તાજેતરના ઇન્વૉઇસ",
+    "noInvoices": "હજી કોઈ ઇન્વૉઇસ નથી"
+  },
   "studentFeesList": {
     "title": "વિદ્યાર્થી ફી",
     "searchPlaceholder": "નામ અથવા પ્રવેશ નંબરથી શોધો…",
@@ -84,7 +99,9 @@
     "emptyNoFees": "હજી કોઈ વિદ્યાર્થી ફી નથી",
     "emptySearchHint": "બીજી શોધ અથવા ફિલ્ટર સાફ કરો",
     "emptyNoFeesHint": "વિદ્યાર્થીઓને ફી રચના સોંપો ત્યારે અહીં દેખાશે",
-    "goToStructures": "ફી રચનાઓ પર જાઓ"
+    "goToStructures": "ફી રચનાઓ પર જાઓ",
+    "totalFees": "કુલ ફી",
+    "paidTotal": "ચૂકવેલ"
   },
   "studentFeeDetail": {
     "title": "ફી વિગત",
@@ -104,6 +121,10 @@
     "receipt": "રસીદ",
     "refund": "પરત",
     "noPaymentsYet": "હજી કોઈ ચુકવણી નથી",
+    "dueDate": "બાકી તારીખ",
+    "dueInDays": "{{n}} દિવસ",
+    "overdueByDays": "{{n}} દિવસથી અતિક્રમે",
+    "viewStatement": "વિવરણ જુઓ",
     "paymentModal": {
       "title": "ચુકવણી નોંધો",
       "remainingBalance": "બાકી બેલેન્સ",
@@ -220,6 +241,9 @@
     "filterUnpaid": "અચૂકવેલ",
     "filterPartial": "આંશિક",
     "filterPaid": "ચૂકવેલ",
+    "filterPending": "બાકી",
+    "filterOverdue": "અતિક્રમે",
+    "headerSubline": "{{n}} ઇન્વૉઇસ · {{amount}} બાકી",
     "dueLine": "બાકી {{date}} • {{amount}}",
     "balance": "બેલેન્સ: {{amount}}",
     "emptyTitle": "કોઈ ઇન્વૉઇસ નથી",
@@ -231,6 +255,9 @@
     "amountPaid": "ચૂકવેલ રકમ",
     "remainingBalance": "બાકી બેલેન્સ",
     "dueDate": "બાકી તારીખ",
+    "issueDate": "જારી",
+    "discount": "ડિસ્કાઉન્ટ",
+    "share": "શેર કરો",
     "status": "સ્થિતિ",
     "feeBreakdown": "ફી વિભાગ",
     "paymentHistory": "ચુકવણી ઇતિહાસ",
