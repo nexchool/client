@@ -47,7 +47,8 @@ const ITEMS: readonly DrawerItem[] = [
   { key: 'attendance', label: 'Attendance', icon: 'checkmark-done-outline', iconActive: 'checkmark-done', route: '/(protected)/attendance/overview', roles: ['admin', 'teacher'] },
   { key: 'schedule', label: 'Schedule', icon: 'time-outline', iconActive: 'time', route: '/(protected)/schedule/today', roles: ['admin', 'teacher', 'student', 'parent'] },
   { key: 'holidays', label: 'Holidays', icon: 'flag-outline', iconActive: 'flag', route: '/(protected)/holidays', roles: ['admin', 'teacher', 'student', 'parent'] },
-  { key: 'leaves', label: 'Leaves', icon: 'briefcase-outline', iconActive: 'briefcase', route: '/(protected)/my-leaves', roles: ['admin', 'teacher'] },
+  { key: 'leaves', label: 'My leaves', icon: 'briefcase-outline', iconActive: 'briefcase', route: '/(protected)/my-leaves', roles: ['admin', 'teacher', 'student'] },
+  { key: 'student-leaves', label: 'Student leaves', icon: 'calendar-outline', iconActive: 'calendar', route: '/(protected)/approve-student-leaves', roles: ['admin', 'teacher'] },
   { key: 'finance', label: 'Finance', icon: 'wallet-outline', iconActive: 'wallet', route: '/(protected)/finance', roles: ['admin', 'student'], flag: 'fees_management' },
   // 'activities' is not a server-side plan feature key (see server/core/feature_flags.py).
   // Leaving unflagged so the item shows whenever the tenant exists.
