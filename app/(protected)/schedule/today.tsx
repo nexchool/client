@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Alert, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,6 +12,8 @@ import {
 } from '@/modules/academics/hooks/useAcademicQueries';
 import { EmptyState } from '@/common/components/EmptyState';
 import { Skeleton } from '@/common/components/Skeleton';
+import { Protected } from '@/modules/permissions/components/Protected';
+import { ScheduleOverrideSheet } from '@/modules/schedule/components/ScheduleOverrideSheet';
 
 const DAYS_BACK = 3;
 const DAYS_FORWARD = 3;
@@ -55,6 +57,7 @@ function ScheduleTodayScreen() {
   const [selectedDayLabel, setSelectedDayLabel] = useState(
     today.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric' })
   );
+  const [overrideSheetVisible, setOverrideSheetVisible] = useState(false);
 
   const teacherQuery = useTeacherTodaySchedule(role.isTeacher);
   const studentQuery = useStudentAcademicDashboard(!role.isTeacher && !role.isAdmin);
@@ -99,23 +102,36 @@ function ScheduleTodayScreen() {
       refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} />}
       showsVerticalScrollIndicator={false}
     >
-      <View>
-        <Text style={[typography.display, { color: palette.onSurface }]}>
-          {t('title', { defaultValue: 'Schedule' })}
-        </Text>
-        <Text
-          style={[
-            typography.bodyMd,
-            { color: palette.onSurfaceVariant, marginTop: spacing.xs },
-          ]}
-        >
-          {today.toLocaleDateString(undefined, {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          })}
-        </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+        <View style={{ flex: 1 }}>
+          <Text style={[typography.display, { color: palette.onSurface }]}>
+            {t('title', { defaultValue: 'Schedule' })}
+          </Text>
+          <Text
+            style={[
+              typography.bodyMd,
+              { color: palette.onSurfaceVariant, marginTop: spacing.xs },
+            ]}
+          >
+            {today.toLocaleDateString(undefined, {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            })}
+          </Text>
+        </View>
+        <Protected anyPermissions={['schedule.override', 'schedule.manage', 'teacher.manage', 'timetable.manage']}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('override.openButton', { defaultValue: 'Add schedule override' })}
+            onPress={() => setOverrideSheetVisible(true)}
+            hitSlop={12}
+            style={{ marginLeft: 12, padding: 8 }}
+          >
+            <Ionicons name="add" size={24} color={palette.onSurface} />
+          </Pressable>
+        </Protected>
       </View>
 
       <ScrollView
@@ -151,6 +167,11 @@ function ScheduleTodayScreen() {
       </ScrollView>
 
       {body}
+
+      <ScheduleOverrideSheet
+        visible={overrideSheetVisible}
+        onClose={() => setOverrideSheetVisible(false)}
+      />
     </ScrollView>
   );
 }
