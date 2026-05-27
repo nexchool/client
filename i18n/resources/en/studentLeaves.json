@@ -1,0 +1,75 @@
+{
+  "list": {
+    "title": "My leaves",
+    "empty": {
+      "title": "No leaves yet",
+      "body": "When you apply for a leave, it will show up here."
+    }
+  },
+  "queue": {
+    "title": "Student leaves",
+    "adminBanner": "Showing requests where the class teacher is currently on leave.",
+    "empty": {
+      "title": "All clear",
+      "body": "No requests need your attention right now."
+    }
+  },
+  "detail": {
+    "leaveSuffix": "leave",
+    "rejectedReason": "Rejected:",
+    "cancelPending": "Cancellation is awaiting class teacher review.",
+    "requestCancel": "Request cancellation"
+  },
+  "form": {
+    "title": "Apply for leave",
+    "submit": "Submit request",
+    "sections": {
+      "type": "Type & dates",
+      "reason": "Reason"
+    }
+  },
+  "field": {
+    "leaveType": "Leave type",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "halfDay": "Day part",
+    "reason": "Reason",
+    "reasonPlaceholder": "Describe the reason for leave"
+  },
+  "cancel": {
+    "title": "Request cancellation",
+    "body": "Your class teacher will be asked to approve the cancellation.",
+    "reasonLabel": "Reason for cancellation",
+    "reasonPlaceholder": "Plans changed",
+    "dismiss": "Dismiss",
+    "submit": "Send request",
+    "error": "Could not submit"
+  },
+  "actions": {
+    "approve": "Approve",
+    "reject": "Reject",
+    "back": "Back",
+    "confirmReject": "Reject",
+    "rejectReason": "Reason for rejection",
+    "rejectReasonPlaceholder": "Explain to the student",
+    "approveCancellation": "Approve cancellation",
+    "keepActive": "Keep leave active",
+    "error": "Action failed"
+  },
+  "discard": {
+    "title": "Discard request?",
+    "body": "Your unsaved request will be lost.",
+    "cancel": "Keep editing",
+    "confirm": "Discard"
+  },
+  "error": {
+    "noStudent": {
+      "title": "Cannot apply",
+      "body": "No student profile found on this account."
+    },
+    "submit": {
+      "title": "Could not submit",
+      "generic": "Please try again."
+    }
+  }
+}

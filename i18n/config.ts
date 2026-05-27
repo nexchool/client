@@ -5,6 +5,7 @@ import enNavigation from "./resources/en/navigation.json";
 import enHome from "./resources/en/home.json";
 import enProfile from "./resources/en/profile.json";
 import enStudents from "./resources/en/students.json";
+import enStudentLeaves from "./resources/en/studentLeaves.json";
 import enTeachers from "./resources/en/teachers.json";
 import enClasses from "./resources/en/classes.json";
 import enAttendance from "./resources/en/attendance.json";
@@ -22,6 +23,7 @@ import guNavigation from "./resources/gu/navigation.json";
 import guHome from "./resources/gu/home.json";
 import guProfile from "./resources/gu/profile.json";
 import guStudents from "./resources/gu/students.json";
+import guStudentLeaves from "./resources/gu/studentLeaves.json";
 import guTeachers from "./resources/gu/teachers.json";
 import guClasses from "./resources/gu/classes.json";
 import guAttendance from "./resources/gu/attendance.json";
@@ -39,6 +41,7 @@ import hiNavigation from "./resources/hi/navigation.json";
 import hiHome from "./resources/hi/home.json";
 import hiProfile from "./resources/hi/profile.json";
 import hiStudents from "./resources/hi/students.json";
+import hiStudentLeaves from "./resources/hi/studentLeaves.json";
 import hiTeachers from "./resources/hi/teachers.json";
 import hiClasses from "./resources/hi/classes.json";
 import hiAttendance from "./resources/hi/attendance.json";
@@ -66,6 +69,7 @@ export const I18N_NAMESPACES = [
   "home",
   "profile",
   "students",
+  "studentLeaves",
   "teachers",
   "classes",
   "attendance",
@@ -88,6 +92,7 @@ export const resources = {
     home: enHome,
     profile: enProfile,
     students: enStudents,
+    studentLeaves: enStudentLeaves,
     teachers: enTeachers,
     classes: enClasses,
     attendance: enAttendance,
@@ -107,6 +112,7 @@ export const resources = {
     home: guHome,
     profile: guProfile,
     students: guStudents,
+    studentLeaves: guStudentLeaves,
     teachers: guTeachers,
     classes: guClasses,
     attendance: guAttendance,
@@ -126,6 +132,7 @@ export const resources = {
     home: hiHome,
     profile: hiProfile,
     students: hiStudents,
+    studentLeaves: hiStudentLeaves,
     teachers: hiTeachers,
     classes: hiClasses,
     attendance: hiAttendance,
