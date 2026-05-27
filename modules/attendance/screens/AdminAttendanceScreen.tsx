@@ -3,26 +3,28 @@ import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
-  StyleSheet,
   FlatList,
-  ActivityIndicator,
   SafeAreaView,
-  TouchableOpacity,
+  Pressable,
+  ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAttendance } from "../hooks/useAttendance";
 import { useClasses } from "@/modules/classes/hooks/useClasses";
-import { Colors } from "@/common/constants/colors";
-import { Spacing, Layout } from "@/common/constants/spacing";
 import { DateField } from "@/common/components/DateField";
 import { ClassItem } from "@/modules/classes/types";
 import { holidayService } from "@/modules/holidays/services/holidayService";
 import { Holiday } from "@/modules/holidays/types";
+import { useTheme } from "@/common/theme";
+import { HomeKpiCard } from "@/modules/home/components/HomeKpiCard";
+import { Skeleton } from "@/common/components/Skeleton";
+import { EmptyState } from "@/common/components/EmptyState";
 
 export default function AdminAttendanceScreen() {
   const { t } = useTranslation("attendance");
   const router = useRouter();
+  const { palette, spacing, radius, typography, elevation } = useTheme();
   const { classAttendance, loading: attLoading, fetchClassAttendance } = useAttendance();
   const { classes, fetchClasses, loading: classesLoading } = useClasses();
 
@@ -58,6 +60,7 @@ export default function AdminAttendanceScreen() {
   useEffect(() => {
     fetchClasses();
     checkHoliday(today);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleClassSelect = (cls: ClassItem) => {
@@ -73,248 +76,370 @@ export default function AdminAttendanceScreen() {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const statusColor = (status: string) => {
     switch (status) {
-      case "present": return Colors.success;
-      case "absent": return Colors.error;
-      case "late": return Colors.warning;
-      default: return Colors.textTertiary;
+      case "present":
+        return palette.success;
+      case "absent":
+        return palette.error;
+      case "late":
+        return palette.warning;
+      default:
+        return palette.onSurfaceVariant;
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backIcon}>
-          <Ionicons name="arrow-back" size={24} color={Colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t("admin.title")}</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: palette.surface }}>
+      {/* Header */}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: spacing.marginMobile,
+          paddingVertical: spacing.md,
+          gap: spacing.sm,
+        }}
+      >
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={8}
+          style={({ pressed }) => ({
+            width: 40,
+            height: 40,
+            borderRadius: radius.full,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: pressed ? palette.surfaceContainer : "transparent",
+          })}
+        >
+          <Ionicons name="arrow-back" size={22} color={palette.onSurface} />
+        </Pressable>
+        <View style={{ flex: 1 }}>
+          <Text style={[typography.headlineMd, { color: palette.onSurface }]}>
+            {t("admin.title")}
+          </Text>
+          <Text
+            style={[
+              typography.labelSm,
+              { color: palette.onSurfaceVariant, marginTop: 2, textTransform: "none", letterSpacing: 0 },
+            ]}
+          >
+            {new Date(selectedDate).toLocaleDateString(undefined, {
+              weekday: "long",
+              month: "long",
+              day: "numeric",
+            })}
+          </Text>
+        </View>
       </View>
 
-      {/* Date Picker */}
-      <View style={styles.dateRow}>
+      <ScrollView
+        contentContainerStyle={{
+          paddingHorizontal: spacing.marginMobile,
+          paddingBottom: spacing.xl * 2,
+          gap: spacing.md,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Date Picker */}
         <DateField
           label={t("admin.dateLabel")}
           value={selectedDate}
           onChange={handleDateChange}
           placeholder={t("admin.datePlaceholder")}
         />
-      </View>
 
-      {/* Holiday Banner */}
-      {holidayInfo && (
-        <View style={styles.holidayBanner}>
-          <Ionicons name="umbrella-outline" size={20} color="#FF6B35" />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.holidayBannerTitle}>
-              {holidayInfo.is_recurring
-                ? t("admin.weeklyOff", { day: holidayInfo.recurring_day_name ?? t("admin.offDay") })
-                : holidayInfo.name}
-            </Text>
-            <Text style={styles.holidayBannerSubtitle}>{t("admin.holidayReadOnly")}</Text>
-          </View>
-        </View>
-      )}
-
-      {/* Class Selector */}
-      {!selectedClass ? (
-        <>
-          <Text style={styles.sectionLabel}>{t("admin.selectClass")}</Text>
-          {classesLoading ? (
-            <View style={styles.center}>
-              <ActivityIndicator size="large" color={Colors.primary} />
-            </View>
-          ) : (
-            <FlatList
-              data={classes}
-              keyExtractor={(item) => item.id}
-              contentContainerStyle={styles.listContent}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.classItem}
-                  onPress={() => handleClassSelect(item)}
-                >
-                  <Text style={styles.classItemName}>
-                    {item.name} - {item.section}
-                  </Text>
-                  <Text style={styles.classItemDetail}>{item.academic_year}</Text>
-                </TouchableOpacity>
-              )}
-            />
-          )}
-        </>
-      ) : (
-        <>
-          {/* Selected Class Header */}
-          <TouchableOpacity
-            style={styles.selectedClass}
-            onPress={() => setSelectedClass(null)}
+        {/* Holiday Banner */}
+        {holidayInfo && (
+          <View
+            style={[
+              elevation.card,
+              {
+                flexDirection: "row",
+                alignItems: "center",
+                gap: spacing.sm,
+                padding: spacing.md,
+                backgroundColor: palette.errorContainer,
+                borderRadius: radius.lg,
+              },
+            ]}
           >
-            <Text style={styles.selectedClassName}>
-              {selectedClass.name} - {selectedClass.section}
+            <View
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: radius.md,
+                backgroundColor: palette.surfaceContainerLowest,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Ionicons name="umbrella-outline" size={20} color={palette.onErrorContainer} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[typography.labelMd, { color: palette.onErrorContainer, fontFamily: "Inter_600SemiBold" }]}>
+                {holidayInfo.is_recurring
+                  ? t("admin.weeklyOff", { day: holidayInfo.recurring_day_name ?? t("admin.offDay") })
+                  : holidayInfo.name}
+              </Text>
+              <Text style={[typography.labelSm, { color: palette.onErrorContainer, textTransform: "none", letterSpacing: 0, marginTop: 2 }]}>
+                {t("admin.holidayReadOnly")}
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {!selectedClass ? (
+          <>
+            {/* Class Selector */}
+            <Text
+              style={[
+                typography.labelSm,
+                {
+                  color: palette.onSurfaceVariant,
+                  textTransform: "uppercase",
+                  letterSpacing: 1,
+                  marginTop: spacing.sm,
+                },
+              ]}
+            >
+              {t("admin.selectClass")}
             </Text>
-            <Text style={styles.changeText}>{t("admin.change")}</Text>
-          </TouchableOpacity>
-
-          {/* Summary */}
-          {classAttendance && (
-            <View style={styles.summaryBar}>
-              <View style={styles.summaryItem}>
-                <Text style={styles.summaryNum}>{classAttendance.total_students}</Text>
-                <Text style={styles.summaryLabel}>{t("admin.total")}</Text>
+            {classesLoading ? (
+              <View style={{ gap: spacing.sm }}>
+                <Skeleton width="100%" height={64} radius={radius.lg} />
+                <Skeleton width="100%" height={64} radius={radius.lg} />
+                <Skeleton width="100%" height={64} radius={radius.lg} />
               </View>
-              <View style={styles.summaryItem}>
-                <Text style={[styles.summaryNum, { color: Colors.success }]}>
-                  {classAttendance.present_count}
-                </Text>
-                <Text style={styles.summaryLabel}>{t("admin.present")}</Text>
+            ) : classes.length === 0 ? (
+              <View
+                style={[
+                  elevation.card,
+                  { backgroundColor: palette.surfaceContainerLowest, borderRadius: radius.xl, overflow: "hidden" },
+                ]}
+              >
+                <EmptyState
+                  icon={<Ionicons name="school-outline" size={36} color={palette.onSurfaceVariant} />}
+                  title={t("admin.emptyDate", { defaultValue: "No classes available" })}
+                />
               </View>
-              <View style={styles.summaryItem}>
-                <Text style={[styles.summaryNum, { color: Colors.error }]}>
-                  {classAttendance.absent_count}
-                </Text>
-                <Text style={styles.summaryLabel}>{t("admin.absent")}</Text>
-              </View>
-              <View style={styles.summaryItem}>
-                <Text style={[styles.summaryNum, { color: Colors.warning }]}>
-                  {classAttendance.late_count}
-                </Text>
-                <Text style={styles.summaryLabel}>{t("admin.late")}</Text>
-              </View>
-            </View>
-          )}
-
-          {/* Attendance Records */}
-          {attLoading ? (
-            <View style={styles.center}>
-              <ActivityIndicator size="large" color={Colors.primary} />
-            </View>
-          ) : (
-            <FlatList
-              data={classAttendance?.attendance || []}
-              keyExtractor={(item) => item.student_id}
-              contentContainerStyle={styles.listContent}
-              renderItem={({ item }) => (
-                <View style={styles.recordRow}>
-                  <View style={styles.recordInfo}>
-                    <Text style={styles.recordName}>{item.student_name}</Text>
-                    <Text style={styles.recordDetail}>{item.admission_number}</Text>
-                  </View>
-                  <Text
-                    style={[
-                      styles.recordStatus,
-                      { color: getStatusColor(item.status || "unmarked") },
-                    ]}
+            ) : (
+              <View
+                style={[
+                  elevation.card,
+                  { backgroundColor: palette.surfaceContainerLowest, borderRadius: radius.xl, overflow: "hidden" },
+                ]}
+              >
+                {classes.map((item, idx) => (
+                  <Pressable
+                    key={item.id}
+                    onPress={() => handleClassSelect(item)}
+                    style={({ pressed }) => ({
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: spacing.md,
+                      padding: spacing.md,
+                      borderBottomWidth: idx < classes.length - 1 ? 1 : 0,
+                      borderBottomColor: palette.surfaceContainerHigh,
+                      backgroundColor: pressed ? palette.surfaceContainerLow : "transparent",
+                    })}
                   >
-                    {item.marked ? t(`status.${item.status}`, { defaultValue: item.status ?? "" }) : t("admin.notMarked")}
-                  </Text>
+                    <View
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: radius.md,
+                        backgroundColor: palette.primaryContainer,
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Ionicons name="school-outline" size={18} color={palette.onPrimaryContainer} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[typography.labelMd, { color: palette.onSurface }]} numberOfLines={1}>
+                        {item.name} - {item.section}
+                      </Text>
+                      <Text
+                        style={[
+                          typography.labelSm,
+                          { color: palette.onSurfaceVariant, textTransform: "none", letterSpacing: 0, marginTop: 2 },
+                        ]}
+                      >
+                        {item.academic_year}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color={palette.onSurfaceVariant} />
+                  </Pressable>
+                ))}
+              </View>
+            )}
+          </>
+        ) : (
+          <>
+            {/* Selected Class Header */}
+            <Pressable
+              onPress={() => setSelectedClass(null)}
+              style={({ pressed }) => [
+                elevation.card,
+                {
+                  flexDirection: "row",
+                  alignItems: "center",
+                  padding: spacing.md,
+                  backgroundColor: pressed ? palette.surfaceContainerLow : palette.surfaceContainerLowest,
+                  borderRadius: radius.lg,
+                  gap: spacing.sm,
+                },
+              ]}
+            >
+              <Ionicons name="chevron-back" size={20} color={palette.primary} />
+              <View style={{ flex: 1 }}>
+                <Text style={[typography.labelMd, { color: palette.onSurface }]}>
+                  {selectedClass.name} - {selectedClass.section}
+                </Text>
+              </View>
+              <Text
+                style={[
+                  typography.labelSm,
+                  { color: palette.primary, fontFamily: "Inter_600SemiBold", textTransform: "uppercase", letterSpacing: 1 },
+                ]}
+              >
+                {t("admin.change")}
+              </Text>
+            </Pressable>
+
+            {/* Summary KPIs */}
+            {classAttendance && (
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: spacing.sm }}>
+                <View style={{ width: "48%" }}>
+                  <HomeKpiCard
+                    label={t("admin.total")}
+                    value={String(classAttendance.total_students)}
+                    accent="primary"
+                    iconName="people-outline"
+                    iconBgToken="primaryContainer"
+                  />
                 </View>
-              )}
-              ListEmptyComponent={
-                <View style={styles.center}>
-                  <Text style={styles.emptyText}>{t("admin.emptyDate")}</Text>
+                <View style={{ width: "48%" }}>
+                  <HomeKpiCard
+                    label={t("admin.present")}
+                    value={String(classAttendance.present_count)}
+                    accent="success"
+                    iconName="checkmark-circle-outline"
+                    iconBgToken="secondaryContainer"
+                  />
                 </View>
-              }
-            />
-          )}
-        </>
-      )}
+                <View style={{ width: "48%" }}>
+                  <HomeKpiCard
+                    label={t("admin.absent")}
+                    value={String(classAttendance.absent_count)}
+                    accent="error"
+                    iconName="close-circle-outline"
+                    iconBgToken="errorContainer"
+                  />
+                </View>
+                <View style={{ width: "48%" }}>
+                  <HomeKpiCard
+                    label={t("admin.late")}
+                    value={String(classAttendance.late_count)}
+                    accent="tertiary"
+                    iconName="time-outline"
+                    iconBgToken="tertiaryContainer"
+                  />
+                </View>
+              </View>
+            )}
+
+            {/* Records */}
+            {attLoading ? (
+              <View style={{ gap: spacing.sm }}>
+                <Skeleton width="100%" height={56} radius={radius.lg} />
+                <Skeleton width="100%" height={56} radius={radius.lg} />
+                <Skeleton width="100%" height={56} radius={radius.lg} />
+                <Skeleton width="100%" height={56} radius={radius.lg} />
+              </View>
+            ) : (
+              <View
+                style={[
+                  elevation.card,
+                  { backgroundColor: palette.surfaceContainerLowest, borderRadius: radius.xl, overflow: "hidden" },
+                ]}
+              >
+                <FlatList
+                  data={classAttendance?.attendance ?? []}
+                  keyExtractor={(item) => item.student_id}
+                  scrollEnabled={false}
+                  renderItem={({ item, index }) => {
+                    const records = classAttendance?.attendance ?? [];
+                    const status = item.status ?? "unmarked";
+                    const c = statusColor(status);
+                    return (
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          padding: spacing.md,
+                          gap: spacing.md,
+                          borderBottomWidth: index < records.length - 1 ? 1 : 0,
+                          borderBottomColor: palette.surfaceContainerHigh,
+                        }}
+                      >
+                        <View
+                          style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: radius.full,
+                            backgroundColor: palette.surfaceContainerHigh,
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Ionicons name="person-outline" size={16} color={palette.onSurfaceVariant} />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={[typography.labelMd, { color: palette.onSurface }]} numberOfLines={1}>
+                            {item.student_name}
+                          </Text>
+                          <Text
+                            style={[
+                              typography.labelSm,
+                              { color: palette.onSurfaceVariant, textTransform: "none", letterSpacing: 0, marginTop: 2 },
+                            ]}
+                          >
+                            {item.admission_number}
+                          </Text>
+                        </View>
+                        <Text
+                          style={[
+                            typography.labelSm,
+                            {
+                              color: c,
+                              fontFamily: "Inter_600SemiBold",
+                              textTransform: "uppercase",
+                              letterSpacing: 1,
+                            },
+                          ]}
+                        >
+                          {item.marked
+                            ? t(`status.${status}`, { defaultValue: status })
+                            : t("admin.notMarked")}
+                        </Text>
+                      </View>
+                    );
+                  }}
+                  ListEmptyComponent={
+                    <EmptyState
+                      icon={<Ionicons name="calendar-outline" size={36} color={palette.onSurfaceVariant} />}
+                      title={t("admin.emptyDate")}
+                    />
+                  }
+                />
+              </View>
+            )}
+          </>
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  center: { flex: 1, justifyContent: "center", alignItems: "center", padding: Spacing.xl },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  backIcon: { padding: Spacing.sm },
-  headerTitle: { flex: 1, fontSize: 20, fontWeight: "bold", color: Colors.text, marginLeft: Spacing.md },
-  dateRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    margin: Spacing.md,
-    padding: Spacing.md,
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.md,
-    gap: Spacing.sm,
-  },
-  dateInput: { flex: 1, fontSize: 16, color: Colors.text },
-  sectionLabel: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: Colors.text,
-    paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.sm,
-  },
-  listContent: { padding: Spacing.md },
-  classItem: {
-    padding: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  classItemName: { fontSize: 16, fontWeight: "500", color: Colors.text },
-  classItemDetail: { fontSize: 13, color: Colors.textSecondary, marginTop: 2 },
-  selectedClass: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    margin: Spacing.md,
-    padding: Spacing.md,
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.md,
-  },
-  selectedClassName: { fontSize: 16, fontWeight: "600", color: Colors.text },
-  changeText: { fontSize: 14, color: Colors.primary, fontWeight: "500" },
-  summaryBar: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: Spacing.md,
-    backgroundColor: Colors.backgroundSecondary,
-    marginHorizontal: Spacing.md,
-    borderRadius: Layout.borderRadius.md,
-    marginBottom: Spacing.sm,
-  },
-  summaryItem: { alignItems: "center" },
-  summaryNum: { fontSize: 18, fontWeight: "700", color: Colors.text },
-  summaryLabel: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
-  recordRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  recordInfo: { flex: 1 },
-  recordName: { fontSize: 15, fontWeight: "500", color: Colors.text },
-  recordDetail: { fontSize: 13, color: Colors.textSecondary },
-  recordStatus: { fontSize: 14, fontWeight: "600", textTransform: "capitalize" },
-  emptyText: { fontSize: 16, color: Colors.textSecondary },
-  holidayBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.sm,
-    marginHorizontal: Spacing.md,
-    marginBottom: Spacing.sm,
-    padding: Spacing.md,
-    backgroundColor: "#FFF3F0",
-    borderRadius: Layout.borderRadius.md,
-    borderWidth: 1,
-    borderColor: "#FF6B35",
-  },
-  holidayBannerTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#CC3300",
-  },
-  holidayBannerSubtitle: {
-    fontSize: 12,
-    color: "#FF6B35",
-    marginTop: 2,
-  },
-});
