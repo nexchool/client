@@ -103,12 +103,18 @@ export function useRecallAnnouncement() {
 }
 
 export function useUploadAnnouncementAttachment() {
-  return useInvalidatingMutation<{
-    file: { uri: string; name: string; type: string };
-    announcement_id?: string;
-  }>(({ file, announcement_id }) =>
-    announcementService.uploadAttachment(file, announcement_id),
-  );
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ file, announcement_id }: { file: { uri: string; name: string; type: string }; announcement_id?: string }) =>
+      announcementService.uploadAttachment(file, announcement_id),
+    onSuccess: (_data, vars) => {
+      // Only refetch the detail page if this upload is for an existing announcement.
+      // Draft (no announcement_id) uploads are tracked locally in the composer's form state.
+      if (vars.announcement_id) {
+        qc.invalidateQueries({ queryKey: announcementKeys.detail(vars.announcement_id) });
+      }
+    },
+  });
 }
 
 export function useDeleteAnnouncementAttachment() {
