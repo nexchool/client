@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
   View,
@@ -17,7 +17,6 @@ import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
 import * as PERMS from "@/modules/permissions/constants/permissions";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
-import { CreateStudentModal } from "../components/CreateStudentModal";
 import { StudentDocumentsSection } from "../components/StudentDocumentsSection";
 import { useAuthContext } from "@/modules/auth/context/AuthContext";
 
@@ -25,10 +24,9 @@ export default function StudentDetailScreen() {
   const { t } = useTranslation("students");
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { currentStudent, loading, fetchStudent, updateStudent, deleteStudent } = useStudents();
+  const { currentStudent, loading, fetchStudent, deleteStudent } = useStudents();
   const { hasPermission } = usePermissions();
   const { isFeatureEnabled } = useAuthContext();
-  const [editModalVisible, setEditModalVisible] = useState(false);
 
   const canUpdate = hasPermission(PERMS.STUDENT_UPDATE);
   const canDelete = hasPermission(PERMS.STUDENT_DELETE);
@@ -38,20 +36,6 @@ export default function StudentDetailScreen() {
       fetchStudent(id);
     }
   }, [id]);
-
-  const handleUpdate = async (data: any) => {
-    if (!id) return;
-
-    try {
-      await updateStudent(id, data);
-      setEditModalVisible(false);
-      Alert.alert(t("list.success"), t("detail.updated"));
-      // Refresh data
-      fetchStudent(id);
-    } catch (error: any) {
-      throw error;
-    }
-  };
 
   const handleBack = () => {
     router.back();
@@ -119,7 +103,12 @@ export default function StudentDetailScreen() {
         {canUpdate && (
           <TouchableOpacity
             style={styles.editButton}
-            onPress={() => setEditModalVisible(true)}
+            onPress={() =>
+              router.push({
+                pathname: "/(protected)/students/[id]/edit",
+                params: { id: id ?? "" },
+              } as any)
+            }
           >
             <Ionicons name="create-outline" size={24} color={Colors.primary} />
           </TouchableOpacity>
@@ -664,17 +653,6 @@ export default function StudentDetailScreen() {
         {/* Documents */}
         <StudentDocumentsSection studentId={currentStudent.id} />
       </ScrollView>
-
-      {/* Edit Modal */}
-      {canUpdate && (
-        <CreateStudentModal
-          visible={editModalVisible}
-          onClose={() => setEditModalVisible(false)}
-          onSubmit={handleUpdate}
-          initialData={currentStudent}
-          mode="edit"
-        />
-      )}
     </SafeAreaView>
   );
 }

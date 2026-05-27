@@ -25,7 +25,6 @@ import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
 import * as PERMS from "@/modules/permissions/constants/permissions";
 import { Colors } from "@/common/constants/colors";
 import { Spacing, Layout } from "@/common/constants/spacing";
-import { CreateTeacherModal } from "../components/CreateTeacherModal";
 import { TeacherLeave, TeacherAvailability } from "../types";
 
 type TabKey = "info" | "subjects" | "availability" | "leaves" | "workload";
@@ -34,10 +33,9 @@ export default function TeacherDetailScreen() {
   const { t } = useTranslation("teachers");
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { currentTeacher, loading, fetchTeacher, updateTeacher, deleteTeacher } = useTeachers();
+  const { currentTeacher, loading, fetchTeacher, deleteTeacher } = useTeachers();
   const { hasPermission } = usePermissions();
   const [activeTab, setActiveTab] = useState<TabKey>("info");
-  const [editModalVisible, setEditModalVisible] = useState(false);
 
   const canUpdate = hasPermission(PERMS.TEACHER_UPDATE);
   const canDelete = hasPermission(PERMS.TEACHER_DELETE);
@@ -120,18 +118,6 @@ export default function TeacherDetailScreen() {
       }
     }
   }, [activeTab, teacherId]);
-
-  const handleUpdate = async (data: any) => {
-    if (!id) return;
-    try {
-      await updateTeacher(id, data);
-      setEditModalVisible(false);
-      Alert.alert(t("list.success"), t("detail.updated"));
-      fetchTeacher(id);
-    } catch (error: any) {
-      throw error;
-    }
-  };
 
   const handleDelete = () => {
     Alert.alert(t("detail.deleteConfirmTitle"), t("detail.deleteConfirmMessage"), [
@@ -289,7 +275,15 @@ export default function TeacherDetailScreen() {
           </TouchableOpacity>
         )}
         {canUpdate && (
-          <TouchableOpacity style={styles.iconBtn} onPress={() => setEditModalVisible(true)}>
+          <TouchableOpacity
+            style={styles.iconBtn}
+            onPress={() =>
+              router.push({
+                pathname: "/(protected)/teachers/[id]/edit",
+                params: { id: id ?? "" },
+              } as any)
+            }
+          >
             <Ionicons name="create-outline" size={22} color={Colors.primary} />
           </TouchableOpacity>
         )}
@@ -504,17 +498,6 @@ export default function TeacherDetailScreen() {
             )}
           </View>
         </ScrollView>
-      )}
-
-      {/* Edit Teacher Modal */}
-      {canUpdate && (
-        <CreateTeacherModal
-          visible={editModalVisible}
-          onClose={() => setEditModalVisible(false)}
-          onSubmit={handleUpdate}
-          initialData={currentTeacher}
-          mode="edit"
-        />
       )}
 
       {/* Availability Modal */}
