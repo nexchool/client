@@ -9,15 +9,13 @@ import {
   SafeAreaView,
   RefreshControl,
   TouchableOpacity,
-  Alert,
   TextInput,
   Pressable,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useStudents } from "../hooks/useStudents";
 import { StudentListItem } from "../components/StudentListItem";
-import { CreateStudentModal } from "../components/CreateStudentModal";
 import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
 import { useAcademicYearContext } from "@/modules/academics/context/AcademicYearContext";
 import { Protected } from "@/modules/permissions/components/Protected";
@@ -53,14 +51,11 @@ export default function StudentsScreen() {
     loading,
     fetchStudents,
     fetchMyProfile,
-    createStudent,
   } = useStudents();
   const { hasPermission, hasAnyPermission } = usePermissions();
   const { selectedAcademicYearId } = useAcademicYearContext();
   const { palette, elevation } = useTheme();
-  const params = useLocalSearchParams();
 
-  const [modalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 500);
 
@@ -70,18 +65,10 @@ export default function StudentsScreen() {
     PERMS.STUDENT_READ_CLASS,
   ]);
   const canViewSelf = hasPermission(PERMS.STUDENT_READ_SELF);
-  const canCreate = hasPermission(PERMS.STUDENT_CREATE);
 
   useEffect(() => {
     loadData();
   }, [canViewAll, canViewSelf, debouncedSearch, selectedAcademicYearId]);
-
-  useEffect(() => {
-    // Check if navigated with Create intent
-    if (params.action === "create" && canCreate) {
-      setModalVisible(true);
-    }
-  }, [params.action, canCreate]);
 
   const loadData = () => {
     if (canViewAll) {
@@ -96,35 +83,6 @@ export default function StudentsScreen() {
 
   const handleStudentPress = (student: Student) => {
     router.push(`/students/${student.id}` as any);
-  };
-
-  const handleCreateStudent = async (data: any) => {
-    try {
-      const response = await createStudent(data);
-      setModalVisible(false);
-      
-      // Show credentials if generated
-      if (response.credentials) {
-        Alert.alert(
-          t("list.credentialTitle"),
-          t("list.credentialBody", {
-            username: response.credentials.username,
-            email: response.credentials.email,
-            password: response.credentials.password,
-          }),
-          [{ text: t("list.ok") }],
-        );
-      } else {
-        Alert.alert(t("list.success"), t("list.createdSimple"));
-      }
-      
-      // Refresh list
-      if (canViewAll) {
-        fetchStudents();
-      }
-    } catch (error: any) {
-      throw error;
-    }
   };
 
   const renderContent = () => {
@@ -215,25 +173,9 @@ export default function StudentsScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{t("list.title")}</Text>
-        {canCreate && (
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => setModalVisible(true)}
-          >
-            <Ionicons name="add" size={24} color={Colors.primary} />
-          </TouchableOpacity>
-        )}
       </View>
 
       {renderContent()}
-
-      {canCreate && (
-        <CreateStudentModal
-          visible={modalVisible}
-          onClose={() => setModalVisible(false)}
-          onSubmit={handleCreateStudent}
-        />
-      )}
 
       <Protected permission={PERMS.STUDENT_CREATE}>
         <Pressable
@@ -285,11 +227,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: Colors.text,
-  },
-  addButton: {
-    padding: Spacing.sm,
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.md,
   },
   listContent: {
     padding: Spacing.md,

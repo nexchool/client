@@ -9,7 +9,6 @@ import {
   SafeAreaView,
   RefreshControl,
   TouchableOpacity,
-  Alert,
   TextInput,
   Pressable,
 } from "react-native";
@@ -17,8 +16,6 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTeachers } from "../hooks/useTeachers";
 import { TeacherListItem } from "../components/TeacherListItem";
-import { CreateTeacherModal } from "../components/CreateTeacherModal";
-import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
 import { Protected } from "@/modules/permissions/components/Protected";
 import * as PERMS from "@/modules/permissions/constants/permissions";
 import { useTheme } from "@/common/theme";
@@ -38,15 +35,11 @@ function useDebounce<T>(value: T, delay: number): T {
 export default function TeachersScreen() {
   const { t } = useTranslation("teachers");
   const router = useRouter();
-  const { teachers, loading, fetchTeachers, createTeacher } = useTeachers();
-  const { hasPermission } = usePermissions();
+  const { teachers, loading, fetchTeachers } = useTeachers();
   const { palette, elevation } = useTheme();
 
-  const [modalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 500);
-
-  const canCreate = hasPermission(PERMS.TEACHER_CREATE);
 
   useEffect(() => {
     fetchTeachers({ search: debouncedSearch || undefined });
@@ -56,43 +49,10 @@ export default function TeachersScreen() {
     router.push(`/teachers/${teacher.id}` as any);
   };
 
-  const handleCreateTeacher = async (data: any) => {
-    try {
-      const response = await createTeacher(data);
-      setModalVisible(false);
-
-      if (response.credentials) {
-        Alert.alert(
-          t("list.credentialTitle"),
-          t("list.credentialBody", {
-            employee_id: response.credentials.employee_id,
-            email: response.credentials.email,
-            password: response.credentials.password,
-          }),
-          [{ text: t("list.ok") }],
-        );
-      } else {
-        Alert.alert(t("list.success"), t("list.createdSimple"));
-      }
-
-      fetchTeachers();
-    } catch (error: any) {
-      throw error;
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{t("list.title")}</Text>
-        {canCreate && (
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => setModalVisible(true)}
-          >
-            <Ionicons name="add" size={24} color={Colors.primary} />
-          </TouchableOpacity>
-        )}
       </View>
 
       {/* Search */}
@@ -137,14 +97,6 @@ export default function TeachersScreen() {
         />
       )}
 
-      {canCreate && (
-        <CreateTeacherModal
-          visible={modalVisible}
-          onClose={() => setModalVisible(false)}
-          onSubmit={handleCreateTeacher}
-        />
-      )}
-
       <Protected permission={PERMS.TEACHER_CREATE}>
         <Pressable
           accessibilityRole="button"
@@ -183,11 +135,6 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.borderLight,
   },
   headerTitle: { fontSize: 24, fontWeight: "bold", color: Colors.text },
-  addButton: {
-    padding: Spacing.sm,
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.md,
-  },
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
