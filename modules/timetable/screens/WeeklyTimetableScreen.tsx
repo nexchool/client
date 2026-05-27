@@ -38,7 +38,7 @@ function formatWeekRange(start: string, end: string): string {
 export default function WeeklyTimetableScreen() {
   const { t } = useTranslation('timetable');
   const { palette, spacing, radius, typography, elevation } = useTheme();
-  const role = useUiRole() as any;
+  const role = useUiRole();
   const params = useLocalSearchParams<{ classId?: string }>();
   const classId = params.classId;
 
@@ -52,6 +52,15 @@ export default function WeeklyTimetableScreen() {
   const isStudent = !!role.isStudent && !classId;
   const isAdminClass = !!role.isAdmin && !!classId;
   const isAdminNoClass = !!role.isAdmin && !classId;
+
+  // Server returns 409 with { success: false, error: 'NotEnrolled' } for students
+  // whose account has no class enrollment for the active academic year.
+  // apiGet throws ApiException with .status and .data carrying the response body.
+  const studentNotEnrolled =
+    isStudent &&
+    ((studentQuery.error as any)?.status === 409 ||
+      (studentQuery.error as any)?.data?.error === 'NotEnrolled' ||
+      (studentQuery.error as any)?.data?.error?.code === 'NotEnrolled');
 
   const data = isTeacher
     ? teacherQuery.data
@@ -154,6 +163,22 @@ export default function WeeklyTimetableScreen() {
               label: t('goToClasses', { defaultValue: 'Go to classes' }),
               onPress: () => router.push('/(protected)/classes'),
             }}
+          />
+        </View>
+      ) : studentNotEnrolled ? (
+        <View
+          style={[
+            elevation.card,
+            { backgroundColor: palette.surfaceContainerLowest, borderRadius: radius.xl },
+          ]}
+        >
+          <EmptyState
+            icon={<Ionicons name="information-circle-outline" size={36} color={palette.onSurfaceVariant} />}
+            title={t('notEnrolled', { defaultValue: 'Not enrolled yet' })}
+            description={t('notEnrolledHelp', {
+              defaultValue:
+                "You haven't been assigned to a class for this academic year. Please contact your school office.",
+            })}
           />
         </View>
       ) : isLoading && !data ? (
