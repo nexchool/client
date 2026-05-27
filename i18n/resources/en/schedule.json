@@ -1,0 +1,10 @@
+{
+  "admin": {
+    "noEvents": "No scheduled events today",
+    "noEventsHelp": "School-wide events will appear here when scheduled."
+  },
+  "comingSoon": "Coming soon",
+  "noClasses": "No classes today",
+  "noPeriods": "No classes today",
+  "title": "Schedule"
+}

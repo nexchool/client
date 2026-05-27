@@ -12,6 +12,8 @@ import enTeacherLeaves from "./resources/en/teacherLeaves.json";
 import enFinance from "./resources/en/finance.json";
 import enHolidays from "./resources/en/holidays.json";
 import enNotifications from "./resources/en/notifications.json";
+import enSchedule from "./resources/en/schedule.json";
+import enTimetable from "./resources/en/timetable.json";
 import guCommon from "./resources/gu/common.json";
 import guAuth from "./resources/gu/auth.json";
 import guSettings from "./resources/gu/settings.json";
@@ -26,6 +28,8 @@ import guTeacherLeaves from "./resources/gu/teacherLeaves.json";
 import guFinance from "./resources/gu/finance.json";
 import guHolidays from "./resources/gu/holidays.json";
 import guNotifications from "./resources/gu/notifications.json";
+import guSchedule from "./resources/gu/schedule.json";
+import guTimetable from "./resources/gu/timetable.json";
 import hiCommon from "./resources/hi/common.json";
 import hiAuth from "./resources/hi/auth.json";
 import hiSettings from "./resources/hi/settings.json";
@@ -40,6 +44,8 @@ import hiTeacherLeaves from "./resources/hi/teacherLeaves.json";
 import hiFinance from "./resources/hi/finance.json";
 import hiHolidays from "./resources/hi/holidays.json";
 import hiNotifications from "./resources/hi/notifications.json";
+import hiSchedule from "./resources/hi/schedule.json";
+import hiTimetable from "./resources/hi/timetable.json";
 
 export const LANGUAGE_STORAGE_KEY = "@school_erp_app_language";
 
@@ -64,6 +70,8 @@ export const I18N_NAMESPACES = [
   "finance",
   "holidays",
   "notifications",
+  "schedule",
+  "timetable",
 ] as const;
 export type I18nNamespace = (typeof I18N_NAMESPACES)[number];
 
@@ -83,6 +91,8 @@ export const resources = {
     finance: enFinance,
     holidays: enHolidays,
     notifications: enNotifications,
+    schedule: enSchedule,
+    timetable: enTimetable,
   },
   gu: {
     common: guCommon,
@@ -99,6 +109,8 @@ export const resources = {
     finance: guFinance,
     holidays: guHolidays,
     notifications: guNotifications,
+    schedule: guSchedule,
+    timetable: guTimetable,
   },
   hi: {
     common: hiCommon,
@@ -115,5 +127,7 @@ export const resources = {
     finance: hiFinance,
     holidays: hiHolidays,
     notifications: hiNotifications,
+    schedule: hiSchedule,
+    timetable: hiTimetable,
   },
 } as const;

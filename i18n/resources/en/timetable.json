@@ -1,0 +1,15 @@
+{
+  "classView": "Class view",
+  "close": "Close",
+  "goToClasses": "Go to classes",
+  "loading": "Loading…",
+  "noTimetable": "No timetable available yet",
+  "noTimetableHelp": "Your school is still finalising the timetable for this academic year.",
+  "notEnrolled": "Not enrolled yet",
+  "notEnrolledHelp": "You haven't been assigned to a class for this academic year. Please contact your school office.",
+  "selectClass": "Select a class",
+  "selectClassHelp": "Open a class from the Classes screen and tap \"View timetable\".",
+  "title": "Timetable",
+  "today": "Today →",
+  "yourSchedule": "Your weekly schedule"
+}
