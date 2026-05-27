@@ -4,7 +4,8 @@
     "title": "શૈક્ષણિક વર્ષ",
     "allYears": "બધા વર્ષ",
     "select": "પસંદ કરો",
-    "createNew": "નવું શૈક્ષણિક વર્ષ બનાવો"
+    "createNew": "નવું શૈક્ષણિક વર્ષ બનાવો",
+    "subtitle": "ડેટા જોવા માટે વર્ષ પસંદ કરો."
   },
   "academicYearCreate": {
     "title": "શૈક્ષણિક વર્ષ બનાવો",
@@ -28,5 +29,12 @@
   },
   "notifications": {
     "openInbox": "સૂચનાઓ ખોલો"
-  }
+  },
+  "cancel": "રદ કરો",
+  "helpSupport": "મદદ અને સહાય",
+  "noModulesAvailable": "તમારા ખાતામાં હજુ કોઈ મોડ્યૂલ ઉપલબ્ધ નથી.",
+  "settings": "સેટિંગ્સ",
+  "signOut": "સાઇન આઉટ",
+  "signOutConfirmMessage": "તમારા ખાતામાં પ્રવેશ માટે તમારે ફરી સાઇન ઇન કરવું પડશે.",
+  "signOutConfirmTitle": "સાઇન આઉટ કરવું છે?"
 }

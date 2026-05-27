@@ -4,7 +4,8 @@
     "title": "शैक्षणिक वर्ष",
     "allYears": "सभी वर्ष",
     "select": "चुनें",
-    "createNew": "नया शैक्षणिक वर्ष बनाएँ"
+    "createNew": "नया शैक्षणिक वर्ष बनाएँ",
+    "subtitle": "डेटा देखने के लिए वर्ष चुनें।"
   },
   "academicYearCreate": {
     "title": "शैक्षणिक वर्ष बनाएँ",
@@ -28,5 +29,12 @@
   },
   "notifications": {
     "openInbox": "सूचनाएँ खोलें"
-  }
+  },
+  "cancel": "रद्द करें",
+  "helpSupport": "सहायता और समर्थन",
+  "noModulesAvailable": "आपके खाते में अभी कोई मॉड्यूल उपलब्ध नहीं है।",
+  "settings": "सेटिंग्स",
+  "signOut": "साइन आउट",
+  "signOutConfirmMessage": "अपने खाते तक पहुँचने के लिए आपको फिर से साइन इन करना होगा।",
+  "signOutConfirmTitle": "साइन आउट करें?"
 }

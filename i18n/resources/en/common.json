@@ -4,7 +4,8 @@
     "title": "Academic Year",
     "allYears": "All Years",
     "select": "Select",
-    "createNew": "Create new academic year"
+    "createNew": "Create new academic year",
+    "subtitle": "Select the year to view data for."
   },
   "academicYearCreate": {
     "title": "Create Academic Year",
@@ -28,5 +29,12 @@
   },
   "notifications": {
     "openInbox": "Open notifications"
-  }
+  },
+  "cancel": "Cancel",
+  "helpSupport": "Help & Support",
+  "noModulesAvailable": "Your account doesn't have any modules available yet.",
+  "settings": "Settings",
+  "signOut": "Sign out",
+  "signOutConfirmMessage": "You will need to sign in again to access your account.",
+  "signOutConfirmTitle": "Sign out?"
 }
