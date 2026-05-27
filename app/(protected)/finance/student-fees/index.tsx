@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   RefreshControl,
   TextInput,
@@ -78,7 +77,7 @@ function StatusPill({ status }: { status: string }) {
 
 /** Derive unique statuses from fee items. */
 function getStatusesToDisplay(
-  items: Array<{ amount?: number; paid_amount?: number }> | undefined,
+  items: { amount?: number; paid_amount?: number }[] | undefined,
   feeStatus: string
 ): string[] {
   if (!items?.length) return [feeStatus];
@@ -569,5 +568,3 @@ function Chip({
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({});

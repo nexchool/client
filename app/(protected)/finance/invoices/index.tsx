@@ -200,10 +200,10 @@ export default function InvoicesListPage() {
     );
   };
 
-  const filterOptions: Array<{
+  const filterOptions: {
     key: "all" | "paid" | "pending" | "overdue";
     label: string;
-  }> = [
+  }[] = [
     { key: "all", label: t("invoices.filterAll", { defaultValue: "All" }) },
     {
       key: "paid",
