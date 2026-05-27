@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router, usePathname } from 'expo-router';
+import { router, usePathname, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/common/theme';
 import { useUnreadNotificationsBadge } from '@/modules/notifications/hooks/useNotifications';
@@ -62,6 +62,14 @@ export function BottomTabBar() {
   const showNotifBadge = isFeatureEnabled('notifications');
   const unreadBadge = useUnreadNotificationsBadge(showNotifBadge);
   const unreadCount = unreadBadge.data?.length ?? 0;
+
+  useFocusEffect(
+    useCallback(() => {
+      if (showNotifBadge) {
+        void unreadBadge.refetch();
+      }
+    }, [showNotifBadge, unreadBadge.refetch])
+  );
 
   const handlePress = (tab: Tab) => {
     const active = isTabActive(pathname, tab.route);
