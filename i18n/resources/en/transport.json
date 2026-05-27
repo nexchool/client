@@ -1,0 +1,13 @@
+{
+  "title": "My Transport",
+  "busNumber": "Bus number",
+  "driver": "Driver",
+  "pickup": "Pickup",
+  "drop": "Drop",
+  "route": "Route",
+  "exceptions": "Today's exceptions",
+  "notEnrolled": {
+    "title": "You're not assigned to transport",
+    "body": "Contact your school's transport office to enroll."
+  }
+}

@@ -14,6 +14,7 @@ import enHolidays from "./resources/en/holidays.json";
 import enNotifications from "./resources/en/notifications.json";
 import enSchedule from "./resources/en/schedule.json";
 import enTimetable from "./resources/en/timetable.json";
+import enTransport from "./resources/en/transport.json";
 import guCommon from "./resources/gu/common.json";
 import guAuth from "./resources/gu/auth.json";
 import guSettings from "./resources/gu/settings.json";
@@ -30,6 +31,7 @@ import guHolidays from "./resources/gu/holidays.json";
 import guNotifications from "./resources/gu/notifications.json";
 import guSchedule from "./resources/gu/schedule.json";
 import guTimetable from "./resources/gu/timetable.json";
+import guTransport from "./resources/gu/transport.json";
 import hiCommon from "./resources/hi/common.json";
 import hiAuth from "./resources/hi/auth.json";
 import hiSettings from "./resources/hi/settings.json";
@@ -46,6 +48,7 @@ import hiHolidays from "./resources/hi/holidays.json";
 import hiNotifications from "./resources/hi/notifications.json";
 import hiSchedule from "./resources/hi/schedule.json";
 import hiTimetable from "./resources/hi/timetable.json";
+import hiTransport from "./resources/hi/transport.json";
 
 export const LANGUAGE_STORAGE_KEY = "@school_erp_app_language";
 
@@ -72,6 +75,7 @@ export const I18N_NAMESPACES = [
   "notifications",
   "schedule",
   "timetable",
+  "transport",
 ] as const;
 export type I18nNamespace = (typeof I18N_NAMESPACES)[number];
 
@@ -93,6 +97,7 @@ export const resources = {
     notifications: enNotifications,
     schedule: enSchedule,
     timetable: enTimetable,
+    transport: enTransport,
   },
   gu: {
     common: guCommon,
@@ -111,6 +116,7 @@ export const resources = {
     notifications: guNotifications,
     schedule: guSchedule,
     timetable: guTimetable,
+    transport: guTransport,
   },
   hi: {
     common: hiCommon,
@@ -129,5 +135,6 @@ export const resources = {
     notifications: hiNotifications,
     schedule: hiSchedule,
     timetable: hiTimetable,
+    transport: hiTransport,
   },
 } as const;
