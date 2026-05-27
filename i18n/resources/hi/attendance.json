@@ -9,12 +9,28 @@
   },
   "myAttendance": {
     "title": "मेरी उपस्थिति",
+    "subtitle": "अपनी उपस्थिति और रुझान देखें",
     "attendanceLabel": "उपस्थिति",
     "presentCount": "उपस्थित: {{count}}",
     "absentCount": "अनुपस्थित: {{count}}",
     "lateCount": "देर से: {{count}}",
     "totalDays": "कुल दिन: {{count}}",
-    "emptyRecords": "कोई उपस्थिति रिकॉर्ड नहीं मिला"
+    "emptyRecords": "कोई उपस्थिति रिकॉर्ड नहीं मिला",
+    "empty": "अभी कोई उपस्थिति डेटा नहीं",
+    "emptyBody": "आपका पहला अंकित दिन यहाँ दिखाई देगा।",
+    "kpi": {
+      "percentage": "उपस्थिति %",
+      "present": "उपस्थित दिन",
+      "absent": "अनुपस्थित दिन",
+      "late": "देर से अंक",
+      "ofTotal": "{{n}} में से"
+    },
+    "legend": {
+      "present": "उपस्थित",
+      "absent": "अनुपस्थित",
+      "late": "देर से",
+      "holiday": "छुट्टी"
+    }
   },
   "session": {
     "missingClass": "कक्षा गुम",

@@ -9,12 +9,28 @@
   },
   "myAttendance": {
     "title": "My Attendance",
+    "subtitle": "Track your attendance and trends",
     "attendanceLabel": "Attendance",
     "presentCount": "Present: {{count}}",
     "absentCount": "Absent: {{count}}",
     "lateCount": "Late: {{count}}",
     "totalDays": "Total days: {{count}}",
-    "emptyRecords": "No attendance records found"
+    "emptyRecords": "No attendance records found",
+    "empty": "No attendance data yet",
+    "emptyBody": "Your first marked day will show here.",
+    "kpi": {
+      "percentage": "Attendance %",
+      "present": "Days present",
+      "absent": "Days absent",
+      "late": "Late marks",
+      "ofTotal": "of {{n}}"
+    },
+    "legend": {
+      "present": "Present",
+      "absent": "Absent",
+      "late": "Late",
+      "holiday": "Holiday"
+    }
   },
   "session": {
     "missingClass": "Missing class",

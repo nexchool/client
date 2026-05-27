@@ -9,12 +9,28 @@
   },
   "myAttendance": {
     "title": "મારી હાજરી",
+    "subtitle": "તમારી હાજરી અને ટ્રેન્ડ જુઓ",
     "attendanceLabel": "હાજરી",
     "presentCount": "હાજર: {{count}}",
     "absentCount": "ગેરહાજર: {{count}}",
     "lateCount": "મોડું: {{count}}",
     "totalDays": "કુલ દિવસ: {{count}}",
-    "emptyRecords": "કોઈ હાજરી રેકોર્ડ મળ્યો નહીં"
+    "emptyRecords": "કોઈ હાજરી રેકોર્ડ મળ્યો નહીં",
+    "empty": "હજી કોઈ હાજરી ડેટા નથી",
+    "emptyBody": "તમારો પહેલો ચિહ્નિત દિવસ અહીં દેખાશે.",
+    "kpi": {
+      "percentage": "હાજરી %",
+      "present": "હાજર દિવસો",
+      "absent": "ગેરહાજર દિવસો",
+      "late": "મોડું ગુણ",
+      "ofTotal": "{{n}} માંથી"
+    },
+    "legend": {
+      "present": "હાજર",
+      "absent": "ગેરહાજર",
+      "late": "મોડું",
+      "holiday": "રજા"
+    }
   },
   "session": {
     "missingClass": "વર્ગ ખૂટે છે",
