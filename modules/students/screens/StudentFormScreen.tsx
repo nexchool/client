@@ -11,7 +11,8 @@
  * Section is not collected here — derived later from class assignment.
  */
 import React from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Alert, BackHandler, Pressable, Text, View } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
@@ -52,6 +53,9 @@ const RELATIONSHIP_OPTIONS: SelectOption[] = [
   { value: 'other', label: 'Other' },
 ];
 
+const ALLOWED_GENDERS = ['male', 'female', 'other'] as const;
+const ALLOWED_RELATIONSHIPS = ['father', 'mother', 'guardian', 'other'] as const;
+
 const today = () => new Date().toISOString().slice(0, 10);
 
 export default function StudentFormScreen() {
@@ -73,7 +77,7 @@ export default function StudentFormScreen() {
   const {
     control,
     handleSubmit,
-    formState: { isDirty },
+    formState,
     setError,
     reset,
   } = useForm<StudentFormInput>({
@@ -100,6 +104,20 @@ export default function StudentFormScreen() {
     const relationship =
       (s.guardian_relationship as StudentFormInput['guardian_relationship']) ||
       'father';
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- runtime guard against unknown server values
+    if (s.gender && !ALLOWED_GENDERS.includes(s.gender as any)) {
+      console.warn('[StudentForm] Hydrate clamped unknown gender:', s.gender);
+    }
+    if (
+      s.guardian_relationship &&
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- runtime guard against unknown server values
+      !ALLOWED_RELATIONSHIPS.includes(s.guardian_relationship as any)
+    ) {
+      console.warn(
+        '[StudentForm] Hydrate clamped unknown relationship:',
+        s.guardian_relationship
+      );
+    }
     reset({
       name: s.name ?? '',
       gender: ['male', 'female', 'other'].includes(gender) ? gender : 'male',
@@ -118,8 +136,8 @@ export default function StudentFormScreen() {
     });
   }, [isEdit, detailQuery.data, reset]);
 
-  const handleBack = () => {
-    if (isDirty) {
+  const handleBack = React.useCallback(() => {
+    if (formState.isDirty) {
       Alert.alert(
         t('discard.title', { defaultValue: 'Discard changes?' }),
         t('discard.body', {
@@ -140,7 +158,19 @@ export default function StudentFormScreen() {
     } else {
       router.back();
     }
-  };
+  }, [formState.isDirty, t]);
+
+  React.useEffect(() => {
+    const onBackPress = () => {
+      if (formState.isDirty) {
+        handleBack();
+        return true; // consume — we handle navigation inside the Alert
+      }
+      return false; // let default back happen
+    };
+    const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => sub.remove();
+  }, [formState.isDirty, handleBack]);
 
   const onSubmit = async (data: StudentFormInput) => {
     // Build DTO — strip empty optionals so the server treats them as omitted.
@@ -159,29 +189,56 @@ export default function StudentFormScreen() {
 
     try {
       if (isEdit) {
-        const updatePayload: UpdateStudentDTO = payload;
-        await updateMutation.mutateAsync(updatePayload);
+        // Only send fields the user actually changed; never re-send admission_date from this UI.
+        const dirtyFields = formState.dirtyFields as Record<string, boolean>;
+        const partial: UpdateStudentDTO = {};
+        (Object.keys(dirtyFields) as (keyof StudentFormInput)[]).forEach((key) => {
+          if (key === 'admission_date') return;
+          const v = (data as Record<string, unknown>)[key];
+          if (v !== '' && v !== undefined) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (partial as any)[key] = v;
+          }
+        });
+        if (Object.keys(partial).length === 0) {
+          // No-op submit — just navigate back, don't hit the server
+          router.back();
+          return;
+        }
+        await updateMutation.mutateAsync(partial);
         router.back();
       } else {
         const result = await createMutation.mutateAsync(payload);
         const created = result.student;
         if (result.credentials) {
+          const credBody =
+            `Username: ${result.credentials.username}\n` +
+            `Password: ${result.credentials.password}\n\n` +
+            'Share these with the parent.';
+          const navigateToDetail = () =>
+            router.replace(
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- expo-router typed routes don't yet include this dynamic route shape
+              { pathname: '/(protected)/students/[id]', params: { id: created.id } } as any
+            );
           Alert.alert(
-            t('credentials.title', {
-              defaultValue: 'Student account created',
-            }),
-            `Username: ${result.credentials.username}\nPassword: ${result.credentials.password}\n\nShare these with the parent.`,
+            t('credentials.title', { defaultValue: 'Student account created' }),
+            credBody,
             [
               {
-                text: t('credentials.done', { defaultValue: 'Done' }),
-                onPress: () =>
-                  router.replace({
-                    pathname: '/(protected)/students/[id]',
-                    params: { id: created.id },
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- expo-router typed routes don't yet include this dynamic route shape
-                  } as any),
+                text: t('credentials.copy', { defaultValue: 'Copy credentials' }),
+                onPress: async () => {
+                  await Clipboard.setStringAsync(
+                    `Username: ${result.credentials!.username}\nPassword: ${result.credentials!.password}`
+                  );
+                  navigateToDetail();
+                },
               },
-            ]
+              {
+                text: t('credentials.done', { defaultValue: 'Done' }),
+                onPress: navigateToDetail,
+              },
+            ],
+            { cancelable: false }
           );
         } else {
           router.replace({
