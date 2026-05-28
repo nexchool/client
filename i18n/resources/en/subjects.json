@@ -1,4 +1,22 @@
 {
+  "mine": {
+    "title": "Subjects",
+    "subtitle": "Subjects, classes, and teachers you're connected to",
+    "emptyTitle": "No subjects yet",
+    "emptyBody": "Subjects assigned to you will appear here.",
+    "errorTitle": "Couldn't load subjects",
+    "errorBody": "Pull down to try again.",
+    "mandatory": "Mandatory",
+    "elective": "Elective",
+    "perWeek": "{{count}}/week",
+    "teachersNone": "—",
+    "type": {
+      "core": "Core",
+      "elective": "Elective",
+      "activity": "Activity",
+      "other": "Other"
+    }
+  },
   "list": {
     "title": "Subjects",
     "sectionCatalog": "Subject catalog",
