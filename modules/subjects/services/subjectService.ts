@@ -1,5 +1,5 @@
 import { apiDelete, apiGet, apiPost, apiPut } from "@/common/services/api";
-import { Subject, CreateSubjectDTO, UpdateSubjectDTO } from "../types";
+import { Subject, CreateSubjectDTO, UpdateSubjectDTO, MySubject } from "../types";
 
 export const subjectService = {
   getSubjects: async () => {
@@ -20,5 +20,9 @@ export const subjectService = {
 
   deleteSubject: async (id: string) => {
     return await apiDelete<void>(`/api/subjects/${id}`);
+  },
+
+  listMySubjects: async (): Promise<MySubject[]> => {
+    return await apiGet<MySubject[]>("/api/subjects/mine");
   },
 };
