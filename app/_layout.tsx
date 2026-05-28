@@ -13,6 +13,7 @@ import { AuthProvider } from "@/modules/auth/context/AuthContext";
 import { checkAndFetchUpdateInBackground } from "@/common/utils/checkForAppUpdate";
 import { initI18n } from "@/i18n";
 import { ThemeProvider } from "@/common/theme";
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const queryClient = new QueryClient();
 
@@ -50,16 +51,18 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider mode="light">
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" />
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen name="(protected)" options={{ headerShown: false }} />
-          </Stack>
-        </AuthProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider mode="light">
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="index" />
+              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+              <Stack.Screen name="(protected)" options={{ headerShown: false }} />
+            </Stack>
+          </AuthProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }
