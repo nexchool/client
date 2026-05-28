@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, Text, View, RefreshControl } from 'react-native';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/common/theme';
 import { ScreenContainer } from '@/common/components/ScreenContainer';
@@ -17,6 +18,7 @@ import type { AuditFilters, AuditLogEntry } from '../types';
 
 function Header() {
   const { palette, spacing, typography } = useTheme();
+  const { t } = useTranslation('audit');
   return (
     <View
       style={{
@@ -33,7 +35,7 @@ function Header() {
       >
         <Ionicons name="chevron-back" size={24} color={palette.onSurface} />
       </Pressable>
-      <Text style={[typography.display, { color: palette.onSurface }]}>Audit log</Text>
+      <Text style={[typography.display, { color: palette.onSurface }]}>{t('title')}</Text>
     </View>
   );
 }
@@ -41,6 +43,7 @@ function Header() {
 export default function AuditLogScreen() {
   const { hasPermission } = useAuth();
   const { palette, spacing, radius } = useTheme();
+  const { t } = useTranslation('audit');
 
   const [filters, setFilters] = useState<AuditFilters>({});
   const [selected, setSelected] = useState<AuditLogEntry | null>(null);
@@ -64,8 +67,8 @@ export default function AuditLogScreen() {
         <Header />
         <EmptyState
           icon={<Ionicons name="lock-closed-outline" size={28} color={palette.onSurfaceVariant} />}
-          title="You don't have access"
-          description="You don't have permission to view the audit log."
+          title={t('notAuthorized.title')}
+          description={t('notAuthorized.description')}
         />
       </ScreenContainer>
     );
@@ -112,13 +115,9 @@ export default function AuditLogScreen() {
                   color={isError ? palette.error : palette.onSurfaceVariant}
                 />
               }
-              title={isError ? 'Could not load audit log' : 'No activity yet'}
-              description={
-                isError
-                  ? 'Something went wrong while loading the audit log.'
-                  : 'Audit entries will appear here as activity happens.'
-              }
-              action={isError ? { label: 'Retry', onPress: () => refetch() } : undefined}
+              title={isError ? t('error.title') : t('empty.title')}
+              description={isError ? t('error.description') : t('empty.description')}
+              action={isError ? { label: t('retry'), onPress: () => refetch() } : undefined}
             />
           }
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}

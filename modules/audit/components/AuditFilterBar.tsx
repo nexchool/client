@@ -1,6 +1,7 @@
 // client/modules/audit/components/AuditFilterBar.tsx
 import React, { useState } from 'react';
 import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useTheme } from '@/common/theme';
 import { ACTION_OPTIONS, MODULE_OPTIONS, AuditSelectOption } from '../constants';
@@ -19,8 +20,16 @@ function parseIsoDate(value?: string): Date {
 
 export function AuditFilterBar({ filters, onChange }: Props) {
   const { palette, spacing, radius, typography } = useTheme();
+  const { t } = useTranslation('audit');
   const [showFrom, setShowFrom] = useState(false);
   const [showTo, setShowTo] = useState(false);
+
+  // Translate a chip's display text from the i18n map, falling back to the
+  // option's static label so unknown server values still render.
+  const chipLabel = (group: 'module' | 'action', option: AuditSelectOption) =>
+    option.value === ''
+      ? t('filter.all')
+      : t(`${group}.${option.value}`, { defaultValue: option.label });
 
   const makeDateHandler =
     (field: 'date_from' | 'date_to', close: () => void) =>
@@ -66,7 +75,7 @@ export function AuditFilterBar({ filters, onChange }: Props) {
           >
             <Text style={[typography.labelSm, { color: palette.onSurfaceVariant }]}>{label}</Text>
             <Text style={[typography.bodyMd, { color: current ? palette.onSurface : palette.onSurfaceVariant }]}>
-              {current ?? 'Any'}
+              {current ?? t('filter.any')}
             </Text>
           </Pressable>
           {current ? (
@@ -91,7 +100,7 @@ export function AuditFilterBar({ filters, onChange }: Props) {
     );
   };
 
-  const chip = (active: boolean, option: AuditSelectOption, onPress: () => void) => (
+  const chip = (active: boolean, option: AuditSelectOption, displayLabel: string, onPress: () => void) => (
     <Pressable
       key={`${option.value}-${option.label}`}
       onPress={onPress}
@@ -109,7 +118,7 @@ export function AuditFilterBar({ filters, onChange }: Props) {
       })}
     >
       <Text style={[typography.labelMd, { color: active ? palette.onTertiaryContainer : palette.onSurface }]}>
-        {option.label}
+        {displayLabel}
       </Text>
     </Pressable>
   );
@@ -120,19 +129,19 @@ export function AuditFilterBar({ filters, onChange }: Props) {
   return (
     <View style={{ gap: spacing.sm, padding: spacing.md, backgroundColor: palette.surfaceContainerLowest }}>
       <View style={{ flexDirection: 'row', gap: spacing.md }}>
-        {dateControl('From', 'date_from', showFrom, setShowFrom, () => setShowFrom(false))}
-        {dateControl('To', 'date_to', showTo, setShowTo, () => setShowTo(false))}
+        {dateControl(t('filter.from'), 'date_from', showFrom, setShowFrom, () => setShowFrom(false))}
+        {dateControl(t('filter.to'), 'date_to', showTo, setShowTo, () => setShowTo(false))}
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm }}>
         {MODULE_OPTIONS.map((option) =>
-          chip(activeModule === option.value, option, () =>
+          chip(activeModule === option.value, option, chipLabel('module', option), () =>
             onChange({ ...filters, module: option.value || undefined }),
           ),
         )}
       </ScrollView>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm }}>
         {ACTION_OPTIONS.map((option) =>
-          chip(activeAction === option.value, option, () =>
+          chip(activeAction === option.value, option, chipLabel('action', option), () =>
             onChange({ ...filters, action: option.value || undefined }),
           ),
         )}

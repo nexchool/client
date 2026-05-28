@@ -1,0 +1,50 @@
+{
+  "title": "Audit log",
+  "filter": {
+    "from": "From",
+    "to": "To",
+    "module": "Module",
+    "action": "Action",
+    "all": "All",
+    "any": "Any"
+  },
+  "module": {
+    "students": "Students",
+    "teachers": "Teachers",
+    "classes": "Classes",
+    "attendance": "Attendance",
+    "fees": "Fees",
+    "announcements": "Announcements",
+    "holidays": "Holidays",
+    "schedule": "Schedule"
+  },
+  "action": {
+    "created": "Created",
+    "updated": "Updated",
+    "deleted": "Deleted",
+    "approved": "Approved",
+    "rejected": "Rejected"
+  },
+  "detail": {
+    "actor": "Actor",
+    "module": "Module",
+    "resource": "Resource",
+    "when": "When",
+    "description": "Description",
+    "meta": "Details",
+    "noMeta": "No additional detail."
+  },
+  "notAuthorized": {
+    "title": "You don't have access",
+    "description": "You don't have permission to view the audit log."
+  },
+  "empty": {
+    "title": "No activity yet",
+    "description": "Audit entries will appear here as activity happens."
+  },
+  "error": {
+    "title": "Could not load audit log",
+    "description": "Something went wrong while loading the audit log."
+  },
+  "retry": "Retry"
+}

@@ -19,6 +19,7 @@ import enSearch from "./resources/en/search.json";
 import enTimetable from "./resources/en/timetable.json";
 import enTransport from "./resources/en/transport.json";
 import enSubjects from "./resources/en/subjects.json";
+import enAudit from "./resources/en/audit.json";
 import guCommon from "./resources/gu/common.json";
 import guAuth from "./resources/gu/auth.json";
 import guSettings from "./resources/gu/settings.json";
@@ -40,6 +41,7 @@ import guSearch from "./resources/gu/search.json";
 import guTimetable from "./resources/gu/timetable.json";
 import guTransport from "./resources/gu/transport.json";
 import guSubjects from "./resources/gu/subjects.json";
+import guAudit from "./resources/gu/audit.json";
 import hiCommon from "./resources/hi/common.json";
 import hiAuth from "./resources/hi/auth.json";
 import hiSettings from "./resources/hi/settings.json";
@@ -61,6 +63,7 @@ import hiSearch from "./resources/hi/search.json";
 import hiTimetable from "./resources/hi/timetable.json";
 import hiTransport from "./resources/hi/transport.json";
 import hiSubjects from "./resources/hi/subjects.json";
+import hiAudit from "./resources/hi/audit.json";
 
 export const LANGUAGE_STORAGE_KEY = "@school_erp_app_language";
 
@@ -92,6 +95,7 @@ export const I18N_NAMESPACES = [
   "timetable",
   "transport",
   "subjects",
+  "audit",
 ] as const;
 export type I18nNamespace = (typeof I18N_NAMESPACES)[number];
 
@@ -118,6 +122,7 @@ export const resources = {
     timetable: enTimetable,
     transport: enTransport,
     subjects: enSubjects,
+    audit: enAudit,
   },
   gu: {
     common: guCommon,
@@ -141,6 +146,7 @@ export const resources = {
     timetable: guTimetable,
     transport: guTransport,
     subjects: guSubjects,
+    audit: guAudit,
   },
   hi: {
     common: hiCommon,
@@ -164,5 +170,6 @@ export const resources = {
     timetable: hiTimetable,
     transport: hiTransport,
     subjects: hiSubjects,
+    audit: hiAudit,
   },
 } as const;

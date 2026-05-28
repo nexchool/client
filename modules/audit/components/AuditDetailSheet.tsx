@@ -1,6 +1,7 @@
 // client/modules/audit/components/AuditDetailSheet.tsx
 import React from 'react';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
 import type { AuditLogEntry } from '../types';
 
@@ -23,6 +24,7 @@ type Props = {
 
 export function AuditDetailSheet({ entry, visible, onClose }: Props) {
   const { palette, spacing, radius, typography } = useTheme();
+  const { t } = useTranslation('audit');
 
   if (!entry) return null;
 
@@ -57,15 +59,15 @@ export function AuditDetailSheet({ entry, visible, onClose }: Props) {
           </View>
           <Text style={[typography.headlineMd, { color: palette.onSurface }]}>{entry.action}</Text>
           <ScrollView contentContainerStyle={{ gap: spacing.md }} showsVerticalScrollIndicator={false}>
-            {labeledRow('Actor', `${entry.actor_name} · ${entry.actor_role}`)}
-            {labeledRow('Module', entry.module)}
-            {labeledRow('Resource', resource)}
-            {labeledRow('When', when)}
-            {labeledRow('Description', entry.description)}
+            {labeledRow(t('detail.actor'), `${entry.actor_name} · ${entry.actor_role}`)}
+            {labeledRow(t('detail.module'), entry.module)}
+            {labeledRow(t('detail.resource'), resource)}
+            {labeledRow(t('detail.when'), when)}
+            {labeledRow(t('detail.description'), entry.description)}
             <View style={{ gap: spacing.sm }}>
-              <Text style={[typography.labelSm, { color: palette.onSurfaceVariant }]}>Details</Text>
+              <Text style={[typography.labelSm, { color: palette.onSurfaceVariant }]}>{t('detail.meta')}</Text>
               {rows.length === 0 ? (
-                <Text style={[typography.bodyMd, { color: palette.onSurface }]}>No additional detail.</Text>
+                <Text style={[typography.bodyMd, { color: palette.onSurface }]}>{t('detail.noMeta')}</Text>
               ) : (
                 rows.map((r) => (
                   <View
