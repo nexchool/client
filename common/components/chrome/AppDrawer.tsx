@@ -42,7 +42,7 @@ const ITEMS: readonly DrawerItem[] = [
   { key: 'students', label: 'Students', icon: 'people-outline', iconActive: 'people', route: '/(protected)/students', roles: ['admin', 'teacher'] },
   { key: 'teachers', label: 'Teachers', icon: 'person-outline', iconActive: 'person', route: '/(protected)/teachers', roles: ['admin'] },
   { key: 'classes', label: 'Classes', icon: 'school-outline', iconActive: 'school', route: '/(protected)/classes', roles: ['admin', 'teacher'] },
-  { key: 'subjects', label: 'Subjects', icon: 'book-outline', iconActive: 'book', route: '/(protected)/subjects', roles: ['admin', 'teacher'] },
+  { key: 'subjects', label: 'Subjects', icon: 'book-outline', iconActive: 'book', route: '/(protected)/subjects', roles: ['admin', 'teacher', 'student'] },
   { key: 'academics', label: 'Academics', icon: 'library-outline', iconActive: 'library', route: '/(protected)/academics', roles: ['admin'] },
   { key: 'attendance', label: 'Attendance', icon: 'checkmark-done-outline', iconActive: 'checkmark-done', route: '/(protected)/attendance/overview', roles: ['admin', 'teacher'] },
   { key: 'schedule', label: 'Schedule', icon: 'time-outline', iconActive: 'time', route: '/(protected)/schedule/today', roles: ['admin', 'teacher', 'student', 'parent'] },

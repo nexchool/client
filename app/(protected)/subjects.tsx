@@ -1,6 +1,5 @@
-import { Redirect } from "expo-router";
+import { SubjectsScreen } from "@/modules/subjects/screens/SubjectsScreen";
 
-/** Deep links to /subjects redirect home — subject master is admin-web only. */
-export default function LegacySubjectsRedirect() {
-  return <Redirect href="/(protected)/home" />;
+export default function SubjectsRoute() {
+  return <SubjectsScreen />;
 }
