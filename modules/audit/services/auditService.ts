@@ -14,6 +14,6 @@ export const auditService = {
     if (filters.date_to) qs.set("date_to", filters.date_to);
     if (filters.module) qs.set("module", filters.module);
     if (filters.action) qs.set("action", filters.action);
-    return apiGet<AuditLogPage>(`/api/audit/?${qs.toString()}`);
+    return apiGet<AuditLogPage>(`/api/audit-logs/?${qs.toString()}`);
   },
 };
