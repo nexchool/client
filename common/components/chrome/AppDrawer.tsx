@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
   Dimensions,
@@ -17,8 +17,8 @@ import { useTranslation } from 'react-i18next';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withSpring,
   withTiming,
+  runOnJS,
 } from 'react-native-reanimated';
 import { useTheme } from '@/common/theme';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
@@ -79,16 +79,21 @@ export function AppDrawer({ visible, onClose }: Props) {
     isParent ? 'parent' :
     'unknown';
 
+  // Keep the Modal mounted through the close animation so the slide-out is seen.
+  const [mounted, setMounted] = useState(visible);
   const translateX = useSharedValue(-DRAWER_W);
   const backdropOpacity = useSharedValue(0);
 
   useEffect(() => {
     if (visible) {
-      translateX.value = withSpring(0, { damping: 28, stiffness: 220 });
-      backdropOpacity.value = withTiming(1, { duration: 200 });
+      setMounted(true);
+      translateX.value = withTiming(0, { duration: 240 });
+      backdropOpacity.value = withTiming(1, { duration: 240 });
     } else {
-      translateX.value = withSpring(-DRAWER_W, { damping: 28, stiffness: 220 });
-      backdropOpacity.value = withTiming(0, { duration: 200 });
+      backdropOpacity.value = withTiming(0, { duration: 220 });
+      translateX.value = withTiming(-DRAWER_W, { duration: 220 }, (finished) => {
+        if (finished) runOnJS(setMounted)(false);
+      });
     }
   }, [visible, translateX, backdropOpacity]);
 
@@ -143,7 +148,7 @@ export function AppDrawer({ visible, onClose }: Props) {
   };
 
   return (
-    <Modal visible={visible} transparent animationType="none" onRequestClose={onClose} statusBarTranslucent>
+    <Modal visible={mounted} transparent animationType="none" onRequestClose={onClose} statusBarTranslucent>
       <Animated.View
         style={[
           styles.backdrop,
