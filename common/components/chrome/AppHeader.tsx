@@ -18,7 +18,7 @@ export function AppHeader({ onMenuPress }: Props) {
   const { palette, spacing, radius, typography } = useTheme();
   const insets = useSafeAreaInsets();
   const { user, isFeatureEnabled, tenantName } = useAuth();
-  const { isStudent } = useUiRole();
+  const { isStudent, isAdmin, isTeacher } = useUiRole();
   const { academicYears, selectedAcademicYearId } = useAcademicYearContext();
   const showNotifBadge = isFeatureEnabled('notifications');
   const unreadBadge = useUnreadNotificationsBadge(showNotifBadge);
@@ -33,6 +33,8 @@ export function AppHeader({ onMenuPress }: Props) {
 
   const activeAy = academicYears.find((ay) => ay.id === selectedAcademicYearId);
   const ayLabel = activeAy?.name ?? '—';
+
+  const showSearch = (isAdmin || isTeacher) && isFeatureEnabled('search');
 
   return (
     <>
@@ -122,6 +124,28 @@ export function AppHeader({ onMenuPress }: Props) {
                 >
                   {ayLabel}
                 </Text>
+              </Pressable>
+            ) : null}
+            {showSearch ? (
+              <Pressable
+                onPress={() => router.push('/(protected)/search')}
+                hitSlop={8}
+                style={({ pressed }) => [
+                  styles.iconBtn,
+                  {
+                    backgroundColor: pressed ? palette.surfaceContainer : 'transparent',
+                    borderRadius: radius.full,
+                    transform: [{ scale: pressed ? 0.95 : 1 }],
+                  },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel="Search"
+              >
+                <Ionicons
+                  name="search-outline"
+                  size={24}
+                  color={palette.onSurfaceVariant}
+                />
               </Pressable>
             ) : null}
             <Pressable
