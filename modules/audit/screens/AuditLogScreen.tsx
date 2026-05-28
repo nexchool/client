@@ -45,7 +45,20 @@ export default function AuditLogScreen() {
   const [filters, setFilters] = useState<AuditFilters>({});
   const [selected, setSelected] = useState<AuditLogEntry | null>(null);
 
-  if (!hasPermission(AUDIT_LOG_VIEW)) {
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    isRefetching,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useAuditLogs(filters);
+
+  const canView = hasPermission(AUDIT_LOG_VIEW);
+
+  if (!canView) {
     return (
       <ScreenContainer scrollable={false}>
         <Header />
@@ -57,17 +70,6 @@ export default function AuditLogScreen() {
       </ScreenContainer>
     );
   }
-
-  const {
-    data,
-    isLoading,
-    isError,
-    refetch,
-    isRefetching,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useAuditLogs(filters);
 
   const items = data?.pages.flatMap((p) => p.items) ?? [];
 
