@@ -48,6 +48,7 @@ const ITEMS: readonly DrawerItem[] = [
   { key: 'schedule', label: 'Schedule', icon: 'time-outline', iconActive: 'time', route: '/(protected)/schedule/today', roles: ['admin', 'teacher', 'student', 'parent'] },
   { key: 'holidays', label: 'Holidays', icon: 'flag-outline', iconActive: 'flag', route: '/(protected)/holidays', roles: ['admin', 'teacher', 'student', 'parent'] },
   { key: 'announcements', label: 'Announcements', icon: 'megaphone-outline', iconActive: 'megaphone', route: '/(protected)/announcements', roles: ['admin', 'teacher', 'student', 'parent'] },
+  { key: 'audit-log', label: 'Audit log', icon: 'shield-checkmark-outline', iconActive: 'shield-checkmark', route: '/(protected)/audit-log', roles: ['admin'] },
   { key: 'leaves', label: 'My leaves', icon: 'briefcase-outline', iconActive: 'briefcase', route: '/(protected)/my-leaves', roles: ['admin', 'teacher', 'student'] },
   { key: 'student-leaves', label: 'Student leaves', icon: 'calendar-outline', iconActive: 'calendar', route: '/(protected)/approve-student-leaves', roles: ['admin', 'teacher'] },
   { key: 'finance', label: 'Finance', icon: 'wallet-outline', iconActive: 'wallet', route: '/(protected)/finance', roles: ['admin', 'student'], flag: 'fees_management' },

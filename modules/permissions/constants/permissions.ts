@@ -159,6 +159,9 @@ export const REPORT_READ_ALL = 'report.read.all';
 export const REPORT_GENERATE = 'report.generate';
 export const REPORT_MANAGE = 'report.manage';
 
+// Audit Log
+export const AUDIT_LOG_VIEW = 'audit_log.view';
+
 // Holiday Management
 export const HOLIDAY_READ = 'holiday.read';
 export const HOLIDAY_CREATE = 'holiday.create';
