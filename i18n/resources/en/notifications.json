@@ -15,5 +15,9 @@
     "notFound": "This notification is no longer available.",
     "noBody": "No message text.",
     "openRelated": "Open related"
-  }
+  },
+  "section": { "today": "Today", "yesterday": "Yesterday", "earlier": "Earlier" },
+  "category": { "all": "All", "announcements": "Announcements", "fees": "Fees", "leaves": "Leaves", "system": "System" },
+  "status": { "all": "All", "unread": "Unread" },
+  "swipe": { "markRead": "Mark read" }
 }

@@ -15,5 +15,9 @@
     "notFound": "यह सूचना अब उपलब्ध नहीं है।",
     "noBody": "कोई संदेश पाठ नहीं।",
     "openRelated": "संबंधित खोलें"
-  }
+  },
+  "section": { "today": "आज", "yesterday": "कल", "earlier": "पुराने" },
+  "category": { "all": "सभी", "announcements": "घोषणाएँ", "fees": "शुल्क", "leaves": "अवकाश", "system": "सिस्टम" },
+  "status": { "all": "सभी", "unread": "अपठित" },
+  "swipe": { "markRead": "पढ़ा हुआ चिह्नित करें" }
 }
