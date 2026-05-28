@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/common/theme';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 import { useUiRole } from '@/modules/permissions/hooks/useUiRole';
 import { useAcademicYearContext } from '@/modules/academics/context/AcademicYearContext';
@@ -15,7 +16,7 @@ type Props = {
 };
 
 export function AppHeader({ onMenuPress }: Props) {
-  const { palette, spacing, radius, typography } = useTheme();
+  const { palette, spacing, radius } = useTheme();
   const insets = useSafeAreaInsets();
   const { user, isFeatureEnabled, tenantName } = useAuth();
   const { isStudent, isAdmin, isTeacher } = useUiRole();
@@ -74,14 +75,12 @@ export function AppHeader({ onMenuPress }: Props) {
               accessibilityRole="button"
               accessibilityLabel="Open menu"
             >
-              <Ionicons name="menu" size={24} color={palette.onSurfaceVariant} />
+              <AppIcon name="menu" size="lg" color="onSurfaceVariant" />
             </Pressable>
             <Text
-              style={[
-                typography.headlineMd,
-                styles.brand,
-                { color: palette.primary, fontFamily: 'Inter_700Bold' },
-              ]}
+              variant="headlineMd"
+              color="primary"
+              style={[styles.brand, { fontFamily: 'Inter_700Bold' }]}
               numberOfLines={1}
               ellipsizeMode="tail"
             >
@@ -106,20 +105,11 @@ export function AppHeader({ onMenuPress }: Props) {
                 accessibilityRole="button"
                 accessibilityLabel={`Academic year ${ayLabel}`}
               >
-                <Ionicons
-                  name="calendar-outline"
-                  size={14}
-                  color={palette.onSurfaceVariant}
-                />
+                <AppIcon name="calendar-outline" size="sm" color="onSurfaceVariant" />
                 <Text
-                  style={[
-                    typography.labelSm,
-                    {
-                      color: palette.onSurfaceVariant,
-                      fontFamily: 'Inter_600SemiBold',
-                      includeFontPadding: false,
-                    },
-                  ]}
+                  variant="labelSm"
+                  color="onSurfaceVariant"
+                  style={{ fontFamily: 'Inter_600SemiBold', includeFontPadding: false }}
                   numberOfLines={1}
                 >
                   {ayLabel}
@@ -141,11 +131,7 @@ export function AppHeader({ onMenuPress }: Props) {
                 accessibilityRole="button"
                 accessibilityLabel="Search"
               >
-                <Ionicons
-                  name="search-outline"
-                  size={24}
-                  color={palette.onSurfaceVariant}
-                />
+                <AppIcon name="search-outline" size="lg" color="onSurfaceVariant" />
               </Pressable>
             ) : null}
             <Pressable
@@ -162,11 +148,7 @@ export function AppHeader({ onMenuPress }: Props) {
               accessibilityRole="button"
               accessibilityLabel="Notifications"
             >
-              <Ionicons
-                name="notifications-outline"
-                size={24}
-                color={palette.onSurfaceVariant}
-              />
+              <AppIcon name="notifications-outline" size="lg" color="onSurfaceVariant" />
               {unreadCount > 0 ? (
                 <View
                   style={[

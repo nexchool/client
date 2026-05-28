@@ -1,6 +1,7 @@
 import React, { type ReactNode } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useTheme } from '@/common/theme';
+import { Text } from '@/common/components/Text';
 import { Button } from '@/common/components/Button';
 
 type Props = {
@@ -11,7 +12,7 @@ type Props = {
 };
 
 export function EmptyState({ icon, title, description, action }: Props) {
-  const { palette, spacing, typography } = useTheme();
+  const { palette, spacing } = useTheme();
   return (
     <View style={[styles.root, { padding: spacing.xl, gap: spacing.md }]}>
       <View
@@ -22,18 +23,11 @@ export function EmptyState({ icon, title, description, action }: Props) {
       >
         {icon}
       </View>
-      <Text style={[typography.headlineMd, styles.center, { color: palette.onSurface }]}>
+      <Text variant="headlineMd" color="onSurface" style={styles.center}>
         {title}
       </Text>
       {description ? (
-        <Text
-          style={[
-            typography.bodyMd,
-            styles.center,
-            { color: palette.onSurfaceVariant },
-          ]}
-          numberOfLines={2}
-        >
+        <Text variant="bodyMd" color="onSurfaceVariant" style={styles.center} numberOfLines={2}>
           {description}
         </Text>
       ) : null}
