@@ -1,0 +1,6 @@
+{
+  "placeholder": "Search students, teachers, classes, fees",
+  "prompt": "Type to search",
+  "empty": { "title": "No matches", "body": "Nothing found for your search." },
+  "group": { "students": "Students", "teachers": "Teachers", "classes": "Classes", "fees": "Fees" }
+}

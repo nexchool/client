@@ -15,6 +15,7 @@ import enFinance from "./resources/en/finance.json";
 import enHolidays from "./resources/en/holidays.json";
 import enNotifications from "./resources/en/notifications.json";
 import enSchedule from "./resources/en/schedule.json";
+import enSearch from "./resources/en/search.json";
 import enTimetable from "./resources/en/timetable.json";
 import enTransport from "./resources/en/transport.json";
 import guCommon from "./resources/gu/common.json";
@@ -34,6 +35,7 @@ import guFinance from "./resources/gu/finance.json";
 import guHolidays from "./resources/gu/holidays.json";
 import guNotifications from "./resources/gu/notifications.json";
 import guSchedule from "./resources/gu/schedule.json";
+import guSearch from "./resources/gu/search.json";
 import guTimetable from "./resources/gu/timetable.json";
 import guTransport from "./resources/gu/transport.json";
 import hiCommon from "./resources/hi/common.json";
@@ -53,6 +55,7 @@ import hiFinance from "./resources/hi/finance.json";
 import hiHolidays from "./resources/hi/holidays.json";
 import hiNotifications from "./resources/hi/notifications.json";
 import hiSchedule from "./resources/hi/schedule.json";
+import hiSearch from "./resources/hi/search.json";
 import hiTimetable from "./resources/hi/timetable.json";
 import hiTransport from "./resources/hi/transport.json";
 
@@ -82,6 +85,7 @@ export const I18N_NAMESPACES = [
   "holidays",
   "notifications",
   "schedule",
+  "search",
   "timetable",
   "transport",
 ] as const;
@@ -106,6 +110,7 @@ export const resources = {
     holidays: enHolidays,
     notifications: enNotifications,
     schedule: enSchedule,
+    search: enSearch,
     timetable: enTimetable,
     transport: enTransport,
   },
@@ -127,6 +132,7 @@ export const resources = {
     holidays: guHolidays,
     notifications: guNotifications,
     schedule: guSchedule,
+    search: guSearch,
     timetable: guTimetable,
     transport: guTransport,
   },
@@ -148,6 +154,7 @@ export const resources = {
     holidays: hiHolidays,
     notifications: hiNotifications,
     schedule: hiSchedule,
+    search: hiSearch,
     timetable: hiTimetable,
     transport: hiTransport,
   },
