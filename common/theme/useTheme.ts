@@ -1,7 +1,8 @@
 import { useContext } from 'react';
 import { ThemeContext, type Theme } from './ThemeProvider';
-import { Spacing, Radius } from './tokens';
+import { Spacing, Radius, IconSize, AvatarSize, LogoSize, TouchTarget } from './tokens';
 import { Typography } from './typography';
+import { Duration, Easings, Interaction } from './motion';
 import { cardShadow, modalShadow, focusRing } from './elevation';
 
 export type UseThemeResult = Theme & {
@@ -13,6 +14,11 @@ export type UseThemeResult = Theme & {
     modal: ReturnType<typeof modalShadow>;
     focusRing: (primaryHex: string) => ReturnType<typeof focusRing>;
   };
+  iconSize: typeof IconSize;
+  avatarSize: typeof AvatarSize;
+  logoSize: typeof LogoSize;
+  touchTarget: typeof TouchTarget;
+  motion: { duration: typeof Duration; easing: typeof Easings; interaction: typeof Interaction };
 };
 
 export function useTheme(): UseThemeResult {
@@ -27,5 +33,10 @@ export function useTheme(): UseThemeResult {
       modal: modalShadow(theme.palette.onSurface),
       focusRing,
     },
+    iconSize: IconSize,
+    avatarSize: AvatarSize,
+    logoSize: LogoSize,
+    touchTarget: TouchTarget,
+    motion: { duration: Duration, easing: Easings, interaction: Interaction },
   };
 }

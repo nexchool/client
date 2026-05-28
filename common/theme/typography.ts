@@ -19,7 +19,11 @@ type TypeRole =
   | 'bodyLg'
   | 'bodyMd'
   | 'labelMd'
-  | 'labelSm';
+  | 'labelSm'
+  | 'titleSm'
+  | 'bodySm'
+  | 'labelLg'
+  | 'overline';
 
 const base: Record<TypeRole, TextStyle> = {
   display: {
@@ -58,6 +62,16 @@ const base: Record<TypeRole, TextStyle> = {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 12,
     lineHeight: 16,
+  },
+  titleSm: { fontFamily: 'Inter_600SemiBold', fontSize: 17, lineHeight: 24 },
+  bodySm: { fontFamily: 'Inter_400Regular', fontSize: 14, lineHeight: 20 },
+  labelLg: { fontFamily: 'Inter_600SemiBold', fontSize: 16, lineHeight: 24 },
+  overline: {
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 11,
+    lineHeight: 16,
+    letterSpacing: 0.88,
+    textTransform: 'uppercase',
   },
 };
 
