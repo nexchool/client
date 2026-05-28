@@ -80,7 +80,7 @@ export function AppHeader({ onMenuPress }: Props) {
             <Text
               variant="headlineMd"
               color="primary"
-              style={[styles.brand, { fontFamily: 'Inter_700Bold' }]}
+              style={styles.brand}
               numberOfLines={1}
               ellipsizeMode="tail"
             >
@@ -109,7 +109,7 @@ export function AppHeader({ onMenuPress }: Props) {
                 <Text
                   variant="labelSm"
                   color="onSurfaceVariant"
-                  style={{ fontFamily: 'Inter_600SemiBold', includeFontPadding: false }}
+                  style={{ includeFontPadding: false }}
                   numberOfLines={1}
                 >
                   {ayLabel}
