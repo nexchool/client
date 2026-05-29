@@ -1,10 +1,11 @@
 import React from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle } from 'react-native-svg';
 import { useTheme } from '@/common/theme';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 import { useStudentAcademicDashboard } from '@/modules/academics/hooks/useAcademicQueries';
 import { useNotificationsList } from '@/modules/notifications/hooks/useNotifications';
@@ -46,7 +47,7 @@ function CircularProgress({ value, size, palette }: { value: number; size: numbe
 
 export function StudentHome() {
   const { t } = useTranslation('home');
-  const { palette, spacing, radius, typography, elevation } = useTheme();
+  const { palette, spacing, radius, elevation } = useTheme();
   const { user, isFeatureEnabled } = useAuth() as any;
   const { data, isLoading, isRefetching, refetch } = useStudentAcademicDashboard();
   // Gate the notifications query on the feature flag so tenants with the
@@ -84,10 +85,10 @@ export function StudentHome() {
       showsVerticalScrollIndicator={false}
     >
       <View>
-        <Text style={[typography.bodyLg, { color: palette.onSurfaceVariant }]}>
+        <Text variant="bodyLg" color="onSurfaceVariant">
           {t('student.welcomeBack', { defaultValue: 'Welcome back,' })}
         </Text>
-        <Text style={[typography.display, { color: palette.onSurface, marginTop: spacing.xs }]}>
+        <Text variant="display" color="onSurface" style={{ marginTop: spacing.xs }}>
           {fullName}
         </Text>
       </View>
@@ -139,35 +140,32 @@ export function StudentHome() {
                   marginBottom: spacing.xs,
                 }}
               >
-                <Text style={[typography.labelSm, { color: palette.primary }]}>
+                <Text variant="labelSm" color="primary">
                   {t('student.upNext', { defaultValue: 'Up Next' })}
                 </Text>
               </View>
-              <Text
-                style={[typography.headlineMd, { color: palette.onSurface }]}
-                numberOfLines={1}
-              >
+              <Text variant="headlineMd" color="onSurface" numberOfLines={1}>
                 {String(upNext?.subject?.name ?? upNext?.subject ?? '—')}
               </Text>
             </View>
-            <Ionicons name="calculator-outline" size={28} color={palette.primary} />
+            <AppIcon name="calculator-outline" size="lg" color="primary" />
           </View>
           <View style={{ gap: spacing.sm }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Ionicons name="time-outline" size={18} color={palette.onSurfaceVariant} />
-              <Text style={[typography.bodyMd, { color: palette.onSurfaceVariant }]} numberOfLines={1}>
+              <AppIcon name="time-outline" size="sm" color="onSurfaceVariant" />
+              <Text variant="bodyMd" color="onSurfaceVariant" numberOfLines={1}>
                 {upNext?.start_time} - {upNext?.end_time}
               </Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Ionicons name="location-outline" size={18} color={palette.onSurfaceVariant} />
-              <Text style={[typography.bodyMd, { color: palette.onSurfaceVariant }]} numberOfLines={1}>
+              <AppIcon name="location-outline" size="sm" color="onSurfaceVariant" />
+              <Text variant="bodyMd" color="onSurfaceVariant" numberOfLines={1}>
                 {String(upNext?.room ?? '—')}
               </Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Ionicons name="person-outline" size={18} color={palette.onSurfaceVariant} />
-              <Text style={[typography.bodyMd, { color: palette.onSurfaceVariant }]} numberOfLines={1}>
+              <AppIcon name="person-outline" size="sm" color="onSurfaceVariant" />
+              <Text variant="bodyMd" color="onSurfaceVariant" numberOfLines={1}>
                 {String(upNext?.teacher?.name ?? '—')}
               </Text>
             </View>
@@ -199,7 +197,7 @@ export function StudentHome() {
           ]}
         >
           <EmptyState
-            icon={<Ionicons name="cafe-outline" size={36} color={palette.onSurfaceVariant} />}
+            icon={<AppIcon name="cafe-outline" size="xl" color="onSurfaceVariant" />}
             title={t('student.noMoreClasses', { defaultValue: 'No more classes today' })}
           />
         </View>
@@ -221,18 +219,13 @@ export function StudentHome() {
           ]}
         >
           <View style={{ flex: 1 }}>
-            <Text
-              style={[
-                typography.labelSm,
-                { color: palette.onSurfaceVariant, textTransform: 'uppercase', letterSpacing: 1 },
-              ]}
-            >
+            <Text variant="overline" color="onSurfaceVariant">
               {t('student.attendance', { defaultValue: 'Attendance' })}
             </Text>
-            <Text style={[typography.headlineLg, { color: palette.primary, marginTop: 4 }]}>
+            <Text variant="headlineLg" color="primary" style={{ marginTop: 4 }}>
               {attendancePct}%
             </Text>
-            <Text style={[typography.labelSm, { color: palette.outline, marginTop: 4 }]}>
+            <Text variant="labelSm" color="outline" style={{ marginTop: 4 }}>
               {t('student.target', { defaultValue: 'Target: {{n}}%', n: attendanceTarget })}
             </Text>
           </View>
@@ -255,27 +248,21 @@ export function StudentHome() {
           ]}
         >
           <View style={{ flex: 1 }}>
-            <Text
-              style={[
-                typography.labelSm,
-                { color: palette.onSurfaceVariant, textTransform: 'uppercase', letterSpacing: 1 },
-              ]}
-            >
+            <Text variant="overline" color="onSurfaceVariant">
               {pendingFeesAmount
                 ? t('student.pendingFees', { defaultValue: 'Pending Fees' })
                 : t('student.feesClear', { defaultValue: 'Fees Clear' })}
             </Text>
             <Text
-              style={[
-                typography.headlineLg,
-                { color: pendingFeesAmount ? palette.error : palette.success, marginTop: 4 },
-              ]}
+              variant="headlineLg"
+              color={pendingFeesAmount ? 'error' : 'success'}
+              style={{ marginTop: 4 }}
               numberOfLines={1}
             >
               {pendingFeesAmount ? `₹${pendingFeesAmount}` : t('student.noFeesDue', { defaultValue: 'All paid' })}
             </Text>
             {pendingFeesDays != null ? (
-              <Text style={[typography.labelSm, { color: palette.outline, marginTop: 4 }]} numberOfLines={1}>
+              <Text variant="labelSm" color="outline" style={{ marginTop: 4 }} numberOfLines={1}>
                 {t('student.dueIn', { defaultValue: 'Due in {{n}} days', n: pendingFeesDays })}
               </Text>
             ) : null}
@@ -290,10 +277,10 @@ export function StudentHome() {
               justifyContent: 'center',
             }}
           >
-            <Ionicons
+            <AppIcon
               name="wallet-outline"
-              size={20}
-              color={pendingFeesAmount ? palette.onErrorContainer : palette.success}
+              size="md"
+              color={pendingFeesAmount ? 'onErrorContainer' : 'success'}
             />
           </View>
         </View>
@@ -317,7 +304,7 @@ export function StudentHome() {
         >
           {updates.length === 0 ? (
             <EmptyState
-              icon={<Ionicons name="mail-open-outline" size={36} color={palette.onSurfaceVariant} />}
+              icon={<AppIcon name="mail-open-outline" size="xl" color="onSurfaceVariant" />}
               title={t('student.noUpdates', { defaultValue: 'No new updates' })}
             />
           ) : (
@@ -337,13 +324,13 @@ export function StudentHome() {
                       justifyContent: 'center',
                     }}
                   >
-                    <Ionicons name="notifications" size={16} color={palette.onSecondaryContainer} />
+                    <AppIcon name="notifications" size="sm" color="onSecondaryContainer" />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={[typography.labelMd, { color: palette.onSurface }]} numberOfLines={1}>
+                    <Text variant="labelMd" color="onSurface" numberOfLines={1}>
                       {String(n?.title ?? n?.subject ?? '—')}
                     </Text>
-                    <Text style={[typography.bodyMd, { color: palette.onSurfaceVariant }]} numberOfLines={1}>
+                    <Text variant="bodyMd" color="onSurfaceVariant" numberOfLines={1}>
                       {String(n?.body ?? n?.message ?? '')}
                     </Text>
                   </View>
@@ -356,5 +343,3 @@ export function StudentHome() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({});

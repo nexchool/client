@@ -1,9 +1,10 @@
 import React from 'react';
-import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, RefreshControl, ScrollView, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/common/theme';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 import { useTeacherTodaySchedule } from '@/modules/academics/hooks/useAcademicQueries';
 import { getTimeOfDayGreeting } from '@/common/utils/greeting';
@@ -32,7 +33,7 @@ function periodStatus(start: string, end: string, now = new Date()): PeriodStatu
 
 export function TeacherHome() {
   const { t } = useTranslation('home');
-  const { palette, spacing, radius, typography, elevation } = useTheme();
+  const { palette, spacing, radius, elevation } = useTheme();
   const { user } = useAuth() as any;
   const { data, isRefetching, refetch } = useTeacherTodaySchedule();
 
@@ -66,19 +67,14 @@ export function TeacherHome() {
       showsVerticalScrollIndicator={false}
     >
       <View>
-        <Text style={[typography.display, { color: palette.onSurface }]}>
+        <Text variant="display" color="onSurface">
           {t('teacher.greeting', {
             defaultValue: '{{greeting}}, {{name}}',
             greeting,
             name: firstName,
           })}
         </Text>
-        <Text
-          style={[
-            typography.bodyMd,
-            { color: palette.onSurfaceVariant, marginTop: spacing.xs },
-          ]}
-        >
+        <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
           {t('teacher.subtitle', { defaultValue: 'Here is your schedule and tasks for today.' })}
         </Text>
       </View>
@@ -137,7 +133,7 @@ export function TeacherHome() {
             ]}
           >
             <EmptyState
-              icon={<Ionicons name="cafe-outline" size={36} color={palette.onSurfaceVariant} />}
+              icon={<AppIcon name="cafe-outline" size="xl" color="onSurfaceVariant" />}
               title={t('teacher.noPeriods', { defaultValue: 'No classes today' })}
             />
           </View>
@@ -187,46 +183,30 @@ export function TeacherHome() {
                         borderRadius: radius.sm,
                       }}
                     >
-                      <Text
-                        style={[
-                          typography.labelSm,
-                          {
-                            color: isOngoing ? palette.primary : palette.onSurfaceVariant,
-                            textTransform: 'uppercase',
-                            letterSpacing: 1,
-                            fontFamily: 'Inter_600SemiBold',
-                          },
-                        ]}
-                      >
+                      <Text variant="overline" color={isOngoing ? 'primary' : 'onSurfaceVariant'}>
                         {status}
                       </Text>
                     </View>
                     <Text
-                      style={[
-                        typography.labelMd,
-                        { color: isOngoing ? palette.onPrimary : palette.onSurfaceVariant, opacity: isOngoing ? 0.9 : 1 },
-                      ]}
+                      variant="labelMd"
+                      color={isOngoing ? 'onPrimary' : 'onSurfaceVariant'}
+                      style={{ opacity: isOngoing ? 0.9 : 1 }}
                     >
                       {p.start_time} - {p.end_time}
                     </Text>
                   </View>
                   <Text
-                    style={[
-                      typography.headlineLg,
-                      { color: isOngoing ? palette.onPrimary : palette.onSurface, marginBottom: spacing.xs },
-                    ]}
+                    variant="headlineLg"
+                    color={isOngoing ? 'onPrimary' : 'onSurface'}
+                    style={{ marginBottom: spacing.xs }}
                     numberOfLines={1}
                   >
                     {String(p.subject?.name ?? p.subject ?? '—')}
                   </Text>
                   <Text
-                    style={[
-                      typography.bodyMd,
-                      {
-                        color: isOngoing ? palette.onPrimary : palette.onSurfaceVariant,
-                        opacity: isOngoing ? 0.9 : 1,
-                      },
-                    ]}
+                    variant="bodyMd"
+                    color={isOngoing ? 'onPrimary' : 'onSurfaceVariant'}
+                    style={{ opacity: isOngoing ? 0.9 : 1 }}
                     numberOfLines={1}
                   >
                     {[p.class_section?.name ?? p.class_name, p.room].filter(Boolean).join(' • ')}
@@ -256,5 +236,3 @@ export function TeacherHome() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({});

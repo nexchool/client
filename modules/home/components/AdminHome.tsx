@@ -4,14 +4,13 @@ import {
   Alert,
   RefreshControl,
   ScrollView,
-  StyleSheet,
-  Text,
   View,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/common/theme';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
 import { useAdminAcademicDashboard } from '@/modules/academics/hooks/useAcademicQueries';
 import { HomeKpiCard } from './HomeKpiCard';
 import { HomeQuickActionCard } from './HomeQuickActionCard';
@@ -26,7 +25,7 @@ function showComingSoon(label: string) {
 
 export function AdminHome() {
   const { t } = useTranslation('home');
-  const { palette, spacing, radius, typography, elevation } = useTheme();
+  const { palette, spacing, radius, elevation } = useTheme();
   const { data, isLoading, isRefetching, refetch } = useAdminAcademicDashboard();
   const [recordPaymentVisible, setRecordPaymentVisible] = React.useState(false);
 
@@ -55,15 +54,10 @@ export function AdminHome() {
       showsVerticalScrollIndicator={false}
     >
       <View>
-        <Text style={[typography.display, { color: palette.onSurface }]}>
+        <Text variant="display" color="onSurface">
           {t('admin.title', { defaultValue: 'School Overview' })}
         </Text>
-        <Text
-          style={[
-            typography.bodyMd,
-            { color: palette.onSurfaceVariant, marginTop: spacing.xs },
-          ]}
-        >
+        <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
           {t('admin.subtitle', {
             defaultValue: 'Real-time insights for today, {{date}}.',
             date: today,
@@ -209,19 +203,19 @@ export function AdminHome() {
                     justifyContent: 'center',
                   }}
                 >
-                  <Ionicons name="alert-circle-outline" size={20} color={palette.onErrorContainer} />
+                  <AppIcon name="alert-circle-outline" size="md" color="onErrorContainer" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[typography.labelMd, { color: palette.onSurface }]} numberOfLines={1}>
+                  <Text variant="labelMd" color="onSurface" numberOfLines={1}>
                     {String(c?.title ?? c?.description ?? 'Conflict')}
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color={palette.primary} />
+                <AppIcon name="chevron-forward" size="sm" color="primary" />
               </View>
             ))
           ) : (
             <EmptyState
-              icon={<Ionicons name="checkmark-circle" size={36} color={palette.success} />}
+              icon={<AppIcon name="checkmark-circle" size="xl" color="success" />}
               title={t('admin.noConflicts', { defaultValue: 'No conflicts today' })}
             />
           )}
@@ -243,5 +237,3 @@ export function AdminHome() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({});

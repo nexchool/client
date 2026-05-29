@@ -1,7 +1,7 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '@/common/theme';
+import { StyleSheet, View } from 'react-native';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
 import { Link } from '@/common/components/Link';
 
 type Props = {
@@ -11,16 +11,15 @@ type Props = {
 };
 
 export function HomeSectionHeader({ title, viewAllLabel, onViewAll }: Props) {
-  const { palette, typography } = useTheme();
   return (
     <View style={styles.row}>
-      <Text style={[typography.headlineMd, { color: palette.onSurface }]} numberOfLines={1}>
+      <Text variant="headlineMd" color="onSurface" numberOfLines={1}>
         {title}
       </Text>
       {onViewAll && viewAllLabel ? (
         <View style={[styles.viewAll, { gap: 2 }]}>
           <Link onPress={onViewAll}>{viewAllLabel}</Link>
-          <Ionicons name="chevron-forward" size={16} color={palette.primary} />
+          <AppIcon name="chevron-forward" size="sm" color="primary" />
         </View>
       ) : null}
     </View>

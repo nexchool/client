@@ -5,13 +5,13 @@ import {
   Modal,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/common/theme';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
 import { Input } from '@/common/components/Input';
 import { Skeleton } from '@/common/components/Skeleton';
 import { EmptyState } from '@/common/components/EmptyState';
@@ -35,7 +35,7 @@ function initials(name?: string | null): string {
 
 export function RecordPaymentPicker({ visible, onClose }: Props) {
   const { t } = useTranslation('home');
-  const { palette, spacing, radius, typography } = useTheme();
+  const { palette, spacing, radius } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
 
   const { data: unpaidFees = [], isLoading: loadingUnpaid } = useStudentFees({
@@ -105,24 +105,18 @@ export function RecordPaymentPicker({ visible, onClose }: Props) {
             { backgroundColor: palette.primaryContainer },
           ]}
         >
-          <Text
-            style={[typography.labelMd, { color: palette.onPrimaryContainer }]}
-          >
+          <Text variant="labelMd" color="onPrimaryContainer">
             {initials(item.student_name)}
           </Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text
-            style={[typography.labelMd, { color: palette.onSurface }]}
-            numberOfLines={1}
-          >
+          <Text variant="labelMd" color="onSurface" numberOfLines={1}>
             {item.student_name ?? '—'}
           </Text>
           <Text
-            style={[
-              typography.labelSm,
-              { color: palette.onSurfaceVariant, marginTop: 2 },
-            ]}
+            variant="labelSm"
+            color="onSurfaceVariant"
+            style={{ marginTop: 2 }}
             numberOfLines={1}
           >
             {t('recordPayment.due', {
@@ -131,11 +125,7 @@ export function RecordPaymentPicker({ visible, onClose }: Props) {
             })}
           </Text>
         </View>
-        <Ionicons
-          name="chevron-forward"
-          size={18}
-          color={palette.onSurfaceVariant}
-        />
+        <AppIcon name="chevron-forward" size="sm" color="onSurfaceVariant" />
       </Pressable>
     );
   };
@@ -175,10 +165,9 @@ export function RecordPaymentPicker({ visible, onClose }: Props) {
           }}
         />
         <Text
-          style={[
-            typography.headlineMd,
-            { color: palette.onSurface, marginBottom: spacing.md },
-          ]}
+          variant="headlineMd"
+          color="onSurface"
+          style={{ marginBottom: spacing.md }}
         >
           {t('recordPayment.title', { defaultValue: 'Record payment' })}
         </Text>
@@ -201,13 +190,7 @@ export function RecordPaymentPicker({ visible, onClose }: Props) {
             </View>
           ) : combined.length === 0 ? (
             <EmptyState
-              icon={
-                <Ionicons
-                  name="cash-outline"
-                  size={36}
-                  color={palette.onSurfaceVariant}
-                />
-              }
+              icon={<AppIcon name="cash-outline" size="xl" color="onSurfaceVariant" />}
               title={t('recordPayment.empty', {
                 defaultValue: 'No outstanding fees',
               })}

@@ -1,7 +1,14 @@
 import React, { type ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, type Palette } from '@/common/theme';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
 
 type AccentToken = 'primary' | 'tertiary' | 'secondary' | 'error' | 'success';
 
@@ -13,7 +20,7 @@ type Props = {
   iconBgToken?: keyof Palette;
   secondaryText?: string;
   secondaryIcon?: keyof typeof Ionicons.glyphMap;
-  secondaryColor?: string;
+  secondaryColor?: keyof Palette;
   rightSlot?: ReactNode;
   onPress?: () => void;
   style?: ViewStyle;
@@ -40,7 +47,7 @@ export function HomeKpiCard({
   onPress,
   style,
 }: Props) {
-  const { palette, spacing, radius, typography, elevation } = useTheme();
+  const { palette, spacing, radius, elevation } = useTheme();
   const accentColor = palette[ACCENT_MAP[accent]];
   const iconBg = palette[iconBgToken];
 
@@ -66,14 +73,12 @@ export function HomeKpiCard({
             { backgroundColor: iconBg, borderRadius: radius.md },
           ]}
         >
-          <Ionicons name={iconName} size={20} color={palette.onSurface} />
+          <AppIcon name={iconName} size="md" color="onSurface" />
         </View>
         <Text
-          style={[
-            typography.labelSm,
-            styles.uppercase,
-            { color: palette.onSurfaceVariant, flex: 1 },
-          ]}
+          variant="overline"
+          color="onSurfaceVariant"
+          style={{ flex: 1 }}
           numberOfLines={1}
         >
           {label}
@@ -81,28 +86,21 @@ export function HomeKpiCard({
       </View>
       <View style={[styles.bottomRow, { marginTop: spacing.sm }]}>
         <View style={{ flex: 1 }}>
-          <Text
-            style={[typography.headlineLg, { color: palette.onSurface }]}
-            numberOfLines={1}
-          >
+          <Text variant="headlineLg" color="onSurface" numberOfLines={1}>
             {value}
           </Text>
           {secondaryText ? (
-            <View
-              style={[styles.secondaryRow, { marginTop: 4, gap: 4 }]}
-            >
+            <View style={[styles.secondaryRow, { marginTop: 4, gap: 4 }]}>
               {secondaryIcon ? (
-                <Ionicons
+                <AppIcon
                   name={secondaryIcon}
-                  size={14}
-                  color={secondaryColor ?? palette.onSurfaceVariant}
+                  size="sm"
+                  color={secondaryColor ?? 'onSurfaceVariant'}
                 />
               ) : null}
               <Text
-                style={[
-                  typography.labelSm,
-                  { color: secondaryColor ?? palette.onSurfaceVariant },
-                ]}
+                variant="labelSm"
+                color={secondaryColor ?? 'onSurfaceVariant'}
                 numberOfLines={1}
               >
                 {secondaryText}
@@ -116,13 +114,42 @@ export function HomeKpiCard({
   );
 
   if (onPress) {
-    return (
-      <Pressable onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}>
-        {inner}
-      </Pressable>
-    );
+    return <KpiPressable onPress={onPress}>{inner}</KpiPressable>;
   }
   return inner;
+}
+
+function KpiPressable({
+  onPress,
+  children,
+}: {
+  onPress: () => void;
+  children: ReactNode;
+}) {
+  const { motion } = useTheme();
+  const scale = useSharedValue(1);
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+  const onPressIn = () => {
+    scale.value = withTiming(motion.interaction.pressScale, {
+      duration: motion.duration.fast,
+      easing: motion.easing.standard,
+    });
+  };
+  const onPressOut = () => {
+    scale.value = withTiming(1, {
+      duration: motion.duration.fast,
+      easing: motion.easing.standard,
+    });
+  };
+  return (
+    <Animated.View style={animatedStyle}>
+      <Pressable onPress={onPress} onPressIn={onPressIn} onPressOut={onPressOut}>
+        {children}
+      </Pressable>
+    </Animated.View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -136,5 +163,4 @@ const styles = StyleSheet.create({
   },
   bottomRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' },
   secondaryRow: { flexDirection: 'row', alignItems: 'center' },
-  uppercase: { textTransform: 'uppercase', letterSpacing: 1 },
 });
