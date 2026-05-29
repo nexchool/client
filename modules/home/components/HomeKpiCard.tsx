@@ -1,14 +1,10 @@
 import React, { type ReactNode } from 'react';
-import { Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-} from 'react-native-reanimated';
+import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, type Palette } from '@/common/theme';
 import { Text } from '@/common/components/Text';
 import { AppIcon } from '@/common/components/AppIcon';
+import { PressScale } from '@/common/components/PressScale';
 
 type AccentToken = 'primary' | 'tertiary' | 'secondary' | 'error' | 'success';
 
@@ -114,42 +110,9 @@ export function HomeKpiCard({
   );
 
   if (onPress) {
-    return <KpiPressable onPress={onPress}>{inner}</KpiPressable>;
+    return <PressScale onPress={onPress}>{inner}</PressScale>;
   }
   return inner;
-}
-
-function KpiPressable({
-  onPress,
-  children,
-}: {
-  onPress: () => void;
-  children: ReactNode;
-}) {
-  const { motion } = useTheme();
-  const scale = useSharedValue(1);
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-  const onPressIn = () => {
-    scale.value = withTiming(motion.interaction.pressScale, {
-      duration: motion.duration.fast,
-      easing: motion.easing.standard,
-    });
-  };
-  const onPressOut = () => {
-    scale.value = withTiming(1, {
-      duration: motion.duration.fast,
-      easing: motion.easing.standard,
-    });
-  };
-  return (
-    <Animated.View style={animatedStyle}>
-      <Pressable onPress={onPress} onPressIn={onPressIn} onPressOut={onPressOut}>
-        {children}
-      </Pressable>
-    </Animated.View>
-  );
 }
 
 const styles = StyleSheet.create({

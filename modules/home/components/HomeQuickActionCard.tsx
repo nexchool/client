@@ -1,14 +1,10 @@
 import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-} from 'react-native-reanimated';
+import { StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, type Palette } from '@/common/theme';
 import { Text } from '@/common/components/Text';
 import { AppIcon } from '@/common/components/AppIcon';
+import { PressScale } from '@/common/components/PressScale';
 
 type Props = {
   label: string;
@@ -27,57 +23,38 @@ export function HomeQuickActionCard({
   onPress,
   dashed = false,
 }: Props) {
-  const { palette, spacing, radius, elevation, motion } = useTheme();
-  const scale = useSharedValue(1);
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-  const onPressIn = () => {
-    scale.value = withTiming(motion.interaction.pressScale, {
-      duration: motion.duration.fast,
-      easing: motion.easing.standard,
-    });
-  };
-  const onPressOut = () => {
-    scale.value = withTiming(1, {
-      duration: motion.duration.fast,
-      easing: motion.easing.standard,
-    });
-  };
+  const { palette, spacing, radius, elevation } = useTheme();
   return (
-    <Animated.View style={[styles.fill, animatedStyle]}>
-      <Pressable
-        onPress={onPress}
-        onPressIn={onPressIn}
-        onPressOut={onPressOut}
-        style={[
-          styles.card,
-          !dashed && elevation.card,
-          {
-            backgroundColor: palette.surfaceContainerLowest,
-            borderRadius: radius.xl,
-            padding: spacing.md,
-            gap: spacing.md,
-          },
-          dashed && {
-            borderWidth: 1,
-            borderColor: palette.outlineVariant,
-            borderStyle: 'dashed',
-          },
-        ]}
+    <PressScale
+      onPress={onPress}
+      style={[
+        styles.fill,
+        styles.card,
+        !dashed && elevation.card,
+        {
+          backgroundColor: palette.surfaceContainerLowest,
+          borderRadius: radius.xl,
+          padding: spacing.md,
+          gap: spacing.md,
+        },
+        dashed && {
+          borderWidth: 1,
+          borderColor: palette.outlineVariant,
+          borderStyle: 'dashed',
+        },
+      ]}
+    >
+      <View style={[styles.iconCircle, { backgroundColor: palette[iconBgToken] }]}>
+        <AppIcon name={iconName} size="md" color={iconFgToken} />
+      </View>
+      <Text
+        variant="labelMd"
+        color={dashed ? 'onSurfaceVariant' : 'onSurface'}
+        numberOfLines={2}
       >
-        <View style={[styles.iconCircle, { backgroundColor: palette[iconBgToken] }]}>
-          <AppIcon name={iconName} size="md" color={iconFgToken} />
-        </View>
-        <Text
-          variant="labelMd"
-          color={dashed ? 'onSurfaceVariant' : 'onSurface'}
-          numberOfLines={2}
-        >
-          {label}
-        </Text>
-      </Pressable>
-    </Animated.View>
+        {label}
+      </Text>
+    </PressScale>
   );
 }
 
