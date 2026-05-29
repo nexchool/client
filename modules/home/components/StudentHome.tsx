@@ -2,7 +2,6 @@ import React from 'react';
 import { RefreshControl, ScrollView, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
-import Svg, { Circle } from 'react-native-svg';
 import { useTheme } from '@/common/theme';
 import { Text } from '@/common/components/Text';
 import { AppIcon } from '@/common/components/AppIcon';
@@ -13,37 +12,7 @@ import { HomeSectionHeader } from './HomeSectionHeader';
 import { Skeleton } from '@/common/components/Skeleton';
 import { EmptyState } from '@/common/components/EmptyState';
 import { Button } from '@/common/components/Button';
-
-function CircularProgress({ value, size, palette }: { value: number; size: number; palette: any }) {
-  const stroke = 3;
-  const radius = (size - stroke) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (Math.min(100, Math.max(0, value)) / 100) * circumference;
-  return (
-    <Svg width={size} height={size}>
-      <Circle
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        stroke={palette.surfaceContainerHighest}
-        strokeWidth={stroke}
-        fill="none"
-      />
-      <Circle
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        stroke={palette.primary}
-        strokeWidth={stroke}
-        fill="none"
-        strokeDasharray={`${circumference} ${circumference}`}
-        strokeDashoffset={offset}
-        strokeLinecap="round"
-        transform={`rotate(-90 ${size / 2} ${size / 2})`}
-      />
-    </Svg>
-  );
-}
+import { ProgressRing } from './ProgressRing';
 
 export function StudentHome() {
   const { t } = useTranslation('home');
@@ -229,7 +198,7 @@ export function StudentHome() {
               {t('student.target', { defaultValue: 'Target: {{n}}%', n: attendanceTarget })}
             </Text>
           </View>
-          <CircularProgress value={Number(attendancePct)} size={64} palette={palette} />
+          <ProgressRing value={Number(attendancePct)} size={64} />
         </View>
         <View
           style={[
