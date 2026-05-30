@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Alert, Linking, Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Linking, Modal, Pressable, ScrollView, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/common/theme';
-import { ScreenContainer } from '@/common/components/ScreenContainer';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
+import { PressScale } from '@/common/components/PressScale';
 import { Skeleton } from '@/common/components/Skeleton';
 import { Button } from '@/common/components/Button';
 import { Link } from '@/common/components/Link';
@@ -17,11 +18,11 @@ import {
   useRecallAnnouncement,
 } from '../hooks/useAnnouncements';
 import { MarkdownView } from '../components/MarkdownView';
-import { STATUS_LABEL } from '../constants';
+import { STATUS_LABEL, statusAccent } from '../constants';
 
 export default function AnnouncementDetailScreen() {
   const { t } = useTranslation('announcements');
-  const { palette, spacing, radius, typography, elevation } = useTheme();
+  const { palette, spacing, radius, elevation } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { isAdmin } = useUiRole();
   const detail = useAnnouncement(id);
@@ -34,9 +35,9 @@ export default function AnnouncementDetailScreen() {
 
   if (detail.isLoading || !detail.data) {
     return (
-      <ScreenContainer>
-        <Skeleton width="100%" height={400} radius={16} />
-      </ScreenContainer>
+      <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg }}>
+        <Skeleton width="100%" height={400} radius={radius.lg} />
+      </View>
     );
   }
 
@@ -44,21 +45,17 @@ export default function AnnouncementDetailScreen() {
   const isRecalled = a.status === 'recalled';
   const canRecall = isAdmin && a.status === 'published';
   const canEdit = isAdmin && a.status !== 'recalled';
+  const accent = statusAccent(a.status);
 
   const handleAttachmentTap = async (attachmentId: string) => {
     try {
       const res = await announcementService.downloadAttachment(attachmentId);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const url = (res as any)?.url;
+      const url = res?.url;
       if (!url) throw new Error('No URL returned');
       await Linking.openURL(url);
     } catch (err: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const e = err as any;
-      Alert.alert(
-        t('attachment.error', { defaultValue: 'Could not open file' }),
-        e?.message ?? 'Try again',
-      );
+      const message = err instanceof Error ? err.message : 'Try again';
+      Alert.alert(t('attachment.error', { defaultValue: 'Could not open file' }), message);
     }
   };
 
@@ -68,34 +65,13 @@ export default function AnnouncementDetailScreen() {
       setRecallVisible(false);
       setRecallReason('');
     } catch (err: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const e = err as any;
-      Alert.alert(
-        t('recall.error', { defaultValue: 'Could not recall' }),
-        e?.message ?? 'Try again',
-      );
+      const message = err instanceof Error ? err.message : 'Try again';
+      Alert.alert(t('recall.error', { defaultValue: 'Could not recall' }), message);
     }
   };
 
-  const statusBg =
-    a.status === 'published'
-      ? `${palette.primary}22`
-      : a.status === 'scheduled'
-        ? `${palette.warning}22`
-        : a.status === 'recalled'
-          ? `${palette.error}22`
-          : `${palette.outlineVariant}66`;
-  const statusFg =
-    a.status === 'published'
-      ? palette.primary
-      : a.status === 'scheduled'
-        ? palette.warning
-        : a.status === 'recalled'
-          ? palette.error
-          : palette.onSurfaceVariant;
-
   return (
-    <ScreenContainer>
+    <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg }}>
       <View
         style={{
           flexDirection: 'row',
@@ -103,24 +79,23 @@ export default function AnnouncementDetailScreen() {
           alignItems: 'center',
         }}
       >
-        <Pressable
+        <AppIcon
+          name="chevron-back"
+          size="lg"
+          color="onSurface"
           onPress={() => router.back()}
-          hitSlop={12}
-          style={{ width: 44, height: 44, justifyContent: 'center' }}
-        >
-          <Ionicons name="chevron-back" size={24} color={palette.onSurface} />
-        </Pressable>
+          accessibilityLabel={t('back', { defaultValue: 'Back' })}
+        />
         {isAdmin ? (
           <View style={{ flexDirection: 'row', gap: spacing.md }}>
             {canEdit ? (
               <Link
                 onPress={() =>
                   router.push(
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     {
                       pathname: '/(protected)/announcements/[id]/edit',
                       params: { id: a.id },
-                    } as any,
+                    } as never,
                   )
                 }
               >
@@ -136,16 +111,19 @@ export default function AnnouncementDetailScreen() {
         ) : null}
       </View>
 
-      <ScrollView contentContainerStyle={{ gap: spacing.lg, paddingBottom: 100 }}>
+      <ScrollView
+        contentContainerStyle={{ gap: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.xl * 2 }}
+        showsVerticalScrollIndicator={false}
+      >
         <View
           style={[
-            elevation.card,
             {
               backgroundColor: palette.surfaceContainerLowest,
               borderRadius: radius.xl,
               padding: spacing.lg,
               gap: spacing.md,
             },
+            elevation.card,
           ]}
         >
           <View
@@ -156,24 +134,24 @@ export default function AnnouncementDetailScreen() {
               gap: spacing.sm,
             }}
           >
-            <Text style={[typography.display, { color: palette.onSurface, flex: 1 }]}>
+            <Text variant="display" color="onSurface" style={{ flex: 1 }}>
               {a.title}
             </Text>
             <View
               style={{
-                backgroundColor: statusBg,
+                backgroundColor: palette.surfaceContainer,
                 paddingHorizontal: spacing.sm,
-                paddingVertical: 4,
+                paddingVertical: spacing.xs,
                 borderRadius: radius.full,
               }}
             >
-              <Text style={[typography.labelSm, { color: statusFg }]}>
+              <Text variant="labelSm" color={accent}>
                 {STATUS_LABEL[a.status] ?? a.status}
               </Text>
             </View>
           </View>
 
-          <Text style={[typography.labelSm, { color: palette.onSurfaceVariant }]}>
+          <Text variant="labelSm" color="onSurfaceVariant">
             {a.author_name ?? 'Admin'}
             {a.published_at
               ? ` · ${new Date(a.published_at).toLocaleString()}`
@@ -188,23 +166,16 @@ export default function AnnouncementDetailScreen() {
           {isRecalled ? (
             <View
               style={{
-                backgroundColor: `${palette.error}22`,
+                backgroundColor: palette.errorContainer,
                 padding: spacing.md,
                 borderRadius: radius.lg,
               }}
             >
-              <Text
-                style={[
-                  typography.labelSm,
-                  { color: palette.error, fontWeight: '600' },
-                ]}
-              >
+              <Text variant="labelSm" color="onErrorContainer">
                 {t('detail.recalled', { defaultValue: 'Recalled' })}
               </Text>
               {a.recalled_reason ? (
-                <Text
-                  style={[typography.bodyMd, { color: palette.error, marginTop: 4 }]}
-                >
+                <Text variant="bodyMd" color="onErrorContainer" style={{ marginTop: spacing.xs }}>
                   {a.recalled_reason}
                 </Text>
               ) : null}
@@ -217,16 +188,16 @@ export default function AnnouncementDetailScreen() {
         {a.attachments && a.attachments.length > 0 ? (
           <View
             style={[
-              elevation.card,
               {
                 backgroundColor: palette.surfaceContainerLowest,
                 borderRadius: radius.xl,
                 padding: spacing.lg,
                 gap: spacing.sm,
               },
+              elevation.card,
             ]}
           >
-            <Text style={[typography.labelMd, { color: palette.onSurfaceVariant }]}>
+            <Text variant="labelMd" color="onSurfaceVariant">
               {t('detail.attachments', { defaultValue: 'Attachments' })}
             </Text>
             {a.attachments.map((att) => (
@@ -242,39 +213,27 @@ export default function AnnouncementDetailScreen() {
                   gap: spacing.sm,
                 })}
               >
-                <Ionicons
-                  name="document-attach-outline"
-                  size={20}
-                  color={palette.primary}
-                />
-                <Text
-                  style={[typography.labelMd, { color: palette.onSurface, flex: 1 }]}
-                  numberOfLines={1}
-                >
+                <AppIcon name="document-attach-outline" size="md" color="primary" />
+                <Text variant="labelMd" color="onSurface" style={{ flex: 1 }} numberOfLines={1}>
                   {att.original_filename ?? 'file'}
                 </Text>
-                <Ionicons
-                  name="download-outline"
-                  size={20}
-                  color={palette.onSurfaceVariant}
-                />
+                <AppIcon name="download-outline" size="md" color="onSurfaceVariant" />
               </Pressable>
             ))}
           </View>
         ) : null}
 
         {isAdmin ? (
-          <Pressable
+          <PressScale
             onPress={() =>
               router.push(
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 {
                   pathname: '/(protected)/announcements/[id]/recipients',
                   params: { id: a.id },
-                } as any,
+                } as never,
               )
             }
-            style={({ pressed }) => ({
+            style={{
               padding: spacing.md,
               borderRadius: radius.lg,
               backgroundColor: palette.surfaceContainerLowest,
@@ -283,24 +242,19 @@ export default function AnnouncementDetailScreen() {
               flexDirection: 'row',
               justifyContent: 'space-between',
               alignItems: 'center',
-              opacity: pressed ? 0.85 : 1,
-            })}
+            }}
           >
-            <Text style={[typography.labelMd, { color: palette.onSurface }]}>
+            <Text variant="labelMd" color="onSurface">
               {t('detail.viewRecipients', { defaultValue: 'View recipients' })}
             </Text>
-            <Ionicons
-              name="chevron-forward"
-              size={20}
-              color={palette.onSurfaceVariant}
-            />
-          </Pressable>
+            <AppIcon name="chevron-forward" size="md" color="onSurfaceVariant" />
+          </PressScale>
         ) : null}
 
         {a.revision_count > 1 ? (
-          <Pressable
+          <PressScale
             onPress={() => setShowRevisions((x) => !x)}
-            style={({ pressed }) => ({
+            style={{
               padding: spacing.md,
               borderRadius: radius.lg,
               backgroundColor: palette.surfaceContainerLowest,
@@ -309,18 +263,13 @@ export default function AnnouncementDetailScreen() {
               flexDirection: 'row',
               justifyContent: 'space-between',
               alignItems: 'center',
-              opacity: pressed ? 0.85 : 1,
-            })}
+            }}
           >
-            <Text style={[typography.labelMd, { color: palette.onSurface }]}>
+            <Text variant="labelMd" color="onSurface">
               {t('detail.revisions', { defaultValue: 'Revisions' })} ({a.revision_count})
             </Text>
-            <Ionicons
-              name={showRevisions ? 'chevron-up' : 'chevron-down'}
-              size={20}
-              color={palette.onSurfaceVariant}
-            />
-          </Pressable>
+            <AppIcon name={showRevisions ? 'chevron-up' : 'chevron-down'} size="md" color="onSurfaceVariant" />
+          </PressScale>
         ) : null}
 
         {showRevisions && revisionsQuery.data ? (
@@ -334,22 +283,18 @@ export default function AnnouncementDetailScreen() {
                   backgroundColor: palette.surfaceContainerLowest,
                   borderWidth: 1,
                   borderColor: palette.outlineVariant,
-                  gap: 4,
+                  gap: spacing.xs,
                 }}
               >
-                <Text
-                  style={[typography.labelSm, { color: palette.onSurfaceVariant }]}
-                >
+                <Text variant="labelSm" color="onSurfaceVariant">
                   v{r.revision_number} · {r.edited_by_name ?? 'Admin'} ·{' '}
                   {r.edited_at ? new Date(r.edited_at).toLocaleString() : ''}
                 </Text>
-                <Text style={[typography.labelMd, { color: palette.onSurface }]}>
+                <Text variant="labelMd" color="onSurface">
                   {r.title}
                 </Text>
                 {r.edit_note ? (
-                  <Text
-                    style={[typography.labelSm, { color: palette.onSurfaceVariant }]}
-                  >
+                  <Text variant="labelSm" color="onSurfaceVariant">
                     {r.edit_note}
                   </Text>
                 ) : null}
@@ -385,15 +330,15 @@ export default function AnnouncementDetailScreen() {
                 style={{
                   width: 40,
                   height: 4,
-                  borderRadius: 2,
+                  borderRadius: radius.sm,
                   backgroundColor: palette.outlineVariant,
                 }}
               />
             </View>
-            <Text style={[typography.headlineMd, { color: palette.onSurface }]}>
+            <Text variant="headlineMd" color="onSurface">
               {t('recall.title', { defaultValue: 'Recall announcement' })}
             </Text>
-            <Text style={[typography.bodyMd, { color: palette.onSurfaceVariant }]}>
+            <Text variant="bodyMd" color="onSurfaceVariant">
               {t('recall.body', {
                 defaultValue: 'A recall notification will be sent to all recipients.',
               })}
@@ -426,6 +371,6 @@ export default function AnnouncementDetailScreen() {
           </Pressable>
         </Pressable>
       </Modal>
-    </ScreenContainer>
+    </View>
   );
 }

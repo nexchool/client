@@ -1,8 +1,9 @@
 import React from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Alert, Pressable, View } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import { useTheme } from '@/common/theme';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
 import {
   useUploadAnnouncementAttachment,
   useDeleteAnnouncementAttachment,
@@ -22,7 +23,7 @@ export function AttachmentUploader({
   onAttachmentAdded,
   onAttachmentRemoved,
 }: Props) {
-  const { palette, spacing, radius, typography } = useTheme();
+  const { palette, spacing, radius } = useTheme();
   const uploadMutation = useUploadAnnouncementAttachment();
   const deleteMutation = useDeleteAnnouncementAttachment();
 
@@ -37,9 +38,8 @@ export function AttachmentUploader({
       })) as unknown as AnnouncementAttachment;
       onAttachmentAdded(att);
     } catch (err: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const e = err as any;
-      Alert.alert('Upload failed', e?.message ?? 'Try again');
+      const message = err instanceof Error ? err.message : 'Try again';
+      Alert.alert('Upload failed', message);
     }
   };
 
@@ -48,15 +48,14 @@ export function AttachmentUploader({
       await deleteMutation.mutateAsync(id);
       onAttachmentRemoved(id);
     } catch (err: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const e = err as any;
-      Alert.alert('Delete failed', e?.message ?? 'Try again');
+      const message = err instanceof Error ? err.message : 'Try again';
+      Alert.alert('Delete failed', message);
     }
   };
 
   return (
     <View style={{ gap: spacing.sm }}>
-      <Text style={[typography.labelMd, { color: palette.onSurfaceVariant }]}>Attachments</Text>
+      <Text variant="labelMd" color="onSurfaceVariant">Attachments</Text>
       {attachments.map((a) => (
         <View
           key={a.id}
@@ -72,16 +71,20 @@ export function AttachmentUploader({
           }}
         >
           <View style={{ flex: 1 }}>
-            <Text style={[typography.labelMd, { color: palette.onSurface }]} numberOfLines={1}>
+            <Text variant="labelMd" color="onSurface" numberOfLines={1}>
               {a.original_filename ?? 'file'}
             </Text>
-            <Text style={[typography.labelSm, { color: palette.onSurfaceVariant }]}>
+            <Text variant="labelSm" color="onSurfaceVariant">
               {a.content_type ?? ''}
             </Text>
           </View>
-          <Pressable onPress={() => handleDelete(a.id)} hitSlop={8}>
-            <Ionicons name="close-circle-outline" size={22} color={palette.error} />
-          </Pressable>
+          <AppIcon
+            name="close-circle-outline"
+            size="lg"
+            color="error"
+            onPress={() => handleDelete(a.id)}
+            accessibilityLabel="Remove attachment"
+          />
         </View>
       ))}
       <Pressable
@@ -100,8 +103,8 @@ export function AttachmentUploader({
           gap: spacing.sm,
         })}
       >
-        <Ionicons name="add" size={20} color={palette.primary} />
-        <Text style={[typography.labelMd, { color: palette.primary }]}>
+        <AppIcon name="add" size="md" color="primary" />
+        <Text variant="labelMd" color="primary">
           {uploadMutation.isPending ? 'Uploading…' : 'Add attachment'}
         </Text>
       </Pressable>

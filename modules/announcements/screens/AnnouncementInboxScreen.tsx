@@ -1,12 +1,12 @@
 // client/modules/announcements/screens/AnnouncementInboxScreen.tsx
 import React, { useMemo, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
-import { ScreenContainer } from '@/common/components/ScreenContainer';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
 import { EmptyState } from '@/common/components/EmptyState';
-import { Ionicons } from '@expo/vector-icons';
 import { useInbox } from '../hooks/useAnnouncements';
 import { AnnouncementRow } from '../components/AnnouncementRow';
 import type { Announcement } from '../types';
@@ -21,7 +21,7 @@ const FILTERS: { value: Filter; label: string }[] = [
 
 export default function AnnouncementInboxScreen() {
   const { t } = useTranslation('announcements');
-  const { palette, spacing, radius, typography } = useTheme();
+  const { palette, spacing, radius } = useTheme();
   const [filter, setFilter] = useState<Filter>('all');
   const { data: announcements = [], isLoading, isRefetching, refetch } = useInbox();
 
@@ -32,13 +32,12 @@ export default function AnnouncementInboxScreen() {
   }, [announcements, filter]);
 
   const handleRowPress = (a: Announcement) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    router.push({ pathname: '/(protected)/announcements/[id]', params: { id: a.id } } as any);
+    router.push({ pathname: '/(protected)/announcements/[id]', params: { id: a.id } } as never);
   };
 
   return (
-    <ScreenContainer>
-      <Text style={[typography.display, { color: palette.onSurface }]}>
+    <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg }}>
+      <Text variant="display" color="onSurface">
         {t('inbox.title', { defaultValue: 'Announcements' })}
       </Text>
 
@@ -62,9 +61,7 @@ export default function AnnouncementInboxScreen() {
                 justifyContent: 'center',
               })}
             >
-              <Text
-                style={[typography.labelMd, { color: active ? palette.onTertiaryContainer : palette.onSurface }]}
-              >
+              <Text variant="labelMd" color={active ? 'onTertiaryContainer' : 'onSurface'}>
                 {f.label}
               </Text>
             </Pressable>
@@ -81,15 +78,16 @@ export default function AnnouncementInboxScreen() {
         ListEmptyComponent={
           !isLoading ? (
             <EmptyState
-              icon={<Ionicons name="megaphone-outline" size={28} color={palette.onSurfaceVariant} />}
+              icon={<AppIcon name="megaphone-outline" size="xl" color="onSurfaceVariant" />}
               title={t('inbox.empty.title', { defaultValue: 'No announcements yet' })}
               description={t('inbox.empty.body', { defaultValue: "When admins send announcements, they'll show up here." })}
             />
           ) : null
         }
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: spacing.xl * 2 }}
       />
-    </ScreenContainer>
+    </View>
   );
 }

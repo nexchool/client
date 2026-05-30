@@ -1,11 +1,12 @@
 import React from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import { useTheme } from '@/common/theme';
+import { Text } from '@/common/components/Text';
 
 type Props = { readCount: number; totalCount: number };
 
 export function ReadReceiptCounter({ readCount, totalCount }: Props) {
-  const { palette, spacing, radius, typography } = useTheme();
+  const { palette, spacing, radius } = useTheme();
   const pct = totalCount > 0 ? Math.round((readCount / totalCount) * 100) : 0;
   return (
     <View
@@ -15,14 +16,14 @@ export function ReadReceiptCounter({ readCount, totalCount }: Props) {
         backgroundColor: palette.surfaceContainerLowest,
         borderWidth: 1,
         borderColor: palette.outlineVariant,
-        gap: 4,
+        gap: spacing.xs,
       }}
     >
-      <Text style={[typography.labelSm, { color: palette.onSurfaceVariant }]}>Read receipts</Text>
-      <Text style={[typography.headlineMd, { color: palette.onSurface }]}>
+      <Text variant="labelSm" color="onSurfaceVariant">Read receipts</Text>
+      <Text variant="headlineMd" color="onSurface">
         {readCount} / {totalCount}
       </Text>
-      <Text style={[typography.labelSm, { color: palette.onSurfaceVariant }]}>{pct}% read</Text>
+      <Text variant="labelSm" color="onSurfaceVariant">{pct}% read</Text>
     </View>
   );
 }

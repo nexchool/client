@@ -1,6 +1,7 @@
 import React from 'react';
-import { Modal, Pressable, Text, View, FlatList } from 'react-native';
+import { Modal, Pressable, View, FlatList } from 'react-native';
 import { useTheme } from '@/common/theme';
+import { Text } from '@/common/components/Text';
 import { useTemplates } from '../hooks/useAnnouncements';
 import type { SystemTemplate } from '../types';
 
@@ -11,7 +12,7 @@ type Props = {
 };
 
 export function TemplatePickerSheet({ visible, onClose, onPick }: Props) {
-  const { palette, spacing, radius, typography } = useTheme();
+  const { palette, spacing, radius } = useTheme();
   const { data: templates = [] } = useTemplates();
 
   return (
@@ -30,9 +31,9 @@ export function TemplatePickerSheet({ visible, onClose, onPick }: Props) {
           }}
         >
           <View style={{ alignItems: 'center' }}>
-            <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: palette.outlineVariant }} />
+            <View style={{ width: 40, height: 4, borderRadius: radius.sm, backgroundColor: palette.outlineVariant }} />
           </View>
-          <Text style={[typography.headlineMd, { color: palette.onSurface }]}>Pick a template</Text>
+          <Text variant="headlineMd" color="onSurface">Pick a template</Text>
           <FlatList
             data={templates}
             keyExtractor={(t) => t.id}
@@ -49,11 +50,8 @@ export function TemplatePickerSheet({ visible, onClose, onPick }: Props) {
                   marginBottom: spacing.sm,
                 })}
               >
-                <Text style={[typography.labelMd, { color: palette.onSurface }]}>{item.title}</Text>
-                <Text
-                  style={[typography.labelSm, { color: palette.onSurfaceVariant, marginTop: 4 }]}
-                  numberOfLines={2}
-                >
+                <Text variant="labelMd" color="onSurface">{item.title}</Text>
+                <Text variant="labelSm" color="onSurfaceVariant" style={{ marginTop: spacing.xs }} numberOfLines={2}>
                   {item.body_markdown.replace(/[*_#]/g, '').slice(0, 80)}…
                 </Text>
               </Pressable>

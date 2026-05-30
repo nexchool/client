@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, BackHandler, Pressable, ScrollView, Text, View, Platform } from 'react-native';
+import { Alert, BackHandler, KeyboardAvoidingView, ScrollView, View, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Ionicons } from '@expo/vector-icons';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { useTheme } from '@/common/theme';
-import { ScreenContainer } from '@/common/components/ScreenContainer';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
 import { Button } from '@/common/components/Button';
 import { Link } from '@/common/components/Link';
 import { Skeleton } from '@/common/components/Skeleton';
@@ -31,7 +31,7 @@ import type { AnnouncementAttachment, AudienceJson, SystemTemplate } from '../ty
 
 export default function AnnouncementComposerScreen() {
   const { t } = useTranslation('announcements');
-  const { palette, spacing, typography } = useTheme();
+  const { palette, spacing, radius } = useTheme();
   const params = useLocalSearchParams<{ id?: string }>();
   const isEdit = !!params.id;
 
@@ -142,9 +142,8 @@ export default function AnnouncementComposerScreen() {
       await persistDraft(data);
       router.back();
     } catch (err: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const e = err as any;
-      Alert.alert(t('error.save', { defaultValue: 'Could not save' }), e?.message ?? 'Try again');
+      const message = err instanceof Error ? err.message : 'Try again';
+      Alert.alert(t('error.save', { defaultValue: 'Could not save' }), message);
     }
   };
 
@@ -154,9 +153,8 @@ export default function AnnouncementComposerScreen() {
       await publishMutation.mutateAsync(id);
       router.replace({ pathname: '/(protected)/announcements/[id]', params: { id } } as never);
     } catch (err: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const e = err as any;
-      Alert.alert(t('error.send', { defaultValue: 'Could not send' }), e?.message ?? 'Try again');
+      const message = err instanceof Error ? err.message : 'Try again';
+      Alert.alert(t('error.send', { defaultValue: 'Could not send' }), message);
     }
   };
 
@@ -173,9 +171,8 @@ export default function AnnouncementComposerScreen() {
       await scheduleMutation.mutateAsync({ id, scheduled_at: scheduledDate.toISOString() });
       router.back();
     } catch (err: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const e = err as any;
-      Alert.alert(t('error.schedule.title', { defaultValue: 'Could not schedule' }), e?.message ?? 'Try again');
+      const message = err instanceof Error ? err.message : 'Try again';
+      Alert.alert(t('error.schedule.title', { defaultValue: 'Could not schedule' }), message);
     }
   };
 
@@ -185,9 +182,8 @@ export default function AnnouncementComposerScreen() {
       await unscheduleMutation.mutateAsync(currentAnnouncementId);
       router.back();
     } catch (err: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const e = err as any;
-      Alert.alert(t('error.unschedule', { defaultValue: 'Could not unschedule' }), e?.message ?? 'Try again');
+      const message = err instanceof Error ? err.message : 'Try again';
+      Alert.alert(t('error.unschedule', { defaultValue: 'Could not unschedule' }), message);
     }
   };
 
@@ -212,22 +208,22 @@ export default function AnnouncementComposerScreen() {
 
   if (isEdit && detail.isLoading && !detail.data) {
     return (
-      <ScreenContainer>
-        <Skeleton width="100%" height={400} radius={16} />
-      </ScreenContainer>
+      <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg }}>
+        <Skeleton width="100%" height={400} radius={radius.lg} />
+      </View>
     );
   }
 
   if (isRecalled) {
     return (
-      <ScreenContainer>
-        <Text style={[typography.bodyMd, { color: palette.error, marginTop: spacing.xl }]}>
+      <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg }}>
+        <Text variant="bodyMd" color="error" style={{ marginTop: spacing.xl }}>
           {t('readonly.recalled', { defaultValue: 'This announcement has been recalled and cannot be edited.' })}
         </Text>
         <Button variant="ghost" onPress={() => router.back()}>
           {t('back', { defaultValue: 'Back' })}
         </Button>
-      </ScreenContainer>
+      </View>
     );
   }
 
@@ -239,17 +235,25 @@ export default function AnnouncementComposerScreen() {
     unscheduleMutation.isPending;
 
   return (
-    <ScreenContainer scrollable={false} keyboardOffset={20}>
+    <KeyboardAvoidingView
+      style={{ flex: 1, paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={20}
+    >
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Pressable onPress={handleBack} hitSlop={12} style={{ width: 44, height: 44, justifyContent: 'center' }}>
-          <Ionicons name="chevron-back" size={24} color={palette.onSurface} />
-        </Pressable>
+        <AppIcon
+          name="chevron-back"
+          size="lg"
+          color="onSurface"
+          onPress={handleBack}
+          accessibilityLabel={t('back', { defaultValue: 'Back' })}
+        />
         <Link onPress={() => setTemplateSheetVisible(true)}>
           {t('templates.link', { defaultValue: 'Templates' })}
         </Link>
       </View>
 
-      <Text style={[typography.display, { color: palette.onSurface, marginTop: spacing.xs }]}>
+      <Text variant="display" color="onSurface" style={{ marginTop: spacing.xs }}>
         {isEdit
           ? t('compose.editTitle', { defaultValue: 'Edit announcement' })
           : t('compose.newTitle', { defaultValue: 'New announcement' })}
@@ -274,7 +278,7 @@ export default function AnnouncementComposerScreen() {
             <View
               style={{
                 padding: spacing.md,
-                borderRadius: 12,
+                borderRadius: radius.md,
                 backgroundColor: palette.surfaceContainerLowest,
                 borderWidth: 1,
                 borderColor: palette.outlineVariant,
@@ -398,6 +402,6 @@ export default function AnnouncementComposerScreen() {
         onClose={() => setTemplateSheetVisible(false)}
         onPick={handleTemplatePick}
       />
-    </ScreenContainer>
+    </KeyboardAvoidingView>
   );
 }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Pressable, Text, View, FlatList } from 'react-native';
+import { Modal, Pressable, View, FlatList } from 'react-native';
 import { useTheme } from '@/common/theme';
+import { Text } from '@/common/components/Text';
 import { Input } from '@/common/components/Input';
 import { Link } from '@/common/components/Link';
 import { useClasses } from '@/modules/finance/hooks/useFinance';
@@ -22,7 +23,7 @@ const DEFAULT_BY_SCOPE: Record<AudienceScope, AudienceJson> = {
 };
 
 export function AudiencePicker({ value, onChange, error }: Props) {
-  const { palette, spacing, radius, typography } = useTheme();
+  const { palette, spacing, radius } = useTheme();
   const { data: classes = [] } = useClasses();
   const { students, fetchStudents } = useStudents();
   const [studentSheetVisible, setStudentSheetVisible] = useState(false);
@@ -66,7 +67,7 @@ export function AudiencePicker({ value, onChange, error }: Props) {
 
   return (
     <View style={{ gap: spacing.sm }}>
-      <Text style={[typography.labelMd, { color: palette.onSurfaceVariant }]}>Audience</Text>
+      <Text variant="labelMd" color="onSurfaceVariant">Audience</Text>
 
       {/* Scope segments */}
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
@@ -89,9 +90,7 @@ export function AudiencePicker({ value, onChange, error }: Props) {
                 justifyContent: 'center',
               })}
             >
-              <Text
-                style={[typography.labelMd, { color: active ? palette.onTertiaryContainer : palette.onSurface }]}
-              >
+              <Text variant="labelMd" color={active ? 'onTertiaryContainer' : 'onSurface'}>
                 {opt.label}
               </Text>
             </Pressable>
@@ -101,7 +100,7 @@ export function AudiencePicker({ value, onChange, error }: Props) {
 
       {/* Secondary picker per scope */}
       {value.scope === 'all' ? (
-        <Text style={[typography.bodyMd, { color: palette.onSurfaceVariant }]}>
+        <Text variant="bodyMd" color="onSurfaceVariant">
           Everyone in the school will receive this.
         </Text>
       ) : null}
@@ -127,12 +126,7 @@ export function AudiencePicker({ value, onChange, error }: Props) {
                   justifyContent: 'center',
                 })}
               >
-                <Text
-                  style={[
-                    typography.labelMd,
-                    { color: active ? palette.onPrimaryContainer : palette.onSurface },
-                  ]}
-                >
+                <Text variant="labelMd" color={active ? 'onPrimaryContainer' : 'onSurface'}>
                   {r.label}
                 </Text>
               </Pressable>
@@ -162,12 +156,7 @@ export function AudiencePicker({ value, onChange, error }: Props) {
                   justifyContent: 'center',
                 })}
               >
-                <Text
-                  style={[
-                    typography.labelMd,
-                    { color: active ? palette.onPrimaryContainer : palette.onSurface },
-                  ]}
-                >
+                <Text variant="labelMd" color={active ? 'onPrimaryContainer' : 'onSurface'}>
                   {c.name ?? c.id}
                 </Text>
               </Pressable>
@@ -189,7 +178,7 @@ export function AudiencePicker({ value, onChange, error }: Props) {
               opacity: pressed ? 0.9 : 1,
             })}
           >
-            <Text style={[typography.bodyMd, { color: palette.onSurface }]}>
+            <Text variant="bodyMd" color="onSurface">
               {(value.student_ids ?? []).length} student(s) selected · tap to edit
             </Text>
           </Pressable>
@@ -217,9 +206,9 @@ export function AudiencePicker({ value, onChange, error }: Props) {
                 }}
               >
                 <View style={{ alignItems: 'center' }}>
-                  <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: palette.outlineVariant }} />
+                  <View style={{ width: 40, height: 4, borderRadius: radius.sm, backgroundColor: palette.outlineVariant }} />
                 </View>
-                <Text style={[typography.headlineMd, { color: palette.onSurface }]}>Pick students</Text>
+                <Text variant="headlineMd" color="onSurface">Pick students</Text>
                 <Input
                   label=""
                   value={studentSearch}
@@ -245,8 +234,8 @@ export function AudiencePicker({ value, onChange, error }: Props) {
                           borderRadius: radius.md,
                         })}
                       >
-                        <Text style={[typography.bodyMd, { color: palette.onSurface }]}>{item.name ?? item.id}</Text>
-                        <Text style={[typography.labelSm, { color: palette.onSurfaceVariant }]}>
+                        <Text variant="bodyMd" color="onSurface">{item.name ?? item.id}</Text>
+                        <Text variant="labelSm" color="onSurfaceVariant">
                           {active ? '✓' : item.admission_number ?? ''}
                         </Text>
                       </Pressable>
@@ -266,7 +255,7 @@ export function AudiencePicker({ value, onChange, error }: Props) {
       ) : null}
 
       {error ? (
-        <Text style={[typography.labelSm, { color: palette.error, marginTop: 4 }]}>{error}</Text>
+        <Text variant="labelSm" color="error" style={{ marginTop: spacing.xs }}>{error}</Text>
       ) : null}
     </View>
   );

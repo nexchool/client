@@ -1,12 +1,12 @@
 // client/modules/announcements/screens/AnnouncementListScreen.tsx
 import React, { useState } from 'react';
-import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
-import { ScreenContainer } from '@/common/components/ScreenContainer';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
 import { EmptyState } from '@/common/components/EmptyState';
-import { Ionicons } from '@expo/vector-icons';
 import { useAnnouncementsList } from '../hooks/useAnnouncements';
 import { AnnouncementRow } from '../components/AnnouncementRow';
 import type { Announcement } from '../types';
@@ -21,18 +21,17 @@ const TABS: { value: Tab; label: string }[] = [
 
 export default function AnnouncementListScreen() {
   const { t } = useTranslation('announcements');
-  const { palette, spacing, radius, typography, elevation } = useTheme();
+  const { palette, spacing, radius, elevation } = useTheme();
   const [tab, setTab] = useState<Tab>('published');
   const { data: announcements = [], isLoading, isRefetching, refetch } = useAnnouncementsList(tab);
 
   const handleRowPress = (a: Announcement) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    router.push({ pathname: '/(protected)/announcements/[id]', params: { id: a.id } } as any);
+    router.push({ pathname: '/(protected)/announcements/[id]', params: { id: a.id } } as never);
   };
 
   return (
-    <ScreenContainer>
-      <Text style={[typography.display, { color: palette.onSurface }]}>
+    <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg }}>
+      <Text variant="display" color="onSurface">
         {t('list.title', { defaultValue: 'Announcements' })}
       </Text>
 
@@ -56,9 +55,7 @@ export default function AnnouncementListScreen() {
                 justifyContent: 'center',
               })}
             >
-              <Text
-                style={[typography.labelMd, { color: active ? palette.onTertiaryContainer : palette.onSurface }]}
-              >
+              <Text variant="labelMd" color={active ? 'onTertiaryContainer' : 'onSurface'}>
                 {tk.label}
               </Text>
             </Pressable>
@@ -75,28 +72,28 @@ export default function AnnouncementListScreen() {
         ListEmptyComponent={
           !isLoading ? (
             <EmptyState
-              icon={<Ionicons name="megaphone-outline" size={28} color={palette.onSurfaceVariant} />}
+              icon={<AppIcon name="megaphone-outline" size="xl" color="onSurfaceVariant" />}
               title={t(`list.empty.${tab}.title`, { defaultValue: 'Nothing here yet' })}
               description={t(`list.empty.${tab}.body`, { defaultValue: 'Tap + to compose a new announcement.' })}
             />
           ) : null
         }
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
-        contentContainerStyle={{ paddingBottom: 120 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: spacing.xl * 3 }}
       />
 
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="New announcement"
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        onPress={() => router.push('/(protected)/announcements/new' as any)}
+        accessibilityLabel={t('list.newA11y', { defaultValue: 'New announcement' })}
+        onPress={() => router.push('/(protected)/announcements/new' as never)}
         style={({ pressed }) => ({
           position: 'absolute',
-          bottom: 96,
-          right: 20,
+          bottom: spacing.lg,
+          right: spacing.marginMobile,
           width: 56,
           height: 56,
-          borderRadius: 28,
+          borderRadius: radius.full,
           backgroundColor: palette.primary,
           alignItems: 'center',
           justifyContent: 'center',
@@ -104,8 +101,8 @@ export default function AnnouncementListScreen() {
           ...elevation.card,
         })}
       >
-        <Ionicons name="add" size={28} color={palette.onPrimary} />
+        <AppIcon name="add" size="xl" color="onPrimary" />
       </Pressable>
-    </ScreenContainer>
+    </View>
   );
 }

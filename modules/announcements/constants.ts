@@ -1,5 +1,6 @@
 import type { SelectOption } from '@/common/forms';
-import type { AudienceRole } from './types';
+import type { Palette } from '@/common/theme';
+import type { AnnouncementStatus, AudienceRole } from './types';
 
 export const AUDIENCE_SCOPE_OPTIONS: SelectOption[] = [
   { value: 'all', label: 'Whole school' },
@@ -21,3 +22,18 @@ export const STATUS_LABEL: Record<string, string> = {
   published: 'Sent',
   recalled: 'Recalled',
 };
+
+/**
+ * Accent palette token per announcement status — matches the People/finance
+ * status-badge pattern (colored text on a soft surface container).
+ */
+export const STATUS_ACCENT: Record<AnnouncementStatus, keyof Palette> = {
+  published: 'primary',
+  scheduled: 'warning',
+  recalled: 'error',
+  draft: 'onSurfaceVariant',
+};
+
+export function statusAccent(status: string): keyof Palette {
+  return STATUS_ACCENT[status as AnnouncementStatus] ?? 'onSurfaceVariant';
+}
