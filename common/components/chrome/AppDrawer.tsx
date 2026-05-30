@@ -6,11 +6,10 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, usePathname } from 'expo-router';
 import Constants from 'expo-constants';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -24,6 +23,8 @@ import { useTheme } from '@/common/theme';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 import { useUiRole } from '@/modules/permissions/hooks/useUiRole';
 import { ProfileAvatar } from '@/common/components/ProfileAvatar';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
 
 type Role = 'admin' | 'teacher' | 'student' | 'parent' | 'unknown';
 
@@ -58,6 +59,25 @@ const ITEMS: readonly DrawerItem[] = [
   { key: 'my-transport', label: 'My Transport', icon: 'bus-outline', iconActive: 'bus', route: '/(protected)/my-transport', roles: ['student'], flag: 'transport' },
 ];
 
+/**
+ * `usePathname()` resolves Expo Router paths WITHOUT route-group segments,
+ * e.g. `/(protected)/attendance/overview` is reported as `/attendance/overview`.
+ * Strip group segments like `(protected)` so item routes can be matched against it.
+ */
+function stripRouteGroups(route: string): string {
+  const cleaned = route
+    .split('/')
+    .filter((segment) => !(segment.startsWith('(') && segment.endsWith(')')))
+    .join('/');
+  return cleaned.startsWith('/') ? cleaned : `/${cleaned}`;
+}
+
+function isItemActive(itemRoute: string, pathname: string): boolean {
+  const base = stripRouteGroups(itemRoute);
+  if (pathname === base) return true;
+  return pathname.startsWith(`${base}/`);
+}
+
 type Props = {
   visible: boolean;
   onClose: () => void;
@@ -69,7 +89,8 @@ const DRAWER_W = Math.round(SCREEN_W * DRAWER_WIDTH_RATIO);
 
 export function AppDrawer({ visible, onClose }: Props) {
   const { t } = useTranslation('common');
-  const { palette, spacing, radius, typography } = useTheme();
+  const { palette, spacing, radius } = useTheme();
+  const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const { user, isFeatureEnabled, logout, tenantName } = useAuth();
   const { isAdmin, isTeacher, isStudent, isParent } = useUiRole();
@@ -188,17 +209,11 @@ export function AppDrawer({ visible, onClose }: Props) {
           ]}
         >
           <ProfileAvatar size={48} name={userName} />
-          <View style={{ flex: 1 }}>
-            <Text
-              style={[typography.headlineMd, { color: palette.primary }]}
-              numberOfLines={1}
-            >
+          <View style={{ flex: 1, gap: spacing.xs }}>
+            <Text variant="titleSm" color="primary" numberOfLines={1}>
               {userName}
             </Text>
-            <Text
-              style={[typography.bodyMd, { color: palette.onSurfaceVariant }]}
-              numberOfLines={1}
-            >
+            <Text variant="bodySm" color="onSurfaceVariant" numberOfLines={1}>
               {roleLine}
             </Text>
           </View>
@@ -210,41 +225,50 @@ export function AppDrawer({ visible, onClose }: Props) {
         >
           {visibleItems.length === 0 ? (
             <View style={{ paddingHorizontal: spacing.lg, paddingVertical: spacing.xl }}>
-              <Text style={[typography.bodyMd, { color: palette.onSurfaceVariant }]}>
+              <Text variant="bodyMd" color="onSurfaceVariant">
                 {t('noModulesAvailable', {
                   defaultValue: "Your account doesn't have any modules available yet.",
                 })}
               </Text>
             </View>
           ) : (
-            visibleItems.map((item, idx) => (
-              <Pressable
-                key={item.key}
-                onPress={() => handleNav(item.route)}
-                style={({ pressed }) => [
-                  styles.row,
-                  {
-                    backgroundColor: pressed ? palette.surfaceContainerHigh : 'transparent',
-                    borderRadius: radius.lg,
-                    marginHorizontal: 8,
-                    paddingHorizontal: 16,
-                    paddingVertical: 12,
-                    gap: spacing.md,
-                    marginTop: idx > 0 && idx % 5 === 0 ? spacing.sm : 4,
-                  },
-                ]}
-              >
-                <Ionicons name={item.icon} size={22} color={palette.onSurfaceVariant} />
-                <Text
-                  style={[
-                    typography.labelMd,
-                    { color: palette.onSurfaceVariant, fontFamily: 'Inter_500Medium' },
+            visibleItems.map((item, idx) => {
+              const active = isItemActive(item.route, pathname);
+              return (
+                <Pressable
+                  key={item.key}
+                  onPress={() => handleNav(item.route)}
+                  style={({ pressed }) => [
+                    styles.row,
+                    {
+                      backgroundColor: active
+                        ? palette.primary
+                        : pressed
+                          ? palette.surfaceContainerHigh
+                          : 'transparent',
+                      borderRadius: radius.lg,
+                      marginHorizontal: spacing.sm,
+                      paddingHorizontal: spacing.md,
+                      paddingVertical: spacing.sm + spacing.xs,
+                      gap: spacing.md,
+                      marginTop: idx === 0 ? 0 : spacing.xs,
+                    },
                   ]}
                 >
-                  {item.label}
-                </Text>
-              </Pressable>
-            ))
+                  <AppIcon
+                    name={active ? item.iconActive : item.icon}
+                    size="lg"
+                    color={active ? 'onPrimary' : 'onSurfaceVariant'}
+                  />
+                  <Text
+                    variant={active ? 'labelLg' : 'labelMd'}
+                    color={active ? 'onPrimary' : 'onSurfaceVariant'}
+                  >
+                    {item.label}
+                  </Text>
+                </Pressable>
+              );
+            })
           )}
         </ScrollView>
 
@@ -252,28 +276,45 @@ export function AppDrawer({ visible, onClose }: Props) {
           style={{
             paddingHorizontal: spacing.lg,
             paddingTop: spacing.md,
+            gap: spacing.xs,
             borderTopWidth: 1,
             borderTopColor: palette.surfaceContainerHigh,
           }}
         >
-          <Pressable
-            onPress={() => handleNav('/(protected)/settings')}
-            style={({ pressed }) => [
-              styles.row,
-              {
-                backgroundColor: pressed ? palette.surfaceContainerHigh : 'transparent',
-                borderRadius: radius.lg,
-                paddingHorizontal: 16,
-                paddingVertical: 12,
-                gap: spacing.md,
-              },
-            ]}
-          >
-            <Ionicons name="settings-outline" size={22} color={palette.onSurfaceVariant} />
-            <Text style={[typography.labelMd, { color: palette.onSurfaceVariant }]}>
-              {t('settings', { defaultValue: 'Settings' })}
-            </Text>
-          </Pressable>
+          {(() => {
+            const settingsActive = isItemActive('/(protected)/settings', pathname);
+            return (
+              <Pressable
+                onPress={() => handleNav('/(protected)/settings')}
+                style={({ pressed }) => [
+                  styles.row,
+                  {
+                    backgroundColor: settingsActive
+                      ? palette.primary
+                      : pressed
+                        ? palette.surfaceContainerHigh
+                        : 'transparent',
+                    borderRadius: radius.lg,
+                    paddingHorizontal: spacing.md,
+                    paddingVertical: spacing.sm + spacing.xs,
+                    gap: spacing.md,
+                  },
+                ]}
+              >
+                <AppIcon
+                  name={settingsActive ? 'settings' : 'settings-outline'}
+                  size="lg"
+                  color={settingsActive ? 'onPrimary' : 'onSurfaceVariant'}
+                />
+                <Text
+                  variant={settingsActive ? 'labelLg' : 'labelMd'}
+                  color={settingsActive ? 'onPrimary' : 'onSurfaceVariant'}
+                >
+                  {t('settings', { defaultValue: 'Settings' })}
+                </Text>
+              </Pressable>
+            );
+          })()}
           <Pressable
             onPress={() => handleNav('/(protected)/help-support')}
             style={({ pressed }) => [
@@ -281,14 +322,14 @@ export function AppDrawer({ visible, onClose }: Props) {
               {
                 backgroundColor: pressed ? palette.surfaceContainerHigh : 'transparent',
                 borderRadius: radius.lg,
-                paddingHorizontal: 16,
-                paddingVertical: 12,
+                paddingHorizontal: spacing.md,
+                paddingVertical: spacing.sm + spacing.xs,
                 gap: spacing.md,
               },
             ]}
           >
-            <Ionicons name="help-circle-outline" size={22} color={palette.onSurfaceVariant} />
-            <Text style={[typography.labelMd, { color: palette.onSurfaceVariant }]}>
+            <AppIcon name="help-circle-outline" size="lg" color="onSurfaceVariant" />
+            <Text variant="labelMd" color="onSurfaceVariant">
               {t('helpSupport', { defaultValue: 'Help & Support' })}
             </Text>
           </Pressable>
@@ -300,34 +341,27 @@ export function AppDrawer({ visible, onClose }: Props) {
               {
                 backgroundColor: pressed ? palette.errorContainer : 'transparent',
                 borderRadius: radius.lg,
-                paddingHorizontal: 16,
-                paddingVertical: 12,
+                paddingHorizontal: spacing.md,
+                paddingVertical: spacing.sm + spacing.xs,
                 gap: spacing.sm,
-                marginTop: spacing.sm,
+                marginTop: spacing.xs,
               },
             ]}
           >
-            <Ionicons name="log-out-outline" size={22} color={palette.error} />
-            <Text
-              style={[
-                typography.labelMd,
-                { color: palette.error, fontFamily: 'Inter_600SemiBold' },
-              ]}
-            >
+            <AppIcon name="log-out-outline" size="lg" color="error" />
+            <Text variant="labelLg" color="error">
               {t('signOut', { defaultValue: 'Sign out' })}
             </Text>
           </Pressable>
 
           <Text
-            style={[
-              typography.labelSm,
-              {
-                color: palette.onSurfaceVariant,
-                opacity: 0.6,
-                textAlign: 'center',
-                marginTop: spacing.sm,
-              },
-            ]}
+            variant="labelSm"
+            color="onSurfaceVariant"
+            style={{
+              opacity: 0.6,
+              textAlign: 'center',
+              marginTop: spacing.sm,
+            }}
           >
             v{Constants.expoConfig?.version ?? '1.0.0'}
           </Text>
