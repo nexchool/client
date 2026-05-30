@@ -72,7 +72,7 @@ export const ClassListItem: React.FC<Props> = ({
                 },
               ]}
             >
-              <Text variant="labelSm" color="onPrimary" numberOfLines={1}>
+              <Text variant="labelSm" color="onPrimaryContainer" numberOfLines={1}>
                 {item.stream}
               </Text>
             </View>
@@ -102,7 +102,7 @@ export const ClassListItem: React.FC<Props> = ({
           <View style={styles.metaRow}>
             <AppIcon name="person-outline" size="md" color="onPrimary" />
             <View style={styles.metaText}>
-              <Text variant="labelSm" color="onPrimaryContainer" style={styles.metaLabel}>
+              <Text variant="labelSm" color="onPrimary" style={styles.metaLabel}>
                 {t("list.classTeacherLabel")}
               </Text>
               <Text variant="bodyMd" color="onPrimary" numberOfLines={1}>
