@@ -1,15 +1,17 @@
 import React, { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useTheme } from '@/common/theme';
+import { Text } from '@/common/components/Text';
 import type { WeeklyTimetable, WeeklyPeriod } from '../types';
 import { WeeklyGridCell } from './WeeklyGridCell';
 import { PeriodDetailSheet } from './PeriodDetailSheet';
 
-const TIME_COL_WIDTH = 60;
-const DAY_COL_WIDTH = 130;
-const CELL_HEIGHT = 72;
+const TIME_COL_WIDTH = 56;
+const DAY_COL_WIDTH = 140;
+const CELL_HEIGHT = 92;
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const ACCENTS = ['primary', 'secondary', 'tertiary'] as const;
 
 type Props = {
   data: WeeklyTimetable;
@@ -37,16 +39,32 @@ function isCurrentPeriod(period: WeeklyPeriod, dayDate: string, now = new Date()
 }
 
 export function WeeklyGrid({ data, secondaryField }: Props) {
-  const { palette, spacing, typography } = useTheme();
+  const { palette, spacing, radius } = useTheme();
   const [selectedPeriod, setSelectedPeriod] = useState<WeeklyPeriod | null>(null);
 
   const timeSlots = useMemo(() => collectTimeSlots(data), [data]);
   const today = new Date().toISOString().slice(0, 10);
 
+  // Stable accent per subject name so the same subject keeps one color.
+  const accentBySubject = useMemo(() => {
+    const map = new Map<string, (typeof ACCENTS)[number]>();
+    let i = 0;
+    for (const d of data.days) {
+      for (const p of d.periods) {
+        const key = p.subject?.name ?? p.id;
+        if (!map.has(key)) {
+          map.set(key, ACCENTS[i % ACCENTS.length]);
+          i += 1;
+        }
+      }
+    }
+    return map;
+  }, [data]);
+
   if (timeSlots.length === 0) {
     return (
       <View style={{ padding: spacing.xl, alignItems: 'center' }}>
-        <Text style={[typography.bodyMd, { color: palette.onSurfaceVariant }]}>
+        <Text variant="bodyMd" color="onSurfaceVariant">
           No periods this week.
         </Text>
       </View>
@@ -60,7 +78,7 @@ export function WeeklyGrid({ data, secondaryField }: Props) {
     <View style={{ flex: 1 }}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View>
-          <View style={[styles.row, { backgroundColor: palette.surface }]}>
+          <View style={styles.row}>
             <View style={{ width: TIME_COL_WIDTH }} />
             {sortedDays.map((d) => {
               const isToday = d.date === today;
@@ -71,30 +89,17 @@ export function WeeklyGrid({ data, secondaryField }: Props) {
                     width: DAY_COL_WIDTH,
                     paddingVertical: spacing.sm,
                     alignItems: 'center',
-                    backgroundColor: isToday ? `${palette.primary}14` : 'transparent',
+                    borderRadius: radius.md,
+                    backgroundColor: isToday ? palette.primaryContainer : 'transparent',
                   }}
                 >
-                  <Text
-                    style={[
-                      typography.labelSm,
-                      {
-                        color: isToday ? palette.primary : palette.onSurfaceVariant,
-                        textTransform: 'uppercase',
-                        letterSpacing: 1,
-                      },
-                    ]}
-                  >
+                  <Text variant="overline" color={isToday ? 'onPrimaryContainer' : 'onSurfaceVariant'}>
                     {DAY_LABELS[d.day_of_week] ?? ''}
                   </Text>
                   <Text
-                    style={[
-                      typography.labelMd,
-                      {
-                        color: isToday ? palette.primary : palette.onSurface,
-                        marginTop: 2,
-                        fontFamily: isToday ? 'Inter_600SemiBold' : 'Inter_500Medium',
-                      },
-                    ]}
+                    variant="labelMd"
+                    color={isToday ? 'onPrimaryContainer' : 'onSurface'}
+                    style={{ marginTop: 2 }}
                   >
                     {d.date.slice(8, 10)}
                   </Text>
@@ -110,17 +115,22 @@ export function WeeklyGrid({ data, secondaryField }: Props) {
                   style={{
                     width: TIME_COL_WIDTH,
                     height: CELL_HEIGHT,
-                    justifyContent: 'center',
-                    alignItems: 'center',
+                    justifyContent: 'flex-start',
+                    alignItems: 'flex-end',
+                    paddingTop: spacing.sm,
+                    paddingRight: spacing.xs,
                   }}
                 >
-                  <Text style={[typography.labelSm, { color: palette.onSurfaceVariant }]}>
+                  <Text variant="labelSm" color="onSurfaceVariant">
                     {slot}
                   </Text>
                 </View>
                 {sortedDays.map((d) => {
                   const period = d.periods.find((p) => p.start_time === slot) ?? null;
                   const current = period ? isCurrentPeriod(period, d.date) : false;
+                  const accent = period
+                    ? accentBySubject.get(period.subject?.name ?? period.id) ?? 'primary'
+                    : 'primary';
                   return (
                     <View key={d.day_of_week} style={{ width: DAY_COL_WIDTH, padding: 4 }}>
                       <WeeklyGridCell
@@ -128,6 +138,7 @@ export function WeeklyGrid({ data, secondaryField }: Props) {
                         width={DAY_COL_WIDTH - 8}
                         height={CELL_HEIGHT - 8}
                         isCurrent={current}
+                        accent={accent}
                         secondaryField={secondaryField}
                         onPress={period ? () => setSelectedPeriod(period) : undefined}
                       />

@@ -1,44 +1,41 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-  TouchableOpacity,
-  FlatList,
-  ActivityIndicator,
-  ScrollView,
-} from "react-native";
-import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { Colors } from "@/common/constants/colors";
-import { Spacing, Layout } from "@/common/constants/spacing";
+import { useTheme } from "@/common/theme";
+import { Text } from "@/common/components/Text";
+import { AppIcon } from "@/common/components/AppIcon";
+import { PressScale } from "@/common/components/PressScale";
 import { bellScheduleApi, academicSettingsApi } from "../api/classAcademicApi";
 import { qk } from "../hooks/queryKeys";
 import type { BellScheduleListItem, BellSchedulePeriod } from "../types";
 
 // ── Period kind config ────────────────────────────────────────────────────────
 
-const KIND_META: Record<string, { color: string; bg: string; label: string }> = {
-  lesson:   { color: "#1D1D1F", bg: "#F0F0F5", label: "Lesson" },
-  break:    { color: "#7A4E00", bg: "#FFF3D4", label: "Break" },
-  lunch:    { color: "#1A5C2E", bg: "#D4F5E2", label: "Lunch" },
-  assembly: { color: "#3A1F6B", bg: "#EFE8FF", label: "Assembly" },
-  other:    { color: "#555555", bg: "#EFEFEF", label: "Other" },
+type ColorKey = keyof ReturnType<typeof useTheme>["palette"];
+
+const KIND_META: Record<
+  string,
+  { accent: ColorKey; chipBg: ColorKey; chipFg: ColorKey; icon: React.ComponentProps<typeof AppIcon>["name"] }
+> = {
+  lesson: { accent: "primary", chipBg: "surfaceContainerHigh", chipFg: "onSurfaceVariant", icon: "book-outline" },
+  break: { accent: "tertiary", chipBg: "tertiaryContainer", chipFg: "onTertiaryContainer", icon: "cafe-outline" },
+  lunch: { accent: "secondary", chipBg: "secondaryContainer", chipFg: "onSecondaryContainer", icon: "restaurant-outline" },
+  assembly: { accent: "tertiary", chipBg: "tertiaryContainer", chipFg: "onTertiaryContainer", icon: "megaphone-outline" },
+  other: { accent: "outline", chipBg: "surfaceContainerHigh", chipFg: "onSurfaceVariant", icon: "ellipse-outline" },
 };
 
 function periodKindMeta(kind: string) {
   return KIND_META[kind] ?? KIND_META.other;
 }
 
+const LESSON_KINDS = new Set(["lesson", "assembly"]);
+
 // ── Time helpers ──────────────────────────────────────────────────────────────
 
 function formatTime(t: string | null): string {
   if (!t) return "—";
-  // datetime "2024-01-01T09:00:00" → slice(11,16); plain time "09:00:00" → slice(0,5)
-  const clean = t.length >= 16 ? t.slice(11, 16) : t.slice(0, 5);
-  return clean;
+  return t.length >= 16 ? t.slice(11, 16) : t.slice(0, 5);
 }
 
 function parseMinutes(t: string | null): number | null {
@@ -58,7 +55,8 @@ function minutesToTime(mins: number): string {
 // ── Main screen ───────────────────────────────────────────────────────────────
 
 export default function BellSchedulesScreen() {
-  const router = useRouter();
+  const { t } = useTranslation("timetable");
+  const { palette, spacing, radius, elevation } = useTheme();
 
   const { data: bellListRes, isLoading } = useQuery({
     queryKey: qk.bellSchedules(),
@@ -89,51 +87,70 @@ export default function BellSchedulesScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.headerBack}>
-          <Ionicons name="arrow-back" size={22} color={Colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Bell schedules</Text>
-        <View style={{ width: 38 }} />
+    <ScrollView
+      contentContainerStyle={{
+        padding: spacing.marginMobile,
+        gap: spacing.lg,
+        paddingBottom: spacing.xl * 3,
+      }}
+      showsVerticalScrollIndicator={false}
+    >
+      <View>
+        <Text variant="display" color="onSurface">
+          {t("bell.title", { defaultValue: "Bell schedules" })}
+        </Text>
+        <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
+          {t("bell.subtitle", {
+            defaultValue: "Daily period timings for your school.",
+          })}
+        </Text>
       </View>
 
       {isLoading ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={Colors.textSecondary} />
-        </View>
+        <ActivityIndicator color={palette.onSurfaceVariant} />
       ) : items.length === 0 ? (
-        <View style={styles.emptyState}>
-          <View style={styles.emptyIcon}>
-            <Ionicons name="alarm-outline" size={28} color={Colors.textTertiary} />
+        <View
+          style={[
+            elevation.card,
+            {
+              backgroundColor: palette.surfaceContainerLowest,
+              borderRadius: radius.xl,
+              padding: spacing.xl,
+              alignItems: "center",
+              gap: spacing.sm,
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.emptyIcon,
+              { backgroundColor: palette.surfaceContainerHigh },
+            ]}
+          >
+            <AppIcon name="alarm-outline" size="xl" color="onSurfaceVariant" />
           </View>
-          <Text style={styles.emptyTitle}>No bell schedules</Text>
-          <Text style={styles.emptyDesc}>
-            Bell schedules are managed in the admin panel.
+          <Text variant="titleSm" color="onSurface">
+            {t("bell.emptyTitle", { defaultValue: "No bell schedules" })}
+          </Text>
+          <Text variant="bodyMd" color="onSurfaceVariant" style={{ textAlign: "center" }}>
+            {t("bell.emptyDesc", {
+              defaultValue: "Bell schedules are managed in the admin panel.",
+            })}
           </Text>
         </View>
       ) : (
-        <FlatList
-          data={items}
-          keyExtractor={(i) => i.id}
-          contentContainerStyle={styles.listContent}
-          ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
-          renderItem={({ item }) => (
+        <View style={{ gap: spacing.md }}>
+          {items.map((item) => (
             <ScheduleCard
+              key={item.id}
               item={item}
               isDefault={item.id === defaultId}
               onPress={() => setSelectedId(item.id)}
             />
-          )}
-          ListHeaderComponent={
-            <Text style={styles.sectionHint}>
-              Tap a schedule to view its daily period breakdown.
-            </Text>
-          }
-        />
+          ))}
+        </View>
       )}
-    </SafeAreaView>
+    </ScrollView>
   );
 }
 
@@ -148,24 +165,46 @@ function ScheduleCard({
   isDefault: boolean;
   onPress: () => void;
 }) {
+  const { t } = useTranslation("timetable");
+  const { palette, spacing, radius, elevation } = useTheme();
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
-      <View style={styles.cardIconWrap}>
-        <Ionicons name="alarm-outline" size={18} color={Colors.text} />
+    <PressScale
+      onPress={onPress}
+      style={[
+        elevation.card,
+        {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: spacing.md,
+          backgroundColor: palette.surfaceContainerLowest,
+          borderRadius: radius.xl,
+          padding: spacing.lg,
+        },
+      ]}
+    >
+      <View style={[styles.cardIcon, { backgroundColor: palette.surfaceContainerHigh }]}>
+        <AppIcon name="alarm-outline" size="md" color="onSurface" />
       </View>
-      <View style={styles.cardBody}>
-        <Text style={styles.cardTitle} numberOfLines={1}>{item.name}</Text>
-        <View style={styles.cardBadgeRow}>
-          {isDefault && (
-            <View style={styles.defaultBadge}>
-              <Ionicons name="star" size={9} color="#7A4E00" style={{ marginRight: 3 }} />
-              <Text style={styles.defaultBadgeText}>School default</Text>
-            </View>
-          )}
-        </View>
+      <View style={{ flex: 1, gap: 4 }}>
+        <Text variant="titleSm" color="onSurface" numberOfLines={1}>
+          {item.name}
+        </Text>
+        {isDefault ? (
+          <View
+            style={[
+              styles.badge,
+              { backgroundColor: palette.secondaryContainer, borderRadius: radius.sm },
+            ]}
+          >
+            <AppIcon name="star" size="sm" color="onSecondaryContainer" />
+            <Text variant="labelSm" color="onSecondaryContainer">
+              {t("bell.schoolDefault", { defaultValue: "School default" })}
+            </Text>
+          </View>
+        ) : null}
       </View>
-      <Ionicons name="chevron-forward" size={16} color={Colors.textTertiary} />
-    </TouchableOpacity>
+      <AppIcon name="chevron-forward" size="md" color="onSurfaceVariant" />
+    </PressScale>
   );
 }
 
@@ -180,6 +219,9 @@ function BellDetailScreen({
   onBack: () => void;
   isDefault: boolean;
 }) {
+  const { t } = useTranslation("timetable");
+  const { palette, spacing, radius } = useTheme();
+
   const { data, isLoading } = useQuery({
     queryKey: qk.bellSchedule(id),
     queryFn: () => bellScheduleApi.get(id),
@@ -196,456 +238,222 @@ function BellDetailScreen({
   ]);
   const dayStart = allMins.length ? Math.min(...allMins) : null;
   const dayEnd = allMins.length ? Math.max(...allMins) : null;
-  const daySpan = dayStart !== null && dayEnd !== null ? dayEnd - dayStart : 0;
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.headerBack}>
-          <Ionicons name="arrow-back" size={22} color={Colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          {isLoading ? "Loading…" : (data?.name ?? "Schedule")}
-        </Text>
+    <ScrollView
+      contentContainerStyle={{
+        padding: spacing.marginMobile,
+        gap: spacing.lg,
+        paddingBottom: spacing.xl * 3,
+      }}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.sm }}>
+        <AppIcon
+          name="arrow-back"
+          size="lg"
+          color="onSurface"
+          onPress={onBack}
+          accessibilityLabel={t("bell.back", { defaultValue: "Back to schedules" })}
+        />
+        <View style={{ flex: 1 }}>
+          <Text variant="headlineMd" color="onSurface" numberOfLines={1}>
+            {isLoading ? t("loading", { defaultValue: "Loading…" }) : data?.name ?? t("bell.scheduleFallback", { defaultValue: "Schedule" })}
+          </Text>
+          {!isLoading && dayStart !== null && dayEnd !== null ? (
+            <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: 2 }}>
+              {minutesToTime(dayStart)} – {minutesToTime(dayEnd)} · {periods.length}{" "}
+              {periods.length === 1
+                ? t("bell.period", { defaultValue: "period" })
+                : t("bell.periods", { defaultValue: "periods" })}
+            </Text>
+          ) : null}
+        </View>
         {isDefault ? (
-          <View style={styles.defaultPill}>
-            <Ionicons name="star" size={10} color="#7A4E00" />
+          <View
+            style={[
+              styles.badge,
+              { backgroundColor: palette.secondaryContainer, borderRadius: radius.sm },
+            ]}
+          >
+            <AppIcon name="star" size="sm" color="onSecondaryContainer" />
+            <Text variant="labelSm" color="onSecondaryContainer">
+              {t("bell.active", { defaultValue: "Active" })}
+            </Text>
           </View>
-        ) : (
-          <View style={{ width: 38 }} />
-        )}
+        ) : null}
       </View>
 
       {isLoading || !data ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={Colors.textSecondary} />
-        </View>
+        <ActivityIndicator color={palette.onSurfaceVariant} />
+      ) : periods.length === 0 ? (
+        <Text variant="bodyMd" color="onSurfaceVariant">
+          {t("bell.noPeriods", { defaultValue: "No periods defined." })}
+        </Text>
       ) : (
-        <ScrollView contentContainerStyle={styles.detailContent} showsVerticalScrollIndicator={false}>
-          {/* Summary row */}
-          <View style={styles.summaryRow}>
-            <SummaryChip
-              icon="time-outline"
-              value={`${periods.length} period${periods.length !== 1 ? "s" : ""}`}
-            />
-            {dayStart !== null && dayEnd !== null && (
-              <SummaryChip
-                icon="calendar-outline"
-                value={`${minutesToTime(dayStart)} – ${minutesToTime(dayEnd)}`}
-              />
-            )}
-            {isDefault && (
-              <SummaryChip icon="star-outline" value="School default" />
-            )}
-          </View>
-
-          {/* Timeline */}
-          {periodsWithTimes.length > 0 && daySpan > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Day timeline</Text>
-              <TimelineBar
-                periods={periodsWithTimes}
-                dayStart={dayStart!}
-                daySpan={daySpan}
-              />
-              <View style={styles.timelineLabels}>
-                <Text style={styles.timelineLabel}>{minutesToTime(dayStart!)}</Text>
-                <Text style={styles.timelineLabel}>{minutesToTime(dayEnd!)}</Text>
-              </View>
-            </View>
-          )}
-
-          {/* Period list */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Periods</Text>
-            {periods.length === 0 ? (
-              <View style={styles.emptyPeriods}>
-                <Text style={styles.emptyDesc}>No periods defined.</Text>
-              </View>
-            ) : (
-              periods.map((p, idx) => (
-                <PeriodRow key={p.id} period={p} isLast={idx === periods.length - 1} />
-              ))
-            )}
-          </View>
-        </ScrollView>
+        <View style={{ gap: spacing.sm }}>
+          {periods.map((p, idx) => (
+            <TimelineRow key={p.id} period={p} isLast={idx === periods.length - 1} />
+          ))}
+        </View>
       )}
-    </SafeAreaView>
+    </ScrollView>
   );
 }
 
-// ── Timeline bar ──────────────────────────────────────────────────────────────
+// ── Timeline row ──────────────────────────────────────────────────────────────
 
-function TimelineBar({
-  periods,
-  dayStart,
-  daySpan,
-}: {
-  periods: BellSchedulePeriod[];
-  dayStart: number;
-  daySpan: number;
-}) {
-  return (
-    <View style={styles.timeline}>
-      {periods.map((p) => {
-        const start = parseMinutes(p.starts_at)!;
-        const end = parseMinutes(p.ends_at)!;
-        const leftPct = ((start - dayStart) / daySpan) * 100;
-        const widthPct = ((end - start) / daySpan) * 100;
-        const meta = periodKindMeta(p.period_kind);
-
-        return (
-          <View
-            key={p.id}
-            style={[
-              styles.timelineSegment,
-              {
-                left: `${leftPct}%` as any,
-                width: `${widthPct}%` as any,
-                backgroundColor: meta.bg,
-              },
-            ]}
-          >
-            {widthPct > 8 && (
-              <Text
-                style={[styles.timelineSegmentLabel, { color: meta.color }]}
-                numberOfLines={1}
-              >
-                {p.label || `P${p.period_number}`}
-              </Text>
-            )}
-          </View>
-        );
-      })}
-    </View>
-  );
-}
-
-// ── Period row ────────────────────────────────────────────────────────────────
-
-function PeriodRow({ period, isLast }: { period: BellSchedulePeriod; isLast: boolean }) {
+function TimelineRow({ period, isLast }: { period: BellSchedulePeriod; isLast: boolean }) {
+  const { t } = useTranslation("timetable");
+  const { palette, spacing, radius } = useTheme();
   const meta = periodKindMeta(period.period_kind);
+  const isLesson = LESSON_KINDS.has(period.period_kind);
+
   const startMins = parseMinutes(period.starts_at);
   const endMins = parseMinutes(period.ends_at);
   const durMins = startMins !== null && endMins !== null ? endMins - startMins : null;
 
-  return (
-    <View style={[styles.periodRow, !isLast && styles.periodRowBorder]}>
-      {/* Kind indicator strip */}
-      <View style={[styles.periodStrip, { backgroundColor: meta.bg }]} />
+  const title =
+    period.label ||
+    (isLesson
+      ? t("bell.periodN", { defaultValue: "Period {{n}}", n: period.period_number })
+      : periodKindLabel(period.period_kind, t));
 
-      <View style={styles.periodMain}>
-        <View style={styles.periodLeft}>
-          <Text style={styles.periodNumber}>P{period.period_number}</Text>
-          <View style={[styles.periodKindBadge, { backgroundColor: meta.bg }]}>
-            <Text style={[styles.periodKindText, { color: meta.color }]}>
-              {meta.label}
-            </Text>
+  return (
+    <View style={{ flexDirection: "row", gap: spacing.md }}>
+      {/* Time + rail */}
+      <View style={{ width: 64, alignItems: "flex-end" }}>
+        <Text variant="labelMd" color="onSurface">
+          {formatTime(period.starts_at)}
+        </Text>
+        <Text variant="labelSm" color="onSurfaceVariant">
+          {formatTime(period.ends_at)}
+        </Text>
+      </View>
+
+      <View style={{ alignItems: "center", width: 14 }}>
+        <View
+          style={[
+            styles.timelineDot,
+            { borderColor: palette[meta.accent], backgroundColor: palette.surfaceContainerLowest },
+          ]}
+        />
+        {!isLast ? (
+          <View style={{ flex: 1, width: 2, backgroundColor: palette.surfaceContainer, marginTop: 2 }} />
+        ) : null}
+      </View>
+
+      {/* Card */}
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: palette.surfaceContainerLowest,
+          borderRadius: radius.lg,
+          borderWidth: 1,
+          borderColor: palette.surfaceContainerHigh,
+          borderLeftWidth: 4,
+          borderLeftColor: palette[meta.accent],
+          padding: spacing.md,
+          marginBottom: spacing.sm,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: spacing.sm,
+        }}
+      >
+        {!isLesson ? (
+          <View style={[styles.kindIcon, { backgroundColor: palette[meta.chipBg] }]}>
+            <AppIcon name={meta.icon} size="sm" color={meta.chipFg} />
           </View>
-          {period.label ? (
-            <Text style={styles.periodLabel} numberOfLines={1}>{period.label}</Text>
+        ) : null}
+        <View style={{ flex: 1, gap: 2 }}>
+          <Text variant="titleSm" color="onSurface" numberOfLines={1}>
+            {title}
+          </Text>
+          {durMins !== null ? (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <AppIcon name="time-outline" size="sm" color="onSurfaceVariant" />
+              <Text variant="labelSm" color="onSurfaceVariant">
+                {t("bell.minutes", { defaultValue: "{{n}} min", n: durMins })}
+              </Text>
+            </View>
           ) : null}
         </View>
-        <View style={styles.periodRight}>
-          <Text style={styles.periodTime}>
-            {formatTime(period.starts_at)} – {formatTime(period.ends_at)}
-          </Text>
-          {durMins !== null && (
-            <Text style={styles.periodDur}>{durMins} min</Text>
-          )}
-        </View>
+        {isLesson ? (
+          <View
+            style={[
+              styles.chip,
+              { backgroundColor: palette[meta.chipBg], borderRadius: radius.sm },
+            ]}
+          >
+            <Text variant="labelSm" color={meta.chipFg}>
+              {periodKindLabel(period.period_kind, t)}
+            </Text>
+          </View>
+        ) : null}
       </View>
     </View>
   );
 }
 
-// ── Summary chip ──────────────────────────────────────────────────────────────
-
-function SummaryChip({ icon, value }: { icon: keyof typeof Ionicons.glyphMap; value: string }) {
-  return (
-    <View style={styles.summaryChip}>
-      <Ionicons name={icon} size={13} color={Colors.textSecondary} />
-      <Text style={styles.summaryChipText}>{value}</Text>
-    </View>
-  );
+function periodKindLabel(
+  kind: string,
+  t: (k: string, o: { defaultValue: string }) => string
+): string {
+  switch (kind) {
+    case "lesson":
+      return t("bell.kindLesson", { defaultValue: "Lesson" });
+    case "break":
+      return t("bell.kindBreak", { defaultValue: "Break" });
+    case "lunch":
+      return t("bell.kindLunch", { defaultValue: "Lunch" });
+    case "assembly":
+      return t("bell.kindAssembly", { defaultValue: "Assembly" });
+    default:
+      return t("bell.kindOther", { defaultValue: "Other" });
+  }
 }
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  // Header
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm + 4,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.borderLight,
-    gap: Spacing.sm,
-  },
-  headerBack: {
-    width: 38,
-    height: 38,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: Layout.borderRadius.sm,
-  },
-  headerTitle: {
-    flex: 1,
-    fontSize: 17,
-    fontWeight: "600",
-    color: Colors.text,
-    textAlign: "center",
-  },
-  defaultPill: {
-    width: 38,
-    height: 38,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  // List
-  listContent: {
-    padding: Spacing.md,
-    paddingTop: Spacing.sm,
-  },
-  sectionHint: {
-    fontSize: 12,
-    color: Colors.textTertiary,
-    marginBottom: Spacing.md,
-  },
-
-  // Card
-  card: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Colors.background,
-    borderRadius: Layout.borderRadius.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.borderLight,
-    padding: Spacing.md,
-    gap: Spacing.md,
-  },
-  cardIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: Layout.borderRadius.sm,
-    backgroundColor: Colors.backgroundSecondary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cardBody: {
-    flex: 1,
-    gap: 4,
-  },
-  cardTitle: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: Colors.text,
-  },
-  cardBadgeRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 4,
-  },
-  defaultBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFF3D4",
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  defaultBadgeText: {
-    fontSize: 11,
-    color: "#7A4E00",
-    fontWeight: "600",
-  },
-
-  // Empty state
-  emptyState: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: Spacing.xl,
-    gap: Spacing.sm,
-  },
   emptyIcon: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: Colors.backgroundSecondary,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: Spacing.xs,
   },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: Colors.text,
+  cardIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  emptyDesc: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    textAlign: "center",
-    lineHeight: 18,
-  },
-
-  // Detail content
-  detailContent: {
-    padding: Spacing.md,
-    gap: Spacing.lg,
-  },
-
-  // Summary chips
-  summaryRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: Spacing.sm,
-  },
-  summaryChip: {
+  badge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.sm,
-    paddingHorizontal: Spacing.sm + 2,
-    paddingVertical: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    alignSelf: "flex-start",
   },
-  summaryChipText: {
-    fontSize: 12,
-    color: Colors.textSecondary,
-    fontWeight: "500",
+  timelineDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 2,
+    marginTop: 2,
   },
-
-  // Section
-  section: {
-    gap: Spacing.sm,
-  },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: Colors.textSecondary,
-    textTransform: "uppercase",
-    letterSpacing: 0.6,
-    marginBottom: 2,
-  },
-
-  // Timeline
-  timeline: {
-    position: "relative",
-    height: 40,
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.sm,
-    overflow: "hidden",
-  },
-  timelineSegment: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
+  kindIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-    borderRightWidth: StyleSheet.hairlineWidth,
-    borderRightColor: Colors.borderLight,
-    paddingHorizontal: 2,
   },
-  timelineSegmentLabel: {
-    fontSize: 9,
-    fontWeight: "700",
-  },
-  timelineLabels: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 4,
-  },
-  timelineLabel: {
-    fontSize: 10,
-    color: Colors.textTertiary,
-    fontFamily: "monospace",
-  },
-
-  // Period row
-  periodRow: {
-    flexDirection: "row",
-    alignItems: "stretch",
-    backgroundColor: Colors.background,
-    borderRadius: Layout.borderRadius.sm,
-    overflow: "hidden",
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.borderLight,
-    marginBottom: Spacing.xs,
-  },
-  periodRowBorder: {
-    // kept for structural clarity; border is on the card itself
-  },
-  periodStrip: {
-    width: 4,
-  },
-  periodMain: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm + 2,
-    gap: Spacing.sm,
-  },
-  periodLeft: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.sm,
-    flexWrap: "wrap",
-  },
-  periodNumber: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: Colors.textSecondary,
-    fontFamily: "monospace",
-    minWidth: 28,
-  },
-  periodKindBadge: {
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  periodKindText: {
-    fontSize: 11,
-    fontWeight: "600",
-  },
-  periodLabel: {
-    fontSize: 13,
-    color: Colors.text,
-    fontWeight: "500",
-    flexShrink: 1,
-  },
-  periodRight: {
-    alignItems: "flex-end",
-    gap: 2,
-  },
-  periodTime: {
-    fontSize: 12,
-    color: Colors.text,
-    fontFamily: "monospace",
-    fontWeight: "500",
-  },
-  periodDur: {
-    fontSize: 11,
-    color: Colors.textTertiary,
-  },
-  emptyPeriods: {
-    paddingVertical: Spacing.lg,
-    alignItems: "center",
+  chip: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
   },
 });

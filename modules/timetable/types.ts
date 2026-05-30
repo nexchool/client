@@ -1,9 +1,11 @@
 export interface WeeklyPeriod {
   id: string;
+  period_number?: number | null;
   start_time: string; // "HH:MM"
   end_time: string;
   subject: { id: string; name: string } | null;
-  class_section: { id: string; name: string } | null;
+  // Server's weekly serializer returns this under `class` (teacher view).
+  class: { id: string; name: string | null } | null;
   teacher: { id: string; name: string } | null;
   room: string | null;
 }

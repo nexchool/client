@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { View } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/common/theme';
 import { useUiRole } from '@/modules/permissions/hooks/useUiRole';
+import { AppIcon } from '@/common/components/AppIcon';
+import { Text } from '@/common/components/Text';
 import { Skeleton } from '@/common/components/Skeleton';
 import { EmptyState } from '@/common/components/EmptyState';
 import { Link } from '@/common/components/Link';
+import { PressScale } from '@/common/components/PressScale';
 import {
   useTeacherWeeklyTimetable,
   useStudentWeeklyTimetable,
@@ -37,7 +39,7 @@ function formatWeekRange(start: string, end: string): string {
 
 export default function WeeklyTimetableScreen() {
   const { t } = useTranslation('timetable');
-  const { palette, spacing, radius, typography, elevation } = useTheme();
+  const { palette, spacing, radius, elevation } = useTheme();
   const role = useUiRole();
   const params = useLocalSearchParams<{ classId?: string }>();
   const classId = params.classId;
@@ -65,24 +67,24 @@ export default function WeeklyTimetableScreen() {
   const data = isTeacher
     ? teacherQuery.data
     : isStudent
-    ? studentQuery.data
-    : isAdminClass
-    ? classQuery.data
-    : undefined;
+      ? studentQuery.data
+      : isAdminClass
+        ? classQuery.data
+        : undefined;
 
   const isLoading = isTeacher
     ? teacherQuery.isLoading
     : isStudent
-    ? studentQuery.isLoading
-    : isAdminClass
-    ? classQuery.isLoading
-    : false;
+      ? studentQuery.isLoading
+      : isAdminClass
+        ? classQuery.isLoading
+        : false;
 
   const secondaryField: 'class' | 'teacher' | 'room' = isTeacher
     ? 'class'
     : isStudent
-    ? 'teacher'
-    : 'teacher';
+      ? 'teacher'
+      : 'teacher';
 
   return (
     <View style={{ flex: 1, padding: spacing.marginMobile, gap: spacing.lg }}>
@@ -94,19 +96,14 @@ export default function WeeklyTimetableScreen() {
             justifyContent: 'space-between',
           }}
         >
-          <Text style={[typography.display, { color: palette.onSurface }]}>
+          <Text variant="display" color="onSurface">
             {t('title', { defaultValue: 'Timetable' })}
           </Text>
           <Link onPress={() => setWeekStart(isoMondayOf(new Date()))}>
             {t('today', { defaultValue: 'Today →' })}
           </Link>
         </View>
-        <Text
-          style={[
-            typography.bodyMd,
-            { color: palette.onSurfaceVariant, marginTop: spacing.xs },
-          ]}
-        >
+        <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
           {isAdminClass
             ? t('classView', { defaultValue: 'Class view' })
             : t('yourSchedule', { defaultValue: 'Your weekly schedule' })}
@@ -125,15 +122,10 @@ export default function WeeklyTimetableScreen() {
           paddingVertical: spacing.sm,
         }}
       >
-        <Pressable onPress={() => setWeekStart(shiftWeek(weekStart, -1))} hitSlop={8}>
-          <Ionicons name="chevron-back" size={20} color={palette.onSurfaceVariant} />
-        </Pressable>
-        <Text
-          style={[
-            typography.labelMd,
-            { color: palette.onSurface, fontFamily: 'Inter_600SemiBold' },
-          ]}
-        >
+        <PressScale onPress={() => setWeekStart(shiftWeek(weekStart, -1))} hitSlop={8}>
+          <AppIcon name="chevron-back" size="md" color="onSurfaceVariant" />
+        </PressScale>
+        <Text variant="labelMd" color="onSurface">
           {data
             ? t('weekOf', {
                 defaultValue: 'Week of {{range}}',
@@ -141,9 +133,9 @@ export default function WeeklyTimetableScreen() {
               })
             : t('loading', { defaultValue: 'Loading…' })}
         </Text>
-        <Pressable onPress={() => setWeekStart(shiftWeek(weekStart, 1))} hitSlop={8}>
-          <Ionicons name="chevron-forward" size={20} color={palette.onSurfaceVariant} />
-        </Pressable>
+        <PressScale onPress={() => setWeekStart(shiftWeek(weekStart, 1))} hitSlop={8}>
+          <AppIcon name="chevron-forward" size="md" color="onSurfaceVariant" />
+        </PressScale>
       </View>
 
       {isAdminNoClass ? (
@@ -154,7 +146,7 @@ export default function WeeklyTimetableScreen() {
           ]}
         >
           <EmptyState
-            icon={<Ionicons name="school-outline" size={36} color={palette.onSurfaceVariant} />}
+            icon={<AppIcon name="school-outline" size="xl" color="onSurfaceVariant" />}
             title={t('selectClass', { defaultValue: 'Select a class' })}
             description={t('selectClassHelp', {
               defaultValue: 'Open a class from the Classes screen and tap "View timetable".',
@@ -173,7 +165,7 @@ export default function WeeklyTimetableScreen() {
           ]}
         >
           <EmptyState
-            icon={<Ionicons name="information-circle-outline" size={36} color={palette.onSurfaceVariant} />}
+            icon={<AppIcon name="information-circle-outline" size="xl" color="onSurfaceVariant" />}
             title={t('notEnrolled', { defaultValue: 'Not enrolled yet' })}
             description={t('notEnrolledHelp', {
               defaultValue:
@@ -191,7 +183,7 @@ export default function WeeklyTimetableScreen() {
           ]}
         >
           <EmptyState
-            icon={<Ionicons name="calendar-clear-outline" size={36} color={palette.onSurfaceVariant} />}
+            icon={<AppIcon name="calendar-clear-outline" size="xl" color="onSurfaceVariant" />}
             title={t('noTimetable', { defaultValue: 'No timetable available yet' })}
             description={t('noTimetableHelp', {
               defaultValue: 'Your school is still finalising the timetable for this academic year.',

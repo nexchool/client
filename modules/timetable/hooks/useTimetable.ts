@@ -80,11 +80,16 @@ function transformBundleToWeekly(bundle: any, weekStartDate: string): WeeklyTime
     if (dow >= 0 && dow <= 6) {
       days[dow].push({
         id: String(p.id),
-        start_time: String(p.start_time).slice(0, 5),
-        end_time: String(p.end_time).slice(0, 5),
-        subject: p.subject ?? null,
-        class_section: p.class_section ?? null,
-        teacher: p.teacher ?? null,
+        period_number: p.period_number ?? null,
+        start_time: String(p.start_time ?? p.starts_at ?? '').slice(0, 5),
+        end_time: String(p.end_time ?? p.ends_at ?? '').slice(0, 5),
+        subject:
+          p.subject ??
+          (p.subject_name ? { id: '', name: p.subject_name } : null),
+        class: p.class ?? p.class_section ?? null,
+        teacher:
+          p.teacher ??
+          (p.teacher_name ? { id: '', name: p.teacher_name } : null),
         room: p.room ?? null,
       });
     }
