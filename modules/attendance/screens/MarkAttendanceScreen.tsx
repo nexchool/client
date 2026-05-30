@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, FlatList, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/common/theme';
+import { AppIcon } from '@/common/components/AppIcon';
+import { Text } from '@/common/components/Text';
 import { Button } from '@/common/components/Button';
 import { Input } from '@/common/components/Input';
 import { Link } from '@/common/components/Link';
@@ -34,7 +35,7 @@ function normalizeStatus(s: string | null | undefined): AttendanceStatus {
 
 export default function MarkAttendanceScreen() {
   const { t } = useTranslation('attendance');
-  const { palette, spacing, radius, typography } = useTheme();
+  const { palette, spacing, radius } = useTheme();
   const router = useRouter();
   const { classId, className } = useLocalSearchParams<{
     classId: string;
@@ -335,15 +336,13 @@ export default function MarkAttendanceScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: palette.surface }]}>
-      {/* Header */}
+      {/* Top bar */}
       <View
         style={{
           paddingHorizontal: spacing.marginMobile,
           paddingTop: spacing.md,
-          paddingBottom: spacing.sm,
           flexDirection: 'row',
           alignItems: 'center',
-          justifyContent: 'space-between',
         }}
       >
         <Pressable
@@ -352,31 +351,47 @@ export default function MarkAttendanceScreen() {
           style={styles.backBtn}
           accessibilityRole="button"
         >
-          <Ionicons name="chevron-back" size={24} color={palette.onSurface} />
+          <AppIcon name="chevron-back" size="lg" color="onSurface" />
         </Pressable>
-        {isSelectedHoliday ? (
-          <View />
-        ) : (
-          <Link onPress={markAllPresent}>{t('mark.allPresent')}</Link>
-        )}
       </View>
 
-      <View style={{ paddingHorizontal: spacing.marginMobile, paddingBottom: spacing.sm }}>
-        <Text
-          style={[typography.headlineMd, { color: palette.onSurface }]}
-          numberOfLines={1}
-        >
-          {className || classAttendance?.class_name || t('mark.headerFallback')}
-        </Text>
-        <Text
-          style={[typography.bodyMd, { color: palette.onSurfaceVariant, marginTop: 2 }]}
-        >
-          {new Date(selectedDate).toLocaleDateString(undefined, {
-            weekday: 'long',
-            month: 'short',
-            day: 'numeric',
-          })}
-        </Text>
+      {/* Context header: class name + date subline + Today/date chip */}
+      <View
+        style={{
+          paddingHorizontal: spacing.marginMobile,
+          paddingBottom: spacing.sm,
+          flexDirection: 'row',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          gap: spacing.md,
+        }}
+      >
+        <View style={{ flex: 1 }}>
+          <Text variant="headlineLg" color="onSurface" numberOfLines={1}>
+            {className || classAttendance?.class_name || t('mark.headerFallback')}
+          </Text>
+          <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: 2 }}>
+            {new Date(selectedDate).toLocaleDateString(undefined, {
+              weekday: 'long',
+              month: 'short',
+              day: 'numeric',
+            })}
+          </Text>
+        </View>
+        {selectedDate === today ? (
+          <View
+            style={{
+              backgroundColor: palette.primaryContainer,
+              borderRadius: radius.full,
+              paddingHorizontal: spacing.md,
+              paddingVertical: 4,
+            }}
+          >
+            <Text variant="labelMd" color="onPrimary">
+              {t('mark.todayChip')}
+            </Text>
+          </View>
+        ) : null}
       </View>
 
       {/* Date strip */}
@@ -405,11 +420,11 @@ export default function MarkAttendanceScreen() {
               : isHolidayDate
                 ? palette.errorContainer
                 : palette.surfaceContainerLow;
-            const textColor = isSelected
-              ? palette.onPrimary
+            const textColorKey: 'onPrimary' | 'onErrorContainer' | 'onSurface' = isSelected
+              ? 'onPrimary'
               : isHolidayDate
-                ? palette.onErrorContainer
-                : palette.onSurface;
+                ? 'onErrorContainer'
+                : 'onSurface';
             return (
               <Pressable
                 key={item.dateStr}
@@ -432,16 +447,11 @@ export default function MarkAttendanceScreen() {
                     ]}
                   />
                 ) : null}
-                <Text style={[typography.labelSm, { color: textColor }]}>{item.weekday}</Text>
-                <Text
-                  style={[
-                    typography.headlineMd,
-                    { color: textColor, marginVertical: 2 },
-                  ]}
-                >
+                <Text variant="labelSm" color={textColorKey}>{item.weekday}</Text>
+                <Text variant="headlineMd" color={textColorKey} style={{ marginVertical: 2 }}>
                   {item.day}
                 </Text>
-                <Text style={[typography.labelSm, { color: textColor }]}>{item.month}</Text>
+                <Text variant="labelSm" color={textColorKey}>{item.month}</Text>
               </Pressable>
             );
           })}
@@ -472,78 +482,68 @@ export default function MarkAttendanceScreen() {
             gap: spacing.sm,
           }}
         >
-          <Ionicons name="umbrella-outline" size={20} color={palette.onErrorContainer} />
+          <AppIcon name="umbrella-outline" size="md" color="onErrorContainer" />
           <View style={{ flex: 1 }}>
-            <Text
-              style={[
-                typography.labelMd,
-                { color: palette.onErrorContainer, fontFamily: 'Inter_600SemiBold' },
-              ]}
-            >
+            <Text variant="labelMd" color="onErrorContainer">
               {selectedHoliday.is_recurring
                 ? t('mark.weeklyOffTitle', {
                     name: selectedHoliday.recurring_day_name ?? t('mark.offDay'),
                   })
                 : selectedHoliday.name}
             </Text>
-            <Text
-              style={[
-                typography.labelSm,
-                { color: palette.onErrorContainer, marginTop: 2 },
-              ]}
-            >
+            <Text variant="labelSm" color="onErrorContainer" style={{ marginTop: 2 }}>
               {t('mark.holidaySubtitle')}
             </Text>
           </View>
         </View>
       ) : null}
 
-      {/* Quick actions */}
+      {/* Search + Mark All Present (ref action row) */}
       <View
         style={{
           flexDirection: 'row',
+          alignItems: 'flex-start',
           gap: spacing.sm,
           paddingHorizontal: spacing.marginMobile,
           paddingTop: spacing.sm,
         }}
       >
         <View style={{ flex: 1 }}>
-          <Button
-            variant="secondary"
-            fullWidth
-            disabled={isSelectedHoliday || !classAttendance?.attendance?.length}
-            onPress={markAllPresent}
-          >
-            {t('mark.allPresent')}
-          </Button>
+          <Input
+            label=""
+            value={search}
+            onChangeText={setSearch}
+            placeholder={t('mark.findStudent')}
+            rightSlot={<AppIcon name="search" size="md" color="onSurfaceVariant" />}
+          />
         </View>
-        <View style={{ flex: 1 }}>
-          <Button
-            variant="secondary"
-            fullWidth
-            disabled={isSelectedHoliday || !classAttendance?.attendance?.length}
-            onPress={markAllAbsent}
-          >
-            {t('mark.allAbsent')}
-          </Button>
-        </View>
+        {!isSelectedHoliday ? (
+          <View style={styles.markAllWrap}>
+            <Link
+              onPress={
+                classAttendance?.attendance?.length ? markAllPresent : () => undefined
+              }
+            >
+              {t('mark.allPresent')}
+            </Link>
+          </View>
+        ) : null}
       </View>
 
-      {/* Search */}
+      {/* All Absent (secondary bulk action, preserved behavior) */}
       <View
         style={{
           paddingHorizontal: spacing.marginMobile,
-          paddingTop: spacing.sm,
         }}
       >
-        <Input
-          label=""
-          value={search}
-          onChangeText={setSearch}
-          placeholder={t('mark.searchPlaceholder', {
-            defaultValue: 'Search by name, roll, or admission #',
-          })}
-        />
+        <Button
+          variant="secondary"
+          fullWidth
+          disabled={isSelectedHoliday || !classAttendance?.attendance?.length}
+          onPress={markAllAbsent}
+        >
+          {t('mark.allAbsent')}
+        </Button>
       </View>
 
       {/* Student list */}
@@ -558,11 +558,11 @@ export default function MarkAttendanceScreen() {
           renderItem={renderStudent}
           contentContainerStyle={{
             paddingHorizontal: spacing.marginMobile,
-            paddingBottom: 120,
+            paddingBottom: 100,
           }}
           ListEmptyComponent={
             <View style={styles.center}>
-              <Text style={[typography.bodyMd, { color: palette.onSurfaceVariant }]}>
+              <Text variant="bodyMd" color="onSurfaceVariant">
                 {t('mark.emptyStudents')}
               </Text>
             </View>
@@ -617,6 +617,9 @@ export default function MarkAttendanceScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   backBtn: { width: 44, height: 44, justifyContent: 'center' },
+  // Vertically align the inline "Mark All Present" link with the Input field
+  // (Input reserves a label row above the 52px field).
+  markAllWrap: { height: 52, marginTop: 26, justifyContent: 'center' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 40 },
   dateCell: {
     width: 52,

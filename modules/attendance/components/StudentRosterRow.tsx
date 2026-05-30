@@ -1,6 +1,7 @@
 import React, { type ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useTheme } from '@/common/theme';
+import { Text } from '@/common/components/Text';
 import { ProfileAvatar } from '@/common/components/ProfileAvatar';
 
 type Props = {
@@ -12,7 +13,7 @@ type Props = {
 };
 
 export function StudentRosterRow({ name, rollNumber, rightSlot, onPress, onLongPress }: Props) {
-  const { palette, spacing, typography } = useTheme();
+  const { palette, spacing } = useTheme();
   return (
     <Pressable
       onPress={onPress}
@@ -28,11 +29,11 @@ export function StudentRosterRow({ name, rollNumber, rightSlot, onPress, onLongP
     >
       <ProfileAvatar size={40} name={name} />
       <View style={{ flex: 1 }}>
-        <Text style={[typography.labelMd, { color: palette.onSurface }]} numberOfLines={1}>
+        <Text variant="labelMd" color="onSurface" numberOfLines={1}>
           {name}
         </Text>
         {rollNumber != null ? (
-          <Text style={[typography.labelSm, { color: palette.onSurfaceVariant, marginTop: 2 }]}>
+          <Text variant="labelSm" color="onSurfaceVariant" style={{ marginTop: 2 }}>
             #{rollNumber}
           </Text>
         ) : null}

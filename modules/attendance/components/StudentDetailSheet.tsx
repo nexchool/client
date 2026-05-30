@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
 import { Button } from '@/common/components/Button';
+import { Text } from '@/common/components/Text';
 import { ProfileAvatar } from '@/common/components/ProfileAvatar';
 import { AttendanceStatusSegmented, type AttendanceStatus } from './AttendanceStatusSegmented';
 
@@ -69,14 +70,11 @@ export function StudentDetailSheet({
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: spacing.md }}>
           <ProfileAvatar size={48} name={studentName} />
           <View style={{ flex: 1 }}>
-            <Text
-              style={[typography.headlineMd, { color: palette.onSurface }]}
-              numberOfLines={1}
-            >
+            <Text variant="headlineMd" color="onSurface" numberOfLines={1}>
               {studentName}
             </Text>
             {rollNumber != null ? (
-              <Text style={[typography.bodyMd, { color: palette.onSurfaceVariant }]}>
+              <Text variant="bodyMd" color="onSurfaceVariant">
                 #{rollNumber}
               </Text>
             ) : null}
@@ -86,9 +84,7 @@ export function StudentDetailSheet({
 
         {canEdit ? (
           <View style={{ marginTop: spacing.lg }}>
-            <Text
-              style={[typography.labelMd, { color: palette.onSurfaceVariant, marginBottom: 6 }]}
-            >
+            <Text variant="labelMd" color="onSurfaceVariant" style={{ marginBottom: 6 }}>
               {t('remarks', { defaultValue: 'Remarks' })}
             </Text>
             <TextInput

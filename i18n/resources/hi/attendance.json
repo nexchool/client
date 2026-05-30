@@ -111,7 +111,9 @@
     "monthOct": "अक्टू",
     "monthNov": "नव",
     "monthDec": "दिस",
-    "searchPlaceholder": "नाम, रोल या प्रवेश # से खोजें"
+    "searchPlaceholder": "नाम, रोल या प्रवेश # से खोजें",
+    "findStudent": "छात्र खोजें…",
+    "todayChip": "आज"
   },
   "status": {
     "present": "उपस्थित",

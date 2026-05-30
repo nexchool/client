@@ -111,7 +111,9 @@
     "monthOct": "ઑક્ટો",
     "monthNov": "નવે",
     "monthDec": "ડિસે",
-    "searchPlaceholder": "નામ, રોલ અથવા પ્રવેશ # થી શોધો"
+    "searchPlaceholder": "નામ, રોલ અથવા પ્રવેશ # થી શોધો",
+    "findStudent": "વિદ્યાર્થી શોધો…",
+    "todayChip": "આજે"
   },
   "status": {
     "present": "હાજર",

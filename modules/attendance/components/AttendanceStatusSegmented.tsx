@@ -1,6 +1,7 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useTheme, type Palette } from '@/common/theme';
+import { Text } from '@/common/components/Text';
 
 export type AttendanceStatus = 'present' | 'absent' | 'late' | null;
 
@@ -23,7 +24,7 @@ type Props = {
 };
 
 export function AttendanceStatusSegmented({ value, onChange }: Props) {
-  const { palette, radius, typography } = useTheme();
+  const { palette, radius } = useTheme();
   return (
     <View
       style={[
@@ -45,15 +46,7 @@ export function AttendanceStatusSegmented({ value, onChange }: Props) {
             }}
             hitSlop={4}
           >
-            <Text
-              style={[
-                typography.labelMd,
-                {
-                  color: active ? palette[opt.activeFg] : palette.onSurfaceVariant,
-                  fontFamily: active ? 'Inter_600SemiBold' : 'Inter_500Medium',
-                },
-              ]}
-            >
+            <Text variant="labelMd" color={active ? opt.activeFg : 'onSurfaceVariant'}>
               {opt.label}
             </Text>
           </Pressable>

@@ -111,7 +111,9 @@
     "monthOct": "Oct",
     "monthNov": "Nov",
     "monthDec": "Dec",
-    "searchPlaceholder": "Search by name, roll, or admission #"
+    "searchPlaceholder": "Search by name, roll, or admission #",
+    "findStudent": "Find student…",
+    "todayChip": "Today"
   },
   "status": {
     "present": "Present",
