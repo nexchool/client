@@ -387,7 +387,7 @@ export default function MarkAttendanceScreen() {
               paddingVertical: 4,
             }}
           >
-            <Text variant="labelMd" color="onPrimary">
+            <Text variant="labelMd" color="onPrimaryContainer">
               {t('mark.todayChip')}
             </Text>
           </View>

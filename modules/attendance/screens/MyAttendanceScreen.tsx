@@ -58,9 +58,10 @@ export default function MyAttendanceScreen() {
   const [selectedCell, setSelectedCell] = useState<DayCell | null>(null);
   const { data, isLoading, isRefetching, refetch } = useMyAttendanceV2(selectedMonth);
 
-  // The me/v2 endpoint returns: total_days, present, percentage, records.
-  // It does NOT return absent/late totals, so derive those from the per-day
-  // records (real data) rather than reading non-existent top-level fields.
+  // The me/v2 endpoint returns: total_days, present, percentage, records,
+  // and also top-level absent/late. Derive absent/late from the per-day
+  // records to stay consistent with the calendar's per-day source; this
+  // reproduces the same counts the endpoint exposes at the top level.
   const records: AttendanceRecord[] = data?.records ?? [];
   const presentCount = data?.present ?? 0;
   const absentCount = useMemo(

@@ -5,7 +5,13 @@
     "empty": "No eligible classes for attendance today.",
     "emptySub": "You need to be assigned as a class teacher with attendance authority, or receive a delegated session.",
     "students": "students",
-    "viewPast": "View past"
+    "viewPast": "View past",
+    "reason": {
+      "admin": "Assigned by admin",
+      "class_teacher": "You are the class teacher",
+      "delegated": "Delegated to you",
+      "legacy_class_teacher": "Class teacher"
+    }
   },
   "myAttendance": {
     "title": "My Attendance",

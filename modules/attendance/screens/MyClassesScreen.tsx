@@ -119,7 +119,7 @@ export default function MyClassesScreen() {
               key={item.class_id}
               state="pending"
               subject={item.class_name}
-              classLabel={t(`myClasses.reason.${item.reason}`, { defaultValue: '' })}
+              classLabel={t(`myClasses.reason.${item.reason}`, { defaultValue: 'Eligible to mark' })}
               onPress={() =>
                 router.push({
                   pathname: '/(protected)/attendance/session',
