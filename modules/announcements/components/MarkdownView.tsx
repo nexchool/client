@@ -1,3 +1,9 @@
+/* eslint-disable no-restricted-syntax --
+ * react-native-markdown-display maps each markdown element to a flat RN style
+ * object and needs raw numeric `fontSize` values per heading level. The
+ * typography <Text variant> scale cannot be threaded into the library's
+ * internal renderers, so these literal sizes are intentional and kept here.
+ */
 import React from 'react';
 import { View } from 'react-native';
 import Markdown from 'react-native-markdown-display';

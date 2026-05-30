@@ -1,24 +1,18 @@
 import React from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  SafeAreaView,
-  Linking,
-} from "react-native";
+import { View, ScrollView, Linking } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "@/common/constants/colors";
-import { Spacing, Layout } from "@/common/constants/spacing";
+import { useTheme } from "@/common/theme";
+import { Text } from "@/common/components/Text";
+import { AppIcon } from "@/common/components/AppIcon";
+import { PressScale } from "@/common/components/PressScale";
 
 const SUPPORT_EMAIL = "hello@nexchool.in";
 
 export default function HelpSupportScreen() {
   const { t } = useTranslation("profile");
   const router = useRouter();
+  const { palette, spacing, radius, touchTarget } = useTheme();
 
   const openEmail = () => {
     const url = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
@@ -28,102 +22,85 @@ export default function HelpSupportScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color={Colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t("helpSupport.screenTitle")}</Text>
+    <View style={{ flex: 1, backgroundColor: palette.surface }}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: spacing.lg,
+          paddingVertical: spacing.sm,
+          borderBottomWidth: 1,
+          borderBottomColor: palette.outlineVariant,
+        }}
+      >
+        <AppIcon
+          name="arrow-back"
+          size="lg"
+          color="onSurface"
+          onPress={() => router.back()}
+          style={{ marginRight: spacing.sm }}
+        />
+        <Text variant="headlineMd" color="onSurface">
+          {t("helpSupport.screenTitle")}
+        </Text>
       </View>
 
       <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
+        style={{ flex: 1 }}
+        contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xl }}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.lead}>{t("helpSupport.lead")}</Text>
+        <Text
+          variant="bodyMd"
+          color="onSurfaceVariant"
+          style={{ marginBottom: spacing.lg }}
+        >
+          {t("helpSupport.lead")}
+        </Text>
 
-        <TouchableOpacity style={styles.emailCard} onPress={openEmail} activeOpacity={0.7}>
-          <View style={styles.emailIconWrap}>
-            <Ionicons name="mail-outline" size={28} color={Colors.primary} />
+        <PressScale
+          onPress={openEmail}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            backgroundColor: palette.surfaceContainerLow,
+            borderRadius: radius.lg,
+            padding: spacing.md,
+            marginBottom: spacing.lg,
+          }}
+        >
+          <View
+            style={{
+              width: touchTarget.min + spacing.sm,
+              height: touchTarget.min + spacing.sm,
+              borderRadius: radius.md,
+              backgroundColor: palette.surface,
+              alignItems: "center",
+              justifyContent: "center",
+              marginRight: spacing.md,
+            }}
+          >
+            <AppIcon name="mail-outline" size="lg" color="primary" />
           </View>
-          <View style={styles.emailTextWrap}>
-            <Text style={styles.emailLabel}>{t("helpSupport.emailLabel")}</Text>
-            <Text style={styles.emailValue}>{SUPPORT_EMAIL}</Text>
+          <View style={{ flex: 1 }}>
+            <Text variant="bodySm" color="onSurfaceVariant" style={{ marginBottom: 2 }}>
+              {t("helpSupport.emailLabel")}
+            </Text>
+            <Text variant="labelLg" color="primary">
+              {SUPPORT_EMAIL}
+            </Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
-        </TouchableOpacity>
+          <AppIcon name="chevron-forward" size="md" color="onSurfaceVariant" />
+        </PressScale>
 
-        <Text style={styles.footerNote}>{t("helpSupport.footerNote")}</Text>
+        <Text
+          variant="bodySm"
+          color="onSurfaceVariant"
+          style={{ fontStyle: "italic" }}
+        >
+          {t("helpSupport.footerNote")}
+        </Text>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  backBtn: {
-    padding: Spacing.sm,
-    marginRight: Spacing.sm,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: Colors.text,
-  },
-  scroll: { flex: 1 },
-  scrollContent: {
-    padding: Spacing.lg,
-    paddingBottom: Spacing.xl,
-  },
-  lead: {
-    fontSize: 15,
-    color: Colors.textSecondary,
-    lineHeight: 22,
-    marginBottom: Spacing.lg,
-  },
-  emailCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.lg,
-    padding: Spacing.md,
-    marginBottom: Spacing.lg,
-  },
-  emailIconWrap: {
-    width: 52,
-    height: 52,
-    borderRadius: Layout.borderRadius.md,
-    backgroundColor: Colors.background,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: Spacing.md,
-  },
-  emailTextWrap: { flex: 1 },
-  emailLabel: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    marginBottom: 2,
-  },
-  emailValue: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: Colors.primary,
-  },
-  footerNote: {
-    fontSize: 13,
-    color: Colors.textTertiary,
-    fontStyle: "italic",
-  },
-});

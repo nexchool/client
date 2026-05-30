@@ -1,17 +1,11 @@
 import React, { useEffect, useMemo, useRef } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-} from "react-native";
+import { View, ScrollView, ActivityIndicator } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "@/common/constants/colors";
-import { Spacing, Layout } from "@/common/constants/spacing";
+import { useTheme } from "@/common/theme";
+import { Text } from "@/common/components/Text";
+import { AppIcon } from "@/common/components/AppIcon";
+import { PressScale } from "@/common/components/PressScale";
 import { useAuth } from "@/modules/auth/hooks/useAuth";
 import {
   useMarkNotificationRead,
@@ -38,6 +32,7 @@ export default function NotificationDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { t, i18n } = useTranslation("notifications");
+  const { palette, spacing, radius, touchTarget } = useTheme();
   const { isFeatureEnabled, hasAnyPermission } = useAuth();
   const canUse = isFeatureEnabled("notifications");
   const canFinanceDeepLink = canOpenFinanceDeepLinks(isFeatureEnabled, hasAnyPermission);
@@ -45,10 +40,7 @@ export default function NotificationDetailScreen() {
   const { data, isLoading, refetch, isFetched } = useNotificationsList(false);
   const markRead = useMarkNotificationRead();
 
-  const item = useMemo(
-    () => data?.find((n) => n.id === id),
-    [data, id]
-  );
+  const item = useMemo(() => data?.find((n) => n.id === id), [data, id]);
 
   useEffect(() => {
     void refetch();
@@ -71,38 +63,72 @@ export default function NotificationDetailScreen() {
     : null;
   const bodyPlain = stripHtmlToPlainText(item?.body);
 
+  const centered = {
+    flex: 1,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    padding: spacing.xl,
+  };
+
   if (!canUse) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.muted}>{t("unavailable")}</Text>
+      <View style={centered}>
+        <Text variant="bodyMd" color="onSurfaceVariant" style={{ textAlign: "center" }}>
+          {t("unavailable")}
+        </Text>
       </View>
     );
   }
 
   if (isLoading && !item) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator color={Colors.primary} />
+      <View style={centered}>
+        <ActivityIndicator color={palette.primary} />
       </View>
     );
   }
 
+  const topBar = (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.sm,
+        borderBottomWidth: 1,
+        borderBottomColor: palette.outlineVariant,
+        minHeight: touchTarget.min + spacing.sm,
+      }}
+    >
+      <View style={{ width: touchTarget.min }}>
+        <AppIcon
+          name="chevron-back"
+          size="lg"
+          color="onSurface"
+          onPress={() => router.back()}
+          accessibilityLabel={t("detail.backA11y")}
+        />
+      </View>
+      <Text
+        variant="titleSm"
+        color="onSurface"
+        numberOfLines={1}
+        style={{ flex: 1, textAlign: "center" }}
+      >
+        {t("detail.title")}
+      </Text>
+      <View style={{ width: touchTarget.min }} />
+    </View>
+  );
+
   if (isFetched && !item) {
     return (
-      <View style={styles.container}>
-        <View style={styles.topBar}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backBtn}
-            hitSlop={12}
-            accessibilityRole="button"
-            accessibilityLabel={t("detail.backA11y")}
-          >
-            <Ionicons name="chevron-back" size={28} color={Colors.text} />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.centered}>
-          <Text style={styles.muted}>{t("detail.notFound")}</Text>
+      <View style={{ flex: 1, backgroundColor: palette.surface }}>
+        {topBar}
+        <View style={centered}>
+          <Text variant="bodyMd" color="onSurfaceVariant" style={{ textAlign: "center" }}>
+            {t("detail.notFound")}
+          </Text>
         </View>
       </View>
     );
@@ -110,132 +136,62 @@ export default function NotificationDetailScreen() {
 
   if (!item) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator color={Colors.primary} />
+      <View style={centered}>
+        <ActivityIndicator color={palette.primary} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.topBar}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backBtn}
-          hitSlop={12}
-          accessibilityRole="button"
-          accessibilityLabel={t("detail.backA11y")}
-        >
-          <Ionicons name="chevron-back" size={28} color={Colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.topBarTitle} numberOfLines={1}>
-          {t("detail.title")}
-        </Text>
-        <View style={styles.topBarSpacer} />
-      </View>
+    <View style={{ flex: 1, backgroundColor: palette.surface }}>
+      {topBar}
 
       <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
+        style={{ flex: 1 }}
+        contentContainerStyle={{
+          padding: spacing.marginMobile,
+          paddingBottom: spacing.xl + spacing.md,
+        }}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.detailTitle}>{item.title}</Text>
-        <Text style={styles.meta}>
+        <Text variant="headlineMd" color="onSurface" style={{ marginBottom: spacing.sm }}>
+          {item.title}
+        </Text>
+        <Text variant="bodySm" color="onSurfaceVariant" style={{ marginBottom: spacing.lg }}>
           {formatWhen(item.created_at, i18n.language)}
         </Text>
         {bodyPlain ? (
-          <Text style={styles.body}>{bodyPlain}</Text>
+          <Text variant="bodyMd" color="onSurface">
+            {bodyPlain}
+          </Text>
         ) : (
-          <Text style={styles.muted}>{t("detail.noBody")}</Text>
+          <Text variant="bodyMd" color="onSurfaceVariant">
+            {t("detail.noBody")}
+          </Text>
         )}
 
         {entityHref ? (
-          <TouchableOpacity
-            style={styles.primaryBtn}
+          <PressScale
             onPress={() => router.push(entityHref as never)}
-            activeOpacity={0.85}
+            style={{
+              marginTop: spacing.xl,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: spacing.sm,
+              backgroundColor: palette.primary,
+              paddingVertical: spacing.md,
+              paddingHorizontal: spacing.lg,
+              borderRadius: radius.md,
+            }}
           >
-            <Text style={styles.primaryBtnText}>{t("detail.openRelated")}</Text>
-            <Ionicons name="arrow-forward" size={18} color="#fff" />
-          </TouchableOpacity>
+            <Text variant="labelLg" color="onPrimary">
+              {t("detail.openRelated")}
+            </Text>
+            <AppIcon name="arrow-forward" size="sm" color="onPrimary" />
+          </PressScale>
         ) : null}
       </ScrollView>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-    minHeight: Layout.headerHeight,
-  },
-  backBtn: {
-    padding: Spacing.xs,
-    width: 44,
-  },
-  topBarTitle: {
-    flex: 1,
-    textAlign: "center",
-    fontSize: 17,
-    fontWeight: "600",
-    color: Colors.text,
-  },
-  topBarSpacer: { width: 44 },
-  scroll: { flex: 1 },
-  scrollContent: {
-    padding: Spacing.lg,
-    paddingBottom: Spacing.xxl,
-  },
-  detailTitle: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: Colors.text,
-    marginBottom: Spacing.sm,
-  },
-  meta: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    marginBottom: Spacing.lg,
-  },
-  body: {
-    fontSize: 16,
-    lineHeight: 24,
-    color: Colors.text,
-  },
-  primaryBtn: {
-    marginTop: Spacing.xl,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: Spacing.sm,
-    backgroundColor: Colors.primary,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-    borderRadius: Layout.borderRadius.md,
-  },
-  primaryBtnText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: Spacing.xl,
-  },
-  muted: {
-    fontSize: 15,
-    color: Colors.textSecondary,
-    textAlign: "center",
-  },
-});

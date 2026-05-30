@@ -205,8 +205,8 @@ export default function ChangePasswordScreen() {
 
       <Text
         style={[
-          typography.display,
-          { color: palette.onSurface, marginTop: spacing.md, fontSize: 28, lineHeight: 36 },
+          typography.headlineLg,
+          { color: palette.onSurface, marginTop: spacing.md },
         ]}
       >
         {t('changePassword.title', { defaultValue: 'Change password' })}

@@ -7,7 +7,6 @@ import React, { Fragment, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
@@ -22,6 +21,8 @@ import {
 import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
 import * as PERMS from "@/modules/permissions/constants/permissions";
 import { useTheme } from "@/common/theme";
+import { Text } from "@/common/components/Text";
+import { AppIcon } from "@/common/components/AppIcon";
 import {
   StudentDocument,
   DOCUMENT_TYPE_LABELS,
@@ -74,7 +75,7 @@ function FileTypeIcon({
 
 export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionProps) {
   const { t } = useTranslation("profile");
-  const { palette, spacing, radius, typography, elevation } = useTheme();
+  const { palette, spacing, radius, elevation } = useTheme();
   const {
     data: documents,
     isLoading,
@@ -141,7 +142,7 @@ export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionPr
   if (isLoading) {
     return (
       <View style={sectionWrapperStyle}>
-        <Text style={[typography.headlineMd, { color: palette.onSurface }]}>
+        <Text variant="headlineMd" color="onSurface">
           {t("documents.title")}
         </Text>
         <View style={[styles.centerPad, { padding: spacing.xl }]}>
@@ -155,15 +156,14 @@ export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionPr
     return (
       <Fragment>
         <View style={sectionWrapperStyle}>
-          <Text style={[typography.headlineMd, { color: palette.onSurface }]}>
+          <Text variant="headlineMd" color="onSurface">
             {t("documents.title")}
           </Text>
           <View style={[styles.centerPad, { padding: spacing.xl, gap: spacing.md }]}>
             <Text
-              style={[
-                typography.bodyMd,
-                { color: palette.onSurfaceVariant, textAlign: "center" },
-              ]}
+              variant="bodyMd"
+              color="onSurfaceVariant"
+              style={{ textAlign: "center" }}
             >
               {t("documents.errorMessage")}
             </Text>
@@ -181,13 +181,8 @@ export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionPr
                 ]}
                 onPress={() => refetch()}
               >
-                <Ionicons name="refresh" size={18} color={palette.primary} />
-                <Text
-                  style={[
-                    typography.labelMd,
-                    { color: palette.primary, fontFamily: "Inter_600SemiBold" },
-                  ]}
-                >
+                <AppIcon name="refresh" size="sm" color="primary" />
+                <Text variant="labelMd" color="primary">
                   {t("documents.retry")}
                 </Text>
               </TouchableOpacity>
@@ -205,13 +200,8 @@ export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionPr
                   ]}
                   onPress={() => setUploadModalVisible(true)}
                 >
-                  <Ionicons name="add" size={18} color={palette.primary} />
-                  <Text
-                    style={[
-                      typography.labelMd,
-                      { color: palette.primary, fontFamily: "Inter_600SemiBold" },
-                    ]}
-                  >
+                  <AppIcon name="add" size="sm" color="primary" />
+                  <Text variant="labelMd" color="primary">
                     {t("documents.addDocument")}
                   </Text>
                 </TouchableOpacity>
@@ -240,7 +230,7 @@ export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionPr
       <View style={sectionWrapperStyle}>
         <View style={styles.headerRow}>
           <View style={[styles.titleWithCount, { gap: spacing.sm }]}>
-            <Text style={[typography.headlineMd, { color: palette.onSurface }]}>
+            <Text variant="headlineMd" color="onSurface">
               {t("documents.title")}
             </Text>
             {list.length > 0 ? (
@@ -254,9 +244,7 @@ export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionPr
                   alignItems: "center",
                 }}
               >
-                <Text
-                  style={[typography.labelSm, { color: palette.onSurfaceVariant }]}
-                >
+                <Text variant="labelSm" color="onSurfaceVariant">
                   {list.length}
                 </Text>
               </View>
@@ -275,13 +263,8 @@ export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionPr
               onPress={() => setUploadModalVisible(true)}
               hitSlop={8}
             >
-              <Ionicons name="add" size={20} color={palette.primary} />
-              <Text
-                style={[
-                  typography.labelMd,
-                  { color: palette.primary, fontFamily: "Inter_600SemiBold" },
-                ]}
-              >
+              <AppIcon name="add" size="md" color="primary" />
+              <Text variant="labelMd" color="primary">
                 {t("documents.addDocument")}
               </Text>
             </TouchableOpacity>
@@ -300,17 +283,16 @@ export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionPr
                 justifyContent: "center",
               }}
             >
-              <Ionicons
+              <AppIcon
                 name="document-outline"
-                size={36}
-                color={palette.onSurfaceVariant}
+                size="xl"
+                color="onSurfaceVariant"
               />
             </View>
             <Text
-              style={[
-                typography.bodyMd,
-                { color: palette.onSurfaceVariant, textAlign: "center" },
-              ]}
+              variant="bodyMd"
+              color="onSurfaceVariant"
+              style={{ textAlign: "center" }}
             >
               {t("documents.emptyState")}
             </Text>
@@ -325,15 +307,7 @@ export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionPr
                 }}
                 onPress={() => setUploadModalVisible(true)}
               >
-                <Text
-                  style={[
-                    typography.labelMd,
-                    {
-                      color: palette.onPrimary,
-                      fontFamily: "Inter_600SemiBold",
-                    },
-                  ]}
-                >
+                <Text variant="labelMd" color="onPrimary">
                   {t("documents.addDocument")}
                 </Text>
               </TouchableOpacity>
@@ -376,21 +350,13 @@ export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionPr
                     palette={palette}
                   />
                   <View style={styles.docCardContent}>
-                    <Text
-                      style={[typography.labelMd, { color: palette.onSurface }]}
-                      numberOfLines={1}
-                    >
+                    <Text variant="labelMd" color="onSurface" numberOfLines={1}>
                       {doc.original_filename}
                     </Text>
                     <Text
-                      style={[
-                        typography.labelSm,
-                        {
-                          color: palette.onSurfaceVariant,
-                          marginTop: 2,
-                          fontFamily: "Inter_400Regular",
-                        },
-                      ]}
+                      variant="bodySm"
+                      color="onSurfaceVariant"
+                      style={{ marginTop: 2 }}
                       numberOfLines={1}
                     >
                       {label}
@@ -406,17 +372,13 @@ export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionPr
                       }}
                       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     >
-                      <Ionicons
-                        name="trash-outline"
-                        size={20}
-                        color={palette.error}
-                      />
+                      <AppIcon name="trash-outline" size="md" color="error" />
                     </TouchableOpacity>
                   )}
-                  <Ionicons
+                  <AppIcon
                     name="chevron-forward"
-                    size={20}
-                    color={palette.onSurfaceVariant}
+                    size="md"
+                    color="onSurfaceVariant"
                   />
                 </TouchableOpacity>
               );

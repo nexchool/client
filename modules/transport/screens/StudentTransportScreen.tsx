@@ -1,5 +1,5 @@
 import React from 'react';
-import { Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
@@ -185,7 +185,7 @@ export default function StudentTransportScreen() {
                     },
                   ]}
                 >
-                  <Text style={[typography.labelSm, { color: palette.warning, textTransform: 'uppercase', letterSpacing: 1, fontFamily: 'Inter_600SemiBold' }]}>
+                  <Text style={[typography.labelSm, { color: palette.warning, textTransform: 'uppercase', letterSpacing: 1 }]}>
                     {ex.type}
                   </Text>
                   <Text style={[typography.bodyMd, { color: palette.onSurface, marginTop: 4 }]}>
@@ -226,5 +226,3 @@ function StopCard({ label, stop, palette, spacing, radius, typography, elevation
     </View>
   );
 }
-
-const styles = StyleSheet.create({});

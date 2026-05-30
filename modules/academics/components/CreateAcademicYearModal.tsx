@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   View,
-  Text,
   TextInput,
   StyleSheet,
   Modal,
@@ -11,9 +10,9 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "@/common/constants/colors";
-import { Spacing, Layout } from "@/common/constants/spacing";
+import { useTheme } from "@/common/theme";
+import { Text } from "@/common/components/Text";
+import { AppIcon } from "@/common/components/AppIcon";
 import { academicYearService, type AcademicYear } from "../services/academicYearService";
 import { DateField } from "@/common/components/DateField";
 
@@ -29,6 +28,7 @@ export function CreateAcademicYearModal({
   onSuccess,
 }: CreateAcademicYearModalProps) {
   const { t } = useTranslation("common");
+  const { palette, spacing, radius, typography } = useTheme();
   const [name, setName] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -88,31 +88,80 @@ export function CreateAcademicYearModal({
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <TouchableOpacity
-          style={styles.backdrop}
+          style={[styles.backdrop, { backgroundColor: "rgba(0,0,0,0.4)" }]}
           activeOpacity={1}
           onPress={onClose}
         />
-        <View style={styles.modal}>
-          <View style={styles.header}>
-            <Text style={styles.title}>{t("academicYearCreate.title")}</Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={24} color={Colors.text} />
-            </TouchableOpacity>
+        <View
+          style={{
+            backgroundColor: palette.surface,
+            borderRadius: radius.md,
+            padding: spacing.lg,
+            width: "100%",
+            maxWidth: 360,
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: spacing.md,
+            }}
+          >
+            <Text variant="headlineMd" color="onSurface">
+              {t("academicYearCreate.title")}
+            </Text>
+            <AppIcon
+              name="close"
+              size="lg"
+              color="onSurface"
+              onPress={onClose}
+              style={{ padding: spacing.xs }}
+            />
           </View>
 
           {error && (
-            <View style={styles.errorBox}>
-              <Text style={styles.errorText}>{error}</Text>
+            <View
+              style={{
+                backgroundColor: palette.errorContainer,
+                padding: spacing.sm,
+                borderRadius: radius.sm,
+                marginBottom: spacing.md,
+                borderLeftWidth: 4,
+                borderLeftColor: palette.error,
+              }}
+            >
+              <Text variant="labelMd" color="error">
+                {error}
+              </Text>
             </View>
           )}
 
-          <Text style={styles.label}>{t("academicYearCreate.nameLabel")}</Text>
+          <Text
+            variant="labelMd"
+            color="onSurface"
+            style={{ marginBottom: spacing.xs }}
+          >
+            {t("academicYearCreate.nameLabel")}
+          </Text>
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              typography.bodyMd,
+              {
+                borderColor: palette.outlineVariant,
+                borderRadius: radius.sm,
+                padding: spacing.md,
+                color: palette.onSurface,
+                backgroundColor: palette.surfaceContainerLow,
+                marginBottom: spacing.md,
+              },
+            ]}
             value={name}
             onChangeText={setName}
             placeholder={t("academicYearCreate.namePlaceholder")}
-            placeholderTextColor={Colors.textTertiary}
+            placeholderTextColor={palette.outline}
             editable={!loading}
           />
 
@@ -131,14 +180,23 @@ export function CreateAcademicYearModal({
           />
 
           <TouchableOpacity
-            style={[styles.submitBtn, loading && styles.submitBtnDisabled]}
+            style={{
+              backgroundColor: palette.primary,
+              padding: spacing.md,
+              borderRadius: radius.md,
+              alignItems: "center",
+              marginTop: spacing.sm,
+              opacity: loading ? 0.6 : 1,
+            }}
             onPress={handleSubmit}
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color="#FFF" />
+              <ActivityIndicator color={palette.onPrimary} />
             ) : (
-              <Text style={styles.submitText}>{t("academicYearCreate.create")}</Text>
+              <Text variant="labelLg" color="onPrimary">
+                {t("academicYearCreate.create")}
+              </Text>
             )}
           </TouchableOpacity>
         </View>
@@ -152,63 +210,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: Spacing.lg,
+    padding: 24,
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.4)",
-  },
-  modal: {
-    backgroundColor: Colors.background,
-    borderRadius: Layout.borderRadius.md,
-    padding: Spacing.lg,
-    width: "100%",
-    maxWidth: 360,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: Spacing.md,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: Colors.text,
-  },
-  closeBtn: { padding: Spacing.xs },
-  errorBox: {
-    backgroundColor: "#FFF0F0",
-    padding: Spacing.sm,
-    borderRadius: Layout.borderRadius.sm,
-    marginBottom: Spacing.md,
-    borderLeftWidth: 4,
-    borderLeftColor: Colors.error,
-  },
-  errorText: { color: Colors.error, fontSize: 14 },
-  label: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: Colors.text,
-    marginBottom: Spacing.xs,
   },
   input: {
     borderWidth: 1,
-    borderColor: Colors.borderLight,
-    borderRadius: Layout.borderRadius.sm,
-    padding: Spacing.md,
-    fontSize: 16,
-    color: Colors.text,
-    backgroundColor: Colors.backgroundSecondary,
-    marginBottom: Spacing.md,
   },
-  submitBtn: {
-    backgroundColor: Colors.primary,
-    padding: Spacing.md,
-    borderRadius: Layout.borderRadius.md,
-    alignItems: "center",
-    marginTop: Spacing.sm,
-  },
-  submitBtnDisabled: { opacity: 0.6 },
-  submitText: { color: "#FFF", fontSize: 16, fontWeight: "600" },
 });

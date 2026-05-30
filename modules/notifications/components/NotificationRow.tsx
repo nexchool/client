@@ -78,8 +78,8 @@ export function NotificationRow({ item, isLast, onPress, onMarkRead }: Props) {
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: spacing.sm }}>
             <Text
               style={[
-                typography.bodyMd,
-                { color: palette.onSurface, flex: 1, fontFamily: isUnread ? 'Inter_600SemiBold' : undefined },
+                isUnread ? typography.labelLg : typography.bodyMd,
+                { color: palette.onSurface, flex: 1 },
               ]}
               numberOfLines={1}
             >

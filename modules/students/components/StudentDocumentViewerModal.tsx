@@ -10,7 +10,6 @@ import { useTranslation } from "react-i18next";
 import {
   Modal,
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
@@ -24,7 +23,6 @@ import Constants from "expo-constants";
 import * as ScreenCapture from "expo-screen-capture";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
-import { Ionicons } from "@expo/vector-icons";
 import { getApiUrl } from "@/common/constants/api";
 import { apiGetBlob } from "@/common/services/api";
 import {
@@ -32,14 +30,21 @@ import {
   getRefreshToken,
   getTenantId,
 } from "@/common/utils/storage";
-import { Colors } from "@/common/constants/colors";
-import { Spacing } from "@/common/constants/spacing";
+import { useTheme } from "@/common/theme";
+import { Text } from "@/common/components/Text";
+import { AppIcon } from "@/common/components/AppIcon";
 import type { StudentDocument } from "../types";
 
 // --- constants ----------------------------------------------------------------
 
 const SCREEN_CAPTURE_KEY = "student-document-viewer";
 const isExpoGo = Constants.appOwnership === "expo";
+
+/* Fixed document-viewer chrome backdrops — deliberately theme-independent so a
+ * scanned page renders on a consistent neutral canvas regardless of brand palette.
+ * eslint-disable-next-line no-restricted-syntax */
+const VIEWER_IMAGE_BACKDROP = "#EAEAEC"; // eslint-disable-line no-restricted-syntax -- neutral image canvas, not a palette token
+const VIEWER_PDF_BACKDROP = "#525659"; // eslint-disable-line no-restricted-syntax -- standard PDF reader gray, not a palette token
 
 const STORAGE_UNAVAILABLE_EN = "Storage is not available.";
 
@@ -166,6 +171,7 @@ async function webObjectUrlFromBlob(blob: Blob, filename: string, kind: Document
 
 export function StudentDocumentViewerModal({ visible, onClose, document }: Props) {
   const { t } = useTranslation("profile");
+  const { palette, spacing } = useTheme();
   const { width: winW, height: winH } = useWindowDimensions();
   const insets = useSafeAreaInsets();
 
@@ -338,35 +344,42 @@ export function StudentDocumentViewerModal({ visible, onClose, document }: Props
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
-      <View style={[styles.screen, { width: winW, height: winH }]}>
-        <View style={[styles.toolbar, { paddingTop: insets.top + Spacing.sm }]}>
-          <Text style={styles.title} numberOfLines={1}>
+      <View style={[styles.screen, { backgroundColor: palette.surface, width: winW, height: winH }]}>
+        <View
+          style={[
+            styles.toolbar,
+            { borderBottomColor: palette.outlineVariant, paddingTop: insets.top + spacing.sm },
+          ]}
+        >
+          <Text variant="labelLg" color="onSurface" numberOfLines={1} style={styles.title}>
             {document?.original_filename ?? t("viewer.fallbackTitle")}
           </Text>
-          <TouchableOpacity
+          <AppIcon
+            name="close"
+            size="lg"
+            color="onSurface"
             onPress={onClose}
-            hitSlop={12}
             accessibilityLabel={t("viewer.close")}
-          >
-            <Ionicons name="close" size={28} color={Colors.text} />
-          </TouchableOpacity>
+          />
         </View>
 
-        <View style={styles.body}>
+        <View style={[styles.body, { backgroundColor: VIEWER_IMAGE_BACKDROP }]}>
           {loading && (
             <View style={styles.centered}>
-              <ActivityIndicator size="large" color={Colors.primary} />
+              <ActivityIndicator size="large" color={palette.primary} />
             </View>
           )}
 
           {loadError && !loading && (
             <View style={styles.centered}>
-              <Text style={styles.err}>{displayLoadError(loadError)}</Text>
+              <Text variant="bodyMd" color="error" style={styles.centerText}>
+                {displayLoadError(loadError)}
+              </Text>
             </View>
           )}
 
           {bodyReady && preview.kind === "image" && (
-            <View style={styles.previewArea}>
+            <View style={[styles.previewArea, { backgroundColor: VIEWER_IMAGE_BACKDROP }]}>
               {!imageError ? (
                 <Image
                   source={{ uri: preview.uri }}
@@ -378,21 +391,23 @@ export function StudentDocumentViewerModal({ visible, onClose, document }: Props
                 />
               ) : (
                 <View style={styles.centered}>
-                  <Text style={styles.err}>{t("viewer.imageError")}</Text>
+                  <Text variant="bodyMd" color="error" style={styles.centerText}>
+                    {t("viewer.imageError")}
+                  </Text>
                 </View>
               )}
             </View>
           )}
 
           {showPdfWeb && (
-            <View style={styles.pdf}>
+            <View style={[styles.pdf, { backgroundColor: VIEWER_PDF_BACKDROP }]}>
               {createElement("iframe", {
                 src: preview.uri,
                 style: {
                   width: "100%",
                   height: "100%",
                   border: "none",
-                  backgroundColor: "#525659",
+                  backgroundColor: VIEWER_PDF_BACKDROP,
                 },
                 title: document?.original_filename ?? t("viewer.pdfIframeTitle"),
               })}
@@ -403,7 +418,7 @@ export function StudentDocumentViewerModal({ visible, onClose, document }: Props
             <PdfNative
               key={preview.uri}
               source={{ uri: normalizeFileUri(preview.uri), cache: false }}
-              style={styles.pdf}
+              style={[styles.pdf, { backgroundColor: VIEWER_PDF_BACKDROP }]}
               fitPolicy={0}
               trustAllCerts={false}
             />
@@ -412,10 +427,26 @@ export function StudentDocumentViewerModal({ visible, onClose, document }: Props
           {showPdfShare && (
             <View style={styles.centered}>
               {isExpoGo && (
-                <Text style={styles.hint}>{t("viewer.expoGoHint")}</Text>
+                <Text
+                  variant="bodyMd"
+                  color="onSurfaceVariant"
+                  style={[styles.centerText, { marginBottom: spacing.lg, paddingHorizontal: spacing.md }]}
+                >
+                  {t("viewer.expoGoHint")}
+                </Text>
               )}
-              <TouchableOpacity style={styles.btn} onPress={() => openPdfExternally(preview.uri)}>
-                <Text style={styles.btnText}>{t("viewer.openPdf")}</Text>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: palette.primary,
+                  paddingVertical: spacing.sm,
+                  paddingHorizontal: spacing.xl,
+                  borderRadius: 8,
+                }}
+                onPress={() => openPdfExternally(preview.uri)}
+              >
+                <Text variant="labelLg" color="onPrimary">
+                  {t("viewer.openPdf")}
+                </Text>
               </TouchableOpacity>
             </View>
           )}
@@ -427,36 +458,30 @@ export function StudentDocumentViewerModal({ visible, onClose, document }: Props
 
 const styles = StyleSheet.create({
   screen: {
-    backgroundColor: Colors.background,
+    flex: 1,
   },
   toolbar: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: Spacing.md,
-    paddingBottom: Spacing.sm,
+    paddingHorizontal: 16,
+    paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
   },
   title: {
     flex: 1,
-    fontSize: 16,
-    fontWeight: "600",
-    color: Colors.text,
-    marginRight: Spacing.sm,
+    marginRight: 8,
   },
   body: {
     flex: 1,
     minHeight: 0,
     width: "100%",
-    backgroundColor: "#EAEAEC",
   },
   previewArea: {
     flex: 1,
     width: "100%",
     minHeight: 0,
     position: "relative",
-    backgroundColor: "#EAEAEC",
   },
   imageFill: {
     ...StyleSheet.absoluteFillObject,
@@ -465,35 +490,14 @@ const styles = StyleSheet.create({
     flex: 1,
     width: "100%",
     minHeight: 0,
-    backgroundColor: "#525659",
   },
   centered: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: "center",
     alignItems: "center",
-    padding: Spacing.lg,
+    padding: 24,
   },
-  err: {
-    color: Colors.error,
+  centerText: {
     textAlign: "center",
-    fontSize: 15,
-  },
-  hint: {
-    color: Colors.textSecondary,
-    textAlign: "center",
-    fontSize: 15,
-    marginBottom: Spacing.lg,
-    paddingHorizontal: Spacing.md,
-  },
-  btn: {
-    backgroundColor: Colors.primary,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.xl,
-    borderRadius: 8,
-  },
-  btnText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
   },
 });

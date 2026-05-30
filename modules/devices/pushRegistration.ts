@@ -33,6 +33,7 @@ async function getNotifications(): Promise<NotificationsModule | null> {
           importance: mod.AndroidImportance.HIGH,
           sound: "default",
           vibrationPattern: [0, 250, 250, 250],
+          // eslint-disable-next-line no-restricted-syntax -- Android notification channel light color requires a literal ARGB hex for the OS API, not a palette token.
           lightColor: "#FF231F7C",
         });
       } catch {

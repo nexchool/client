@@ -7,18 +7,16 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   View,
-  Text,
-  StyleSheet,
   Modal,
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
   Alert,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
-import { Colors } from "@/common/constants/colors";
-import { Spacing, Layout } from "@/common/constants/spacing";
+import { useTheme } from "@/common/theme";
+import { Text } from "@/common/components/Text";
+import { AppIcon } from "@/common/components/AppIcon";
 import {
   DOCUMENT_TYPES,
   type DocumentTypeValue,
@@ -48,6 +46,7 @@ export function UploadDocumentModal({
   uploadMutation,
 }: UploadDocumentModalProps) {
   const { t } = useTranslation("profile");
+  const { palette, spacing, radius } = useTheme();
   const [documentType, setDocumentType] = useState<DocumentTypeValue | "">("");
   const [selectedFile, setSelectedFile] = useState<{
     uri: string;
@@ -122,9 +121,7 @@ export function UploadDocumentModal({
     } catch (e: unknown) {
       Alert.alert(
         t("uploadModal.cannotUploadTitle"),
-        e instanceof Error
-          ? e.message
-          : t("uploadModal.prepareFailed"),
+        e instanceof Error ? e.message : t("uploadModal.prepareFailed"),
       );
     } finally {
       setIsPreparing(false);
@@ -133,6 +130,14 @@ export function UploadDocumentModal({
 
   const isValid = Boolean(documentType && selectedFile && !isPending && !isPreparing);
 
+  const pickerBoxStyle = {
+    padding: spacing.md,
+    backgroundColor: palette.surfaceContainerLow,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: palette.outlineVariant,
+  };
+
   return (
     <Modal
       visible={visible}
@@ -140,45 +145,96 @@ export function UploadDocumentModal({
       animationType="slide"
       onRequestClose={handleClose}
     >
-      <View style={styles.overlay}>
-        <View style={styles.modal}>
-          <View style={styles.header}>
-            <Text style={styles.title}>{t("uploadModal.title")}</Text>
-            <TouchableOpacity onPress={handleClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={24} color={Colors.text} />
-            </TouchableOpacity>
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: "rgba(0,0,0,0.5)",
+          justifyContent: "flex-end",
+        }}
+      >
+        <View
+          style={{
+            backgroundColor: palette.surface,
+            borderTopLeftRadius: radius.lg,
+            borderTopRightRadius: radius.lg,
+            maxHeight: "80%",
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: spacing.lg,
+              borderBottomWidth: 1,
+              borderBottomColor: palette.outlineVariant,
+            }}
+          >
+            <Text variant="headlineMd" color="onSurface">
+              {t("uploadModal.title")}
+            </Text>
+            <AppIcon
+              name="close"
+              size="lg"
+              color="onSurface"
+              onPress={handleClose}
+              style={{ padding: spacing.xs }}
+            />
           </View>
 
-          <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
+          <ScrollView style={{ padding: spacing.lg }} keyboardShouldPersistTaps="handled">
             {/* Document Type */}
-            <Text style={styles.label}>{t("uploadModal.documentType")}</Text>
+            <Text variant="labelMd" color="onSurfaceVariant" style={{ marginBottom: spacing.xs }}>
+              {t("uploadModal.documentType")}
+            </Text>
             <TouchableOpacity
-              style={styles.picker}
+              style={{
+                ...pickerBoxStyle,
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
               onPress={() => setShowTypePicker(!showTypePicker)}
             >
-              <Text style={documentType ? styles.pickerText : styles.pickerPlaceholder}>
+              <Text
+                variant="bodyMd"
+                color={documentType ? "onSurface" : "outline"}
+              >
                 {documentType
                   ? t(`documentTypes.${documentType}`)
                   : t("uploadModal.selectType")}
               </Text>
-              <Ionicons
+              <AppIcon
                 name={showTypePicker ? "chevron-up" : "chevron-down"}
-                size={20}
-                color={Colors.textSecondary}
+                size="md"
+                color="onSurfaceVariant"
               />
             </TouchableOpacity>
             {showTypePicker && (
-              <View style={styles.pickerOptions}>
+              <View
+                style={{
+                  marginTop: spacing.xs,
+                  backgroundColor: palette.surfaceContainerLow,
+                  borderRadius: radius.sm,
+                  borderWidth: 1,
+                  borderColor: palette.outlineVariant,
+                  overflow: "hidden",
+                }}
+              >
                 {DOCUMENT_TYPES.map((type) => (
                   <TouchableOpacity
                     key={type}
-                    style={styles.pickerOption}
+                    style={{
+                      padding: spacing.md,
+                      borderBottomWidth: 1,
+                      borderBottomColor: palette.outlineVariant,
+                    }}
                     onPress={() => {
                       setDocumentType(type);
                       setShowTypePicker(false);
                     }}
                   >
-                    <Text style={styles.pickerOptionText}>
+                    <Text variant="bodyMd" color="onSurface">
                       {t(`documentTypes.${type}`)}
                     </Text>
                   </TouchableOpacity>
@@ -187,20 +243,45 @@ export function UploadDocumentModal({
             )}
 
             {/* File Picker */}
-            <Text style={[styles.label, { marginTop: Spacing.md }]}>
+            <Text
+              variant="labelMd"
+              color="onSurfaceVariant"
+              style={{ marginBottom: spacing.xs, marginTop: spacing.md }}
+            >
               {t("uploadModal.file")}
             </Text>
-            <TouchableOpacity style={styles.fileButton} onPress={handlePickFile}>
-              <Ionicons name="document-attach-outline" size={24} color={Colors.primary} />
-              <Text style={styles.fileButtonText}>
+            <TouchableOpacity
+              style={{
+                ...pickerBoxStyle,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: spacing.md,
+                borderStyle: "dashed",
+              }}
+              onPress={handlePickFile}
+            >
+              <AppIcon name="document-attach-outline" size="lg" color="primary" />
+              <Text variant="bodyMd" color="primary" style={{ flex: 1 }}>
                 {selectedFile ? selectedFile.name : t("uploadModal.chooseFile")}
               </Text>
             </TouchableOpacity>
 
             {error && (
-              <View style={styles.errorBox}>
-                <Ionicons name="alert-circle" size={18} color={Colors.error} />
-                <Text style={styles.errorText}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: spacing.sm,
+                  marginTop: spacing.md,
+                  padding: spacing.md,
+                  backgroundColor: palette.errorContainer,
+                  borderRadius: radius.sm,
+                  borderWidth: 1,
+                  borderColor: palette.error,
+                }}
+              >
+                <AppIcon name="alert-circle" size="sm" color="error" />
+                <Text variant="labelMd" color="error" style={{ flex: 1 }}>
                   {typeof error === "object" && error !== null && "data" in error
                     ? (error as { data?: { message?: string } }).data?.message ||
                       (typeof (error as Error).message === "string" &&
@@ -208,27 +289,51 @@ export function UploadDocumentModal({
                         ? (error as Error).message
                         : t("uploadModal.uploadFailedHint"))
                     : typeof (error as Error).message === "string" &&
-                      (error as Error).message !== "true"
-                    ? (error as Error).message
-                    : t("uploadModal.uploadFailedHint")}
+                        (error as Error).message !== "true"
+                      ? (error as Error).message
+                      : t("uploadModal.uploadFailedHint")}
                 </Text>
               </View>
             )}
           </ScrollView>
 
-          <View style={styles.footer}>
-            <TouchableOpacity style={styles.cancelButton} onPress={handleClose}>
-              <Text style={styles.cancelButtonText}>{t("uploadModal.cancel")}</Text>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "flex-end",
+              gap: spacing.md,
+              padding: spacing.lg,
+              borderTopWidth: 1,
+              borderTopColor: palette.outlineVariant,
+            }}
+          >
+            <TouchableOpacity
+              style={{ paddingHorizontal: spacing.lg, paddingVertical: spacing.md }}
+              onPress={handleClose}
+            >
+              <Text variant="bodyMd" color="onSurfaceVariant">
+                {t("uploadModal.cancel")}
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.uploadButton, !isValid && styles.uploadButtonDisabled]}
+              style={{
+                paddingHorizontal: spacing.xl,
+                paddingVertical: spacing.md,
+                backgroundColor: palette.primary,
+                borderRadius: radius.sm,
+                minWidth: 100,
+                alignItems: "center",
+                opacity: isValid ? 1 : 0.5,
+              }}
               onPress={() => void handleUpload()}
               disabled={!isValid}
             >
               {isPending || isPreparing ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
+                <ActivityIndicator size="small" color={palette.onPrimary} />
               ) : (
-                <Text style={styles.uploadButtonText}>{t("uploadModal.upload")}</Text>
+                <Text variant="labelLg" color="onPrimary">
+                  {t("uploadModal.upload")}
+                </Text>
               )}
             </TouchableOpacity>
           </View>
@@ -237,141 +342,3 @@ export function UploadDocumentModal({
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "flex-end",
-  },
-  modal: {
-    backgroundColor: Colors.background,
-    borderTopLeftRadius: Layout.borderRadius.lg,
-    borderTopRightRadius: Layout.borderRadius.lg,
-    maxHeight: "80%",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: Colors.text,
-  },
-  closeBtn: {
-    padding: Spacing.xs,
-  },
-  content: {
-    padding: Spacing.lg,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: Colors.textSecondary,
-    marginBottom: Spacing.xs,
-  },
-  picker: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: Spacing.md,
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.sm,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-  },
-  pickerText: {
-    fontSize: 16,
-    color: Colors.text,
-  },
-  pickerPlaceholder: {
-    fontSize: 16,
-    color: Colors.textTertiary,
-  },
-  pickerOptions: {
-    marginTop: Spacing.xs,
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.sm,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    overflow: "hidden",
-  },
-  pickerOption: {
-    padding: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  pickerOptionText: {
-    fontSize: 16,
-    color: Colors.text,
-  },
-  fileButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.md,
-    padding: Spacing.md,
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.sm,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    borderStyle: "dashed",
-  },
-  fileButtonText: {
-    fontSize: 16,
-    color: Colors.primary,
-    flex: 1,
-  },
-  errorBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.sm,
-    marginTop: Spacing.md,
-    padding: Spacing.md,
-    backgroundColor: "#FFF5F5",
-    borderRadius: Layout.borderRadius.sm,
-    borderWidth: 1,
-    borderColor: "#FFCCCC",
-  },
-  errorText: {
-    flex: 1,
-    fontSize: 14,
-    color: Colors.error,
-  },
-  footer: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: Spacing.md,
-    padding: Spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: Colors.borderLight,
-  },
-  cancelButton: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    color: Colors.textSecondary,
-  },
-  uploadButton: {
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-    backgroundColor: Colors.primary,
-    borderRadius: Layout.borderRadius.sm,
-    minWidth: 100,
-    alignItems: "center",
-  },
-  uploadButtonDisabled: {
-    opacity: 0.5,
-  },
-  uploadButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#FFFFFF",
-  },
-});
