@@ -39,12 +39,15 @@
     "linkStudentFeesSubtitle": "View fees and record payments",
     "linkInvoicesTitle": "Fee Invoices",
     "linkInvoicesSubtitle": "Manage invoices, payments & receipts",
-    "recentPayments": "Recent Payments",
+    "recentPayments": "Recent Transactions",
     "recentPaymentsHint": "Latest collections",
-    "viewAll": "View all",
+    "viewAll": "View All",
     "noRecentPayments": "No recent payments",
     "noRecentPaymentsHint": "Payments you record will appear here",
-    "goToStudentFees": "Go to Student Fees"
+    "goToStudentFees": "Go to Student Fees",
+    "overdueTrend": "Needs attention",
+    "collectionChartTitle": "Fee Collection",
+    "collectionChartSubtitle": "Last 7 days"
   },
   "feeFilters": {
     "all": "All",
@@ -85,7 +88,11 @@
     "breakdown": "Fee Breakdown",
     "ofTotal": "of {{total}}",
     "recentInvoices": "Recent Invoices",
-    "noInvoices": "No invoices yet"
+    "noInvoices": "No invoices yet",
+    "overdueByDays": "Overdue by {{n}} days",
+    "overdueInvoices": "Overdue Invoices",
+    "viewInvoices": "My Invoices",
+    "viewInvoicesSub": "See all fee invoices and dues"
   },
   "studentFeesList": {
     "title": "Student Fees",
@@ -245,9 +252,16 @@
     "filterOverdue": "Overdue",
     "headerSubline": "{{n}} invoices · {{amount}} due",
     "dueLine": "Due {{date}} • {{amount}}",
+    "dueOnLine": "Due {{date}}",
+    "paidOnLine": "Paid on {{date}}",
+    "amountLabel": "Total",
     "balance": "Balance: {{amount}}",
+    "totalOutstanding": "Total Outstanding",
+    "nextDueDate": "Next Due Date",
+    "noDue": "—",
+    "createFab": "Create invoice",
     "emptyTitle": "No invoices",
-    "emptySubtext": "Invoices will appear here when created"
+    "emptySubtext": "Invoices will appear here once issued."
   },
   "invoiceDetail": {
     "notFound": "Invoice not found",

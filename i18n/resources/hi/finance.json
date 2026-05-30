@@ -39,12 +39,15 @@
     "linkStudentFeesSubtitle": "शुल्क देखें और भुगतान दर्ज करें",
     "linkInvoicesTitle": "शुल्क चालान",
     "linkInvoicesSubtitle": "चालान, भुगतान और रसीदें प्रबंधित करें",
-    "recentPayments": "हाल के भुगतान",
+    "recentPayments": "हाल के लेन-देन",
     "recentPaymentsHint": "नवीनतम संग्रह",
     "viewAll": "सभी देखें",
     "noRecentPayments": "कोई हाल भुगतान नहीं",
     "noRecentPaymentsHint": "आपके दर्ज भुगतान यहाँ दिखेंगे",
-    "goToStudentFees": "छात्र शुल्क पर जाएँ"
+    "goToStudentFees": "छात्र शुल्क पर जाएँ",
+    "overdueTrend": "ध्यान देने योग्य",
+    "collectionChartTitle": "शुल्क संग्रह",
+    "collectionChartSubtitle": "पिछले 7 दिन"
   },
   "feeFilters": {
     "all": "सभी",
@@ -85,7 +88,11 @@
     "breakdown": "शुल्क विवरण",
     "ofTotal": "{{total}} में से",
     "recentInvoices": "हालिया चालान",
-    "noInvoices": "अभी कोई चालान नहीं"
+    "noInvoices": "अभी कोई चालान नहीं",
+    "overdueByDays": "{{n}} दिन से अतिदेय",
+    "overdueInvoices": "अतिदेय चालान",
+    "viewInvoices": "मेरे चालान",
+    "viewInvoicesSub": "सभी शुल्क चालान और बकाया देखें"
   },
   "studentFeesList": {
     "title": "छात्र शुल्क",
@@ -247,7 +254,14 @@
     "dueLine": "देय {{date}} • {{amount}}",
     "balance": "शेष: {{amount}}",
     "emptyTitle": "कोई चालान नहीं",
-    "emptySubtext": "बनने पर चालान यहाँ दिखेंगे"
+    "emptySubtext": "जारी होने पर चालान यहाँ दिखेंगे।",
+    "dueOnLine": "देय {{date}}",
+    "paidOnLine": "{{date}} को भुगतान",
+    "amountLabel": "कुल",
+    "totalOutstanding": "कुल बकाया",
+    "nextDueDate": "अगली देय तिथि",
+    "noDue": "—",
+    "createFab": "चालान बनाएँ"
   },
   "invoiceDetail": {
     "notFound": "चालान नहीं मिला",

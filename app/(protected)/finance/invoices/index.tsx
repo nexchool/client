@@ -1,25 +1,23 @@
 import React, { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  RefreshControl,
-  SafeAreaView,
-  Pressable,
-} from "react-native";
+import { View, FlatList, RefreshControl, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useInvoices } from "@/modules/fees/hooks/useFees";
 import type { FeeInvoice } from "@/modules/fees/services/feesService";
 import { calendarLocaleForLanguage } from "@/i18n";
-import { useTheme } from "@/common/theme";
+import { useTheme, type Palette } from "@/common/theme";
+import { Text } from "@/common/components/Text";
+import { AppIcon } from "@/common/components/AppIcon";
+import { PressScale } from "@/common/components/PressScale";
 import { Skeleton } from "@/common/components/Skeleton";
 import { EmptyState } from "@/common/components/EmptyState";
+import { DashboardKpiCard } from "@/modules/home/components/DashboardKpiCard";
 import { formatCurrency } from "@/common/utils/formatCurrency";
 import { Protected } from "@/modules/permissions/components/Protected";
 import * as PERMS from "@/modules/permissions/constants/permissions";
+
+type IconName = keyof typeof Ionicons.glyphMap;
 
 function formatDate(s: string, locale: string) {
   try {
@@ -42,30 +40,35 @@ function isOverdue(invoice: FeeInvoice): boolean {
   }
 }
 
-function StatusPill({ status }: { status: string }) {
+/** Maps a (resolved) invoice status to its accent palette token + badge glyph. */
+const STATUS_META: Record<string, { accent: keyof Palette; icon: IconName }> = {
+  overdue: { accent: "error", icon: "warning-outline" },
+  unpaid: { accent: "secondary", icon: "time-outline" },
+  partial: { accent: "secondary", icon: "time-outline" },
+  draft: { accent: "onSurfaceVariant", icon: "document-outline" },
+  paid: { accent: "tertiary", icon: "checkmark-circle-outline" },
+  cancelled: { accent: "onSurfaceVariant", icon: "close-circle-outline" },
+};
+
+function StatusBadge({ status }: { status: string }) {
   const { t } = useTranslation("finance");
-  const { palette, typography, spacing, radius } = useTheme();
-  const colorMap: Record<string, string> = {
-    draft: palette.onSurfaceVariant,
-    unpaid: palette.error,
-    partial: palette.warning,
-    paid: palette.success,
-    cancelled: palette.onSurfaceVariant,
-    overdue: palette.error,
-  };
-  const color = colorMap[status] ?? palette.onSurfaceVariant;
+  const { palette, spacing, radius } = useTheme();
+  const meta = STATUS_META[status] ?? STATUS_META.draft;
+  const color = palette[meta.accent];
   return (
     <View
       style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 4,
         paddingHorizontal: spacing.sm,
         paddingVertical: 2,
         borderRadius: radius.full,
-        borderWidth: 1,
-        borderColor: color,
-        backgroundColor: `${color}15`,
+        backgroundColor: `${color}1A`,
       }}
     >
-      <Text style={[typography.labelSm, { color }]}>
+      <AppIcon name={meta.icon} size="sm" color={meta.accent} />
+      <Text variant="labelSm" style={{ color }}>
         {t(`invoiceStatuses.${status}`, { defaultValue: status })}
       </Text>
     </View>
@@ -76,10 +79,8 @@ export default function InvoicesListPage() {
   const { t, i18n } = useTranslation("finance");
   const locale = calendarLocaleForLanguage(i18n.language ?? "en");
   const router = useRouter();
-  const { palette, spacing, radius, typography, elevation } = useTheme();
-  const [filter, setFilter] = useState<"all" | "paid" | "pending" | "overdue">(
-    "all"
-  );
+  const { palette, spacing, radius, elevation } = useTheme();
+  const [filter, setFilter] = useState<"all" | "paid" | "pending" | "overdue">("all");
 
   // Server-side query: only `paid` maps cleanly; everything else fetched and filtered client-side.
   const serverStatus = filter === "paid" ? "paid" : undefined;
@@ -97,15 +98,13 @@ export default function InvoicesListPage() {
     if (filter === "overdue") return invoices.filter(isOverdue);
     if (filter === "pending")
       return invoices.filter(
-        (i) =>
-          i.status === "unpaid" || i.status === "partial" || i.status === "draft"
+        (i) => i.status === "unpaid" || i.status === "partial" || i.status === "draft"
       );
     return invoices;
   }, [invoices, filter]);
 
-  // Header subline data
-  const totalCount = invoices.length;
-  const totalDue = useMemo(
+  // Summary derived only from real fields.
+  const totalOutstanding = useMemo(
     () =>
       invoices
         .filter((i) => i.status !== "paid" && i.status !== "cancelled")
@@ -113,293 +112,244 @@ export default function InvoicesListPage() {
     [invoices]
   );
 
+  // Earliest still-owed due date (real field, derivable). No fabricated values.
+  const nextDueDate = useMemo(() => {
+    const owed = invoices
+      .filter((i) => i.status !== "paid" && i.status !== "cancelled" && i.due_date)
+      .map((i) => new Date(i.due_date).getTime())
+      .filter((t) => !Number.isNaN(t));
+    if (owed.length === 0) return null;
+    return new Date(Math.min(...owed));
+  }, [invoices]);
+
   const renderItem = ({ item }: { item: FeeInvoice }) => {
     const overdue = isOverdue(item);
+    const resolvedStatus = overdue ? "overdue" : item.status;
+    const meta = STATUS_META[resolvedStatus] ?? STATUS_META.draft;
+    const isPaid = item.status === "paid";
+    const dateLabel = isPaid
+      ? t("invoices.paidOnLine", {
+          defaultValue: "Paid on {{date}}",
+          date: formatDate(item.updated_at ?? item.issue_date, locale),
+        })
+      : t("invoices.dueOnLine", {
+          defaultValue: "Due {{date}}",
+          date: formatDate(item.due_date, locale),
+        });
+
     return (
-      <Pressable
-        onPress={() =>
-          router.push(`/(protected)/finance/invoices/${item.id}` as never)
-        }
-        style={({ pressed }) => [
+      <PressScale
+        onPress={() => router.push(`/(protected)/finance/invoices/${item.id}` as never)}
+        style={[
           elevation.card,
           {
             backgroundColor: palette.surfaceContainerLowest,
             borderRadius: radius.xl,
             padding: spacing.md,
             marginBottom: spacing.md,
-            flexDirection: "row",
-            alignItems: "center",
-            gap: spacing.md,
-            borderLeftWidth: overdue ? 4 : 0,
-            borderLeftColor: palette.error,
-            opacity: pressed ? 0.92 : 1,
+            borderLeftWidth: 4,
+            borderLeftColor: palette[meta.accent],
+            opacity: isPaid ? 0.85 : 1,
           },
         ]}
       >
         <View
           style={{
-            width: 44,
-            height: 44,
-            borderRadius: radius.md,
-            backgroundColor: palette.primaryContainer,
+            flexDirection: "row",
             alignItems: "center",
-            justifyContent: "center",
+            gap: spacing.sm,
+            marginBottom: spacing.xs,
           }}
         >
-          <Ionicons
-            name="receipt-outline"
-            size={22}
-            color={palette.onPrimaryContainer}
-          />
+          <Text variant="labelSm" color="onSurfaceVariant" numberOfLines={1} style={{ flex: 1 }}>
+            {item.invoice_number}
+          </Text>
+          <StatusBadge status={resolvedStatus} />
         </View>
 
-        <View style={{ flex: 1 }}>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <Text
-              style={[typography.labelMd, { color: palette.onSurface }]}
-              numberOfLines={1}
-            >
-              {item.invoice_number}
+        <View style={{ flexDirection: "row", alignItems: "flex-end", gap: spacing.md }}>
+          <View style={{ flex: 1 }}>
+            <Text variant="labelMd" color="onSurface">
+              {t("invoices.amountLabel", { defaultValue: "Total" })}
             </Text>
-            <StatusPill status={overdue ? "overdue" : item.status} />
+            <Text variant="headlineMd" color={isPaid ? "onSurfaceVariant" : "onSurface"}>
+              {formatCurrency(item.total_amount)}
+            </Text>
+            <Text variant="bodySm" color="onSurfaceVariant" style={{ marginTop: 2 }}>
+              {dateLabel}
+            </Text>
+            {!isPaid ? (
+              <Text variant="labelSm" color="onSurface" style={{ marginTop: 2 }}>
+                {t("invoices.balance", {
+                  amount: formatCurrency(item.remaining_balance),
+                })}
+              </Text>
+            ) : null}
           </View>
-          <Text
-            style={[
-              typography.labelSm,
-              { color: palette.onSurfaceVariant, marginTop: 2 },
-            ]}
-            numberOfLines={1}
-          >
-            {t("invoices.dueLine", {
-              date: formatDate(item.due_date, locale),
-              amount: formatCurrency(item.total_amount),
-            })}
-          </Text>
-          <Text
-            style={[
-              typography.labelSm,
-              { color: palette.onSurface, marginTop: 2 },
-            ]}
-          >
-            {t("invoices.balance", {
-              amount: formatCurrency(item.remaining_balance),
-            })}
-          </Text>
+          <AppIcon name="chevron-forward" size="md" color="onSurfaceVariant" />
         </View>
-
-        <Ionicons
-          name="chevron-forward"
-          size={20}
-          color={palette.onSurfaceVariant}
-        />
-      </Pressable>
+      </PressScale>
     );
   };
 
-  const filterOptions: {
-    key: "all" | "paid" | "pending" | "overdue";
-    label: string;
-  }[] = [
+  const filterOptions: { key: "all" | "paid" | "pending" | "overdue"; label: string }[] = [
     { key: "all", label: t("invoices.filterAll", { defaultValue: "All" }) },
-    {
-      key: "paid",
-      label: t("invoices.filterPaid", { defaultValue: "Paid" }),
-    },
-    {
-      key: "pending",
-      label: t("invoices.filterPending", { defaultValue: "Pending" }),
-    },
-    {
-      key: "overdue",
-      label: t("invoices.filterOverdue", { defaultValue: "Overdue" }),
-    },
+    { key: "paid", label: t("invoices.filterPaid", { defaultValue: "Paid" }) },
+    { key: "pending", label: t("invoices.filterPending", { defaultValue: "Pending" }) },
+    { key: "overdue", label: t("invoices.filterOverdue", { defaultValue: "Overdue" }) },
   ];
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: palette.surface }}>
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
+    <View style={{ flex: 1, backgroundColor: palette.surface }}>
+      <FlatList
+        data={filteredInvoices}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        contentContainerStyle={{
           paddingHorizontal: spacing.marginMobile,
-          paddingTop: spacing.md,
-          paddingBottom: spacing.sm,
-          gap: spacing.sm,
+          paddingTop: spacing.lg,
+          // Clear the FAB (56 + spacing.lg above the tab bar) without a big empty band.
+          paddingBottom: spacing.lg + 56 + spacing.lg,
         }}
-      >
-        <TouchableOpacity
-          onPress={() => router.back()}
-          hitSlop={12}
-          style={{ padding: spacing.xs }}
-        >
-          <Ionicons
-            name="chevron-back"
-            size={26}
-            color={palette.onSurface}
-          />
-        </TouchableOpacity>
-        <Text
-          style={[typography.headlineLg, { color: palette.onSurface, flex: 1 }]}
-        >
-          {t("invoices.title", { defaultValue: "Invoices" })}
-        </Text>
-      </View>
-
-      <View
-        style={{
-          paddingHorizontal: spacing.marginMobile,
-          marginBottom: spacing.md,
-        }}
-      >
-        <Text
-          style={[typography.display, { color: palette.onSurface }]}
-        >
-          {t("invoices.title", { defaultValue: "Invoices" })}
-        </Text>
-        <Text
-          style={[
-            typography.bodyMd,
-            { color: palette.onSurfaceVariant, marginTop: spacing.xs },
-          ]}
-        >
-          {t("invoices.headerSubline", {
-            defaultValue: "{{n}} invoices · {{amount}} due",
-            n: totalCount,
-            amount: formatCurrency(totalDue),
-          })}
-        </Text>
-      </View>
-
-      <View
-        style={{
-          flexDirection: "row",
-          flexWrap: "wrap",
-          gap: spacing.sm,
-          paddingHorizontal: spacing.marginMobile,
-          marginBottom: spacing.md,
-        }}
-      >
-        {filterOptions.map((opt) => {
-          const active = filter === opt.key;
-          return (
-            <Pressable
-              key={opt.key}
-              onPress={() => setFilter(opt.key)}
-              style={({ pressed }) => ({
-                paddingHorizontal: spacing.md,
-                paddingVertical: spacing.xs,
-                borderRadius: radius.full,
-                backgroundColor: active
-                  ? palette.primary
-                  : palette.surfaceContainerLow,
-                borderWidth: 1,
-                borderColor: active ? palette.primary : palette.outlineVariant,
-                opacity: pressed ? 0.85 : 1,
-              })}
-            >
-              <Text
-                style={[
-                  typography.labelSm,
-                  { color: active ? palette.onPrimary : palette.onSurface },
-                ]}
-              >
-                {opt.label}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <View>
+            <View style={{ marginBottom: spacing.lg }}>
+              <Text variant="display" color="onSurface">
+                {t("invoices.title", { defaultValue: "Invoices" })}
               </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+              <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
+                {t("invoices.headerSubline", {
+                  defaultValue: "{{n}} invoices · {{amount}} due",
+                  n: invoices.length,
+                  amount: formatCurrency(totalOutstanding),
+                })}
+              </Text>
+            </View>
 
-      {error ? (
-        <View style={{ padding: spacing.lg, alignItems: "center" }}>
-          <Text style={[typography.bodyMd, { color: palette.error }]}>
-            {error instanceof Error ? error.message : t("common.failedToLoad")}
-          </Text>
-          <TouchableOpacity
-            style={{
-              marginTop: spacing.md,
-              paddingHorizontal: spacing.lg,
-              paddingVertical: spacing.sm,
-              backgroundColor: palette.primary,
-              borderRadius: radius.md,
-            }}
-            onPress={() => refetch()}
-          >
-            <Text style={[typography.labelMd, { color: palette.onPrimary }]}>
-              {t("common.retry")}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      ) : isLoading && invoices.length === 0 ? (
-        <View style={{ padding: spacing.marginMobile, gap: spacing.md }}>
-          <Skeleton width="100%" height={88} radius={radius.xl} />
-          <Skeleton width="100%" height={88} radius={radius.xl} />
-          <Skeleton width="100%" height={88} radius={radius.xl} />
-        </View>
-      ) : (
-        <FlatList
-          data={filteredInvoices}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          contentContainerStyle={{
-            paddingHorizontal: spacing.marginMobile,
-            paddingBottom: spacing.xl * 2,
-          }}
-          refreshControl={
-            <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-          }
-          ListEmptyComponent={
-            <EmptyState
-              icon={
-                <Ionicons
-                  name="document-text-outline"
-                  size={36}
-                  color={palette.onSurfaceVariant}
+            <View style={{ flexDirection: "row", gap: spacing.sm, marginBottom: spacing.lg }}>
+              <View style={{ flex: 1 }}>
+                <DashboardKpiCard
+                  label={t("invoices.totalOutstanding", { defaultValue: "Total Outstanding" })}
+                  value={formatCurrency(totalOutstanding)}
+                  accentColor={totalOutstanding > 0 ? "error" : "success"}
+                  iconName="wallet-outline"
+                  iconChipBg={totalOutstanding > 0 ? "errorContainer" : "surfaceContainerHigh"}
+                  iconChipFg={totalOutstanding > 0 ? "onErrorContainer" : "success"}
                 />
-              }
-              title={t("invoices.emptyTitle", {
-                defaultValue: "No invoices",
+              </View>
+              <View style={{ flex: 1 }}>
+                <DashboardKpiCard
+                  label={t("invoices.nextDueDate", { defaultValue: "Next Due Date" })}
+                  value={
+                    nextDueDate
+                      ? formatDate(nextDueDate.toISOString(), locale)
+                      : t("invoices.noDue", { defaultValue: "—" })
+                  }
+                  accentColor="secondary"
+                  iconName="calendar-outline"
+                  iconChipBg="secondaryContainer"
+                  iconChipFg="onSecondaryContainer"
+                />
+              </View>
+            </View>
+
+            <View
+              style={{
+                flexDirection: "row",
+                flexWrap: "wrap",
+                gap: spacing.sm,
+                marginBottom: spacing.md,
+              }}
+            >
+              {filterOptions.map((opt) => {
+                const active = filter === opt.key;
+                return (
+                  <Pressable
+                    key={opt.key}
+                    onPress={() => setFilter(opt.key)}
+                    style={({ pressed }) => ({
+                      paddingHorizontal: spacing.md,
+                      paddingVertical: spacing.xs,
+                      borderRadius: radius.full,
+                      backgroundColor: active ? palette.primary : palette.surfaceContainerLow,
+                      borderWidth: 1,
+                      borderColor: active ? palette.primary : palette.outlineVariant,
+                      opacity: pressed ? 0.85 : 1,
+                    })}
+                  >
+                    <Text variant="labelSm" color={active ? "onPrimary" : "onSurface"}>
+                      {opt.label}
+                    </Text>
+                  </Pressable>
+                );
               })}
+            </View>
+          </View>
+        }
+        ListEmptyComponent={
+          error ? (
+            <View style={{ paddingVertical: spacing.lg, alignItems: "center" }}>
+              <Text variant="bodyMd" color="error">
+                {error instanceof Error ? error.message : t("common.failedToLoad")}
+              </Text>
+              <PressScale
+                onPress={() => refetch()}
+                style={{
+                  marginTop: spacing.md,
+                  paddingHorizontal: spacing.lg,
+                  paddingVertical: spacing.sm,
+                  backgroundColor: palette.primary,
+                  borderRadius: radius.md,
+                }}
+              >
+                <Text variant="labelMd" color="onPrimary">
+                  {t("common.retry")}
+                </Text>
+              </PressScale>
+            </View>
+          ) : isLoading ? (
+            <View style={{ gap: spacing.md }}>
+              <Skeleton width="100%" height={108} radius={radius.xl} />
+              <Skeleton width="100%" height={108} radius={radius.xl} />
+              <Skeleton width="100%" height={108} radius={radius.xl} />
+            </View>
+          ) : (
+            <EmptyState
+              icon={<AppIcon name="document-text-outline" size="xl" color="onSurfaceVariant" />}
+              title={t("invoices.emptyTitle", { defaultValue: "No invoices" })}
               description={t("invoices.emptySubtext", {
                 defaultValue: "Invoices will appear here once issued.",
               })}
             />
-          }
-        />
-      )}
+          )
+        }
+      />
 
       <Protected permission={PERMS.FEES_INVOICE_CREATE}>
-        <Pressable
+        <PressScale
           accessibilityRole="button"
-          accessibilityLabel={t("invoices.createFab", {
-            defaultValue: "Create invoice",
-          })}
-          onPress={() =>
-            router.push("/(protected)/finance/invoices/new" as never)
-          }
-          style={({ pressed }) => ({
-            position: "absolute",
-            bottom: 96,
-            right: 20,
-            width: 56,
-            height: 56,
-            borderRadius: 28,
-            backgroundColor: palette.primary,
-            alignItems: "center",
-            justifyContent: "center",
-            opacity: pressed ? 0.85 : 1,
-            ...elevation.card,
-          })}
+          accessibilityLabel={t("invoices.createFab", { defaultValue: "Create invoice" })}
+          onPress={() => router.push("/(protected)/finance/invoices/new" as never)}
+          style={[
+            elevation.card,
+            {
+              position: "absolute",
+              bottom: spacing.lg,
+              right: spacing.marginMobile,
+              width: 56,
+              height: 56,
+              borderRadius: 28,
+              backgroundColor: palette.primary,
+              alignItems: "center",
+              justifyContent: "center",
+            },
+          ]}
         >
-          <Ionicons name="add" size={28} color={palette.onPrimary} />
-        </Pressable>
+          <AppIcon name="add" size="lg" color="onPrimary" />
+        </PressScale>
       </Protected>
-    </SafeAreaView>
+    </View>
   );
 }

@@ -39,12 +39,15 @@
     "linkStudentFeesSubtitle": "ફી જુઓ અને ચુકવણી નોંધો",
     "linkInvoicesTitle": "ફી ઇન્વૉઇસ",
     "linkInvoicesSubtitle": "ઇન્વૉઇસ, ચુકવણી અને રસીદો સંચાલિત કરો",
-    "recentPayments": "તાજી ચુકવણીઓ",
+    "recentPayments": "તાજેતરના વ્યવહારો",
     "recentPaymentsHint": "નવીનતમ વસૂલી",
     "viewAll": "બધું જુઓ",
     "noRecentPayments": "કોઈ તાજી ચુકવણી નથી",
     "noRecentPaymentsHint": "તમે નોંધો તે ચુકવણીઓ અહીં દેખાશે",
-    "goToStudentFees": "વિદ્યાર્થી ફી પર જાઓ"
+    "goToStudentFees": "વિદ્યાર્થી ફી પર જાઓ",
+    "overdueTrend": "ધ્યાન જરૂરી",
+    "collectionChartTitle": "ફી સંગ્રહ",
+    "collectionChartSubtitle": "છેલ્લા 7 દિવસ"
   },
   "feeFilters": {
     "all": "બધા",
@@ -85,7 +88,11 @@
     "breakdown": "ફી વિગત",
     "ofTotal": "{{total}} માંથી",
     "recentInvoices": "તાજેતરના ઇન્વૉઇસ",
-    "noInvoices": "હજી કોઈ ઇન્વૉઇસ નથી"
+    "noInvoices": "હજી કોઈ ઇન્વૉઇસ નથી",
+    "overdueByDays": "{{n}} દિવસથી મુદત વીતી",
+    "overdueInvoices": "મુદત વીતેલી ઇન્વૉઇસ",
+    "viewInvoices": "મારી ઇન્વૉઇસ",
+    "viewInvoicesSub": "બધી ફી ઇન્વૉઇસ અને બાકી જુઓ"
   },
   "studentFeesList": {
     "title": "વિદ્યાર્થી ફી",
@@ -247,7 +254,14 @@
     "dueLine": "બાકી {{date}} • {{amount}}",
     "balance": "બેલેન્સ: {{amount}}",
     "emptyTitle": "કોઈ ઇન્વૉઇસ નથી",
-    "emptySubtext": "બનાવાયેલી ઇન્વૉઇસ અહીં દેખાશે"
+    "emptySubtext": "જારી થયા પછી ઇન્વૉઇસ અહીં દેખાશે.",
+    "dueOnLine": "બાકી {{date}}",
+    "paidOnLine": "{{date}} ના રોજ ચૂકવેલ",
+    "amountLabel": "કુલ",
+    "totalOutstanding": "કુલ બાકી",
+    "nextDueDate": "આગામી બાકી તારીખ",
+    "noDue": "—",
+    "createFab": "ઇન્વૉઇસ બનાવો"
   },
   "invoiceDetail": {
     "notFound": "ઇન્વૉઇસ મળી નથી",
