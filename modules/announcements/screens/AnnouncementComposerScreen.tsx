@@ -259,7 +259,10 @@ export default function AnnouncementComposerScreen() {
           : t('compose.newTitle', { defaultValue: 'New announcement' })}
       </Text>
 
-      <ScrollView contentContainerStyle={{ gap: spacing.lg, paddingTop: spacing.lg, paddingBottom: 200 }}>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ gap: spacing.lg, paddingTop: spacing.lg, paddingBottom: 200 }}
+      >
         <FormSection title={t('section.content', { defaultValue: 'Content' })}>
           <FormField
             control={control}
