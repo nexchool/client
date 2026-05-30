@@ -1,10 +1,11 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "@/common/constants/colors";
-import { Spacing, Layout } from "@/common/constants/spacing";
+import { View, StyleSheet } from "react-native";
+import { Text } from "@/common/components/Text";
+import { AppIcon } from "@/common/components/AppIcon";
+import { PressScale } from "@/common/components/PressScale";
 import { ProfileAvatar } from "@/common/components/ProfileAvatar";
+import { useTheme } from "@/common/theme";
 import { Student } from "../types";
 
 interface StudentListItemProps {
@@ -12,61 +13,155 @@ interface StudentListItemProps {
   onPress: (student: Student) => void;
 }
 
+/** "Grade 10-B" -> { grade: "Grade 10", section: "B" }. Falls back gracefully. */
+function splitClassName(className?: string): { grade?: string; section?: string } {
+  if (!className) return {};
+  const idx = className.lastIndexOf("-");
+  if (idx === -1) return { grade: className };
+  return {
+    grade: className.slice(0, idx).trim() || undefined,
+    section: className.slice(idx + 1).trim() || undefined,
+  };
+}
+
 export const StudentListItem: React.FC<StudentListItemProps> = ({
   student,
   onPress,
 }) => {
   const { t } = useTranslation("students");
+  const { palette, spacing, radius, elevation, avatarSize } = useTheme();
+
+  const isInactive =
+    (student.student_status || "").trim().toLowerCase() === "inactive";
+  const { grade, section } = splitClassName(student.class_name);
+  const accentColor = isInactive ? palette.outlineVariant : palette.primary;
+
   return (
-    <TouchableOpacity
-      style={styles.container}
+    <PressScale
       onPress={() => onPress(student)}
-      activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={student.name || t("listItem.unknownName")}
+      style={[
+        styles.card,
+        {
+          backgroundColor: palette.surfaceContainerLowest,
+          borderRadius: radius.xl,
+          borderLeftColor: accentColor,
+          opacity: isInactive ? 0.85 : 1,
+          ...elevation.card,
+        },
+      ]}
     >
-      <ProfileAvatar
-        uri={student.profile_picture}
-        size={48}
-        name={student.name}
-        iconColor={Colors.primary}
-        placeholderBg={Colors.backgroundSecondary}
-        style={{ marginRight: Spacing.md }}
-      />
-      <View style={styles.content}>
-        <Text style={styles.name}>
-          {student.name || t("listItem.unknownName")}
-        </Text>
-        <Text style={styles.info}>
-          {student.admission_number} •{" "}
-          {student.class_name || t("listItem.noClass")}
-        </Text>
+      <View style={styles.body}>
+        <View style={[styles.topRow, { marginBottom: spacing.md }]}>
+          <ProfileAvatar
+            uri={student.profile_picture}
+            size={avatarSize.md}
+            name={student.name}
+            iconColor={
+              isInactive ? palette.outline : palette.onTertiaryContainer
+            }
+            placeholderBg={
+              isInactive ? palette.surfaceContainerHighest : palette.tertiaryContainer
+            }
+          />
+          <View style={styles.headerText}>
+            <Text variant="titleSm" color="onSurface" numberOfLines={1}>
+              {student.name || t("listItem.unknownName")}
+            </Text>
+            <Text variant="bodySm" color="onSurfaceVariant" numberOfLines={1}>
+              {`ID: ${student.admission_number}`}
+            </Text>
+          </View>
+          {isInactive ? (
+            <View
+              style={[
+                styles.statusBadge,
+                {
+                  backgroundColor: palette.surfaceContainerHighest,
+                  borderRadius: radius.sm,
+                  paddingHorizontal: spacing.sm,
+                },
+              ]}
+            >
+              <Text variant="labelSm" color="onSurfaceVariant">
+                {t("list.badgeInactive")}
+              </Text>
+            </View>
+          ) : (
+            <AppIcon name="chevron-forward" size="md" color="outlineVariant" />
+          )}
+        </View>
+
+        <View
+          style={[
+            styles.footer,
+            {
+              borderTopColor: palette.outlineVariant,
+              paddingTop: spacing.sm,
+            },
+          ]}
+        >
+          <View style={styles.gradeRow}>
+            <AppIcon name="school-outline" size="sm" color={isInactive ? "outline" : "primary"} />
+            <Text variant="labelMd" color="onSurface">
+              {grade || t("listItem.noClass")}
+            </Text>
+          </View>
+          {section ? (
+            <View
+              style={[
+                styles.sectionBadge,
+                {
+                  backgroundColor: palette.surfaceContainer,
+                  borderRadius: radius.full,
+                  paddingHorizontal: spacing.md,
+                },
+              ]}
+            >
+              <Text variant="labelSm" color="onSurface">
+                {`Sec ${section}`}
+              </Text>
+            </View>
+          ) : null}
+        </View>
       </View>
-      <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
-    </TouchableOpacity>
+    </PressScale>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  card: {
+    borderLeftWidth: 4,
+    marginBottom: 12,
+    overflow: "hidden",
+  },
+  body: {
+    padding: 16,
+  },
+  topRow: {
     flexDirection: "row",
     alignItems: "center",
-    padding: Spacing.md,
-    backgroundColor: Colors.background,
-    borderRadius: Layout.borderRadius.md,
-    marginBottom: Spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
   },
-  content: {
+  headerText: {
     flex: 1,
+    marginLeft: 12,
   },
-  name: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: Colors.text,
-    marginBottom: 2,
+  statusBadge: {
+    paddingVertical: 2,
   },
-  info: {
-    fontSize: 14,
-    color: Colors.textSecondary,
+  footer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  gradeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  sectionBadge: {
+    paddingVertical: 4,
   },
 });

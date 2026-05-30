@@ -2,18 +2,15 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   View,
-  Text,
   StyleSheet,
   FlatList,
   ActivityIndicator,
   SafeAreaView,
   RefreshControl,
-  TouchableOpacity,
   TextInput,
   Pressable,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 import { useStudents } from "../hooks/useStudents";
 import { StudentListItem } from "../components/StudentListItem";
 import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
@@ -21,8 +18,8 @@ import { useAcademicYearContext } from "@/modules/academics/context/AcademicYear
 import { Protected } from "@/modules/permissions/components/Protected";
 import * as PERMS from "@/modules/permissions/constants/permissions";
 import { useTheme } from "@/common/theme";
-import { Colors } from "@/common/constants/colors";
-import { Spacing, Layout } from "@/common/constants/spacing";
+import { Text } from "@/common/components/Text";
+import { AppIcon } from "@/common/components/AppIcon";
 import { Student } from "../types";
 
 // Debounce hook
@@ -42,6 +39,8 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
+type StatusFilter = "all" | "active" | "inactive";
+
 export default function StudentsScreen() {
   const { t } = useTranslation("students");
   const router = useRouter();
@@ -54,9 +53,10 @@ export default function StudentsScreen() {
   } = useStudents();
   const { hasPermission, hasAnyPermission } = usePermissions();
   const { selectedAcademicYearId } = useAcademicYearContext();
-  const { palette, elevation } = useTheme();
+  const { palette, radius, elevation } = useTheme();
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const debouncedSearch = useDebounce(searchQuery, 500);
 
   // Check permissions
@@ -68,13 +68,15 @@ export default function StudentsScreen() {
 
   useEffect(() => {
     loadData();
-  }, [canViewAll, canViewSelf, debouncedSearch, selectedAcademicYearId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canViewAll, canViewSelf, debouncedSearch, statusFilter, selectedAcademicYearId]);
 
   const loadData = () => {
     if (canViewAll) {
       fetchStudents({
         search: debouncedSearch || undefined,
         academic_year_id: selectedAcademicYearId || undefined,
+        student_status: statusFilter === "all" ? undefined : statusFilter,
       });
     } else if (canViewSelf) {
       fetchMyProfile();
@@ -85,78 +87,180 @@ export default function StudentsScreen() {
     router.push(`/students/${student.id}` as any);
   };
 
+  const cycleStatusFilter = () => {
+    setStatusFilter((prev) =>
+      prev === "all" ? "active" : prev === "active" ? "inactive" : "all"
+    );
+  };
+
+  const statusLabel =
+    statusFilter === "active"
+      ? t("list.filterStatusActive")
+      : statusFilter === "inactive"
+      ? t("list.filterStatusInactive")
+      : t("list.filterStatusAll");
+
+  const renderFilters = () => {
+    const isActive = statusFilter !== "all";
+    return (
+      <View
+        style={[
+          styles.toolbar,
+          {
+            backgroundColor: palette.surfaceContainerLowest,
+            borderRadius: radius.xl,
+            ...elevation.card,
+          },
+        ]}
+      >
+        <View
+          style={[
+            styles.searchContainer,
+            {
+              borderRadius: radius.DEFAULT,
+              borderColor: palette.outlineVariant,
+              backgroundColor: palette.surfaceContainerLowest,
+            },
+          ]}
+        >
+          <AppIcon name="search" size="md" color="outline" />
+          <TextInput
+            style={[styles.searchInput, { color: palette.onSurface }]}
+            placeholder={t("list.searchPlaceholder")}
+            placeholderTextColor={palette.onSurfaceVariant}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <AppIcon
+              name="close-circle"
+              size="md"
+              color="onSurfaceVariant"
+              onPress={() => setSearchQuery("")}
+              accessibilityLabel="Clear search"
+            />
+          )}
+        </View>
+
+        <View style={styles.chipRow}>
+          <Pressable
+            onPress={cycleStatusFilter}
+            accessibilityRole="button"
+            accessibilityLabel={statusLabel}
+            style={({ pressed }) => [
+              styles.chip,
+              {
+                borderRadius: radius.full,
+                backgroundColor: isActive
+                  ? palette.surfaceContainerLow
+                  : palette.surfaceContainerLowest,
+                borderColor: isActive ? palette.primary : palette.outlineVariant,
+                opacity: pressed ? 0.85 : 1,
+              },
+            ]}
+          >
+            <Text
+              variant="labelMd"
+              color={isActive ? "primary" : "onSurfaceVariant"}
+            >
+              {statusLabel}
+            </Text>
+            <AppIcon
+              name={isActive ? "close" : "chevron-down"}
+              size="sm"
+              color={isActive ? "primary" : "onSurfaceVariant"}
+            />
+          </Pressable>
+        </View>
+      </View>
+    );
+  };
+
   const renderContent = () => {
     if (loading && students.length === 0 && !currentStudent) {
       return (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+          <ActivityIndicator size="large" color={palette.primary} />
         </View>
       );
     }
 
     if (canViewAll) {
       return (
-        <>
-          {/* Search Bar */}
-          <View style={styles.searchContainer}>
-            <Ionicons name="search" size={20} color={Colors.textSecondary} style={styles.searchIcon} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder={t("list.searchPlaceholder")}
-              placeholderTextColor={Colors.textSecondary}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
+        <FlatList
+          data={students}
+          keyExtractor={(item) => item.id}
+          ListHeaderComponent={renderFilters()}
+          renderItem={({ item }) => (
+            <StudentListItem student={item} onPress={handleStudentPress} />
+          )}
+          contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={loading}
+              onRefresh={loadData}
+              tintColor={palette.primary}
             />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery("")}>
-                <Ionicons name="close-circle" size={20} color={Colors.textSecondary} />
-              </TouchableOpacity>
-            )}
-          </View>
-
-          <FlatList
-            data={students}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <StudentListItem
-                student={item}
-                onPress={handleStudentPress}
-              />
-            )}
-            contentContainerStyle={styles.listContent}
-            refreshControl={
-              <RefreshControl refreshing={loading} onRefresh={loadData} />
-            }
-            ListEmptyComponent={
-              <View style={styles.center}>
-                <Text style={styles.emptyText}>
-                  {searchQuery ? t("list.emptySearch") : t("list.empty")}
-                </Text>
-              </View>
-            }
-          />
-        </>
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <AppIcon name="people-outline" size="hero" color="outline" />
+              <Text
+                variant="bodyMd"
+                color="onSurfaceVariant"
+                style={styles.emptyText}
+              >
+                {searchQuery ? t("list.emptySearch") : t("list.empty")}
+              </Text>
+            </View>
+          }
+        />
       );
     }
 
     if (canViewSelf && currentStudent) {
       return (
         <View style={styles.profileContainer}>
-          <Text style={styles.profileTitle}>{t("list.myProfileTitle")}</Text>
-          <View style={styles.card}>
-            <Text style={styles.label}>{t("list.labelName")}</Text>
-            <Text style={styles.value}>{currentStudent.name}</Text>
+          <Text variant="headlineMd" color="onSurface" style={styles.profileTitle}>
+            {t("list.myProfileTitle")}
+          </Text>
+          <View
+            style={[
+              styles.profileCard,
+              {
+                backgroundColor: palette.surfaceContainerLowest,
+                borderRadius: radius.xl,
+                ...elevation.card,
+              },
+            ]}
+          >
+            <Text variant="labelMd" color="onSurfaceVariant" style={styles.label}>
+              {t("list.labelName")}
+            </Text>
+            <Text variant="bodyLg" color="onSurface">
+              {currentStudent.name}
+            </Text>
 
-            <Text style={styles.label}>{t("list.labelAdmissionNo")}</Text>
-            <Text style={styles.value}>{currentStudent.admission_number}</Text>
+            <Text variant="labelMd" color="onSurfaceVariant" style={styles.label}>
+              {t("list.labelAdmissionNo")}
+            </Text>
+            <Text variant="bodyLg" color="onSurface">
+              {currentStudent.admission_number}
+            </Text>
 
-            <Text style={styles.label}>{t("list.labelClass")}</Text>
-            <Text style={styles.value}>
+            <Text variant="labelMd" color="onSurfaceVariant" style={styles.label}>
+              {t("list.labelClass")}
+            </Text>
+            <Text variant="bodyLg" color="onSurface">
               {currentStudent.class_name || t("list.notAssigned")}
             </Text>
 
-            <Text style={styles.label}>{t("list.labelEmail")}</Text>
-            <Text style={styles.value}>{currentStudent.email}</Text>
+            <Text variant="labelMd" color="onSurfaceVariant" style={styles.label}>
+              {t("list.labelEmail")}
+            </Text>
+            <Text variant="bodyLg" color="onSurface">
+              {currentStudent.email}
+            </Text>
           </View>
         </View>
       );
@@ -164,15 +268,19 @@ export default function StudentsScreen() {
 
     return (
       <View style={styles.center}>
-        <Text style={styles.errorText}>{t("list.noPermission")}</Text>
+        <Text variant="bodyMd" color="error" style={styles.errorText}>
+          {t("list.noPermission")}
+        </Text>
       </View>
     );
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t("list.title")}</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: palette.surface }]}>
+      <View style={[styles.header, { borderBottomColor: palette.outlineVariant }]}>
+        <Text variant="headlineLg" color="onSurface">
+          {t("list.title")}
+        </Text>
       </View>
 
       {renderContent()}
@@ -196,7 +304,7 @@ export default function StudentsScreen() {
             ...elevation.card,
           })}
         >
-          <Ionicons name="add" size={28} color={palette.onPrimary} />
+          <AppIcon name="add" size="xl" color="onPrimary" />
         </Pressable>
       </Protected>
     </SafeAreaView>
@@ -206,89 +314,78 @@ export default function StudentsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: Spacing.xl,
+    padding: 32,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-    backgroundColor: Colors.background,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: Colors.text,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   listContent: {
-    padding: Spacing.md,
+    padding: 16,
+    paddingBottom: 120,
   },
-  emptyText: {
-    fontSize: 16,
-    color: Colors.textSecondary,
-  },
-  errorText: {
-    fontSize: 16,
-    color: Colors.error,
-    textAlign: "center",
-  },
-  profileContainer: {
-    padding: Spacing.lg,
-  },
-  profileTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    marginBottom: Spacing.lg,
-    color: Colors.text,
-  },
-  card: {
-    padding: Spacing.lg,
-    backgroundColor: Colors.background,
-    borderRadius: Layout.borderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  label: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    marginTop: Spacing.md,
-  },
-  value: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: Colors.text,
+  toolbar: {
+    padding: 16,
+    marginBottom: 16,
+    gap: 12,
   },
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    margin: Spacing.md,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
-  },
-  searchIcon: {
-    marginRight: Spacing.sm,
+    gap: 8,
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
-    color: Colors.text,
-    padding: Spacing.sm,
+    padding: 0,
+  },
+  chipRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  chip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderWidth: 1,
+  },
+  emptyState: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 64,
+    gap: 12,
+  },
+  emptyText: {
+    textAlign: "center",
+  },
+  errorText: {
+    textAlign: "center",
+  },
+  profileContainer: {
+    padding: 20,
+  },
+  profileTitle: {
+    marginBottom: 16,
+  },
+  profileCard: {
+    padding: 20,
+  },
+  label: {
+    marginTop: 12,
+    marginBottom: 2,
   },
 });

@@ -9,6 +9,7 @@ export const studentService = {
     class_ids?: string[];
     academic_year_id?: string;
     search?: string;
+    student_status?: string;
   }) => {
     let url = '/api/students/';
     if (params) {
@@ -18,6 +19,7 @@ export const studentService = {
       else if (params.class_id) query.append('class_id', params.class_id);
       if (params.academic_year_id) query.append('academic_year_id', params.academic_year_id);
       if (params.search) query.append('search', params.search);
+      if (params.student_status) query.append('student_status', params.student_status);
       const queryString = query.toString();
       if (queryString) url += `?${queryString}`;
     }
