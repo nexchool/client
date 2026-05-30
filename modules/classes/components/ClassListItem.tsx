@@ -4,7 +4,7 @@ import { View, StyleSheet } from "react-native";
 import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
 import { PressScale } from "@/common/components/PressScale";
-import { useTheme } from "@/common/theme";
+import { useTheme, Spacing } from "@/common/theme";
 import { ClassItem } from "../types";
 
 interface Props {
@@ -150,14 +150,14 @@ export const ClassListItem: React.FC<Props> = ({
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: 16,
+    marginBottom: Spacing.md,
     overflow: "hidden",
   },
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    gap: 12,
+    gap: Spacing[12],
   },
   headerText: {
     flex: 1,
@@ -175,12 +175,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   metaSection: {
-    gap: 12,
+    gap: Spacing[12],
   },
   metaRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: Spacing[12],
   },
   metaText: {
     flex: 1,
@@ -199,6 +199,6 @@ const styles = StyleSheet.create({
   timetableButton: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: Spacing.xs,
   },
 });

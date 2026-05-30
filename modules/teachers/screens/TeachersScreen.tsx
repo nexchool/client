@@ -15,7 +15,7 @@ import { useTeachers } from "../hooks/useTeachers";
 import { TeacherListItem } from "../components/TeacherListItem";
 import { Protected } from "@/modules/permissions/components/Protected";
 import * as PERMS from "@/modules/permissions/constants/permissions";
-import { useTheme } from "@/common/theme";
+import { useTheme, Spacing } from "@/common/theme";
 import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
 import { Teacher } from "../types";
@@ -33,7 +33,7 @@ export default function TeachersScreen() {
   const { t } = useTranslation("teachers");
   const router = useRouter();
   const { teachers, departments, loading, fetchTeachers } = useTeachers();
-  const { palette, radius, elevation } = useTheme();
+  const { palette, spacing, radius, elevation } = useTheme();
 
   const [searchQuery, setSearchQuery] = useState("");
   // Real filter: department. Options come from the list-endpoint envelope.
@@ -155,7 +155,16 @@ export default function TeachersScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: palette.surface }]}>
-      <View style={[styles.header, { borderBottomColor: palette.outlineVariant }]}>
+      <View
+        style={[
+          styles.header,
+          {
+            paddingHorizontal: spacing.marginMobile,
+            paddingVertical: spacing.md,
+            borderBottomColor: palette.outlineVariant,
+          },
+        ]}
+      >
         <Text variant="headlineLg" color="onSurface">
           {t("list.title")}
         </Text>
@@ -176,7 +185,11 @@ export default function TeachersScreen() {
           renderItem={({ item }) => (
             <TeacherListItem teacher={item} onPress={handleTeacherPress} />
           )}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={{
+            paddingHorizontal: spacing.marginMobile,
+            paddingTop: spacing.md,
+            paddingBottom: spacing[40] * 3,
+          }}
           refreshControl={
             <RefreshControl
               refreshing={loading}
@@ -208,8 +221,8 @@ export default function TeachersScreen() {
           onPress={() => router.push("/(protected)/teachers/new" as any)}
           style={({ pressed }) => ({
             position: "absolute",
-            bottom: 96,
-            right: 20,
+            bottom: spacing[40] * 2 + spacing.md,
+            right: spacing.marginMobile,
             width: 56,
             height: 56,
             borderRadius: 28,
@@ -235,32 +248,26 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 32,
+    padding: Spacing.xl,
   },
   header: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   subtitle: {
     marginTop: 2,
   },
-  listContent: {
-    padding: 16,
-    paddingBottom: 120,
-  },
   toolbar: {
-    padding: 16,
-    marginBottom: 16,
-    gap: 12,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    gap: Spacing[12],
   },
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
+    paddingHorizontal: Spacing[12],
     paddingVertical: 10,
     borderWidth: 1,
-    gap: 8,
+    gap: Spacing.sm,
   },
   searchInput: {
     flex: 1,
@@ -269,22 +276,22 @@ const styles = StyleSheet.create({
   chipRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
+    gap: Spacing.sm,
   },
   chip: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
     borderWidth: 1,
     maxWidth: "100%",
   },
   emptyState: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 64,
-    gap: 12,
+    paddingVertical: Spacing[48] + Spacing.md,
+    gap: Spacing[12],
   },
   emptyText: {
     textAlign: "center",

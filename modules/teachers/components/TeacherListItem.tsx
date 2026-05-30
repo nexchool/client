@@ -5,7 +5,7 @@ import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
 import { PressScale } from "@/common/components/PressScale";
 import { ProfileAvatar } from "@/common/components/ProfileAvatar";
-import { useTheme } from "@/common/theme";
+import { useTheme, Spacing } from "@/common/theme";
 import { Teacher } from "../types";
 
 interface Props {
@@ -165,7 +165,7 @@ const AVATAR_OVERLAP = 28;
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: 16,
+    marginBottom: Spacing.md,
     overflow: "hidden",
   },
   cover: {
@@ -174,16 +174,16 @@ const styles = StyleSheet.create({
   },
   avatarRing: {
     alignSelf: "center",
-    padding: 4,
+    padding: Spacing.xs,
     borderRadius: 9999,
     marginTop: -AVATAR_OVERLAP,
   },
   body: {
     alignItems: "center",
-    paddingBottom: 16,
+    paddingBottom: Spacing.md,
   },
   name: {
-    marginTop: 8,
+    marginTop: Spacing.sm,
     textAlign: "center",
   },
   employeeId: {
@@ -193,14 +193,14 @@ const styles = StyleSheet.create({
   pill: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: Spacing.xs,
     maxWidth: "100%",
   },
   viewProfile: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 4,
+    gap: Spacing.xs,
     alignSelf: "stretch",
     paddingVertical: 10,
   },

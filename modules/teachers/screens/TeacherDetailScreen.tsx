@@ -321,7 +321,7 @@ export default function TeacherDetailScreen() {
         horizontal
         showsHorizontalScrollIndicator={false}
         style={{ maxHeight: 48, borderBottomWidth: 1, borderBottomColor: palette.surfaceContainerHighest }}
-        contentContainerStyle={{ paddingHorizontal: spacing.md, alignItems: 'center' }}
+        contentContainerStyle={{ paddingHorizontal: spacing.xs, alignItems: 'center' }}
       >
         {TABS.map((tab) => {
           const isActive = activeTab === tab.key;

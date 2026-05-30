@@ -16,7 +16,7 @@ import { useAcademicYearContext } from "@/modules/academics/context/AcademicYear
 import * as PERMS from "@/modules/permissions/constants/permissions";
 import { CreateClassModal } from "../components/CreateClassModal";
 import { ClassListItem } from "../components/ClassListItem";
-import { useTheme } from "@/common/theme";
+import { useTheme, Spacing } from "@/common/theme";
 import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
 import { PressScale } from "@/common/components/PressScale";
@@ -65,7 +65,7 @@ export default function ClassesScreen() {
   const { classes, loading, fetchClasses, createClass } = useClasses();
   const { hasPermission } = usePermissions();
   const { selectedAcademicYearId } = useAcademicYearContext();
-  const { palette, radius, elevation } = useTheme();
+  const { palette, spacing, radius, elevation } = useTheme();
 
   const canCreate = hasPermission(PERMS.CLASS_CREATE);
   const [modalVisible, setModalVisible] = useState(false);
@@ -104,7 +104,16 @@ export default function ClassesScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: palette.surface }]}>
-      <View style={[styles.header, { borderBottomColor: palette.outlineVariant }]}>
+      <View
+        style={[
+          styles.header,
+          {
+            paddingHorizontal: spacing.marginMobile,
+            paddingVertical: spacing.md,
+            borderBottomColor: palette.outlineVariant,
+          },
+        ]}
+      >
         <Text variant="headlineLg" color="onSurface">
           {t("list.title")}
         </Text>
@@ -141,7 +150,11 @@ export default function ClassesScreen() {
               onViewTimetable={handleViewTimetable}
             />
           )}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={{
+            paddingHorizontal: spacing.marginMobile,
+            paddingTop: spacing.md,
+            paddingBottom: spacing[40] * 3,
+          }}
           refreshControl={
             <RefreshControl
               refreshing={loading}
@@ -197,38 +210,32 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 32,
+    padding: Spacing.xl,
   },
   header: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   subtitle: {
     marginTop: 2,
   },
-  listContent: {
-    padding: 16,
-    paddingBottom: 120,
-  },
   sectionHeader: {
-    paddingBottom: 8,
-    marginBottom: 16,
+    paddingBottom: Spacing.sm,
+    marginBottom: Spacing.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   emptyState: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 64,
-    gap: 12,
+    paddingVertical: Spacing[48] + Spacing.md,
+    gap: Spacing[12],
   },
   emptyText: {
     textAlign: "center",
   },
   fab: {
     position: "absolute",
-    bottom: 96,
-    right: 20,
+    bottom: Spacing[40] * 2 + Spacing.md,
+    right: Spacing.marginMobile,
     width: 56,
     height: 56,
     alignItems: "center",

@@ -5,7 +5,7 @@ import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
 import { PressScale } from "@/common/components/PressScale";
 import { ProfileAvatar } from "@/common/components/ProfileAvatar";
-import { useTheme } from "@/common/theme";
+import { useTheme, Spacing } from "@/common/theme";
 import { Student } from "../types";
 
 interface StudentListItemProps {
@@ -133,11 +133,11 @@ export const StudentListItem: React.FC<StudentListItemProps> = ({
 const styles = StyleSheet.create({
   card: {
     borderLeftWidth: 4,
-    marginBottom: 12,
+    marginBottom: Spacing[12],
     overflow: "hidden",
   },
   body: {
-    padding: 16,
+    padding: Spacing.md,
   },
   topRow: {
     flexDirection: "row",
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
   },
   headerText: {
     flex: 1,
-    marginLeft: 12,
+    marginLeft: Spacing[12],
   },
   statusBadge: {
     paddingVertical: 2,
@@ -159,9 +159,9 @@ const styles = StyleSheet.create({
   gradeRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: Spacing.xs,
   },
   sectionBadge: {
-    paddingVertical: 4,
+    paddingVertical: Spacing.xs,
   },
 });
