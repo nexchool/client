@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
 import { ScreenContainer } from '@/common/components/ScreenContainer';
+import { Text } from '@/common/components/Text';
 import { Logo } from '@/common/components/Logo';
 import { Input } from '@/common/components/Input';
 import { Button } from '@/common/components/Button';
@@ -12,7 +13,7 @@ import { useRegister } from '@/modules/auth/hooks/useRegister';
 
 export default function RegisterScreen() {
   const { t } = useTranslation('auth');
-  const { palette, spacing, typography } = useTheme();
+  const { spacing } = useTheme();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -46,26 +47,16 @@ export default function RegisterScreen() {
       </View>
 
       <Text
-        style={[
-          typography.display,
-          {
-            color: palette.onSurface,
-            textAlign: 'center',
-            marginTop: spacing.xl,
-          },
-        ]}
+        variant="display"
+        color="onSurface"
+        style={{ textAlign: 'center', marginTop: spacing.xl }}
       >
         {t('createAccount', { defaultValue: 'Create your account' })}
       </Text>
       <Text
-        style={[
-          typography.bodyMd,
-          {
-            color: palette.onSurfaceVariant,
-            textAlign: 'center',
-            marginTop: spacing.xs,
-          },
-        ]}
+        variant="bodyMd"
+        color="onSurfaceVariant"
+        style={{ textAlign: 'center', marginTop: spacing.xs }}
       >
         {t('registerSubtitle', {
           defaultValue: 'Sign up to get started with your account',
@@ -105,14 +96,9 @@ export default function RegisterScreen() {
 
       {error ? (
         <Text
-          style={[
-            typography.bodyMd,
-            {
-              color: palette.error,
-              textAlign: 'center',
-              marginTop: spacing.md,
-            },
-          ]}
+          variant="bodyMd"
+          color="error"
+          style={{ textAlign: 'center', marginTop: spacing.md }}
         >
           {error}
         </Text>
@@ -125,7 +111,7 @@ export default function RegisterScreen() {
       </View>
 
       <View style={styles.footer}>
-        <Text style={[typography.bodyMd, { color: palette.onSurfaceVariant }]}>
+        <Text variant="bodyMd" color="onSurfaceVariant">
           {t('hasAccount', { defaultValue: 'Already have an account? ' })}
         </Text>
         <Link onPress={() => router.push('/(auth)/login')}>{t('signIn')}</Link>

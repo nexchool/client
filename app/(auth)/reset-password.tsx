@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
@@ -7,12 +7,13 @@ import { ScreenContainer } from '@/common/components/ScreenContainer';
 import { Input } from '@/common/components/Input';
 import { Button } from '@/common/components/Button';
 import { Link } from '@/common/components/Link';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
 import { useResetPassword } from '@/modules/auth/hooks/useResetPassword';
 
 export default function ResetPasswordScreen() {
   const { t } = useTranslation('auth');
-  const { palette, spacing, typography } = useTheme();
+  const { palette, spacing } = useTheme();
   const params = useLocalSearchParams<{ token?: string; email?: string }>();
   const token = params.token || '';
   const email = params.email || '';
@@ -59,7 +60,7 @@ export default function ResetPasswordScreen() {
   return (
     <ScreenContainer>
       <Pressable onPress={() => router.back()} hitSlop={12} style={styles.back}>
-        <Ionicons name="chevron-back" size={24} color={palette.onSurface} />
+        <AppIcon name="chevron-back" size="lg" color="onSurface" />
       </Pressable>
 
       {submitted ? (
@@ -74,26 +75,23 @@ export default function ResetPasswordScreen() {
               justifyContent: 'center',
             }}
           >
-            <Ionicons name="checkmark" size={36} color={palette.success} />
+            <AppIcon name="checkmark" size="xl" color="success" />
           </View>
           <Text
-            style={[
-              typography.headlineMd,
-              { color: palette.onSurface, marginTop: spacing.lg, textAlign: 'center' },
-            ]}
+            variant="headlineMd"
+            color="onSurface"
+            style={{ marginTop: spacing.lg, textAlign: 'center' }}
           >
             {t('passwordUpdated', { defaultValue: 'Password updated' })}
           </Text>
           <Text
-            style={[
-              typography.bodyMd,
-              {
-                color: palette.onSurfaceVariant,
-                marginTop: spacing.sm,
-                textAlign: 'center',
-                paddingHorizontal: spacing.lg,
-              },
-            ]}
+            variant="bodyMd"
+            color="onSurfaceVariant"
+            style={{
+              marginTop: spacing.sm,
+              textAlign: 'center',
+              paddingHorizontal: spacing.lg,
+            }}
           >
             {t('passwordUpdatedHelp', {
               defaultValue: 'Sign in with your new password to continue.',
@@ -108,18 +106,16 @@ export default function ResetPasswordScreen() {
       ) : (
         <>
           <Text
-            style={[
-              typography.headlineLg,
-              { color: palette.onSurface, marginTop: spacing.xl },
-            ]}
+            variant="headlineLg"
+            color="onSurface"
+            style={{ marginTop: spacing.xl }}
           >
             {t('createNewPassword', { defaultValue: 'Create new password' })}
           </Text>
           <Text
-            style={[
-              typography.bodyMd,
-              { color: palette.onSurfaceVariant, marginTop: spacing.xs },
-            ]}
+            variant="bodyMd"
+            color="onSurfaceVariant"
+            style={{ marginTop: spacing.xs }}
           >
             {t('createNewPasswordHelp', {
               defaultValue: 'Choose a strong password you have not used before.',
@@ -157,10 +153,9 @@ export default function ResetPasswordScreen() {
 
           {error && !passwordError && !confirmError ? (
             <Text
-              style={[
-                typography.bodyMd,
-                { color: palette.error, marginTop: spacing.sm, textAlign: 'center' },
-              ]}
+              variant="bodyMd"
+              color="error"
+              style={{ marginTop: spacing.sm, textAlign: 'center' }}
             >
               {error}
             </Text>

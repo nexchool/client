@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
 import { ScreenContainer } from '@/common/components/ScreenContainer';
+import { Text } from '@/common/components/Text';
 import { Logo } from '@/common/components/Logo';
 import { Input } from '@/common/components/Input';
 import { Button } from '@/common/components/Button';
@@ -14,7 +15,7 @@ import { isLoginFieldError } from '@/modules/auth/errors/LoginFieldError';
 
 export default function LoginScreen() {
   const { t } = useTranslation('auth');
-  const { palette, spacing, typography } = useTheme();
+  const { palette, spacing } = useTheme();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -71,14 +72,13 @@ export default function LoginScreen() {
     return (
       <ScreenContainer>
         <View style={{ paddingTop: spacing.xl }}>
-          <Text style={[typography.headlineLg, { color: palette.onSurface }]}>
+          <Text variant="headlineLg" color="onSurface">
             {t('whichSchool')}
           </Text>
           <Text
-            style={[
-              typography.bodyMd,
-              { color: palette.onSurfaceVariant, marginTop: spacing.xs },
-            ]}
+            variant="bodyMd"
+            color="onSurfaceVariant"
+            style={{ marginTop: spacing.xs }}
           >
             {t('tenantSubtitle')}
           </Text>
@@ -113,15 +113,14 @@ export default function LoginScreen() {
                     },
                   ]}
                 >
-                  <Text style={[typography.bodyLg, { color: palette.onSurface }]}>
+                  <Text variant="bodyLg" color="onSurface">
                     {tenant.name}
                   </Text>
                   {tenant.subdomain ? (
                     <Text
-                      style={[
-                        typography.labelSm,
-                        { color: palette.onSurfaceVariant, marginTop: spacing.xs },
-                      ]}
+                      variant="labelSm"
+                      color="onSurfaceVariant"
+                      style={{ marginTop: spacing.xs }}
                     >
                       {tenant.subdomain}
                     </Text>
@@ -142,26 +141,16 @@ export default function LoginScreen() {
       </View>
 
       <Text
-        style={[
-          typography.display,
-          {
-            color: palette.onSurface,
-            textAlign: 'center',
-            marginTop: spacing.xl,
-          },
-        ]}
+        variant="display"
+        color="onSurface"
+        style={{ textAlign: 'center', marginTop: spacing.xl }}
       >
         {t('welcomeBack')}
       </Text>
       <Text
-        style={[
-          typography.bodyMd,
-          {
-            color: palette.onSurfaceVariant,
-            textAlign: 'center',
-            marginTop: spacing.xs,
-          },
-        ]}
+        variant="bodyMd"
+        color="onSurfaceVariant"
+        style={{ textAlign: 'center', marginTop: spacing.xs }}
       >
         {t('signInSubtitle')}
       </Text>
@@ -205,14 +194,9 @@ export default function LoginScreen() {
 
       {error ? (
         <Text
-          style={[
-            typography.bodyMd,
-            {
-              color: palette.error,
-              textAlign: 'center',
-              marginTop: spacing.md,
-            },
-          ]}
+          variant="bodyMd"
+          color="error"
+          style={{ textAlign: 'center', marginTop: spacing.md }}
         >
           {error}
         </Text>
@@ -225,7 +209,7 @@ export default function LoginScreen() {
       </View>
 
       <View style={styles.footer}>
-        <Text style={[typography.bodyMd, { color: palette.onSurfaceVariant }]}>
+        <Text variant="bodyMd" color="onSurfaceVariant">
           {t('noAccountPrefix')}{' '}
         </Text>
         <Link onPress={() => router.push('/(auth)/register')}>{t('signUp')}</Link>

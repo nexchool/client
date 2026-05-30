@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
 import { ScreenContainer } from '@/common/components/ScreenContainer';
 import { Input } from '@/common/components/Input';
 import { Button } from '@/common/components/Button';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
 import { useForgotPassword } from '@/modules/auth/hooks/useForgotPassword';
 
 export default function ForgotPasswordScreen() {
   const { t } = useTranslation('auth');
-  const { palette, spacing, typography } = useTheme();
+  const { palette, spacing } = useTheme();
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
 
@@ -35,7 +36,7 @@ export default function ForgotPasswordScreen() {
         hitSlop={12}
         style={styles.back}
       >
-        <Ionicons name="chevron-back" size={24} color={palette.onSurface} />
+        <AppIcon name="chevron-back" size="lg" color="onSurface" />
       </Pressable>
 
       {success ? (
@@ -50,26 +51,23 @@ export default function ForgotPasswordScreen() {
               justifyContent: 'center',
             }}
           >
-            <Ionicons name="checkmark" size={36} color={palette.success} />
+            <AppIcon name="checkmark" size="xl" color="success" />
           </View>
           <Text
-            style={[
-              typography.headlineMd,
-              { color: palette.onSurface, marginTop: spacing.lg, textAlign: 'center' },
-            ]}
+            variant="headlineMd"
+            color="onSurface"
+            style={{ marginTop: spacing.lg, textAlign: 'center' }}
           >
             {t('checkEmail', { defaultValue: 'Check your email' })}
           </Text>
           <Text
-            style={[
-              typography.bodyMd,
-              {
-                color: palette.onSurfaceVariant,
-                marginTop: spacing.sm,
-                textAlign: 'center',
-                paddingHorizontal: spacing.lg,
-              },
-            ]}
+            variant="bodyMd"
+            color="onSurfaceVariant"
+            style={{
+              marginTop: spacing.sm,
+              textAlign: 'center',
+              paddingHorizontal: spacing.lg,
+            }}
           >
             {t('checkEmailHelp', {
               defaultValue: "We've sent a password reset link to your email.",
@@ -84,18 +82,16 @@ export default function ForgotPasswordScreen() {
       ) : (
         <>
           <Text
-            style={[
-              typography.headlineLg,
-              { color: palette.onSurface, marginTop: spacing.xl },
-            ]}
+            variant="headlineLg"
+            color="onSurface"
+            style={{ marginTop: spacing.xl }}
           >
             {t('resetTitle', { defaultValue: 'Reset your password' })}
           </Text>
           <Text
-            style={[
-              typography.bodyMd,
-              { color: palette.onSurfaceVariant, marginTop: spacing.xs },
-            ]}
+            variant="bodyMd"
+            color="onSurfaceVariant"
+            style={{ marginTop: spacing.xs }}
           >
             {t('resetSubtitle', {
               defaultValue: "Enter your email and we'll send you a reset link.",
@@ -117,10 +113,9 @@ export default function ForgotPasswordScreen() {
 
           {error && !emailError ? (
             <Text
-              style={[
-                typography.bodyMd,
-                { color: palette.error, marginTop: spacing.sm, textAlign: 'center' },
-              ]}
+              variant="bodyMd"
+              color="error"
+              style={{ marginTop: spacing.sm, textAlign: 'center' }}
             >
               {error}
             </Text>

@@ -10,5 +10,17 @@
     "hindi": "હિન્દી"
   },
   "languageSwitcherHint": "એપ ભાષા પસંદ કરો",
-  "languageDropdownHint": "ઉપલબ્ધ ભાષાઓની યાદી ખોલે છે"
+  "languageDropdownHint": "ઉપલબ્ધ ભાષાઓની યાદી ખોલે છે",
+  "sections": {
+    "account": "એકાઉન્ટ",
+    "preferences": "પસંદગીઓ",
+    "app": "એપ"
+  },
+  "rows": {
+    "personalInfo": "વ્યક્તિગત માહિતી",
+    "personalInfoSubtitle": "તમારું નામ, ઈમેલ અને વિગતો જુઓ",
+    "security": "પાસવર્ડ અને સુરક્ષા",
+    "securitySubtitle": "તમારો પાસવર્ડ બદલો",
+    "helpSupport": "મદદ અને સહાય"
+  }
 }

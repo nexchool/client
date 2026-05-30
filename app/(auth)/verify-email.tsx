@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
 import { ScreenContainer } from '@/common/components/ScreenContainer';
 import { Logo } from '@/common/components/Logo';
 import { Button } from '@/common/components/Button';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
 import { useAuthContext } from '@/modules/auth/context/AuthContext';
 
 type VerificationStatus = 'processing' | 'success' | 'error';
 
 export default function VerifyEmailScreen() {
   const { t } = useTranslation('auth');
-  const { palette, spacing, typography } = useTheme();
+  const { palette, spacing } = useTheme();
   const params = useLocalSearchParams();
 
   // URL params from backend redirect (preserved deep-link callback contract)
@@ -89,23 +90,20 @@ export default function VerifyEmailScreen() {
             style={{ marginTop: spacing.xl }}
           />
           <Text
-            style={[
-              typography.headlineMd,
-              { color: palette.onSurface, marginTop: spacing.lg, textAlign: 'center' },
-            ]}
+            variant="headlineMd"
+            color="onSurface"
+            style={{ marginTop: spacing.lg, textAlign: 'center' }}
           >
             {t('verifyProcessingTitle', { defaultValue: 'Completing verification' })}
           </Text>
           <Text
-            style={[
-              typography.bodyMd,
-              {
-                color: palette.onSurfaceVariant,
-                marginTop: spacing.sm,
-                textAlign: 'center',
-                paddingHorizontal: spacing.lg,
-              },
-            ]}
+            variant="bodyMd"
+            color="onSurfaceVariant"
+            style={{
+              marginTop: spacing.sm,
+              textAlign: 'center',
+              paddingHorizontal: spacing.lg,
+            }}
           >
             {t('verifyProcessingHelp', {
               defaultValue: 'Please wait while we complete your email verification.',
@@ -130,26 +128,23 @@ export default function VerifyEmailScreen() {
               justifyContent: 'center',
             }}
           >
-            <Ionicons name="checkmark" size={36} color={palette.success} />
+            <AppIcon name="checkmark" size="xl" color="success" />
           </View>
           <Text
-            style={[
-              typography.headlineLg,
-              { color: palette.onSurface, marginTop: spacing.lg, textAlign: 'center' },
-            ]}
+            variant="headlineLg"
+            color="onSurface"
+            style={{ marginTop: spacing.lg, textAlign: 'center' }}
           >
             {t('verifySuccessTitle', { defaultValue: 'Email verified' })}
           </Text>
           <Text
-            style={[
-              typography.bodyMd,
-              {
-                color: palette.onSurfaceVariant,
-                marginTop: spacing.sm,
-                textAlign: 'center',
-                paddingHorizontal: spacing.lg,
-              },
-            ]}
+            variant="bodyMd"
+            color="onSurfaceVariant"
+            style={{
+              marginTop: spacing.sm,
+              textAlign: 'center',
+              paddingHorizontal: spacing.lg,
+            }}
           >
             {t('verifySuccessHelp', {
               defaultValue: "You're signed in and ready to go.",
@@ -182,26 +177,23 @@ export default function VerifyEmailScreen() {
             justifyContent: 'center',
           }}
         >
-          <Ionicons name="close" size={36} color={palette.error} />
+          <AppIcon name="close" size="xl" color="error" />
         </View>
         <Text
-          style={[
-            typography.headlineLg,
-            { color: palette.onSurface, marginTop: spacing.lg, textAlign: 'center' },
-          ]}
+          variant="headlineLg"
+          color="onSurface"
+          style={{ marginTop: spacing.lg, textAlign: 'center' }}
         >
           {t('verifyFailedTitle', { defaultValue: 'Verification failed' })}
         </Text>
         <Text
-          style={[
-            typography.bodyMd,
-            {
-              color: palette.onSurfaceVariant,
-              marginTop: spacing.sm,
-              textAlign: 'center',
-              paddingHorizontal: spacing.lg,
-            },
-          ]}
+          variant="bodyMd"
+          color="onSurfaceVariant"
+          style={{
+            marginTop: spacing.sm,
+            textAlign: 'center',
+            paddingHorizontal: spacing.lg,
+          }}
         >
           {error ||
             t('verifyFailedHelp', {
