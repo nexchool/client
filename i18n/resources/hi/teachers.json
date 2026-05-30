@@ -23,6 +23,12 @@
   "detail": {
     "notFound": "शिक्षक नहीं मिला",
     "goBack": "वापस जाएँ",
+    "title": "शिक्षक",
+    "edit": "संपादित करें",
+    "editTeacher": "शिक्षक संपादित करें",
+    "call": "कॉल करें",
+    "subjectsTaught": "पढ़ाए जाने वाले विषय",
+    "credentials": "योग्यताएँ",
     "updated": "शिक्षक सफलतापूर्वक अपडेट हुआ",
     "deleteConfirmTitle": "शिक्षक हटाएँ",
     "deleteConfirmMessage": "क्या आप वाकई इस शिक्षक को हटाना चाहते हैं?",

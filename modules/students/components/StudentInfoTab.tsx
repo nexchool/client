@@ -2,8 +2,8 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuthContext } from '@/modules/auth/context/AuthContext';
 import { Student } from '../types';
-import { DetailCard } from './DetailCard';
-import { DetailRow } from './DetailRow';
+import { DetailCard } from '@/common/components/DetailCard';
+import { DetailRow } from '@/common/components/DetailRow';
 import { StudentDocumentsSection } from './StudentDocumentsSection';
 
 interface Row {

@@ -1,80 +1,72 @@
-import React, { useEffect, useState, useMemo } from "react";
-import { useTranslation } from "react-i18next";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ActivityIndicator,
-  SafeAreaView,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  Modal,
-  TextInput,
-  FlatList,
-  Switch,
-} from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { useTeachers } from "../hooks/useTeachers";
-import { useTeacherSubjects } from "../hooks/useTeacherSubjects";
-import { useTeacherAvailability } from "../hooks/useTeacherAvailability";
-import { useTeacherLeaves } from "@/modules/teacher-leaves/hooks/useTeacherLeaves";
-import { useTeacherWorkload } from "../hooks/useTeacherWorkload";
-import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
-import * as PERMS from "@/modules/permissions/constants/permissions";
-import { Colors } from "@/common/constants/colors";
-import { Spacing, Layout } from "@/common/constants/spacing";
-import { TeacherLeave, TeacherAvailability } from "../types";
+import React, { useEffect, useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { View, ScrollView, ActivityIndicator, Alert, Modal, FlatList, Switch } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useTheme } from '@/common/theme';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
+import { PressScale } from '@/common/components/PressScale';
+import { Input } from '@/common/components/Input';
+import { Button } from '@/common/components/Button';
+import { DetailCard } from '@/common/components/DetailCard';
+import { DetailRow } from '@/common/components/DetailRow';
+import { useTeachers } from '../hooks/useTeachers';
+import { useTeacherSubjects } from '../hooks/useTeacherSubjects';
+import { useTeacherAvailability } from '../hooks/useTeacherAvailability';
+import { useTeacherLeaves } from '@/modules/teacher-leaves/hooks/useTeacherLeaves';
+import { useTeacherWorkload } from '../hooks/useTeacherWorkload';
+import { usePermissions } from '@/modules/permissions/hooks/usePermissions';
+import * as PERMS from '@/modules/permissions/constants/permissions';
+import { TeacherLeave, TeacherAvailability } from '../types';
+import { TeacherDetailHero } from '../components/TeacherDetailHero';
+import { TeacherSubjectsCard } from '../components/TeacherSubjectsCard';
 
-type TabKey = "info" | "subjects" | "availability" | "leaves" | "workload";
+type TabKey = 'info' | 'subjects' | 'availability' | 'leaves' | 'workload';
 
 export default function TeacherDetailScreen() {
-  const { t } = useTranslation("teachers");
+  const { t } = useTranslation('teachers');
+  const { palette, spacing, radius } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { currentTeacher, loading, fetchTeacher, deleteTeacher } = useTeachers();
   const { hasPermission } = usePermissions();
-  const [activeTab, setActiveTab] = useState<TabKey>("info");
+  const [activeTab, setActiveTab] = useState<TabKey>('info');
 
   const canUpdate = hasPermission(PERMS.TEACHER_UPDATE);
   const canDelete = hasPermission(PERMS.TEACHER_DELETE);
   const canManage = hasPermission(PERMS.TEACHER_MANAGE);
   const canLeaveManage = hasPermission(PERMS.TEACHER_LEAVE_MANAGE);
 
-  const teacherId = id || "";
+  const teacherId = id || '';
 
   const dayNames = useMemo(
     () => [
-      "",
-      t("detail.days.mon"),
-      t("detail.days.tue"),
-      t("detail.days.wed"),
-      t("detail.days.thu"),
-      t("detail.days.fri"),
-      t("detail.days.sat"),
-      t("detail.days.sun"),
+      '',
+      t('detail.days.mon'),
+      t('detail.days.tue'),
+      t('detail.days.wed'),
+      t('detail.days.thu'),
+      t('detail.days.fri'),
+      t('detail.days.sat'),
+      t('detail.days.sun'),
     ],
     [t],
   );
 
   const TABS: { key: TabKey; label: string }[] = useMemo(
     () => [
-      { key: "info", label: t("detail.tabs.info") },
-      { key: "subjects", label: t("detail.tabs.subjects") },
-      { key: "availability", label: t("detail.tabs.availability") },
-      { key: "leaves", label: t("detail.tabs.leaves") },
-      { key: "workload", label: t("detail.tabs.workload") },
+      { key: 'info', label: t('detail.tabs.info') },
+      { key: 'subjects', label: t('detail.tabs.subjects') },
+      { key: 'availability', label: t('detail.tabs.availability') },
+      { key: 'leaves', label: t('detail.tabs.leaves') },
+      { key: 'workload', label: t('detail.tabs.workload') },
     ],
     [t],
   );
 
-  // --- Subjects tab ---
-  const {
-    subjects: teacherSubjects,
-    loading: subjectsLoading,
-    fetchSubjects,
-  } = useTeacherSubjects(teacherId);
+  // --- Subjects tab (managed subject expertise list) ---
+  const { subjects: teacherSubjects, loading: subjectsLoading, fetchSubjects } = useTeacherSubjects(teacherId);
 
   // --- Availability tab ---
   const {
@@ -85,8 +77,8 @@ export default function TeacherDetailScreen() {
     deleteSlot,
   } = useTeacherAvailability(teacherId);
   const [showAvailModal, setShowAvailModal] = useState(false);
-  const [availDay, setAvailDay] = useState("1");
-  const [availPeriod, setAvailPeriod] = useState("1");
+  const [availDay, setAvailDay] = useState('1');
+  const [availPeriod, setAvailPeriod] = useState('1');
   const [availIsAvailable, setAvailIsAvailable] = useState(false);
 
   // --- Leaves tab ---
@@ -95,8 +87,8 @@ export default function TeacherDetailScreen() {
   // --- Workload tab ---
   const { workload, loading: workloadLoading, fetchWorkload, saveWorkload } = useTeacherWorkload(teacherId);
   const [showWorkloadModal, setShowWorkloadModal] = useState(false);
-  const [maxPerDay, setMaxPerDay] = useState("6");
-  const [maxPerWeek, setMaxPerWeek] = useState("30");
+  const [maxPerDay, setMaxPerDay] = useState('6');
+  const [maxPerWeek, setMaxPerWeek] = useState('30');
   const [workloadSaving, setWorkloadSaving] = useState(false);
 
   useEffect(() => {
@@ -110,29 +102,33 @@ export default function TeacherDetailScreen() {
     if (!teacherId) return;
     if (!tabVisited.current[activeTab]) {
       tabVisited.current[activeTab] = true;
-      if (activeTab === "subjects") fetchSubjects();
-      if (activeTab === "availability") fetchAvailability();
-      if (activeTab === "leaves") fetchLeaves({ teacher_id: teacherId });
-      if (activeTab === "workload") {
-        fetchWorkload();
-      }
+      if (activeTab === 'subjects') fetchSubjects();
+      if (activeTab === 'availability') fetchAvailability();
+      if (activeTab === 'leaves') fetchLeaves({ teacher_id: teacherId });
+      if (activeTab === 'workload') fetchWorkload();
     }
   }, [activeTab, teacherId]);
 
+  const goEdit = () =>
+    router.push({
+      pathname: '/(protected)/teachers/[id]/edit',
+      params: { id: id ?? '' },
+    } as never);
+
   const handleDelete = () => {
-    Alert.alert(t("detail.deleteConfirmTitle"), t("detail.deleteConfirmMessage"), [
-      { text: t("detail.cancel"), style: "cancel" },
+    Alert.alert(t('detail.deleteConfirmTitle'), t('detail.deleteConfirmMessage'), [
+      { text: t('detail.cancel'), style: 'cancel' },
       {
-        text: t("detail.delete"),
-        style: "destructive",
+        text: t('detail.delete'),
+        style: 'destructive',
         onPress: async () => {
           if (!id) return;
           try {
             await deleteTeacher(id);
             router.back();
           } catch (e: unknown) {
-            const msg = e instanceof Error ? e.message : t("detail.deleteFailed");
-            Alert.alert(t("detail.errorTitle"), msg);
+            const msg = e instanceof Error ? e.message : t('detail.deleteFailed');
+            Alert.alert(t('detail.errorTitle'), msg);
           }
         },
       },
@@ -143,36 +139,33 @@ export default function TeacherDetailScreen() {
   const handleCreateAvail = async () => {
     try {
       await createSlot({
-        day_of_week: parseInt(availDay),
-        period_number: parseInt(availPeriod),
+        day_of_week: parseInt(availDay, 10),
+        period_number: parseInt(availPeriod, 10),
         available: availIsAvailable,
       });
       setShowAvailModal(false);
-      setAvailDay("1");
-      setAvailPeriod("1");
+      setAvailDay('1');
+      setAvailPeriod('1');
       setAvailIsAvailable(false);
-    } catch (e: any) {
-      Alert.alert(t("detail.errorTitle"), e.message || t("detail.saveAvailError"));
+    } catch (e: unknown) {
+      Alert.alert(t('detail.errorTitle'), e instanceof Error ? e.message : t('detail.saveAvailError'));
     }
   };
 
   const handleDeleteAvail = (slot: TeacherAvailability) => {
     Alert.alert(
-      t("detail.deleteSlotTitle"),
-      t("detail.deleteSlotMessage", {
-        day: dayNames[slot.day_of_week] ?? "",
-        period: slot.period_number,
-      }),
+      t('detail.deleteSlotTitle'),
+      t('detail.deleteSlotMessage', { day: dayNames[slot.day_of_week] ?? '', period: slot.period_number }),
       [
-        { text: t("detail.cancel"), style: "cancel" },
+        { text: t('detail.cancel'), style: 'cancel' },
         {
-          text: t("detail.delete"),
-          style: "destructive",
+          text: t('detail.delete'),
+          style: 'destructive',
           onPress: async () => {
             try {
               await deleteSlot(slot.id);
-            } catch (e: any) {
-              Alert.alert(t("detail.errorTitle"), e.message);
+            } catch (e: unknown) {
+              Alert.alert(t('detail.errorTitle'), e instanceof Error ? e.message : t('detail.saveAvailError'));
             }
           },
         },
@@ -184,55 +177,55 @@ export default function TeacherDetailScreen() {
   const handleApproveLeave = async (leave: TeacherLeave) => {
     try {
       await approveLeave(leave.id);
-    } catch (e: any) {
-      Alert.alert(t("detail.errorTitle"), e.message);
+    } catch (e: unknown) {
+      Alert.alert(t('detail.errorTitle'), e instanceof Error ? e.message : t('detail.errorTitle'));
     }
   };
 
   const handleRejectLeave = async (leave: TeacherLeave) => {
     try {
       await rejectLeave(leave.id);
-    } catch (e: any) {
-      Alert.alert(t("detail.errorTitle"), e.message);
+    } catch (e: unknown) {
+      Alert.alert(t('detail.errorTitle'), e instanceof Error ? e.message : t('detail.errorTitle'));
     }
   };
 
   // --- Workload helpers ---
   const openWorkloadModal = () => {
-    setMaxPerDay(workload?.max_periods_per_day?.toString() ?? "6");
-    setMaxPerWeek(workload?.max_periods_per_week?.toString() ?? "30");
+    setMaxPerDay(workload?.max_periods_per_day?.toString() ?? '6');
+    setMaxPerWeek(workload?.max_periods_per_week?.toString() ?? '30');
     setShowWorkloadModal(true);
   };
 
   const handleSaveWorkload = async () => {
-    const day = parseInt(maxPerDay);
-    const week = parseInt(maxPerWeek);
+    const day = parseInt(maxPerDay, 10);
+    const week = parseInt(maxPerWeek, 10);
     if (!day || !week || day < 1 || week < 1) {
-      Alert.alert(t("detail.validationTitle"), t("detail.workloadValidation"));
+      Alert.alert(t('detail.validationTitle'), t('detail.workloadValidation'));
       return;
     }
     try {
       setWorkloadSaving(true);
       await saveWorkload({ max_periods_per_day: day, max_periods_per_week: week });
       setShowWorkloadModal(false);
-    } catch (e: any) {
-      Alert.alert(t("detail.errorTitle"), e.message || t("detail.saveWorkloadError"));
+    } catch (e: unknown) {
+      Alert.alert(t('detail.errorTitle'), e instanceof Error ? e.message : t('detail.saveWorkloadError'));
     } finally {
       setWorkloadSaving(false);
     }
   };
 
-  const statusColor = (status: string) => {
-    if (status === "approved") return Colors.success;
-    if (status === "rejected") return Colors.error;
-    return Colors.warning;
+  const leaveStatusColor = (status: string): 'success' | 'error' | 'warning' => {
+    if (status === 'approved') return 'success';
+    if (status === 'rejected') return 'error';
+    return 'warning';
   };
 
   if (loading && !currentTeacher) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+      <SafeAreaView style={{ flex: 1, backgroundColor: palette.surface }} edges={['top']}>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator size="large" color={palette.primary} />
         </View>
       </SafeAreaView>
     );
@@ -240,541 +233,500 @@ export default function TeacherDetailScreen() {
 
   if (!currentTeacher) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.center}>
-          <Text style={styles.errorText}>{t("detail.notFound")}</Text>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-            <Text style={styles.backBtnText}>{t("detail.goBack")}</Text>
-          </TouchableOpacity>
+      <SafeAreaView style={{ flex: 1, backgroundColor: palette.surface }} edges={['top']}>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl }}>
+          <Text variant="bodyLg" color="error" style={{ marginBottom: spacing.lg, textAlign: 'center' }}>
+            {t('detail.notFound')}
+          </Text>
+          <PressScale
+            onPress={() => router.back()}
+            style={{
+              backgroundColor: palette.primary,
+              paddingHorizontal: spacing.xl,
+              paddingVertical: spacing.md,
+              borderRadius: radius.md,
+            }}
+          >
+            <Text variant="labelLg" color="onPrimary">
+              {t('detail.goBack')}
+            </Text>
+          </PressScale>
         </View>
       </SafeAreaView>
     );
   }
 
-  const InfoRow = ({ label, value }: { label: string; value?: string | number | null }) => {
-    if (!value && value !== 0) return null;
-    return (
-      <View style={styles.infoRow}>
-        <Text style={styles.label}>{label}</Text>
-        <Text style={styles.value}>{value}</Text>
-      </View>
-    );
-  };
+  const teacher = currentTeacher;
+
+  // Contact rows — only real, present fields
+  const contactRows = [
+    { icon: 'card-outline' as const, label: t('detail.employeeId'), value: teacher.employee_id },
+    { icon: 'mail-outline' as const, label: t('detail.email'), value: teacher.email },
+    { icon: 'call-outline' as const, label: t('detail.phone'), value: teacher.phone },
+    { icon: 'home-outline' as const, label: t('detail.sectionAddress'), value: teacher.address },
+  ].filter((r) => r.value != null && String(r.value).trim() !== '');
+
+  // Professional rows — only real, present fields
+  const professionalRows = [
+    { icon: 'briefcase-outline' as const, label: t('detail.designation'), value: teacher.designation },
+    { icon: 'business-outline' as const, label: t('detail.department'), value: teacher.department },
+    {
+      icon: 'time-outline' as const,
+      label: t('detail.experience'),
+      value:
+        teacher.experience_years != null
+          ? t('detail.experienceYears', { years: teacher.experience_years })
+          : undefined,
+    },
+    { icon: 'calendar-outline' as const, label: t('detail.dateOfJoining'), value: teacher.date_of_joining },
+  ].filter((r) => r.value != null && String(r.value).trim() !== '');
+
+  // Credentials rows — only real qualification / specialization strings (no fabricated degrees)
+  const credentialRows = [
+    { icon: 'school-outline' as const, label: t('detail.qualification'), value: teacher.qualification },
+    { icon: 'ribbon-outline' as const, label: t('detail.specialization'), value: teacher.specialization },
+  ].filter((r) => r.value != null && String(r.value).trim() !== '');
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: palette.surface }} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backIcon}>
-          <Ionicons name="arrow-back" size={24} color={Colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle} numberOfLines={1}>{currentTeacher.name}</Text>
-        {canDelete && (
-          <TouchableOpacity style={styles.iconBtn} onPress={handleDelete}>
-            <Ionicons name="trash-outline" size={22} color={Colors.error} />
-          </TouchableOpacity>
-        )}
-        {canUpdate && (
-          <TouchableOpacity
-            style={styles.iconBtn}
-            onPress={() =>
-              router.push({
-                pathname: "/(protected)/teachers/[id]/edit",
-                params: { id: id ?? "" },
-              } as any)
-            }
-          >
-            <Ionicons name="create-outline" size={22} color={Colors.primary} />
-          </TouchableOpacity>
-        )}
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingHorizontal: spacing.marginMobile,
+          paddingVertical: spacing.md,
+          borderBottomWidth: 1,
+          borderBottomColor: palette.surfaceContainerHighest,
+        }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}>
+          <AppIcon
+            name="arrow-back"
+            size="lg"
+            color="onSurface"
+            onPress={() => router.back()}
+            accessibilityLabel={t('detail.goBack')}
+          />
+          <Text variant="headlineMd" color="onSurface" numberOfLines={1}>
+            {t('detail.title')}
+          </Text>
+        </View>
+        {canDelete ? <AppIcon name="trash-outline" size="lg" color="error" onPress={handleDelete} /> : null}
       </View>
 
       {/* Tab Bar */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabBar} contentContainerStyle={styles.tabBarContent}>
-        {TABS.map((tab) => (
-          <TouchableOpacity
-            key={tab.key}
-            style={[styles.tab, activeTab === tab.key && styles.tabActive]}
-            onPress={() => setActiveTab(tab.key)}
-          >
-            <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>{tab.label}</Text>
-          </TouchableOpacity>
-        ))}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={{ maxHeight: 48, borderBottomWidth: 1, borderBottomColor: palette.surfaceContainerHighest }}
+        contentContainerStyle={{ paddingHorizontal: spacing.md, alignItems: 'center' }}
+      >
+        {TABS.map((tab) => {
+          const isActive = activeTab === tab.key;
+          return (
+            <PressScale
+              key={tab.key}
+              onPress={() => setActiveTab(tab.key)}
+              style={{
+                paddingHorizontal: spacing.md,
+                paddingVertical: spacing.sm,
+                borderBottomWidth: 2,
+                borderBottomColor: isActive ? palette.primary : 'transparent',
+              }}
+            >
+              <Text variant="labelMd" color={isActive ? 'primary' : 'onSurfaceVariant'}>
+                {tab.label}
+              </Text>
+            </PressScale>
+          );
+        })}
       </ScrollView>
 
       {/* ── INFO TAB ── */}
-      {activeTab === "info" && (
-        <ScrollView style={styles.content}>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t("detail.sectionBasic")}</Text>
-            <InfoRow label={t("detail.fullName")} value={currentTeacher.name} />
-            <InfoRow label={t("detail.employeeId")} value={currentTeacher.employee_id} />
-            <InfoRow label={t("detail.email")} value={currentTeacher.email} />
-            <InfoRow label={t("detail.phone")} value={currentTeacher.phone} />
-            <InfoRow
-              label={t("detail.status")}
-              value={t(`status.${(currentTeacher.status ?? "").toLowerCase()}`, {
-                defaultValue: currentTeacher.status ?? "",
-              })}
-            />
-          </View>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t("detail.sectionProfessional")}</Text>
-            <InfoRow label={t("detail.designation")} value={currentTeacher.designation} />
-            <InfoRow label={t("detail.department")} value={currentTeacher.department} />
-            <InfoRow label={t("detail.qualification")} value={currentTeacher.qualification} />
-            <InfoRow label={t("detail.specialization")} value={currentTeacher.specialization} />
-            <InfoRow
-              label={t("detail.experience")}
-              value={
-                currentTeacher.experience_years != null
-                  ? t("detail.experienceYears", { years: currentTeacher.experience_years })
-                  : undefined
-              }
-            />
-            <InfoRow label={t("detail.dateOfJoining")} value={currentTeacher.date_of_joining} />
-          </View>
-          {currentTeacher.address && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>{t("detail.sectionAddress")}</Text>
-              <Text style={styles.addressText}>{currentTeacher.address}</Text>
-            </View>
-          )}
+      {activeTab === 'info' ? (
+        <ScrollView
+          contentContainerStyle={{
+            paddingHorizontal: spacing.marginMobile,
+            paddingTop: spacing.lg,
+            paddingBottom: 96,
+          }}
+          showsVerticalScrollIndicator={false}
+        >
+          <TeacherDetailHero teacher={teacher} canUpdate={canUpdate} onEdit={goEdit} />
+          <TeacherSubjectsCard subjects={teacher.subjects ?? []} />
+          {credentialRows.length > 0 ? (
+            <DetailCard title={t('detail.credentials')} accent="secondaryContainer">
+              {credentialRows.map((r) => (
+                <DetailRow key={r.label} icon={r.icon} label={r.label} value={String(r.value)} />
+              ))}
+            </DetailCard>
+          ) : null}
+          {professionalRows.length > 0 ? (
+            <DetailCard title={t('detail.sectionProfessional')} accent="primaryContainer">
+              {professionalRows.map((r) => (
+                <DetailRow key={r.label} icon={r.icon} label={r.label} value={String(r.value)} />
+              ))}
+            </DetailCard>
+          ) : null}
+          {contactRows.length > 0 ? (
+            <DetailCard title={t('detail.sectionBasic')} accent="tertiaryContainer">
+              {contactRows.map((r) => (
+                <DetailRow key={r.label} icon={r.icon} label={r.label} value={String(r.value)} />
+              ))}
+            </DetailCard>
+          ) : null}
         </ScrollView>
-      )}
+      ) : null}
 
-      {/* ── SUBJECTS TAB ── */}
-      {activeTab === "subjects" && (
-        <View style={styles.tabContent}>
-          <View style={styles.tabContentHeader}>
-            <Text style={styles.tabContentTitle}>{t("detail.subjectExpertise")}</Text>
+      {/* ── SUBJECTS TAB (managed expertise list) ── */}
+      {activeTab === 'subjects' ? (
+        <View style={{ flex: 1 }}>
+          <View style={{ paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg }}>
+            <Text variant="headlineMd" color="onSurface">
+              {t('detail.subjectExpertise')}
+            </Text>
+            <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
+              {t('detail.subjectsReadOnlyHint')}
+            </Text>
           </View>
-          <Text style={[styles.helperText, { paddingHorizontal: Spacing.md }]}>
-            {t("detail.subjectsReadOnlyHint")}
-          </Text>
           {subjectsLoading ? (
-            <ActivityIndicator style={{ marginTop: Spacing.xl }} color={Colors.primary} />
+            <ActivityIndicator style={{ marginTop: spacing.xl }} color={palette.primary} />
           ) : teacherSubjects.length === 0 ? (
-            <Text style={styles.emptyText}>{t("detail.emptySubjects")}</Text>
+            <Text variant="bodyMd" color="onSurfaceVariant" style={{ padding: spacing.marginMobile }}>
+              {t('detail.emptySubjects')}
+            </Text>
           ) : (
             <FlatList
               data={teacherSubjects}
               keyExtractor={(item) => item.id}
-              contentContainerStyle={{ padding: Spacing.md }}
+              contentContainerStyle={{ padding: spacing.marginMobile, gap: spacing.sm }}
               renderItem={({ item }) => (
-                <View style={styles.listItem}>
-                  <View style={styles.listItemInfo}>
-                    <Text style={styles.listItemName}>{item.subject_name}</Text>
-                    {item.subject_code ? <Text style={styles.listItemDetail}>{item.subject_code}</Text> : null}
-                  </View>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: spacing.md,
+                    borderRadius: radius.md,
+                    backgroundColor: palette.surfaceContainerLowest,
+                  }}
+                >
+                  <Text variant="bodyMd" color="onSurface">
+                    {item.subject_name}
+                  </Text>
+                  {item.subject_code ? (
+                    <View
+                      style={{
+                        paddingHorizontal: spacing.sm,
+                        paddingVertical: spacing.xs,
+                        borderRadius: radius.full,
+                        backgroundColor: palette.tertiaryContainer,
+                      }}
+                    >
+                      <Text variant="labelSm" color="onTertiaryContainer">
+                        {item.subject_code}
+                      </Text>
+                    </View>
+                  ) : null}
                 </View>
               )}
             />
           )}
         </View>
-      )}
+      ) : null}
 
       {/* ── AVAILABILITY TAB ── */}
-      {activeTab === "availability" && (
-        <View style={styles.tabContent}>
-          <View style={styles.tabContentHeader}>
-            <Text style={styles.tabContentTitle}>{t("detail.unavailabilityTitle")}</Text>
-            {canManage && (
-              <TouchableOpacity style={styles.addBtn} onPress={() => setShowAvailModal(true)}>
-                <Ionicons name="add" size={20} color="#fff" />
-                <Text style={styles.addBtnText}>{t("detail.add")}</Text>
-              </TouchableOpacity>
-            )}
+      {activeTab === 'availability' ? (
+        <View style={{ flex: 1 }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              paddingHorizontal: spacing.marginMobile,
+              paddingTop: spacing.lg,
+            }}
+          >
+            <Text variant="headlineMd" color="onSurface">
+              {t('detail.unavailabilityTitle')}
+            </Text>
+            {canManage ? (
+              <PressScale
+                onPress={() => setShowAvailModal(true)}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: spacing.xs,
+                  paddingHorizontal: spacing.md,
+                  paddingVertical: spacing.sm,
+                  borderRadius: radius.md,
+                  backgroundColor: palette.primary,
+                }}
+              >
+                <AppIcon name="add" size="sm" color="onPrimary" />
+                <Text variant="labelMd" color="onPrimary">
+                  {t('detail.add')}
+                </Text>
+              </PressScale>
+            ) : null}
           </View>
-          <Text style={styles.helperText}>{t("detail.availabilityHelper")}</Text>
+          <Text variant="bodyMd" color="onSurfaceVariant" style={{ paddingHorizontal: spacing.marginMobile, marginTop: spacing.xs }}>
+            {t('detail.availabilityHelper')}
+          </Text>
           {availLoading ? (
-            <ActivityIndicator style={{ marginTop: Spacing.xl }} color={Colors.primary} />
+            <ActivityIndicator style={{ marginTop: spacing.xl }} color={palette.primary} />
           ) : availability.length === 0 ? (
-            <Text style={styles.emptyText}>{t("detail.emptyAvailability")}</Text>
+            <Text variant="bodyMd" color="onSurfaceVariant" style={{ padding: spacing.marginMobile }}>
+              {t('detail.emptyAvailability')}
+            </Text>
           ) : (
             <FlatList
               data={availability}
               keyExtractor={(item) => item.id}
-              contentContainerStyle={{ padding: Spacing.md }}
+              contentContainerStyle={{ padding: spacing.marginMobile, gap: spacing.sm }}
               renderItem={({ item }) => (
-                <View style={styles.listItem}>
-                  <View style={styles.listItemInfo}>
-                    <Text style={styles.listItemName}>
-                      {t("detail.slotLine", {
-                        day: dayNames[item.day_of_week] ?? "",
-                        period: item.period_number,
-                      })}
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: spacing.md,
+                    borderRadius: radius.md,
+                    backgroundColor: palette.surfaceContainerLowest,
+                  }}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text variant="bodyMd" color="onSurface">
+                      {t('detail.slotLine', { day: dayNames[item.day_of_week] ?? '', period: item.period_number })}
                     </Text>
-                    <Text style={[styles.listItemDetail, { color: item.available ? Colors.success : Colors.error }]}>
-                      {item.available ? t("detail.slotAvailable") : t("detail.slotUnavailable")}
+                    <Text variant="labelSm" color={item.available ? 'success' : 'error'} style={{ marginTop: spacing.xs }}>
+                      {item.available ? t('detail.slotAvailable') : t('detail.slotUnavailable')}
                     </Text>
                   </View>
-                  {canManage && (
-                    <TouchableOpacity onPress={() => handleDeleteAvail(item)}>
-                      <Ionicons name="close-circle-outline" size={22} color={Colors.error} />
-                    </TouchableOpacity>
-                  )}
+                  {canManage ? (
+                    <AppIcon name="close-circle-outline" size="lg" color="error" onPress={() => handleDeleteAvail(item)} />
+                  ) : null}
                 </View>
               )}
             />
           )}
         </View>
-      )}
+      ) : null}
 
       {/* ── LEAVES TAB ── */}
-      {activeTab === "leaves" && (
-        <View style={styles.tabContent}>
-          <View style={styles.tabContentHeader}>
-            <Text style={styles.tabContentTitle}>{t("detail.leaveRequestsTitle")}</Text>
+      {activeTab === 'leaves' ? (
+        <View style={{ flex: 1 }}>
+          <View style={{ paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg }}>
+            <Text variant="headlineMd" color="onSurface">
+              {t('detail.leaveRequestsTitle')}
+            </Text>
           </View>
           {leavesLoading ? (
-            <ActivityIndicator style={{ marginTop: Spacing.xl }} color={Colors.primary} />
+            <ActivityIndicator style={{ marginTop: spacing.xl }} color={palette.primary} />
           ) : leaves.length === 0 ? (
-            <Text style={styles.emptyText}>{t("detail.emptyLeaves")}</Text>
+            <Text variant="bodyMd" color="onSurfaceVariant" style={{ padding: spacing.marginMobile }}>
+              {t('detail.emptyLeaves')}
+            </Text>
           ) : (
             <FlatList
               data={leaves}
               keyExtractor={(item) => item.id}
-              contentContainerStyle={{ padding: Spacing.md }}
-              renderItem={({ item }) => (
-                <View style={styles.leaveCard}>
-                  <View style={styles.leaveCardHeader}>
-                    <Text style={styles.leaveType}>{item.leave_type.toUpperCase()}</Text>
-                    <View style={[styles.statusBadge, { backgroundColor: statusColor(item.status) + "20" }]}>
-                      <Text style={[styles.statusText, { color: statusColor(item.status) }]}>
-                        {t(`status.${item.status}`, { defaultValue: item.status })}
+              contentContainerStyle={{ padding: spacing.marginMobile, gap: spacing.md }}
+              renderItem={({ item }) => {
+                const statusColor = leaveStatusColor(item.status);
+                return (
+                  <View
+                    style={{
+                      padding: spacing.md,
+                      borderRadius: radius.lg,
+                      backgroundColor: palette.surfaceContainerLowest,
+                      borderLeftWidth: 4,
+                      borderLeftColor: palette[statusColor],
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm }}>
+                      <Text variant="labelMd" color="onSurface">
+                        {item.leave_type.toUpperCase()}
                       </Text>
+                      <View
+                        style={{
+                          paddingHorizontal: spacing.sm,
+                          paddingVertical: spacing.xs,
+                          borderRadius: radius.full,
+                          backgroundColor: palette.surfaceContainer,
+                        }}
+                      >
+                        <Text variant="labelSm" color={statusColor}>
+                          {t(`status.${item.status}`, { defaultValue: item.status })}
+                        </Text>
+                      </View>
                     </View>
+                    <Text variant="bodyMd" color="onSurface">
+                      {item.start_date} → {item.end_date}
+                    </Text>
+                    {item.reason ? (
+                      <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
+                        {item.reason}
+                      </Text>
+                    ) : null}
+                    {canLeaveManage && item.status === 'pending' ? (
+                      <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md }}>
+                        <Button size="sm" variant="primary" style={{ flex: 1 }} onPress={() => handleApproveLeave(item)}>
+                          {t('detail.approve')}
+                        </Button>
+                        <Button size="sm" variant="destructive" style={{ flex: 1 }} onPress={() => handleRejectLeave(item)}>
+                          {t('detail.reject')}
+                        </Button>
+                      </View>
+                    ) : null}
                   </View>
-                  <Text style={styles.leaveDates}>{item.start_date} → {item.end_date}</Text>
-                  {item.reason ? <Text style={styles.leaveReason}>{item.reason}</Text> : null}
-                  {canLeaveManage && item.status === "pending" && (
-                    <View style={styles.leaveActions}>
-                      <TouchableOpacity style={styles.approveBtn} onPress={() => handleApproveLeave(item)}>
-                        <Text style={styles.approveBtnText}>{t("detail.approve")}</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity style={styles.rejectBtn} onPress={() => handleRejectLeave(item)}>
-                        <Text style={styles.rejectBtnText}>{t("detail.reject")}</Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
-                </View>
-              )}
+                );
+              }}
             />
           )}
         </View>
-      )}
+      ) : null}
 
       {/* ── WORKLOAD TAB ── */}
-      {activeTab === "workload" && (
-        <ScrollView style={styles.content}>
-          <View style={styles.section}>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>{t("detail.workloadRule")}</Text>
-              {canManage && (
-                <TouchableOpacity style={styles.addSmallBtn} onPress={openWorkloadModal}>
-                  <Ionicons name={workload ? "create-outline" : "add"} size={18} color={Colors.primary} />
-                  <Text style={styles.addSmallBtnText}>
-                    {workload ? t("detail.editRule") : t("detail.setRule")}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
+      {activeTab === 'workload' ? (
+        <ScrollView contentContainerStyle={{ padding: spacing.marginMobile }}>
+          <DetailCard title={t('detail.workloadRule')} accent="primaryContainer">
             {workloadLoading ? (
-              <ActivityIndicator color={Colors.primary} />
+              <ActivityIndicator color={palette.primary} />
             ) : workload ? (
               <>
-                <View style={styles.workloadRow}>
-                  <Text style={styles.workloadLabel}>{t("detail.maxPeriodsPerDay")}</Text>
-                  <Text style={styles.workloadValue}>{workload.max_periods_per_day}</Text>
-                </View>
-                <View style={styles.workloadRow}>
-                  <Text style={styles.workloadLabel}>{t("detail.maxPeriodsPerWeek")}</Text>
-                  <Text style={styles.workloadValue}>{workload.max_periods_per_week}</Text>
-                </View>
+                <DetailRow
+                  icon="today-outline"
+                  label={t('detail.maxPeriodsPerDay')}
+                  value={String(workload.max_periods_per_day)}
+                />
+                <DetailRow
+                  icon="calendar-outline"
+                  label={t('detail.maxPeriodsPerWeek')}
+                  value={String(workload.max_periods_per_week)}
+                />
               </>
             ) : (
-              <Text style={styles.emptyText}>{t("detail.noWorkloadDefault")}</Text>
+              <Text variant="bodyMd" color="onSurfaceVariant">
+                {t('detail.noWorkloadDefault')}
+              </Text>
             )}
-          </View>
+          </DetailCard>
+          {canManage ? (
+            <Button
+              variant="secondary"
+              fullWidth
+              onPress={openWorkloadModal}
+              leftIcon={<AppIcon name={workload ? 'create-outline' : 'add'} size="sm" color="primary" />}
+            >
+              {workload ? t('detail.editRule') : t('detail.setRule')}
+            </Button>
+          ) : null}
         </ScrollView>
-      )}
+      ) : null}
 
       {/* Availability Modal */}
       <Modal visible={showAvailModal} animationType="slide" presentationStyle="formSheet">
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>{t("detail.addAvailabilityTitle")}</Text>
-            <TouchableOpacity onPress={() => setShowAvailModal(false)}>
-              <Ionicons name="close" size={24} color={Colors.text} />
-            </TouchableOpacity>
+        <SafeAreaView style={{ flex: 1, backgroundColor: palette.surface }} edges={['top']}>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              paddingHorizontal: spacing.marginMobile,
+              paddingVertical: spacing.md,
+              borderBottomWidth: 1,
+              borderBottomColor: palette.surfaceContainerHighest,
+            }}
+          >
+            <Text variant="headlineMd" color="onSurface">
+              {t('detail.addAvailabilityTitle')}
+            </Text>
+            <AppIcon name="close" size="lg" color="onSurface" onPress={() => setShowAvailModal(false)} />
           </View>
-          <ScrollView style={{ padding: Spacing.lg }}>
-            <Text style={styles.fieldLabel}>{t("detail.dayOfWeekLabel")}</Text>
-            <TextInput
-              style={styles.input}
+          <ScrollView contentContainerStyle={{ padding: spacing.marginMobile, gap: spacing.md }}>
+            <Input
+              label={t('detail.dayOfWeekLabel')}
               value={availDay}
               onChangeText={setAvailDay}
               keyboardType="number-pad"
               placeholder="1"
             />
-            <Text style={styles.fieldLabel}>{t("detail.periodNumberLabel")}</Text>
-            <TextInput
-              style={styles.input}
+            <Input
+              label={t('detail.periodNumberLabel')}
               value={availPeriod}
               onChangeText={setAvailPeriod}
               keyboardType="number-pad"
               placeholder="3"
             />
-            <View style={styles.switchRow}>
-              <Text style={styles.fieldLabel}>{t("detail.availableLabel")}</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text variant="labelMd" color="onSurface">
+                {t('detail.availableLabel')}
+              </Text>
               <Switch
                 value={availIsAvailable}
                 onValueChange={setAvailIsAvailable}
-                trackColor={{ true: Colors.success, false: Colors.error }}
+                trackColor={{ true: palette.success, false: palette.error }}
               />
             </View>
-            <Text style={styles.helperText}>{t("detail.availabilitySwitchHint")}</Text>
-            <TouchableOpacity style={styles.submitBtn} onPress={handleCreateAvail}>
-              <Text style={styles.submitBtnText}>{t("detail.saveSlot")}</Text>
-            </TouchableOpacity>
+            <Text variant="bodyMd" color="onSurfaceVariant">
+              {t('detail.availabilitySwitchHint')}
+            </Text>
+            <Button variant="primary" fullWidth onPress={handleCreateAvail} style={{ marginTop: spacing.md }}>
+              {t('detail.saveSlot')}
+            </Button>
           </ScrollView>
         </SafeAreaView>
       </Modal>
 
       {/* Workload Rule Modal */}
       <Modal visible={showWorkloadModal} animationType="slide" presentationStyle="formSheet">
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>{t("detail.workloadModalTitle")}</Text>
-            <TouchableOpacity onPress={() => setShowWorkloadModal(false)}>
-              <Ionicons name="close" size={24} color={Colors.text} />
-            </TouchableOpacity>
+        <SafeAreaView style={{ flex: 1, backgroundColor: palette.surface }} edges={['top']}>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              paddingHorizontal: spacing.marginMobile,
+              paddingVertical: spacing.md,
+              borderBottomWidth: 1,
+              borderBottomColor: palette.surfaceContainerHighest,
+            }}
+          >
+            <Text variant="headlineMd" color="onSurface">
+              {t('detail.workloadModalTitle')}
+            </Text>
+            <AppIcon name="close" size="lg" color="onSurface" onPress={() => setShowWorkloadModal(false)} />
           </View>
-          <ScrollView style={{ padding: Spacing.lg }}>
-            <Text style={styles.fieldLabel}>{t("detail.maxPerDayRequired")}</Text>
-            <TextInput style={styles.input} value={maxPerDay} onChangeText={setMaxPerDay} keyboardType="number-pad" placeholder="6" />
-
-            <Text style={styles.fieldLabel}>{t("detail.maxPerWeekRequired")}</Text>
-            <TextInput style={styles.input} value={maxPerWeek} onChangeText={setMaxPerWeek} keyboardType="number-pad" placeholder="30" />
-
-            <TouchableOpacity style={styles.submitBtn} onPress={handleSaveWorkload} disabled={workloadSaving}>
-              <Text style={styles.submitBtnText}>
-                {workloadSaving ? t("detail.saving") : t("detail.saveRule")}
-              </Text>
-            </TouchableOpacity>
+          <ScrollView contentContainerStyle={{ padding: spacing.marginMobile, gap: spacing.md }}>
+            <Input
+              label={t('detail.maxPerDayRequired')}
+              value={maxPerDay}
+              onChangeText={setMaxPerDay}
+              keyboardType="number-pad"
+              placeholder="6"
+            />
+            <Input
+              label={t('detail.maxPerWeekRequired')}
+              value={maxPerWeek}
+              onChangeText={setMaxPerWeek}
+              keyboardType="number-pad"
+              placeholder="30"
+            />
+            <Button
+              variant="primary"
+              fullWidth
+              loading={workloadSaving}
+              onPress={handleSaveWorkload}
+              style={{ marginTop: spacing.md }}
+            >
+              {workloadSaving ? t('detail.saving') : t('detail.saveRule')}
+            </Button>
           </ScrollView>
         </SafeAreaView>
       </Modal>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  center: { flex: 1, justifyContent: "center", alignItems: "center", padding: Spacing.xl },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  backIcon: { padding: Spacing.sm },
-  headerTitle: { flex: 1, fontSize: 20, fontWeight: "bold", color: Colors.text, marginLeft: Spacing.md },
-  iconBtn: {
-    padding: Spacing.sm,
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.md,
-    marginLeft: Spacing.sm,
-  },
-  // Tab bar
-  tabBar: { borderBottomWidth: 1, borderBottomColor: Colors.borderLight, maxHeight: 40 },
-  tabBarContent: { paddingHorizontal: Spacing.md },
-  tab: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    marginRight: 4,
-    borderBottomWidth: 2,
-    borderBottomColor: "transparent",
-  },
-  tabActive: { borderBottomColor: Colors.primary },
-  tabText: { fontSize: 14, fontWeight: "500", color: Colors.textSecondary },
-  tabTextActive: { color: Colors.primary },
-  // Content
-  content: { flex: 1, padding: Spacing.lg },
-  tabContent: { flex: 1 },
-  tabContentHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  tabContentTitle: { fontSize: 17, fontWeight: "600", color: Colors.text },
-  section: {
-    marginBottom: Spacing.xl,
-    backgroundColor: Colors.background,
-    borderRadius: Layout.borderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    padding: Spacing.lg,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: Colors.text,
-    marginBottom: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-    paddingBottom: Spacing.sm,
-  },
-  sectionHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-    paddingBottom: Spacing.sm,
-  },
-  infoRow: { marginBottom: Spacing.md },
-  label: { fontSize: 14, color: Colors.textSecondary, marginBottom: 4 },
-  value: { fontSize: 16, fontWeight: "500", color: Colors.text },
-  addressText: { fontSize: 16, color: Colors.text, lineHeight: 24 },
-  // List items
-  listItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  listItemInfo: { flex: 1 },
-  listItemName: { fontSize: 15, fontWeight: "500", color: Colors.text },
-  listItemDetail: { fontSize: 13, color: Colors.textSecondary, marginTop: 2 },
-  emptyText: { fontSize: 14, color: Colors.textSecondary, fontStyle: "italic", padding: Spacing.lg },
-  helperText: { fontSize: 13, color: Colors.textTertiary, paddingHorizontal: Spacing.lg, paddingBottom: Spacing.sm },
-  // Leave cards
-  leaveCard: {
-    marginHorizontal: Spacing.md,
-    marginBottom: Spacing.md,
-    padding: Spacing.md,
-    borderRadius: Layout.borderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    backgroundColor: Colors.backgroundTertiary,
-  },
-  leaveCardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: Spacing.sm },
-  leaveType: { fontSize: 13, fontWeight: "700", color: Colors.text, letterSpacing: 0.5 },
-  statusBadge: { paddingHorizontal: Spacing.sm, paddingVertical: 3, borderRadius: Layout.borderRadius.sm },
-  statusText: { fontSize: 12, fontWeight: "600" },
-  leaveDates: { fontSize: 14, color: Colors.text, marginBottom: 4 },
-  leaveReason: { fontSize: 13, color: Colors.textSecondary, marginTop: 4 },
-  leaveActions: { flexDirection: "row", gap: Spacing.sm, marginTop: Spacing.sm },
-  approveBtn: {
-    flex: 1,
-    backgroundColor: Colors.success + "20",
-    paddingVertical: Spacing.sm,
-    borderRadius: Layout.borderRadius.sm,
-    alignItems: "center",
-  },
-  approveBtnText: { color: Colors.success, fontWeight: "600", fontSize: 13 },
-  rejectBtn: {
-    flex: 1,
-    backgroundColor: Colors.error + "20",
-    paddingVertical: Spacing.sm,
-    borderRadius: Layout.borderRadius.sm,
-    alignItems: "center",
-  },
-  rejectBtnText: { color: Colors.error, fontWeight: "600", fontSize: 13 },
-  // Workload
-  workloadRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  workloadLabel: { fontSize: 15, color: Colors.textSecondary },
-  workloadValue: { fontSize: 15, fontWeight: "600", color: Colors.text },
-  // Buttons
-  addBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Colors.primary,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: Layout.borderRadius.sm,
-    gap: 4,
-  },
-  addBtnText: { color: "#fff", fontWeight: "600", fontSize: 14 },
-  addSmallBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Colors.backgroundSecondary,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    borderRadius: Layout.borderRadius.sm,
-    gap: 4,
-  },
-  addSmallBtnText: { fontSize: 14, color: Colors.primary, fontWeight: "500" },
-  // Modal
-  modalContainer: { flex: 1, backgroundColor: Colors.background },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  modalTitle: { fontSize: 18, fontWeight: "600", color: Colors.text },
-  pickerItem: { padding: Spacing.md, borderBottomWidth: 1, borderBottomColor: Colors.borderLight },
-  pickerName: { fontSize: 16, fontWeight: "500", color: Colors.text },
-  pickerDetail: { fontSize: 13, color: Colors.textSecondary, marginTop: 2 },
-  // Form
-  fieldLabel: { fontSize: 14, fontWeight: "500", color: Colors.text, marginBottom: Spacing.xs, marginTop: Spacing.md },
-  input: {
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: Layout.borderRadius.sm,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    fontSize: 15,
-    color: Colors.text,
-    backgroundColor: Colors.backgroundSecondary,
-  },
-  switchRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginVertical: Spacing.md },
-  chip: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: Layout.borderRadius.sm,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    backgroundColor: Colors.backgroundSecondary,
-    marginRight: Spacing.sm,
-  },
-  chipActive: { borderColor: Colors.primary, backgroundColor: Colors.primary + "20" },
-  chipText: { fontSize: 13, color: Colors.text },
-  chipTextActive: { color: Colors.primary, fontWeight: "600" },
-  submitBtn: {
-    backgroundColor: Colors.primary,
-    paddingVertical: Spacing.md,
-    borderRadius: Layout.borderRadius.md,
-    alignItems: "center",
-    marginTop: Spacing.xl,
-    marginBottom: Spacing.lg,
-  },
-  submitBtnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
-  errorText: { fontSize: 16, color: Colors.error, textAlign: "center", marginBottom: Spacing.lg },
-  backBtn: {
-    backgroundColor: Colors.primary,
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-    borderRadius: Layout.borderRadius.md,
-  },
-  backBtnText: { color: "#FFFFFF", fontSize: 16, fontWeight: "600" },
-});

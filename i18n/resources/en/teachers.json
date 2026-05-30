@@ -23,6 +23,12 @@
   "detail": {
     "notFound": "Teacher not found",
     "goBack": "Go back",
+    "title": "Teacher",
+    "edit": "Edit",
+    "editTeacher": "Edit teacher",
+    "call": "Call",
+    "subjectsTaught": "Subjects Taught",
+    "credentials": "Credentials",
     "updated": "Teacher updated successfully",
     "deleteConfirmTitle": "Delete teacher",
     "deleteConfirmMessage": "Are you sure you want to delete this teacher?",

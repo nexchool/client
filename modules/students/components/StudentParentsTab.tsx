@@ -4,8 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
 import { Text } from '@/common/components/Text';
 import { Student } from '../types';
-import { DetailCard } from './DetailCard';
-import { DetailRow } from './DetailRow';
+import { DetailCard } from '@/common/components/DetailCard';
+import { DetailRow } from '@/common/components/DetailRow';
 
 interface Row {
   icon: React.ComponentProps<typeof DetailRow>['icon'];
