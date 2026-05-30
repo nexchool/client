@@ -1,11 +1,16 @@
 {
   "list": {
     "title": "कक्षाएँ",
+    "subtitle": "सभी सक्रिय शैक्षणिक कक्षाएँ प्रबंधित करें और देखें।",
     "empty": "कोई कक्षा नहीं मिली।",
     "success": "सफल",
     "created": "कक्षा सफलतापूर्वक बनाई गई",
     "studentsCount": "{{count}} छात्र",
-    "teachersCount": "{{count}} शिक्षक"
+    "teachersCount": "{{count}} शिक्षक",
+    "gradeHeader": "कक्षा {{grade}}",
+    "otherGrade": "अन्य",
+    "classTeacherLabel": "कक्षा शिक्षक",
+    "viewTimetable": "समय-सारणी देखें"
   },
   "detail": {
     "notFound": "कक्षा नहीं मिली",

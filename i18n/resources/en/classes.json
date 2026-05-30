@@ -1,11 +1,16 @@
 {
   "list": {
     "title": "Classes",
+    "subtitle": "Manage and view all active academic classes.",
     "empty": "No classes found.",
     "success": "Success",
     "created": "Class created successfully",
     "studentsCount": "{{count}} students",
-    "teachersCount": "{{count}} teachers"
+    "teachersCount": "{{count}} teachers",
+    "gradeHeader": "Grade {{grade}}",
+    "otherGrade": "Other",
+    "classTeacherLabel": "Class Teacher",
+    "viewTimetable": "View Timetable"
   },
   "detail": {
     "notFound": "Class not found",

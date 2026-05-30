@@ -7,6 +7,8 @@ export interface ClassItem {
   section: string;
   /** Standard / grade number when using standard-based naming (e.g. 10 → Grade 10) */
   grade_level?: number | null;
+  /** Grade 11–12 stream: Science / Commerce / Arts / Vocational. Null for grades 1–10. */
+  stream?: string | null;
   academic_year: string;
   academic_year_id?: string;
   start_date?: string;

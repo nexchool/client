@@ -1,26 +1,63 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   View,
-  Text,
   StyleSheet,
-  FlatList,
+  SectionList,
   ActivityIndicator,
   SafeAreaView,
   RefreshControl,
-  TouchableOpacity,
   Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 import { useClasses } from "../hooks/useClasses";
 import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
 import { useAcademicYearContext } from "@/modules/academics/context/AcademicYearContext";
 import * as PERMS from "@/modules/permissions/constants/permissions";
 import { CreateClassModal } from "../components/CreateClassModal";
-import { Colors } from "@/common/constants/colors";
-import { Spacing, Layout } from "@/common/constants/spacing";
+import { ClassListItem } from "../components/ClassListItem";
+import { useTheme } from "@/common/theme";
+import { Text } from "@/common/components/Text";
+import { AppIcon } from "@/common/components/AppIcon";
+import { PressScale } from "@/common/components/PressScale";
 import { ClassItem, CreateClassDTO } from "../types";
+
+interface ClassSection {
+  title: string;
+  /** Sort key: real grade_level if present, else a high sentinel so "Other" sinks. */
+  order: number;
+  data: ClassItem[];
+}
+
+/**
+ * Group classes under grade section headers using the REAL `grade_level` field.
+ * Classes without a grade_level fall into an "Other" bucket rather than being
+ * dropped or fabricated into a grade.
+ */
+function groupByGrade(
+  classes: ClassItem[],
+  otherLabel: string,
+  gradeLabel: (grade: number) => string,
+): ClassSection[] {
+  const buckets = new Map<string, ClassSection>();
+
+  for (const cls of classes) {
+    const hasGrade = typeof cls.grade_level === "number";
+    const key = hasGrade ? `g-${cls.grade_level}` : "other";
+    let section = buckets.get(key);
+    if (!section) {
+      section = {
+        title: hasGrade ? gradeLabel(cls.grade_level as number) : otherLabel,
+        order: hasGrade ? (cls.grade_level as number) : Number.MAX_SAFE_INTEGER,
+        data: [],
+      };
+      buckets.set(key, section);
+    }
+    section.data.push(cls);
+  }
+
+  return Array.from(buckets.values()).sort((a, b) => a.order - b.order);
+}
 
 export default function ClassesScreen() {
   const { t } = useTranslation("classes");
@@ -28,6 +65,7 @@ export default function ClassesScreen() {
   const { classes, loading, fetchClasses, createClass } = useClasses();
   const { hasPermission } = usePermissions();
   const { selectedAcademicYearId } = useAcademicYearContext();
+  const { palette, radius, elevation } = useTheme();
 
   const canCreate = hasPermission(PERMS.CLASS_CREATE);
   const [modalVisible, setModalVisible] = useState(false);
@@ -36,142 +74,164 @@ export default function ClassesScreen() {
     fetchClasses({ academic_year_id: selectedAcademicYearId || undefined });
   }, [selectedAcademicYearId, fetchClasses]);
 
+  const sections = useMemo(
+    () =>
+      groupByGrade(
+        classes,
+        t("list.otherGrade"),
+        (grade) => t("list.gradeHeader", { grade }),
+      ),
+    [classes, t],
+  );
+
   const handleClassPress = (cls: ClassItem) => {
     router.push(`/classes/${cls.id}` as any);
   };
 
-  const handleCreateClass = async (data: CreateClassDTO) => {
-    try {
-      await createClass(data);
-      setModalVisible(false);
-      Alert.alert(t("list.success"), t("list.created"));
-      fetchClasses();
-    } catch (error: any) {
-      throw error;
-    }
+  const handleViewTimetable = (cls: ClassItem) => {
+    router.push(`/(protected)/timetable?classId=${cls.id}` as any);
   };
 
-  const renderClassItem = ({ item }: { item: ClassItem }) => (
-    <TouchableOpacity
-      style={styles.classCard}
-      onPress={() => handleClassPress(item)}
-      activeOpacity={0.7}
-    >
-      <View style={styles.classIcon}>
-        <Ionicons name="school" size={24} color={Colors.primary} />
-      </View>
-      <View style={styles.classInfo}>
-        <Text style={styles.className}>
-          {item.name} - {item.section}
-        </Text>
-        <Text style={styles.classDetail}>{item.academic_year}</Text>
-        <View style={styles.statsRow}>
-          <View style={styles.stat}>
-            <Ionicons name="people-outline" size={14} color={Colors.textSecondary} />
-            <Text style={styles.statText}>
-              {t("list.studentsCount", { count: item.student_count || 0 })}
-            </Text>
-          </View>
-          <View style={styles.stat}>
-            <Ionicons name="person-outline" size={14} color={Colors.textSecondary} />
-            <Text style={styles.statText}>
-              {t("list.teachersCount", { count: item.teacher_count || 0 })}
-            </Text>
-          </View>
-        </View>
-      </View>
-      <Ionicons name="chevron-forward" size={20} color={Colors.textTertiary} />
-    </TouchableOpacity>
-  );
+  const handleCreateClass = async (data: CreateClassDTO) => {
+    await createClass(data);
+    setModalVisible(false);
+    Alert.alert(t("list.success"), t("list.created"));
+    fetchClasses({ academic_year_id: selectedAcademicYearId || undefined });
+  };
+
+  const refresh = () =>
+    fetchClasses({ academic_year_id: selectedAcademicYearId || undefined });
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t("list.title")}</Text>
-        {canCreate && (
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => setModalVisible(true)}
-          >
-            <Ionicons name="add" size={24} color={Colors.primary} />
-          </TouchableOpacity>
-        )}
+    <SafeAreaView style={[styles.container, { backgroundColor: palette.surface }]}>
+      <View style={[styles.header, { borderBottomColor: palette.outlineVariant }]}>
+        <Text variant="headlineLg" color="onSurface">
+          {t("list.title")}
+        </Text>
+        <Text variant="bodyMd" color="onSurfaceVariant" style={styles.subtitle}>
+          {t("list.subtitle")}
+        </Text>
       </View>
 
       {loading && classes.length === 0 ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+          <ActivityIndicator size="large" color={palette.primary} />
         </View>
       ) : (
-        <FlatList
-          data={classes}
+        <SectionList
+          sections={sections}
           keyExtractor={(item) => item.id}
-          renderItem={renderClassItem}
+          stickySectionHeadersEnabled={false}
+          renderSectionHeader={({ section }) => (
+            <View
+              style={[
+                styles.sectionHeader,
+                { borderBottomColor: palette.outlineVariant },
+              ]}
+            >
+              <Text variant="headlineMd" color="onSurface">
+                {section.title}
+              </Text>
+            </View>
+          )}
+          renderItem={({ item }) => (
+            <ClassListItem
+              item={item}
+              onPress={handleClassPress}
+              onViewTimetable={handleViewTimetable}
+            />
+          )}
           contentContainerStyle={styles.listContent}
           refreshControl={
-            <RefreshControl refreshing={loading} onRefresh={() => fetchClasses()} />
+            <RefreshControl
+              refreshing={loading}
+              onRefresh={refresh}
+              tintColor={palette.primary}
+            />
           }
           ListEmptyComponent={
-            <View style={styles.center}>
-              <Text style={styles.emptyText}>{t("list.empty")}</Text>
+            <View style={styles.emptyState}>
+              <AppIcon name="school-outline" size="hero" color="outline" />
+              <Text
+                variant="bodyMd"
+                color="onSurfaceVariant"
+                style={styles.emptyText}
+              >
+                {t("list.empty")}
+              </Text>
             </View>
           }
         />
       )}
 
       {canCreate && (
-        <CreateClassModal
-          visible={modalVisible}
-          onClose={() => setModalVisible(false)}
-          onSubmit={handleCreateClass}
-        />
+        <>
+          <PressScale
+            accessibilityRole="button"
+            accessibilityLabel={t("modal.titleCreate")}
+            onPress={() => setModalVisible(true)}
+            style={[
+              styles.fab,
+              { backgroundColor: palette.primary, borderRadius: radius.full, ...elevation.card },
+            ]}
+          >
+            <AppIcon name="add" size="xl" color="onPrimary" />
+          </PressScale>
+
+          <CreateClassModal
+            visible={modalVisible}
+            onClose={() => setModalVisible(false)}
+            onSubmit={handleCreateClass}
+          />
+        </>
       )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  center: { flex: 1, justifyContent: "center", alignItems: "center", padding: Spacing.xl },
+  container: {
+    flex: 1,
+  },
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 32,
+  },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  headerTitle: { fontSize: 24, fontWeight: "bold", color: Colors.text },
-  addButton: {
-    padding: Spacing.sm,
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.md,
+  subtitle: {
+    marginTop: 2,
   },
-  listContent: { padding: Spacing.md },
-  classCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: Spacing.md,
-    backgroundColor: Colors.background,
-    borderRadius: Layout.borderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    marginBottom: Spacing.sm,
+  listContent: {
+    padding: 16,
+    paddingBottom: 120,
   },
-  classIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: Layout.borderRadius.md,
-    backgroundColor: Colors.backgroundSecondary,
+  sectionHeader: {
+    paddingBottom: 8,
+    marginBottom: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  emptyState: {
     alignItems: "center",
     justifyContent: "center",
-    marginRight: Spacing.md,
+    paddingVertical: 64,
+    gap: 12,
   },
-  classInfo: { flex: 1 },
-  className: { fontSize: 16, fontWeight: "600", color: Colors.text },
-  classDetail: { fontSize: 13, color: Colors.textSecondary, marginTop: 2 },
-  statsRow: { flexDirection: "row", marginTop: Spacing.xs, gap: Spacing.md },
-  stat: { flexDirection: "row", alignItems: "center", gap: 4 },
-  statText: { fontSize: 12, color: Colors.textSecondary },
-  emptyText: { fontSize: 16, color: Colors.textSecondary },
+  emptyText: {
+    textAlign: "center",
+  },
+  fab: {
+    position: "absolute",
+    bottom: 96,
+    right: 20,
+    width: 56,
+    height: 56,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });

@@ -1,11 +1,16 @@
 {
   "list": {
     "title": "વર્ગો",
+    "subtitle": "બધા સક્રિય શૈક્ષણિક વર્ગો સંચાલિત કરો અને જુઓ.",
     "empty": "કોઈ વર્ગ મળ્યો નહીં.",
     "success": "સફળ",
     "created": "વર્ગ સફળતાપૂર્વક બન્યો",
     "studentsCount": "{{count}} વિદ્યાર્થી",
-    "teachersCount": "{{count}} શિક્ષક"
+    "teachersCount": "{{count}} શિક્ષક",
+    "gradeHeader": "ધોરણ {{grade}}",
+    "otherGrade": "અન્ય",
+    "classTeacherLabel": "વર્ગ શિક્ષક",
+    "viewTimetable": "સમયપત્રક જુઓ"
   },
   "detail": {
     "notFound": "વર્ગ મળ્યો નહીં",
