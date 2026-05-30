@@ -15,8 +15,8 @@ interface Props {
   onChange: (key: string) => void;
 }
 
-/** Underlined segmented tab bar (Stitch Info / Parents / Fees). */
-export function StudentDetailTabs({ tabs, active, onChange }: Props) {
+/** Underlined segmented tab bar shared by detail screens. */
+export function DetailTabs({ tabs, active, onChange }: Props) {
   const { palette, spacing } = useTheme();
   return (
     <View

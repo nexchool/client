@@ -11,7 +11,7 @@ import { useStudents } from '../hooks/useStudents';
 import { usePermissions } from '@/modules/permissions/hooks/usePermissions';
 import * as PERMS from '@/modules/permissions/constants/permissions';
 import { StudentDetailHero } from '../components/StudentDetailHero';
-import { StudentDetailTabs, type TabItem } from '../components/StudentDetailTabs';
+import { DetailTabs, type TabItem } from '@/common/components/DetailTabs';
 import { StudentInfoTab } from '../components/StudentInfoTab';
 import { StudentParentsTab } from '../components/StudentParentsTab';
 import { StudentFeesTab } from '../components/StudentFeesTab';
@@ -133,7 +133,7 @@ export default function StudentDetailScreen() {
             showsVerticalScrollIndicator={false}
           >
             <StudentDetailHero student={currentStudent} />
-            <StudentDetailTabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
+            <DetailTabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
 
             {activeTab === 'info' && <StudentInfoTab student={currentStudent} />}
             {activeTab === 'parents' && <StudentParentsTab student={currentStudent} />}

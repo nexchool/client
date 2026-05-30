@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View, ScrollView, ActivityIndicator, Alert, Modal, FlatList, Switch } from 'react-native';
+import { View, ScrollView, ActivityIndicator, Alert, Modal, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTheme } from '@/common/theme';
@@ -21,6 +21,7 @@ import * as PERMS from '@/modules/permissions/constants/permissions';
 import { TeacherLeave, TeacherAvailability } from '../types';
 import { TeacherDetailHero } from '../components/TeacherDetailHero';
 import { TeacherSubjectsCard } from '../components/TeacherSubjectsCard';
+import { DetailTabs, type TabItem } from '@/common/components/DetailTabs';
 
 type TabKey = 'info' | 'subjects' | 'availability' | 'leaves' | 'workload';
 
@@ -316,316 +317,280 @@ export default function TeacherDetailScreen() {
         {canDelete ? <AppIcon name="trash-outline" size="lg" color="error" onPress={handleDelete} /> : null}
       </View>
 
-      {/* Tab Bar */}
       <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={{ maxHeight: 48, borderBottomWidth: 1, borderBottomColor: palette.surfaceContainerHighest }}
-        contentContainerStyle={{ paddingHorizontal: spacing.xs, alignItems: 'center' }}
+        contentContainerStyle={{
+          paddingHorizontal: spacing.marginMobile,
+          paddingTop: spacing.lg,
+          paddingBottom: 96,
+        }}
+        showsVerticalScrollIndicator={false}
       >
-        {TABS.map((tab) => {
-          const isActive = activeTab === tab.key;
-          return (
-            <PressScale
-              key={tab.key}
-              onPress={() => setActiveTab(tab.key)}
-              style={{
-                paddingHorizontal: spacing.md,
-                paddingVertical: spacing.sm,
-                borderBottomWidth: 2,
-                borderBottomColor: isActive ? palette.primary : 'transparent',
-              }}
-            >
-              <Text variant="labelMd" color={isActive ? 'primary' : 'onSurfaceVariant'}>
-                {tab.label}
-              </Text>
-            </PressScale>
-          );
-        })}
-      </ScrollView>
+        <TeacherDetailHero teacher={teacher} canUpdate={canUpdate} onEdit={goEdit} />
+        <DetailTabs tabs={TABS as TabItem[]} active={activeTab} onChange={(key) => setActiveTab(key as TabKey)} />
 
-      {/* ── INFO TAB ── */}
-      {activeTab === 'info' ? (
-        <ScrollView
-          contentContainerStyle={{
-            paddingHorizontal: spacing.marginMobile,
-            paddingTop: spacing.lg,
-            paddingBottom: 96,
-          }}
-          showsVerticalScrollIndicator={false}
-        >
-          <TeacherDetailHero teacher={teacher} canUpdate={canUpdate} onEdit={goEdit} />
-          <TeacherSubjectsCard subjects={teacher.subjects ?? []} />
-          {credentialRows.length > 0 ? (
-            <DetailCard title={t('detail.credentials')} accent="secondaryContainer">
-              {credentialRows.map((r) => (
-                <DetailRow key={r.label} icon={r.icon} label={r.label} value={String(r.value)} />
-              ))}
-            </DetailCard>
-          ) : null}
-          {professionalRows.length > 0 ? (
-            <DetailCard title={t('detail.sectionProfessional')} accent="primaryContainer">
-              {professionalRows.map((r) => (
-                <DetailRow key={r.label} icon={r.icon} label={r.label} value={String(r.value)} />
-              ))}
-            </DetailCard>
-          ) : null}
-          {contactRows.length > 0 ? (
-            <DetailCard title={t('detail.sectionBasic')} accent="tertiaryContainer">
-              {contactRows.map((r) => (
-                <DetailRow key={r.label} icon={r.icon} label={r.label} value={String(r.value)} />
-              ))}
-            </DetailCard>
-          ) : null}
-        </ScrollView>
-      ) : null}
+        {/* ── INFO TAB ── */}
+        {activeTab === 'info' ? (
+          <>
+            <TeacherSubjectsCard subjects={teacher.subjects ?? []} />
+            {credentialRows.length > 0 ? (
+              <DetailCard title={t('detail.credentials')} accent="secondaryContainer">
+                {credentialRows.map((r) => (
+                  <DetailRow key={r.label} icon={r.icon} label={r.label} value={String(r.value)} />
+                ))}
+              </DetailCard>
+            ) : null}
+            {professionalRows.length > 0 ? (
+              <DetailCard title={t('detail.sectionProfessional')} accent="primaryContainer">
+                {professionalRows.map((r) => (
+                  <DetailRow key={r.label} icon={r.icon} label={r.label} value={String(r.value)} />
+                ))}
+              </DetailCard>
+            ) : null}
+            {contactRows.length > 0 ? (
+              <DetailCard title={t('detail.sectionBasic')} accent="tertiaryContainer">
+                {contactRows.map((r) => (
+                  <DetailRow key={r.label} icon={r.icon} label={r.label} value={String(r.value)} />
+                ))}
+              </DetailCard>
+            ) : null}
+          </>
+        ) : null}
 
-      {/* ── SUBJECTS TAB (managed expertise list) ── */}
-      {activeTab === 'subjects' ? (
-        <View style={{ flex: 1 }}>
-          <View style={{ paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg }}>
+        {/* ── SUBJECTS TAB (managed expertise list) ── */}
+        {activeTab === 'subjects' ? (
+          <View>
             <Text variant="headlineMd" color="onSurface">
               {t('detail.subjectExpertise')}
             </Text>
             <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
               {t('detail.subjectsReadOnlyHint')}
             </Text>
-          </View>
-          {subjectsLoading ? (
-            <ActivityIndicator style={{ marginTop: spacing.xl }} color={palette.primary} />
-          ) : teacherSubjects.length === 0 ? (
-            <Text variant="bodyMd" color="onSurfaceVariant" style={{ padding: spacing.marginMobile }}>
-              {t('detail.emptySubjects')}
-            </Text>
-          ) : (
-            <FlatList
-              data={teacherSubjects}
-              keyExtractor={(item) => item.id}
-              contentContainerStyle={{ padding: spacing.marginMobile, gap: spacing.sm }}
-              renderItem={({ item }) => (
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: spacing.md,
-                    borderRadius: radius.md,
-                    backgroundColor: palette.surfaceContainerLowest,
-                  }}
-                >
-                  <Text variant="bodyMd" color="onSurface">
-                    {item.subject_name}
-                  </Text>
-                  {item.subject_code ? (
-                    <View
-                      style={{
-                        paddingHorizontal: spacing.sm,
-                        paddingVertical: spacing.xs,
-                        borderRadius: radius.full,
-                        backgroundColor: palette.tertiaryContainer,
-                      }}
-                    >
-                      <Text variant="labelSm" color="onTertiaryContainer">
-                        {item.subject_code}
-                      </Text>
-                    </View>
-                  ) : null}
-                </View>
-              )}
-            />
-          )}
-        </View>
-      ) : null}
-
-      {/* ── AVAILABILITY TAB ── */}
-      {activeTab === 'availability' ? (
-        <View style={{ flex: 1 }}>
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              paddingHorizontal: spacing.marginMobile,
-              paddingTop: spacing.lg,
-            }}
-          >
-            <Text variant="headlineMd" color="onSurface">
-              {t('detail.unavailabilityTitle')}
-            </Text>
-            {canManage ? (
-              <PressScale
-                onPress={() => setShowAvailModal(true)}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: spacing.xs,
-                  paddingHorizontal: spacing.md,
-                  paddingVertical: spacing.sm,
-                  borderRadius: radius.md,
-                  backgroundColor: palette.primary,
-                }}
-              >
-                <AppIcon name="add" size="sm" color="onPrimary" />
-                <Text variant="labelMd" color="onPrimary">
-                  {t('detail.add')}
-                </Text>
-              </PressScale>
-            ) : null}
-          </View>
-          <Text variant="bodyMd" color="onSurfaceVariant" style={{ paddingHorizontal: spacing.marginMobile, marginTop: spacing.xs }}>
-            {t('detail.availabilityHelper')}
-          </Text>
-          {availLoading ? (
-            <ActivityIndicator style={{ marginTop: spacing.xl }} color={palette.primary} />
-          ) : availability.length === 0 ? (
-            <Text variant="bodyMd" color="onSurfaceVariant" style={{ padding: spacing.marginMobile }}>
-              {t('detail.emptyAvailability')}
-            </Text>
-          ) : (
-            <FlatList
-              data={availability}
-              keyExtractor={(item) => item.id}
-              contentContainerStyle={{ padding: spacing.marginMobile, gap: spacing.sm }}
-              renderItem={({ item }) => (
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: spacing.md,
-                    borderRadius: radius.md,
-                    backgroundColor: palette.surfaceContainerLowest,
-                  }}
-                >
-                  <View style={{ flex: 1 }}>
-                    <Text variant="bodyMd" color="onSurface">
-                      {t('detail.slotLine', { day: dayNames[item.day_of_week] ?? '', period: item.period_number })}
-                    </Text>
-                    <Text variant="labelSm" color={item.available ? 'success' : 'error'} style={{ marginTop: spacing.xs }}>
-                      {item.available ? t('detail.slotAvailable') : t('detail.slotUnavailable')}
-                    </Text>
-                  </View>
-                  {canManage ? (
-                    <AppIcon name="close-circle-outline" size="lg" color="error" onPress={() => handleDeleteAvail(item)} />
-                  ) : null}
-                </View>
-              )}
-            />
-          )}
-        </View>
-      ) : null}
-
-      {/* ── LEAVES TAB ── */}
-      {activeTab === 'leaves' ? (
-        <View style={{ flex: 1 }}>
-          <View style={{ paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg }}>
-            <Text variant="headlineMd" color="onSurface">
-              {t('detail.leaveRequestsTitle')}
-            </Text>
-          </View>
-          {leavesLoading ? (
-            <ActivityIndicator style={{ marginTop: spacing.xl }} color={palette.primary} />
-          ) : leaves.length === 0 ? (
-            <Text variant="bodyMd" color="onSurfaceVariant" style={{ padding: spacing.marginMobile }}>
-              {t('detail.emptyLeaves')}
-            </Text>
-          ) : (
-            <FlatList
-              data={leaves}
-              keyExtractor={(item) => item.id}
-              contentContainerStyle={{ padding: spacing.marginMobile, gap: spacing.md }}
-              renderItem={({ item }) => {
-                const statusColor = leaveStatusColor(item.status);
-                return (
+            {subjectsLoading ? (
+              <ActivityIndicator style={{ marginTop: spacing.xl }} color={palette.primary} />
+            ) : teacherSubjects.length === 0 ? (
+              <Text variant="bodyMd" color="onSurfaceVariant" style={{ paddingVertical: spacing.lg }}>
+                {t('detail.emptySubjects')}
+              </Text>
+            ) : (
+              <View style={{ marginTop: spacing.md, gap: spacing.sm }}>
+                {teacherSubjects.map((item) => (
                   <View
+                    key={item.id}
                     style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
                       padding: spacing.md,
-                      borderRadius: radius.lg,
+                      borderRadius: radius.md,
                       backgroundColor: palette.surfaceContainerLowest,
-                      borderLeftWidth: 4,
-                      borderLeftColor: palette[statusColor],
                     }}
                   >
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm }}>
-                      <Text variant="labelMd" color="onSurface">
-                        {item.leave_type.toUpperCase()}
-                      </Text>
+                    <Text variant="bodyMd" color="onSurface">
+                      {item.subject_name}
+                    </Text>
+                    {item.subject_code ? (
                       <View
                         style={{
                           paddingHorizontal: spacing.sm,
                           paddingVertical: spacing.xs,
                           borderRadius: radius.full,
-                          backgroundColor: palette.surfaceContainer,
+                          backgroundColor: palette.tertiaryContainer,
                         }}
                       >
-                        <Text variant="labelSm" color={statusColor}>
-                          {t(`status.${item.status}`, { defaultValue: item.status })}
+                        <Text variant="labelSm" color="onTertiaryContainer">
+                          {item.subject_code}
                         </Text>
-                      </View>
-                    </View>
-                    <Text variant="bodyMd" color="onSurface">
-                      {item.start_date} → {item.end_date}
-                    </Text>
-                    {item.reason ? (
-                      <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
-                        {item.reason}
-                      </Text>
-                    ) : null}
-                    {canLeaveManage && item.status === 'pending' ? (
-                      <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md }}>
-                        <Button size="sm" variant="primary" style={{ flex: 1 }} onPress={() => handleApproveLeave(item)}>
-                          {t('detail.approve')}
-                        </Button>
-                        <Button size="sm" variant="destructive" style={{ flex: 1 }} onPress={() => handleRejectLeave(item)}>
-                          {t('detail.reject')}
-                        </Button>
                       </View>
                     ) : null}
                   </View>
-                );
-              }}
-            />
-          )}
-        </View>
-      ) : null}
-
-      {/* ── WORKLOAD TAB ── */}
-      {activeTab === 'workload' ? (
-        <ScrollView contentContainerStyle={{ padding: spacing.marginMobile }}>
-          <DetailCard title={t('detail.workloadRule')} accent="primaryContainer">
-            {workloadLoading ? (
-              <ActivityIndicator color={palette.primary} />
-            ) : workload ? (
-              <>
-                <DetailRow
-                  icon="today-outline"
-                  label={t('detail.maxPeriodsPerDay')}
-                  value={String(workload.max_periods_per_day)}
-                />
-                <DetailRow
-                  icon="calendar-outline"
-                  label={t('detail.maxPeriodsPerWeek')}
-                  value={String(workload.max_periods_per_week)}
-                />
-              </>
-            ) : (
-              <Text variant="bodyMd" color="onSurfaceVariant">
-                {t('detail.noWorkloadDefault')}
-              </Text>
+                ))}
+              </View>
             )}
-          </DetailCard>
-          {canManage ? (
-            <Button
-              variant="secondary"
-              fullWidth
-              onPress={openWorkloadModal}
-              leftIcon={<AppIcon name={workload ? 'create-outline' : 'add'} size="sm" color="primary" />}
+          </View>
+        ) : null}
+
+        {/* ── AVAILABILITY TAB ── */}
+        {activeTab === 'availability' ? (
+          <View>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
             >
-              {workload ? t('detail.editRule') : t('detail.setRule')}
-            </Button>
-          ) : null}
-        </ScrollView>
-      ) : null}
+              <Text variant="headlineMd" color="onSurface">
+                {t('detail.unavailabilityTitle')}
+              </Text>
+              {canManage ? (
+                <PressScale
+                  onPress={() => setShowAvailModal(true)}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: spacing.xs,
+                    paddingHorizontal: spacing.md,
+                    paddingVertical: spacing.sm,
+                    borderRadius: radius.md,
+                    backgroundColor: palette.primary,
+                  }}
+                >
+                  <AppIcon name="add" size="sm" color="onPrimary" />
+                  <Text variant="labelMd" color="onPrimary">
+                    {t('detail.add')}
+                  </Text>
+                </PressScale>
+              ) : null}
+            </View>
+            <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
+              {t('detail.availabilityHelper')}
+            </Text>
+            {availLoading ? (
+              <ActivityIndicator style={{ marginTop: spacing.xl }} color={palette.primary} />
+            ) : availability.length === 0 ? (
+              <Text variant="bodyMd" color="onSurfaceVariant" style={{ paddingVertical: spacing.lg }}>
+                {t('detail.emptyAvailability')}
+              </Text>
+            ) : (
+              <View style={{ marginTop: spacing.md, gap: spacing.sm }}>
+                {availability.map((item) => (
+                  <View
+                    key={item.id}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: spacing.md,
+                      borderRadius: radius.md,
+                      backgroundColor: palette.surfaceContainerLowest,
+                    }}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text variant="bodyMd" color="onSurface">
+                        {t('detail.slotLine', { day: dayNames[item.day_of_week] ?? '', period: item.period_number })}
+                      </Text>
+                      <Text variant="labelSm" color={item.available ? 'success' : 'error'} style={{ marginTop: spacing.xs }}>
+                        {item.available ? t('detail.slotAvailable') : t('detail.slotUnavailable')}
+                      </Text>
+                    </View>
+                    {canManage ? (
+                      <AppIcon name="close-circle-outline" size="lg" color="error" onPress={() => handleDeleteAvail(item)} />
+                    ) : null}
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+        ) : null}
+
+        {/* ── LEAVES TAB ── */}
+        {activeTab === 'leaves' ? (
+          <View>
+            <Text variant="headlineMd" color="onSurface">
+              {t('detail.leaveRequestsTitle')}
+            </Text>
+            {leavesLoading ? (
+              <ActivityIndicator style={{ marginTop: spacing.xl }} color={palette.primary} />
+            ) : leaves.length === 0 ? (
+              <Text variant="bodyMd" color="onSurfaceVariant" style={{ paddingVertical: spacing.lg }}>
+                {t('detail.emptyLeaves')}
+              </Text>
+            ) : (
+              <View style={{ marginTop: spacing.md, gap: spacing.md }}>
+                {leaves.map((item) => {
+                  const statusColor = leaveStatusColor(item.status);
+                  return (
+                    <View
+                      key={item.id}
+                      style={{
+                        padding: spacing.md,
+                        borderRadius: radius.lg,
+                        backgroundColor: palette.surfaceContainerLowest,
+                        borderLeftWidth: 4,
+                        borderLeftColor: palette[statusColor],
+                      }}
+                    >
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm }}>
+                        <Text variant="labelMd" color="onSurface">
+                          {item.leave_type.toUpperCase()}
+                        </Text>
+                        <View
+                          style={{
+                            paddingHorizontal: spacing.sm,
+                            paddingVertical: spacing.xs,
+                            borderRadius: radius.full,
+                            backgroundColor: palette.surfaceContainer,
+                          }}
+                        >
+                          <Text variant="labelSm" color={statusColor}>
+                            {t(`status.${item.status}`, { defaultValue: item.status })}
+                          </Text>
+                        </View>
+                      </View>
+                      <Text variant="bodyMd" color="onSurface">
+                        {item.start_date} → {item.end_date}
+                      </Text>
+                      {item.reason ? (
+                        <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
+                          {item.reason}
+                        </Text>
+                      ) : null}
+                      {canLeaveManage && item.status === 'pending' ? (
+                        <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md }}>
+                          <Button size="sm" variant="primary" style={{ flex: 1 }} onPress={() => handleApproveLeave(item)}>
+                            {t('detail.approve')}
+                          </Button>
+                          <Button size="sm" variant="destructive" style={{ flex: 1 }} onPress={() => handleRejectLeave(item)}>
+                            {t('detail.reject')}
+                          </Button>
+                        </View>
+                      ) : null}
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+          </View>
+        ) : null}
+
+        {/* ── WORKLOAD TAB ── */}
+        {activeTab === 'workload' ? (
+          <View>
+            <DetailCard title={t('detail.workloadRule')} accent="primaryContainer">
+              {workloadLoading ? (
+                <ActivityIndicator color={palette.primary} />
+              ) : workload ? (
+                <>
+                  <DetailRow
+                    icon="today-outline"
+                    label={t('detail.maxPeriodsPerDay')}
+                    value={String(workload.max_periods_per_day)}
+                  />
+                  <DetailRow
+                    icon="calendar-outline"
+                    label={t('detail.maxPeriodsPerWeek')}
+                    value={String(workload.max_periods_per_week)}
+                  />
+                </>
+              ) : (
+                <Text variant="bodyMd" color="onSurfaceVariant">
+                  {t('detail.noWorkloadDefault')}
+                </Text>
+              )}
+            </DetailCard>
+            {canManage ? (
+              <Button
+                variant="secondary"
+                fullWidth
+                onPress={openWorkloadModal}
+                leftIcon={<AppIcon name={workload ? 'create-outline' : 'add'} size="sm" color="primary" />}
+              >
+                {workload ? t('detail.editRule') : t('detail.setRule')}
+              </Button>
+            ) : null}
+          </View>
+        ) : null}
+      </ScrollView>
 
       {/* Availability Modal */}
       <Modal visible={showAvailModal} animationType="slide" presentationStyle="formSheet">
