@@ -8,12 +8,15 @@ module.exports = defineConfig([
     ignores: ['dist/*'],
   },
   {
-    // Design-system guard. Staged at "warn" — flips to "error" repo-wide
-    // once Workstream B migrates all screens off raw styling.
+    // Design-system guard. Flipped to "error" after Workstream B migrated
+    // every screen off raw styling (whole-app count reached 0). Raw
+    // fontSize/fontFamily/hex in modules/** or app/** now fails the build.
+    // Genuinely-required raw values (markdown-lib heading sizes, Android
+    // notification-channel ARGB) are suppressed inline with an explanation.
     files: ['modules/**/*.{ts,tsx}', 'app/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-syntax': [
-        'warn',
+        'error',
         {
           selector: "Property[key.name='fontSize']",
           message: 'Use the typography scale via <Text variant="..."> instead of a raw fontSize.',
