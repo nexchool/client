@@ -5,22 +5,27 @@ import { Teacher, CreateTeacherDTO, UpdateTeacherDTO, CreateTeacherResponse } fr
 
 export const useTeachers = () => {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [departments, setDepartments] = useState<string[]>([]);
   const [currentTeacher, setCurrentTeacher] = useState<Teacher | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTeachers = useCallback(async (params?: { search?: string; status?: string }) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await teacherService.getTeachers(params);
-      setTeachers(data);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch teachers');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const fetchTeachers = useCallback(
+    async (params?: { search?: string; status?: string; department?: string }) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await teacherService.getTeachers(params);
+        setTeachers(data.items);
+        setDepartments(data.departments);
+      } catch (err: any) {
+        setError(err.message || 'Failed to fetch teachers');
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
 
   const fetchTeacher = useCallback(async (id: string) => {
     setLoading(true);
@@ -86,6 +91,7 @@ export const useTeachers = () => {
 
   return {
     teachers,
+    departments,
     currentTeacher,
     loading,
     error,

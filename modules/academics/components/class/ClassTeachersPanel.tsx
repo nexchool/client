@@ -58,7 +58,7 @@ export function ClassTeachersPanel({ classId, canManage }: Props) {
     setRole("assistant");
     setAllowAtt(false);
     try {
-      setTeachers(await teacherService.getTeachers({ status: "active" }));
+      setTeachers((await teacherService.getTeachers({ status: "active" })).items);
     } catch {
       setTeachers([]);
     }
@@ -71,7 +71,7 @@ export function ClassTeachersPanel({ classId, canManage }: Props) {
     setRole(a.role as "primary" | "assistant");
     setAllowAtt(a.allow_attendance_marking);
     try {
-      setTeachers(await teacherService.getTeachers({ status: "active" }));
+      setTeachers((await teacherService.getTeachers({ status: "active" })).items);
     } catch {
       setTeachers([]);
     }

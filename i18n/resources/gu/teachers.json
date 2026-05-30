@@ -1,7 +1,10 @@
 {
   "list": {
-    "title": "શિક્ષકો",
+    "title": "શિક્ષક નિર્દેશિકા",
+    "subtitle": "તમારા શૈક્ષણિક સ્ટાફને સંચાલિત કરો અને તેમની સાથે જોડાઓ.",
     "searchPlaceholder": "નામ, ID અથવા વિભાગથી શોધો…",
+    "filterDepartmentAll": "બધા વિભાગ",
+    "viewProfile": "પ્રોફાઇલ જુઓ",
     "emptySearch": "કોઈ શિક્ષક મળ્યો નહીં.",
     "emptyNone": "હજી કોઈ શિક્ષક નથી.",
     "credentialTitle": "શિક્ષક સફળતાપૂર્વક બન્યો",

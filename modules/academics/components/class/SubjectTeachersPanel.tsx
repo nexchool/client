@@ -78,7 +78,7 @@ export function SubjectTeachersPanel({ classId, canManage }: Props) {
     setRole("primary");
     try {
       const t = await teacherService.getTeachers({ status: "active" });
-      setTeachers(t);
+      setTeachers(t.items);
     } catch {
       setTeachers([]);
     }
@@ -92,7 +92,7 @@ export function SubjectTeachersPanel({ classId, canManage }: Props) {
     setRole(row.role as "primary" | "assistant" | "guest");
     try {
       const t = await teacherService.getTeachers({ status: "active" });
-      setTeachers(t);
+      setTeachers(t.items);
     } catch {
       setTeachers([]);
     }

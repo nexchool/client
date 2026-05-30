@@ -1,7 +1,10 @@
 {
   "list": {
-    "title": "Teachers",
+    "title": "Teachers Directory",
+    "subtitle": "Manage and connect with your academic staff.",
     "searchPlaceholder": "Search by name, ID, or department…",
+    "filterDepartmentAll": "All departments",
+    "viewProfile": "View Profile",
     "emptySearch": "No teachers found.",
     "emptyNone": "No teachers yet.",
     "credentialTitle": "Teacher created successfully",

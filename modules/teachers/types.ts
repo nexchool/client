@@ -24,6 +24,19 @@ export interface Teacher {
   subjects?: TeacherSubjectItem[];
 }
 
+/** Envelope returned by GET /api/teachers/ (list). */
+export interface TeacherListResponse {
+  items: Teacher[];
+  total: number;
+  page: number;
+  per_page: number;
+  total_pages: number;
+  /** Distinct department values across all tenant teachers (for filter options). */
+  departments: string[];
+  /** Distinct designation values across all tenant teachers. */
+  designations: string[];
+}
+
 // --- Teacher Subject Expertise ---
 export interface TeacherSubject {
   id: string;

@@ -1,10 +1,11 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "@/common/constants/colors";
-import { Spacing, Layout } from "@/common/constants/spacing";
+import { View, StyleSheet } from "react-native";
+import { Text } from "@/common/components/Text";
+import { AppIcon } from "@/common/components/AppIcon";
+import { PressScale } from "@/common/components/PressScale";
 import { ProfileAvatar } from "@/common/components/ProfileAvatar";
+import { useTheme } from "@/common/theme";
 import { Teacher } from "../types";
 
 interface Props {
@@ -14,101 +15,197 @@ interface Props {
 
 export const TeacherListItem: React.FC<Props> = ({ teacher, onPress }) => {
   const { t } = useTranslation("teachers");
-  const statusKey = teacher.status?.toLowerCase?.() ?? "";
-  const statusLabel = t(`status.${statusKey}`, {
-    defaultValue: teacher.status ?? "",
-  });
+  const { palette, spacing, radius, elevation, avatarSize } = useTheme();
+
+  const isInactive =
+    (teacher.status || "").trim().toLowerCase() === "inactive";
+
+  // Real fields only: department is the primary pill, designation the fallback.
+  // The list endpoint does NOT ship subjects or photos.
+  const pillLabel = teacher.department || teacher.designation;
+  const accentColor = isInactive ? palette.outlineVariant : palette.primary;
+
   return (
-    <TouchableOpacity
-      style={styles.container}
+    <PressScale
       onPress={() => onPress(teacher)}
-      activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={teacher.name}
+      style={[
+        styles.card,
+        {
+          backgroundColor: palette.surfaceContainerLowest,
+          borderRadius: radius.xl,
+          opacity: isInactive ? 0.85 : 1,
+          ...elevation.card,
+        },
+      ]}
     >
-      <ProfileAvatar
-        uri={teacher.profile_picture}
-        size={44}
-        name={teacher.name}
-        iconColor={Colors.textSecondary}
-        placeholderBg={Colors.backgroundSecondary}
-        style={{ marginRight: Spacing.md }}
+      {/* Cover band */}
+      <View
+        style={[
+          styles.cover,
+          {
+            backgroundColor: palette.surfaceContainerHigh,
+            borderTopLeftRadius: radius.xl,
+            borderTopRightRadius: radius.xl,
+          },
+        ]}
       />
-      <View style={styles.info}>
-        <Text style={styles.name}>{teacher.name}</Text>
-        <Text style={styles.detail}>{teacher.employee_id}</Text>
-        {teacher.department && (
-          <Text style={styles.detail}>{teacher.department}</Text>
-        )}
+
+      {/* Avatar overlapping the band */}
+      <View
+        style={[
+          styles.avatarRing,
+          { backgroundColor: palette.surfaceContainerLowest },
+        ]}
+      >
+        <ProfileAvatar
+          uri={teacher.profile_picture}
+          size={avatarSize.lg}
+          name={teacher.name}
+          iconColor={
+            isInactive ? palette.outline : palette.onTertiaryContainer
+          }
+          placeholderBg={
+            isInactive
+              ? palette.surfaceContainerHighest
+              : palette.tertiaryContainer
+          }
+        />
       </View>
-      <View style={styles.right}>
-        <View
-          style={[
-            styles.statusBadge,
-            teacher.status === "active" ? styles.activeBadge : styles.inactiveBadge,
-          ]}
+
+      <View style={[styles.body, { paddingHorizontal: spacing.md }]}>
+        <Text
+          variant="titleSm"
+          color="onSurface"
+          numberOfLines={1}
+          style={styles.name}
         >
-          <Text
+          {teacher.name}
+        </Text>
+
+        <Text
+          variant="bodySm"
+          color="onSurfaceVariant"
+          numberOfLines={1}
+          style={styles.employeeId}
+        >
+          {`ID: ${teacher.employee_id}`}
+        </Text>
+
+        {pillLabel ? (
+          <View
             style={[
-              styles.statusText,
-              teacher.status === "active" ? styles.activeText : styles.inactiveText,
+              styles.pill,
+              {
+                backgroundColor: isInactive
+                  ? palette.surfaceContainerHighest
+                  : palette.tertiaryContainer,
+                borderRadius: radius.full,
+                paddingHorizontal: spacing.md,
+                paddingVertical: spacing.xs,
+                marginTop: spacing.sm,
+              },
             ]}
           >
-            {statusLabel}
+            <AppIcon
+              name="briefcase-outline"
+              size="sm"
+              color={isInactive ? "onSurfaceVariant" : "onTertiaryContainer"}
+            />
+            <Text
+              variant="labelSm"
+              color={isInactive ? "onSurfaceVariant" : "onTertiaryContainer"}
+              numberOfLines={1}
+            >
+              {pillLabel}
+            </Text>
+          </View>
+        ) : null}
+
+        {/* View Profile affordance — whole card is pressable */}
+        <View
+          style={[
+            styles.viewProfile,
+            {
+              backgroundColor: palette.surfaceContainerLow,
+              borderRadius: radius.md,
+              marginTop: spacing.md,
+            },
+          ]}
+        >
+          <Text variant="labelMd" color={isInactive ? "onSurfaceVariant" : "primary"}>
+            {t("list.viewProfile")}
           </Text>
+          <AppIcon
+            name="chevron-forward"
+            size="sm"
+            color={isInactive ? "onSurfaceVariant" : "primary"}
+          />
         </View>
-        <Ionicons name="chevron-forward" size={20} color={Colors.textTertiary} />
       </View>
-    </TouchableOpacity>
+
+      {/* Accent edge to echo status without a separate badge */}
+      <View
+        style={[
+          styles.accent,
+          {
+            backgroundColor: accentColor,
+            borderBottomLeftRadius: radius.xl,
+            borderBottomRightRadius: radius.xl,
+          },
+        ]}
+      />
+    </PressScale>
   );
 };
 
+const COVER_HEIGHT = 56;
+const AVATAR_OVERLAP = 28;
+
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: Spacing.md,
-    backgroundColor: Colors.background,
-    borderRadius: Layout.borderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    marginBottom: Spacing.sm,
+  card: {
+    marginBottom: 16,
+    overflow: "hidden",
   },
-  info: {
-    flex: 1,
+  cover: {
+    height: COVER_HEIGHT,
+    width: "100%",
+  },
+  avatarRing: {
+    alignSelf: "center",
+    padding: 4,
+    borderRadius: 9999,
+    marginTop: -AVATAR_OVERLAP,
+  },
+  body: {
+    alignItems: "center",
+    paddingBottom: 16,
   },
   name: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: Colors.text,
+    marginTop: 8,
+    textAlign: "center",
   },
-  detail: {
-    fontSize: 13,
-    color: Colors.textSecondary,
+  employeeId: {
     marginTop: 2,
+    textAlign: "center",
   },
-  right: {
+  pill: {
     flexDirection: "row",
     alignItems: "center",
-    gap: Spacing.sm,
+    gap: 4,
+    maxWidth: "100%",
   },
-  statusBadge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-    borderRadius: Layout.borderRadius.sm,
+  viewProfile: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    alignSelf: "stretch",
+    paddingVertical: 10,
   },
-  activeBadge: {
-    backgroundColor: "#E8F5E9",
-  },
-  inactiveBadge: {
-    backgroundColor: "#FFF3E0",
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: "500",
-  },
-  activeText: {
-    color: Colors.success,
-  },
-  inactiveText: {
-    color: Colors.warning,
+  accent: {
+    height: 3,
+    width: "100%",
   },
 });

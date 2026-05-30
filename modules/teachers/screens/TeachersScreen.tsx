@@ -2,25 +2,22 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   View,
-  Text,
   StyleSheet,
   FlatList,
   ActivityIndicator,
   SafeAreaView,
   RefreshControl,
-  TouchableOpacity,
   TextInput,
   Pressable,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 import { useTeachers } from "../hooks/useTeachers";
 import { TeacherListItem } from "../components/TeacherListItem";
 import { Protected } from "@/modules/permissions/components/Protected";
 import * as PERMS from "@/modules/permissions/constants/permissions";
 import { useTheme } from "@/common/theme";
-import { Colors } from "@/common/constants/colors";
-import { Spacing, Layout } from "@/common/constants/spacing";
+import { Text } from "@/common/components/Text";
+import { AppIcon } from "@/common/components/AppIcon";
 import { Teacher } from "../types";
 
 function useDebounce<T>(value: T, delay: number): T {
@@ -35,62 +32,169 @@ function useDebounce<T>(value: T, delay: number): T {
 export default function TeachersScreen() {
   const { t } = useTranslation("teachers");
   const router = useRouter();
-  const { teachers, loading, fetchTeachers } = useTeachers();
-  const { palette, elevation } = useTheme();
+  const { teachers, departments, loading, fetchTeachers } = useTeachers();
+  const { palette, radius, elevation } = useTheme();
 
   const [searchQuery, setSearchQuery] = useState("");
+  // Real filter: department. Options come from the list-endpoint envelope.
+  const [department, setDepartment] = useState<string | null>(null);
   const debouncedSearch = useDebounce(searchQuery, 500);
 
   useEffect(() => {
-    fetchTeachers({ search: debouncedSearch || undefined });
-  }, [debouncedSearch]);
+    loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, department]);
+
+  const loadData = () => {
+    fetchTeachers({
+      search: debouncedSearch || undefined,
+      department: department || undefined,
+    });
+  };
 
   const handleTeacherPress = (teacher: Teacher) => {
     router.push(`/teachers/${teacher.id}` as any);
   };
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t("list.title")}</Text>
-      </View>
+  const cycleDepartment = () => {
+    if (departments.length === 0) return;
+    setDepartment((prev) => {
+      if (prev === null) return departments[0];
+      const idx = departments.indexOf(prev);
+      return idx === -1 || idx === departments.length - 1
+        ? null
+        : departments[idx + 1];
+    });
+  };
 
-      {/* Search */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color={Colors.textSecondary} style={styles.searchIcon} />
+  const departmentActive = department !== null;
+  const departmentLabel = department ?? t("list.filterDepartmentAll");
+
+  const renderToolbar = () => (
+    <View
+      style={[
+        styles.toolbar,
+        {
+          backgroundColor: palette.surfaceContainerLowest,
+          borderRadius: radius.xl,
+          ...elevation.card,
+        },
+      ]}
+    >
+      <View
+        style={[
+          styles.searchContainer,
+          {
+            borderRadius: radius.DEFAULT,
+            borderColor: palette.outlineVariant,
+            backgroundColor: palette.surfaceContainerLowest,
+          },
+        ]}
+      >
+        <AppIcon name="search" size="md" color="outline" />
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: palette.onSurface }]}
           placeholder={t("list.searchPlaceholder")}
-          placeholderTextColor={Colors.textSecondary}
+          placeholderTextColor={palette.onSurfaceVariant}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
         {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery("")}>
-            <Ionicons name="close-circle" size={20} color={Colors.textSecondary} />
-          </TouchableOpacity>
+          <AppIcon
+            name="close-circle"
+            size="md"
+            color="onSurfaceVariant"
+            onPress={() => setSearchQuery("")}
+            accessibilityLabel="Clear search"
+          />
         )}
+      </View>
+
+      {departments.length > 0 && (
+        <View style={styles.chipRow}>
+          <Pressable
+            onPress={cycleDepartment}
+            accessibilityRole="button"
+            accessibilityLabel={departmentLabel}
+            style={({ pressed }) => [
+              styles.chip,
+              {
+                borderRadius: radius.full,
+                backgroundColor: departmentActive
+                  ? palette.surfaceContainerLow
+                  : palette.surfaceContainerLowest,
+                borderColor: departmentActive
+                  ? palette.primary
+                  : palette.outlineVariant,
+                opacity: pressed ? 0.85 : 1,
+              },
+            ]}
+          >
+            <AppIcon
+              name="briefcase-outline"
+              size="sm"
+              color={departmentActive ? "primary" : "onSurfaceVariant"}
+            />
+            <Text
+              variant="labelMd"
+              color={departmentActive ? "primary" : "onSurfaceVariant"}
+              numberOfLines={1}
+            >
+              {departmentLabel}
+            </Text>
+            <AppIcon
+              name={departmentActive ? "close" : "chevron-down"}
+              size="sm"
+              color={departmentActive ? "primary" : "onSurfaceVariant"}
+            />
+          </Pressable>
+        </View>
+      )}
+    </View>
+  );
+
+  return (
+    <SafeAreaView style={[styles.container, { backgroundColor: palette.surface }]}>
+      <View style={[styles.header, { borderBottomColor: palette.outlineVariant }]}>
+        <Text variant="headlineLg" color="onSurface">
+          {t("list.title")}
+        </Text>
+        <Text variant="bodyMd" color="onSurfaceVariant" style={styles.subtitle}>
+          {t("list.subtitle")}
+        </Text>
       </View>
 
       {loading && teachers.length === 0 ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+          <ActivityIndicator size="large" color={palette.primary} />
         </View>
       ) : (
         <FlatList
           data={teachers}
           keyExtractor={(item) => item.id}
+          ListHeaderComponent={renderToolbar()}
           renderItem={({ item }) => (
             <TeacherListItem teacher={item} onPress={handleTeacherPress} />
           )}
           contentContainerStyle={styles.listContent}
           refreshControl={
-            <RefreshControl refreshing={loading} onRefresh={() => fetchTeachers()} />
+            <RefreshControl
+              refreshing={loading}
+              onRefresh={loadData}
+              tintColor={palette.primary}
+            />
           }
           ListEmptyComponent={
-            <View style={styles.center}>
-              <Text style={styles.emptyText}>
-                {searchQuery ? t("list.emptySearch") : t("list.emptyNone")}
+            <View style={styles.emptyState}>
+              <AppIcon name="people-outline" size="hero" color="outline" />
+              <Text
+                variant="bodyMd"
+                color="onSurfaceVariant"
+                style={styles.emptyText}
+              >
+                {searchQuery || departmentActive
+                  ? t("list.emptySearch")
+                  : t("list.emptyNone")}
               </Text>
             </View>
           }
@@ -116,7 +220,7 @@ export default function TeachersScreen() {
             ...elevation.card,
           })}
         >
-          <Ionicons name="add" size={28} color={palette.onPrimary} />
+          <AppIcon name="add" size="xl" color="onPrimary" />
         </Pressable>
       </Protected>
     </SafeAreaView>
@@ -124,30 +228,65 @@ export default function TeachersScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  center: { flex: 1, justifyContent: "center", alignItems: "center", padding: Spacing.xl },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
+  container: {
+    flex: 1,
   },
-  headerTitle: { fontSize: 24, fontWeight: "bold", color: Colors.text },
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 32,
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  subtitle: {
+    marginTop: 2,
+  },
+  listContent: {
+    padding: 16,
+    paddingBottom: 120,
+  },
+  toolbar: {
+    padding: 16,
+    marginBottom: 16,
+    gap: 12,
+  },
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    margin: Spacing.md,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    gap: 8,
   },
-  searchIcon: { marginRight: Spacing.sm },
-  searchInput: { flex: 1, fontSize: 16, color: Colors.text, padding: Spacing.sm },
-  listContent: { padding: Spacing.md },
-  emptyText: { fontSize: 16, color: Colors.textSecondary },
+  searchInput: {
+    flex: 1,
+    padding: 0,
+  },
+  chipRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  chip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderWidth: 1,
+    maxWidth: "100%",
+  },
+  emptyState: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 64,
+    gap: 12,
+  },
+  emptyText: {
+    textAlign: "center",
+  },
 });

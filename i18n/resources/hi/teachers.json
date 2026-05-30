@@ -1,7 +1,10 @@
 {
   "list": {
-    "title": "शिक्षक",
+    "title": "शिक्षक निर्देशिका",
+    "subtitle": "अपने शैक्षणिक स्टाफ़ को प्रबंधित करें और उनसे जुड़ें।",
     "searchPlaceholder": "नाम, ID या विभाग से खोजें…",
+    "filterDepartmentAll": "सभी विभाग",
+    "viewProfile": "प्रोफ़ाइल देखें",
     "emptySearch": "कोई शिक्षक नहीं मिला।",
     "emptyNone": "अभी कोई शिक्षक नहीं।",
     "credentialTitle": "शिक्षक सफलतापूर्वक बनाया गया",
