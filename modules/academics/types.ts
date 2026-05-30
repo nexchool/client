@@ -181,7 +181,7 @@ export interface StudentDashboardResponse {
     present: number;
     percentage: number;
     source?: string;
-  };
+  } | null;
 }
 
 export interface AttendanceSessionV2 {

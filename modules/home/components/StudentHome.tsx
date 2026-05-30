@@ -14,6 +14,21 @@ import { EmptyState } from '@/common/components/EmptyState';
 import { Button } from '@/common/components/Button';
 import { ProgressRing } from './ProgressRing';
 
+// "08:00:00" -> "08:00"; null/empty -> "".
+function hhmm(value: string | null | undefined): string {
+  if (!value) return '';
+  const [h, m] = value.split(':');
+  return h && m ? `${h}:${m}` : value;
+}
+
+// Minutes since midnight for an "HH:MM:SS" string; null if unparseable.
+function minutesOfDay(value: string | null | undefined): number | null {
+  if (!value) return null;
+  const [h, m] = value.split(':').map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) return null;
+  return h * 60 + m;
+}
+
 export function StudentHome() {
   const { t } = useTranslation('home');
   const { palette, spacing, radius, elevation } = useTheme();
@@ -27,11 +42,27 @@ export function StudentHome() {
   const fullName =
     [user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.name || '';
 
-  const upNext = (data as any)?.next_class;
-  const attendancePct = (data as any)?.attendance?.percentage ?? 0;
-  const attendanceTarget = (data as any)?.attendance?.target ?? 85;
-  const pendingFeesAmount = (data as any)?.fees?.pending_amount;
-  const pendingFeesDays = (data as any)?.fees?.days_until_due;
+  // Up Next: from today's schedule, pick the earliest period whose end time is
+  // still >= now. Periods without bell-schedule times can't be ranked, so they
+  // are skipped here. Falls back to null -> "No more classes today" empty state.
+  const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+  const upNext =
+    (data?.today_schedule ?? [])
+      .filter((p) => {
+        const end = minutesOfDay(p.ends_at);
+        return end != null && end >= nowMinutes;
+      })
+      .sort((a, b) => (minutesOfDay(a.starts_at) ?? 0) - (minutesOfDay(b.starts_at) ?? 0))[0] ??
+    null;
+
+  const attendancePct = data?.attendance_summary?.percentage ?? 0;
+  const attendanceTarget = 85;
+
+  // NOTE: /api/finance/student-fees requires finance.read/manage/collect, which
+  // the Student role does NOT hold — calling it from a student session returns
+  // 403. So we render a neutral fees state rather than firing a failing query.
+  const pendingFeesAmount: number | undefined = undefined;
+  const pendingFeesDays: number | null = null;
 
   // Notification list shape may be `Notification[]` or `{ results: [] }` or paginated.
   // Flatten defensively.
@@ -114,7 +145,7 @@ export function StudentHome() {
                 </Text>
               </View>
               <Text variant="headlineMd" color="onSurface" numberOfLines={1}>
-                {String(upNext?.subject?.name ?? upNext?.subject ?? '—')}
+                {upNext?.subject_name ?? '—'}
               </Text>
             </View>
             <AppIcon name="calculator-outline" size="lg" color="primary" />
@@ -123,7 +154,7 @@ export function StudentHome() {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <AppIcon name="time-outline" size="sm" color="onSurfaceVariant" />
               <Text variant="bodyMd" color="onSurfaceVariant" numberOfLines={1}>
-                {upNext?.start_time} - {upNext?.end_time}
+                {[hhmm(upNext?.starts_at), hhmm(upNext?.ends_at)].filter(Boolean).join(' - ') || '—'}
               </Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -135,7 +166,7 @@ export function StudentHome() {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <AppIcon name="person-outline" size="sm" color="onSurfaceVariant" />
               <Text variant="bodyMd" color="onSurfaceVariant" numberOfLines={1}>
-                {String(upNext?.teacher?.name ?? '—')}
+                {upNext?.teacher_name ?? '—'}
               </Text>
             </View>
           </View>

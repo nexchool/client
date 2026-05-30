@@ -10,6 +10,7 @@ import { useTeacherTodaySchedule } from '@/modules/academics/hooks/useAcademicQu
 import { getTimeOfDayGreeting } from '@/common/utils/greeting';
 import { HomeQuickActionCard } from './HomeQuickActionCard';
 import { HomeSectionHeader } from './HomeSectionHeader';
+import { DashboardActionRow } from './DashboardActionRow';
 import { EmptyState } from '@/common/components/EmptyState';
 import { Button } from '@/common/components/Button';
 
@@ -19,7 +20,15 @@ function showComingSoon(label: string) {
 
 type PeriodStatus = 'ongoing' | 'next' | 'later';
 
-function periodStatus(start: string, end: string, now = new Date()): PeriodStatus {
+// Server sends `starts_at` / `ends_at` as "HH:MM:SS" (Python time.isoformat),
+// or null when the class has no bell schedule. Null times can't be ranked, so
+// such periods fall through to "later".
+function periodStatus(
+  start: string | null | undefined,
+  end: string | null | undefined,
+  now = new Date()
+): PeriodStatus {
+  if (!start || !end) return 'later';
   const [sh, sm] = start.split(':').map(Number);
   const [eh, em] = end.split(':').map(Number);
   const s = new Date(now);
@@ -31,6 +40,13 @@ function periodStatus(start: string, end: string, now = new Date()): PeriodStatu
   return 'later';
 }
 
+// "08:00:00" -> "08:00"; null/empty -> "".
+function hhmm(value: string | null | undefined): string {
+  if (!value) return '';
+  const [h, m] = value.split(':');
+  return h && m ? `${h}:${m}` : value;
+}
+
 export function TeacherHome() {
   const { t } = useTranslation('home');
   const { palette, spacing, radius, elevation } = useTheme();
@@ -40,14 +56,14 @@ export function TeacherHome() {
   const greeting = getTimeOfDayGreeting(t);
   const firstName = user?.first_name ?? user?.name?.split(' ')?.[0] ?? '';
 
-  const periods: any[] = (data as any)?.periods ?? [];
-  const ordered = [...periods].sort((a, b) =>
-    String(a.start_time).localeCompare(String(b.start_time))
+  const lectures = data?.lectures ?? [];
+  const ordered = [...lectures].sort((a, b) =>
+    String(a.starts_at ?? '').localeCompare(String(b.starts_at ?? ''))
   );
   const now = new Date();
   let nextAssigned = false;
   const labeled = ordered.map((p) => {
-    const s = periodStatus(p.start_time, p.end_time, now);
+    const s = periodStatus(p.starts_at, p.ends_at, now);
     if (s === 'next' && nextAssigned) return { ...p, _status: 'later' as PeriodStatus };
     if (s === 'next') {
       nextAssigned = true;
@@ -55,6 +71,8 @@ export function TeacherHome() {
     }
     return { ...p, _status: s };
   });
+
+  const pendingTasks = lectures.filter((p) => p.attendance_pending_today === true);
 
   return (
     <ScrollView
@@ -192,7 +210,7 @@ export function TeacherHome() {
                       color={isOngoing ? 'onPrimary' : 'onSurfaceVariant'}
                       style={{ opacity: isOngoing ? 0.9 : 1 }}
                     >
-                      {p.start_time} - {p.end_time}
+                      {[hhmm(p.starts_at), hhmm(p.ends_at)].filter(Boolean).join(' - ') || '—'}
                     </Text>
                   </View>
                   <Text
@@ -201,7 +219,7 @@ export function TeacherHome() {
                     style={{ marginBottom: spacing.xs }}
                     numberOfLines={1}
                   >
-                    {String(p.subject?.name ?? p.subject ?? '—')}
+                    {p.subject_name ?? '—'}
                   </Text>
                   <Text
                     variant="bodyMd"
@@ -209,7 +227,7 @@ export function TeacherHome() {
                     style={{ opacity: isOngoing ? 0.9 : 1 }}
                     numberOfLines={1}
                   >
-                    {[p.class_section?.name ?? p.class_name, p.room].filter(Boolean).join(' • ')}
+                    {[p.class_name, p.room].filter(Boolean).join(' • ')}
                   </Text>
                   {isOngoing ? (
                     <View style={{ marginTop: spacing.md }}>
@@ -233,6 +251,37 @@ export function TeacherHome() {
           </ScrollView>
         )}
       </View>
+
+      {pendingTasks.length > 0 ? (
+        <View style={{ gap: spacing.md }}>
+          <HomeSectionHeader
+            title={t('teacher.pendingTasks', { defaultValue: 'Pending Tasks' })}
+          />
+          <View
+            style={[
+              elevation.card,
+              {
+                backgroundColor: palette.surfaceContainerLowest,
+                borderRadius: radius.xl,
+                paddingHorizontal: spacing.lg,
+                paddingVertical: spacing.xs,
+              },
+            ]}
+          >
+            {pendingTasks.map((p, idx) => (
+              <DashboardActionRow
+                key={p.id ?? idx}
+                title={t('teacher.markAttendanceFor', { defaultValue: 'Mark attendance' })}
+                subtitle={p.class_name ?? '—'}
+                iconName="checkmark-done"
+                iconChipBg="primaryContainer"
+                iconChipFg="onPrimaryContainer"
+                onPress={() => router.push('/(protected)/attendance/my-classes')}
+              />
+            ))}
+          </View>
+        </View>
+      ) : null}
     </ScrollView>
   );
 }

@@ -94,7 +94,9 @@
       "more": "More Actions",
       "mySchedule": "My Schedule"
     },
+    "markAttendanceFor": "Mark attendance",
     "noPeriods": "No classes today",
+    "pendingTasks": "Pending Tasks",
     "startLesson": "Start Lesson",
     "subtitle": "Here is your schedule and tasks for today.",
     "todaysPeriods": "Today's Periods"

@@ -94,7 +94,9 @@
       "more": "और क्रियाएँ",
       "mySchedule": "मेरा शेड्यूल"
     },
+    "markAttendanceFor": "उपस्थिति दर्ज करें",
     "noPeriods": "आज कोई कक्षा नहीं",
+    "pendingTasks": "लंबित कार्य",
     "startLesson": "पाठ शुरू करें",
     "subtitle": "यहाँ आज का आपका शेड्यूल और कार्य हैं।",
     "todaysPeriods": "आज के पीरियड"
