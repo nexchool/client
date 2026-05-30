@@ -1,60 +1,22 @@
 import React, { useMemo, useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Ionicons } from '@expo/vector-icons';
-import Svg, { Circle } from 'react-native-svg';
 import { useTheme } from '@/common/theme';
 import { useClassAttendanceSession } from '@/modules/academics/hooks/useAcademicQueries';
 import { usePermissions } from '@/modules/permissions/hooks/usePermissions';
 import * as PERMS from '@/modules/permissions/constants/permissions';
+import { AppIcon } from '@/common/components/AppIcon';
+import { Text } from '@/common/components/Text';
 import { Button } from '@/common/components/Button';
 import { Skeleton } from '@/common/components/Skeleton';
 import { EmptyState } from '@/common/components/EmptyState';
+import { ProgressRing } from '@/modules/home/components/ProgressRing';
 import { StudentRosterRow } from '../components/StudentRosterRow';
 import { StudentDetailSheet } from '../components/StudentDetailSheet';
 import type { AttendanceStatus } from '../components/AttendanceStatusSegmented';
 
 type FilterStatus = 'all' | 'present' | 'absent' | 'late' | 'unmarked';
-
-function CircularProgress({
-  value,
-  size,
-  palette,
-}: {
-  value: number;
-  size: number;
-  palette: any;
-}) {
-  const stroke = 4;
-  const r = (size - stroke) / 2;
-  const C = 2 * Math.PI * r;
-  const offset = C - (Math.min(100, Math.max(0, value)) / 100) * C;
-  return (
-    <Svg width={size} height={size}>
-      <Circle
-        cx={size / 2}
-        cy={size / 2}
-        r={r}
-        stroke={palette.surfaceContainerHighest}
-        strokeWidth={stroke}
-        fill="none"
-      />
-      <Circle
-        cx={size / 2}
-        cy={size / 2}
-        r={r}
-        stroke={palette.primary}
-        strokeWidth={stroke}
-        fill="none"
-        strokeDasharray={`${C} ${C}`}
-        strokeDashoffset={offset}
-        strokeLinecap="round"
-        transform={`rotate(-90 ${size / 2} ${size / 2})`}
-      />
-    </Svg>
-  );
-}
 
 function isMarked(status: string | null | undefined): boolean {
   return !!status && status !== 'unmarked' && status !== '';
@@ -62,7 +24,7 @@ function isMarked(status: string | null | undefined): boolean {
 
 export default function AttendanceSessionScreen() {
   const { t } = useTranslation('attendance');
-  const { palette, spacing, radius, typography, elevation } = useTheme();
+  const { palette, spacing, radius, elevation } = useTheme();
   const { hasPermission } = usePermissions();
   const params = useLocalSearchParams<{ classId: string; className?: string; date: string }>();
   const classId = params.classId;
@@ -101,11 +63,11 @@ export default function AttendanceSessionScreen() {
     return records.filter((r) => r.status === filter);
   }, [records, filter]);
 
-  const filterChips: { key: FilterStatus; label: string; color: string }[] = [
-    { key: 'present', label: t('counts.present', { defaultValue: 'Present' }), color: palette.success },
-    { key: 'absent', label: t('counts.absent', { defaultValue: 'Absent' }), color: palette.error },
-    { key: 'late', label: t('counts.late', { defaultValue: 'Late' }), color: palette.warning },
-    { key: 'unmarked', label: t('counts.unmarked', { defaultValue: 'Unmarked' }), color: palette.outline },
+  const filterChips: { key: FilterStatus; label: string; color: keyof typeof palette }[] = [
+    { key: 'present', label: t('counts.present', { defaultValue: 'Present' }), color: 'success' },
+    { key: 'absent', label: t('counts.absent', { defaultValue: 'Absent' }), color: 'error' },
+    { key: 'late', label: t('counts.late', { defaultValue: 'Late' }), color: 'warning' },
+    { key: 'unmarked', label: t('counts.unmarked', { defaultValue: 'Unmarked' }), color: 'outline' },
   ];
 
   return (
@@ -121,9 +83,9 @@ export default function AttendanceSessionScreen() {
         <Pressable
           onPress={() => router.back()}
           hitSlop={12}
-          style={{ width: 44, height: 44, justifyContent: 'center' }}
+          style={styles.backBtn}
         >
-          <Ionicons name="chevron-back" size={24} color={palette.onSurface} />
+          <AppIcon name="chevron-back" size="lg" color="onSurface" />
         </Pressable>
 
         {isLoading && !data ? (
@@ -144,31 +106,17 @@ export default function AttendanceSessionScreen() {
               ]}
             >
               <View style={{ flex: 1 }}>
-                <Text
-                  style={[typography.headlineLg, { color: palette.onSurface }]}
-                  numberOfLines={1}
-                >
+                <Text variant="headlineLg" color="onSurface" numberOfLines={1}>
                   {params.className ?? session?.class_name ?? ''}
                 </Text>
-                <Text
-                  style={[
-                    typography.bodyMd,
-                    { color: palette.onSurfaceVariant, marginTop: 4 },
-                  ]}
-                  numberOfLines={1}
-                >
+                <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: 4 }} numberOfLines={1}>
                   {new Date(date).toLocaleDateString(undefined, {
                     weekday: 'long',
                     month: 'short',
                     day: 'numeric',
                   })}
                 </Text>
-                <Text
-                  style={[
-                    typography.bodyMd,
-                    { color: palette.onSurfaceVariant, marginTop: 4 },
-                  ]}
-                >
+                <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: 4 }}>
                   {t('session.marked', {
                     defaultValue: '{{marked}}/{{total}} marked',
                     marked,
@@ -177,17 +125,8 @@ export default function AttendanceSessionScreen() {
                 </Text>
               </View>
               <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-                <CircularProgress value={pct} size={72} palette={palette} />
-                <Text
-                  style={[
-                    typography.labelMd,
-                    {
-                      color: palette.primary,
-                      position: 'absolute',
-                      fontFamily: 'Inter_600SemiBold',
-                    },
-                  ]}
-                >
+                <ProgressRing value={pct} size={72} stroke={4} />
+                <Text variant="labelMd" color="primary" style={styles.ringLabel}>
                   {pct}%
                 </Text>
               </View>
@@ -203,19 +142,14 @@ export default function AttendanceSessionScreen() {
                     onPress={() => setFilter(isActive ? 'all' : c.key)}
                     style={{
                       flex: 1,
-                      backgroundColor: isActive ? c.color + '22' : palette.surfaceContainerLowest,
+                      backgroundColor: isActive ? palette[c.color] + '22' : palette.surfaceContainerLowest,
                       borderRadius: radius.lg,
                       padding: spacing.sm,
                       alignItems: 'center',
                     }}
                   >
-                    <Text style={[typography.headlineMd, { color: c.color }]}>{count}</Text>
-                    <Text
-                      style={[
-                        typography.labelSm,
-                        { color: palette.onSurfaceVariant, marginTop: 2 },
-                      ]}
-                    >
+                    <Text variant="headlineMd" color={c.color}>{count}</Text>
+                    <Text variant="labelSm" color="onSurfaceVariant" style={{ marginTop: 2 }}>
                       {c.label}
                     </Text>
                   </Pressable>
@@ -235,7 +169,7 @@ export default function AttendanceSessionScreen() {
             >
               {filtered.length === 0 ? (
                 <EmptyState
-                  icon={<Ionicons name="search-outline" size={28} color={palette.onSurfaceVariant} />}
+                  icon={<AppIcon name="search-outline" size="xl" color="onSurfaceVariant" />}
                   title={t('session.noMatching', { defaultValue: 'No students match this filter' })}
                 />
               ) : (
@@ -244,14 +178,7 @@ export default function AttendanceSessionScreen() {
                     key={r.student_id}
                     name={r.student_name ?? ''}
                     rollNumber={r.admission_number ?? undefined}
-                    rightSlot={
-                      <StatusPill
-                        status={r.status}
-                        marked={isMarked(r.status)}
-                        palette={palette}
-                        typography={typography}
-                      />
-                    }
+                    rightSlot={<StatusPill status={r.status} marked={isMarked(r.status)} />}
                     onPress={() =>
                       setSelectedStudent({
                         id: r.student_id,
@@ -311,17 +238,8 @@ export default function AttendanceSessionScreen() {
   );
 }
 
-function StatusPill({
-  status,
-  marked,
-  palette,
-  typography,
-}: {
-  status: string | null;
-  marked: boolean;
-  palette: any;
-  typography: any;
-}) {
+function StatusPill({ status, marked }: { status: string | null; marked: boolean }) {
+  const { palette } = useTheme();
   if (!marked || !status) {
     return (
       <View
@@ -333,32 +251,33 @@ function StatusPill({
           borderRadius: 999,
         }}
       >
-        <Text style={[typography.labelSm, { color: palette.onSurfaceVariant }]}>—</Text>
+        <Text variant="labelSm" color="onSurfaceVariant">—</Text>
       </View>
     );
   }
-  const color =
-    status === 'present' ? palette.success :
-    status === 'absent' ? palette.error :
-    status === 'late' ? palette.warning :
-    palette.outline;
+  const colorKey: 'success' | 'error' | 'warning' | 'outline' =
+    status === 'present' ? 'success' :
+    status === 'absent' ? 'error' :
+    status === 'late' ? 'warning' :
+    'outline';
   const label = status[0].toUpperCase() + status.slice(1);
   return (
     <View
       style={{
-        backgroundColor: `${color}22`,
+        backgroundColor: `${palette[colorKey]}22`,
         paddingHorizontal: 10,
         paddingVertical: 4,
         borderRadius: 999,
       }}
     >
-      <Text
-        style={[typography.labelSm, { color, fontFamily: 'Inter_600SemiBold' }]}
-      >
+      <Text variant="labelSm" color={colorKey}>
         {label}
       </Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  backBtn: { width: 44, height: 44, justifyContent: 'center' },
+  ringLabel: { position: 'absolute' },
+});

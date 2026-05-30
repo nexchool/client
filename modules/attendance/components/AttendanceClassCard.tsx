@@ -1,8 +1,10 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
+import { Text } from '@/common/components/Text';
 import { Button } from '@/common/components/Button';
+import { PressScale } from '@/common/components/PressScale';
 
 type State = 'pending' | 'marked' | 'partial';
 
@@ -30,7 +32,7 @@ export function AttendanceClassCard({
   onPrimaryAction,
 }: Props) {
   const { t } = useTranslation('attendance');
-  const { palette, spacing, radius, typography, elevation } = useTheme();
+  const { palette, spacing, radius, elevation } = useTheme();
   const accentColor =
     state === 'pending' ? palette.primary :
     state === 'marked' ? palette.success :
@@ -39,15 +41,15 @@ export function AttendanceClassCard({
     state === 'pending' ? palette.primaryContainer :
     state === 'marked' ? `${palette.success}22` :
     `${palette.warning}22`;
-  const pillFg =
-    state === 'pending' ? palette.onPrimaryContainer :
-    state === 'marked' ? palette.success :
-    palette.warning;
+  const pillColor: 'onPrimaryContainer' | 'success' | 'warning' =
+    state === 'pending' ? 'onPrimaryContainer' :
+    state === 'marked' ? 'success' :
+    'warning';
 
   return (
-    <Pressable
+    <PressScale
       onPress={onPress}
-      style={({ pressed }) => [
+      style={[
         styles.card,
         elevation.card,
         {
@@ -56,7 +58,6 @@ export function AttendanceClassCard({
           padding: spacing.lg,
           borderLeftWidth: 4,
           borderLeftColor: accentColor,
-          opacity: pressed ? 0.95 : 1,
         },
       ]}
     >
@@ -69,26 +70,18 @@ export function AttendanceClassCard({
         }}
       >
         <View style={{ backgroundColor: pillBg, paddingHorizontal: 8, paddingVertical: 2, borderRadius: radius.sm }}>
-          <Text
-            style={[
-              typography.labelSm,
-              { color: pillFg, textTransform: 'uppercase', letterSpacing: 1, fontFamily: 'Inter_600SemiBold' },
-            ]}
-          >
+          <Text variant="labelSm" color={pillColor} style={styles.pill}>
             {STATE_LABEL[state]}
           </Text>
         </View>
         {timeLabel ? (
-          <Text style={[typography.labelMd, { color: palette.onSurfaceVariant }]}>{timeLabel}</Text>
+          <Text variant="labelMd" color="onSurfaceVariant">{timeLabel}</Text>
         ) : null}
       </View>
-      <Text
-        style={[typography.headlineMd, { color: palette.onSurface, marginBottom: 2 }]}
-        numberOfLines={1}
-      >
+      <Text variant="headlineMd" color="onSurface" style={{ marginBottom: 2 }} numberOfLines={1}>
         {subject}
       </Text>
-      <Text style={[typography.bodyMd, { color: palette.onSurfaceVariant }]} numberOfLines={1}>
+      <Text variant="bodyMd" color="onSurfaceVariant" numberOfLines={1}>
         {classLabel}
       </Text>
       <View style={{ marginTop: spacing.md, flexDirection: 'row', justifyContent: 'flex-end' }}>
@@ -102,8 +95,11 @@ export function AttendanceClassCard({
             : t('class.mark', { defaultValue: 'Mark' })}
         </Button>
       </View>
-    </Pressable>
+    </PressScale>
   );
 }
 
-const styles = StyleSheet.create({ card: {} });
+const styles = StyleSheet.create({
+  card: {},
+  pill: { textTransform: 'uppercase', letterSpacing: 1 },
+});

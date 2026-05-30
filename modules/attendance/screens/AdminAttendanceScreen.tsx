@@ -1,15 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  View,
-  Text,
-  FlatList,
-  SafeAreaView,
-  Pressable,
-  ScrollView,
-} from "react-native";
+import { View, FlatList, Pressable, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 import { useAttendance } from "../hooks/useAttendance";
 import { useClasses } from "@/modules/classes/hooks/useClasses";
 import { DateField } from "@/common/components/DateField";
@@ -17,6 +9,9 @@ import { ClassItem } from "@/modules/classes/types";
 import { holidayService } from "@/modules/holidays/services/holidayService";
 import { Holiday } from "@/modules/holidays/types";
 import { useTheme } from "@/common/theme";
+import { AppIcon } from "@/common/components/AppIcon";
+import { Text } from "@/common/components/Text";
+import { PressScale } from "@/common/components/PressScale";
 import { HomeKpiCard } from "@/modules/home/components/HomeKpiCard";
 import { Skeleton } from "@/common/components/Skeleton";
 import { EmptyState } from "@/common/components/EmptyState";
@@ -24,7 +19,7 @@ import { EmptyState } from "@/common/components/EmptyState";
 export default function AdminAttendanceScreen() {
   const { t } = useTranslation("attendance");
   const router = useRouter();
-  const { palette, spacing, radius, typography, elevation } = useTheme();
+  const { palette, spacing, radius, elevation } = useTheme();
   const { classAttendance, loading: attLoading, fetchClassAttendance } = useAttendance();
   const { classes, fetchClasses, loading: classesLoading } = useClasses();
 
@@ -76,21 +71,21 @@ export default function AdminAttendanceScreen() {
     }
   };
 
-  const statusColor = (status: string) => {
+  const statusColor = (status: string): "success" | "error" | "warning" | "onSurfaceVariant" => {
     switch (status) {
       case "present":
-        return palette.success;
+        return "success";
       case "absent":
-        return palette.error;
+        return "error";
       case "late":
-        return palette.warning;
+        return "warning";
       default:
-        return palette.onSurfaceVariant;
+        return "onSurfaceVariant";
     }
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: palette.surface }}>
+    <View style={{ flex: 1, backgroundColor: palette.surface }}>
       {/* Header */}
       <View
         style={{
@@ -113,18 +108,13 @@ export default function AdminAttendanceScreen() {
             backgroundColor: pressed ? palette.surfaceContainer : "transparent",
           })}
         >
-          <Ionicons name="arrow-back" size={22} color={palette.onSurface} />
+          <AppIcon name="arrow-back" size="lg" color="onSurface" />
         </Pressable>
         <View style={{ flex: 1 }}>
-          <Text style={[typography.headlineMd, { color: palette.onSurface }]}>
+          <Text variant="headlineMd" color="onSurface">
             {t("admin.title")}
           </Text>
-          <Text
-            style={[
-              typography.labelSm,
-              { color: palette.onSurfaceVariant, marginTop: 2, textTransform: "none", letterSpacing: 0 },
-            ]}
-          >
+          <Text variant="labelSm" color="onSurfaceVariant" style={{ marginTop: 2 }}>
             {new Date(selectedDate).toLocaleDateString(undefined, {
               weekday: "long",
               month: "long",
@@ -175,15 +165,15 @@ export default function AdminAttendanceScreen() {
                 justifyContent: "center",
               }}
             >
-              <Ionicons name="umbrella-outline" size={20} color={palette.onErrorContainer} />
+              <AppIcon name="umbrella-outline" size="md" color="onErrorContainer" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={[typography.labelMd, { color: palette.onErrorContainer, fontFamily: "Inter_600SemiBold" }]}>
+              <Text variant="labelMd" color="onErrorContainer">
                 {holidayInfo.is_recurring
                   ? t("admin.weeklyOff", { day: holidayInfo.recurring_day_name ?? t("admin.offDay") })
                   : holidayInfo.name}
               </Text>
-              <Text style={[typography.labelSm, { color: palette.onErrorContainer, textTransform: "none", letterSpacing: 0, marginTop: 2 }]}>
+              <Text variant="labelSm" color="onErrorContainer" style={{ marginTop: 2 }}>
                 {t("admin.holidayReadOnly")}
               </Text>
             </View>
@@ -193,17 +183,7 @@ export default function AdminAttendanceScreen() {
         {!selectedClass ? (
           <>
             {/* Class Selector */}
-            <Text
-              style={[
-                typography.labelSm,
-                {
-                  color: palette.onSurfaceVariant,
-                  textTransform: "uppercase",
-                  letterSpacing: 1,
-                  marginTop: spacing.sm,
-                },
-              ]}
-            >
+            <Text variant="overline" color="onSurfaceVariant" style={{ marginTop: spacing.sm }}>
               {t("admin.selectClass")}
             </Text>
             {classesLoading ? (
@@ -220,7 +200,7 @@ export default function AdminAttendanceScreen() {
                 ]}
               >
                 <EmptyState
-                  icon={<Ionicons name="school-outline" size={36} color={palette.onSurfaceVariant} />}
+                  icon={<AppIcon name="school-outline" size="xl" color="onSurfaceVariant" />}
                   title={t("admin.emptyDate", { defaultValue: "No classes available" })}
                 />
               </View>
@@ -255,22 +235,17 @@ export default function AdminAttendanceScreen() {
                         justifyContent: "center",
                       }}
                     >
-                      <Ionicons name="school-outline" size={18} color={palette.onPrimaryContainer} />
+                      <AppIcon name="school-outline" size="md" color="onPrimaryContainer" />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={[typography.labelMd, { color: palette.onSurface }]} numberOfLines={1}>
+                      <Text variant="labelMd" color="onSurface" numberOfLines={1}>
                         {item.name} - {item.section}
                       </Text>
-                      <Text
-                        style={[
-                          typography.labelSm,
-                          { color: palette.onSurfaceVariant, textTransform: "none", letterSpacing: 0, marginTop: 2 },
-                        ]}
-                      >
+                      <Text variant="labelSm" color="onSurfaceVariant" style={{ marginTop: 2 }}>
                         {item.academic_year}
                       </Text>
                     </View>
-                    <Ionicons name="chevron-forward" size={18} color={palette.onSurfaceVariant} />
+                    <AppIcon name="chevron-forward" size="md" color="onSurfaceVariant" />
                   </Pressable>
                 ))}
               </View>
@@ -279,35 +254,30 @@ export default function AdminAttendanceScreen() {
         ) : (
           <>
             {/* Selected Class Header */}
-            <Pressable
+            <PressScale
               onPress={() => setSelectedClass(null)}
-              style={({ pressed }) => [
+              style={[
                 elevation.card,
                 {
                   flexDirection: "row",
                   alignItems: "center",
                   padding: spacing.md,
-                  backgroundColor: pressed ? palette.surfaceContainerLow : palette.surfaceContainerLowest,
+                  backgroundColor: palette.surfaceContainerLowest,
                   borderRadius: radius.lg,
                   gap: spacing.sm,
                 },
               ]}
             >
-              <Ionicons name="chevron-back" size={20} color={palette.primary} />
+              <AppIcon name="chevron-back" size="md" color="primary" />
               <View style={{ flex: 1 }}>
-                <Text style={[typography.labelMd, { color: palette.onSurface }]}>
+                <Text variant="labelMd" color="onSurface">
                   {selectedClass.name} - {selectedClass.section}
                 </Text>
               </View>
-              <Text
-                style={[
-                  typography.labelSm,
-                  { color: palette.primary, fontFamily: "Inter_600SemiBold", textTransform: "uppercase", letterSpacing: 1 },
-                ]}
-              >
+              <Text variant="overline" color="primary">
                 {t("admin.change")}
               </Text>
-            </Pressable>
+            </PressScale>
 
             {/* Summary KPIs */}
             {classAttendance && (
@@ -373,7 +343,7 @@ export default function AdminAttendanceScreen() {
                   renderItem={({ item, index }) => {
                     const records = classAttendance?.attendance ?? [];
                     const status = item.status ?? "unmarked";
-                    const c = statusColor(status);
+                    const colorKey = statusColor(status);
                     return (
                       <View
                         style={{
@@ -395,32 +365,17 @@ export default function AdminAttendanceScreen() {
                             justifyContent: "center",
                           }}
                         >
-                          <Ionicons name="person-outline" size={16} color={palette.onSurfaceVariant} />
+                          <AppIcon name="person-outline" size="sm" color="onSurfaceVariant" />
                         </View>
                         <View style={{ flex: 1 }}>
-                          <Text style={[typography.labelMd, { color: palette.onSurface }]} numberOfLines={1}>
+                          <Text variant="labelMd" color="onSurface" numberOfLines={1}>
                             {item.student_name}
                           </Text>
-                          <Text
-                            style={[
-                              typography.labelSm,
-                              { color: palette.onSurfaceVariant, textTransform: "none", letterSpacing: 0, marginTop: 2 },
-                            ]}
-                          >
+                          <Text variant="labelSm" color="onSurfaceVariant" style={{ marginTop: 2 }}>
                             {item.admission_number}
                           </Text>
                         </View>
-                        <Text
-                          style={[
-                            typography.labelSm,
-                            {
-                              color: c,
-                              fontFamily: "Inter_600SemiBold",
-                              textTransform: "uppercase",
-                              letterSpacing: 1,
-                            },
-                          ]}
-                        >
+                        <Text variant="overline" color={colorKey}>
                           {item.marked
                             ? t(`status.${status}`, { defaultValue: status })
                             : t("admin.notMarked")}
@@ -430,7 +385,7 @@ export default function AdminAttendanceScreen() {
                   }}
                   ListEmptyComponent={
                     <EmptyState
-                      icon={<Ionicons name="calendar-outline" size={36} color={palette.onSurfaceVariant} />}
+                      icon={<AppIcon name="calendar-outline" size="xl" color="onSurfaceVariant" />}
                       title={t("admin.emptyDate")}
                     />
                   }
@@ -440,6 +395,6 @@ export default function AdminAttendanceScreen() {
           </>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

@@ -1,10 +1,12 @@
 import React, { useMemo, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/common/theme';
 import { useEligibleAttendanceClasses } from '@/modules/academics/hooks/useAcademicQueries';
+import type { EligibleClassItem } from '@/modules/academics/types';
+import { AppIcon } from '@/common/components/AppIcon';
+import { Text } from '@/common/components/Text';
 import { Skeleton } from '@/common/components/Skeleton';
 import { EmptyState } from '@/common/components/EmptyState';
 import { Link } from '@/common/components/Link';
@@ -27,7 +29,7 @@ function buildDayStrip(today: Date) {
 
 export default function MyClassesScreen() {
   const { t } = useTranslation('attendance');
-  const { palette, spacing, radius, typography } = useTheme();
+  const { palette, spacing, radius } = useTheme();
   const today = new Date();
   const [selectedIso, setSelectedIso] = useState<string>(today.toISOString().slice(0, 10));
   const { data: items = [], isLoading, refetch, isRefetching } =
@@ -57,16 +59,11 @@ export default function MyClassesScreen() {
           alignItems: 'center',
         }}
       >
-        <View>
-          <Text style={[typography.display, { color: palette.onSurface }]}>
+        <View style={{ flex: 1 }}>
+          <Text variant="display" color="onSurface">
             {t('myClasses.title', { defaultValue: 'Mark Attendance' })}
           </Text>
-          <Text
-            style={[
-              typography.bodyMd,
-              { color: palette.onSurfaceVariant, marginTop: spacing.xs },
-            ]}
-          >
+          <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
             {longDate}
           </Text>
         </View>
@@ -83,24 +80,23 @@ export default function MyClassesScreen() {
         {dayStrip.map((d) => {
           const isSelected = d.iso === selectedIso;
           return (
-            <Text
+            <Pressable
               key={d.iso}
               onPress={() => setSelectedIso(d.iso)}
-              style={[
-                typography.labelMd,
-                {
-                  paddingHorizontal: spacing.md,
-                  paddingVertical: spacing.sm,
-                  borderRadius: radius.full,
-                  backgroundColor: isSelected ? palette.primaryContainer : palette.surfaceContainerLowest,
-                  color: isSelected ? palette.onPrimaryContainer : palette.onSurfaceVariant,
-                  overflow: 'hidden',
-                  fontFamily: isSelected ? 'Inter_600SemiBold' : 'Inter_500Medium',
-                },
-              ]}
+              style={{
+                paddingHorizontal: spacing.md,
+                paddingVertical: spacing.sm,
+                borderRadius: radius.full,
+                backgroundColor: isSelected ? palette.primaryContainer : palette.surfaceContainerLowest,
+              }}
             >
-              {d.label}
-            </Text>
+              <Text
+                variant="labelMd"
+                color={isSelected ? 'onPrimaryContainer' : 'onSurfaceVariant'}
+              >
+                {d.label}
+              </Text>
+            </Pressable>
           );
         })}
       </ScrollView>
@@ -113,63 +109,41 @@ export default function MyClassesScreen() {
         </View>
       ) : items.length === 0 ? (
         <EmptyState
-          icon={<Ionicons name="cafe-outline" size={36} color={palette.onSurfaceVariant} />}
+          icon={<AppIcon name="cafe-outline" size="xl" color="onSurfaceVariant" />}
           title={t('myClasses.empty', { defaultValue: 'No classes to mark' })}
         />
       ) : (
         <View style={{ gap: spacing.md }}>
-          {items.map((item: any) => {
-            const totalStudents = item.total_students ?? 0;
-            const markedCount = item.marked_count ?? 0;
-            const state: 'pending' | 'marked' | 'partial' =
-              markedCount === 0
-                ? 'pending'
-                : totalStudents > 0 && markedCount >= totalStudents
-                ? 'marked'
-                : markedCount > 0
-                ? 'partial'
-                : 'pending';
-            const subject = item.subject_name ?? item.class_name ?? '—';
-            const classLabel = totalStudents
-              ? `${item.class_name} • ${totalStudents} ${t('myClasses.students', { defaultValue: 'students' })}`
-              : item.class_name ?? '';
-            return (
-              <AttendanceClassCard
-                key={item.class_id}
-                state={state}
-                subject={subject}
-                classLabel={classLabel}
-                timeLabel={item.period_time}
-                onPress={() =>
-                  router.push({
-                    pathname: '/(protected)/attendance/session',
-                    params: {
-                      classId: item.class_id,
-                      className: item.class_name,
-                      date: selectedIso,
-                    },
-                  } as any)
-                }
-                onPrimaryAction={() =>
-                  router.push({
-                    pathname:
-                      state === 'marked'
-                        ? '/(protected)/attendance/session'
-                        : '/(protected)/attendance/mark',
-                    params: {
-                      classId: item.class_id,
-                      className: item.class_name,
-                      date: selectedIso,
-                    },
-                  } as any)
-                }
-              />
-            );
-          })}
+          {items.map((item: EligibleClassItem) => (
+            <AttendanceClassCard
+              key={item.class_id}
+              state="pending"
+              subject={item.class_name}
+              classLabel={t(`myClasses.reason.${item.reason}`, { defaultValue: '' })}
+              onPress={() =>
+                router.push({
+                  pathname: '/(protected)/attendance/session',
+                  params: {
+                    classId: item.class_id,
+                    className: item.class_name,
+                    date: selectedIso,
+                  },
+                } as any)
+              }
+              onPrimaryAction={() =>
+                router.push({
+                  pathname: '/(protected)/attendance/mark',
+                  params: {
+                    classId: item.class_id,
+                    className: item.class_name,
+                    date: selectedIso,
+                  },
+                } as any)
+              }
+            />
+          ))}
         </View>
       )}
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({});
