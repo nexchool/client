@@ -2,19 +2,15 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   View,
-  Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  SafeAreaView,
   Modal,
   TextInput,
   Switch,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 import {
   useStructure,
   useAcademicYears,
@@ -23,11 +19,15 @@ import {
   useDeleteStructure,
 } from "@/modules/finance/hooks/useFinance";
 import type { FeeStructure } from "@/modules/finance/types";
-import { Colors } from "@/common/constants/colors";
-import { Spacing, Layout } from "@/common/constants/spacing";
 import { ClassMultiSelect } from "@/common/components/ClassMultiSelect";
 import { calendarLocaleForLanguage } from "@/i18n";
 import { DateField } from "@/common/components/DateField";
+import { useTheme } from "@/common/theme";
+import { Text } from "@/common/components/Text";
+import { AppIcon } from "@/common/components/AppIcon";
+import { DetailCard } from "@/common/components/DetailCard";
+import { DetailRow } from "@/common/components/DetailRow";
+import { EmptyState } from "@/common/components/EmptyState";
 
 function formatDate(s: string, locale: string) {
   try {
@@ -38,7 +38,7 @@ function formatDate(s: string, locale: string) {
 }
 
 function formatCurrency(n: number) {
-  return `₹${n.toLocaleString("en-IN")}`;
+  return `₹${Number(n).toLocaleString("en-IN")}`;
 }
 
 export default function FeeStructureInfoPage() {
@@ -46,6 +46,7 @@ export default function FeeStructureInfoPage() {
   const locale = calendarLocaleForLanguage(i18n.language ?? "en");
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { palette, spacing, radius, elevation } = useTheme();
   const [modalOpen, setModalOpen] = useState(false);
 
   const { data: structure, isLoading, error, refetch } = useStructure(id);
@@ -55,7 +56,9 @@ export default function FeeStructureInfoPage() {
   const deleteMut = useDeleteStructure();
 
   const academicYearName =
-    academicYears.find((ay) => ay.id === structure?.academic_year_id)?.name ?? structure?.academic_year_id ?? "—";
+    academicYears.find((ay) => ay.id === structure?.academic_year_id)?.name ??
+    structure?.academic_year_id ??
+    "—";
 
   const handleEdit = () => setModalOpen(true);
 
@@ -74,7 +77,12 @@ export default function FeeStructureInfoPage() {
               await deleteMut.mutateAsync(structure.id);
               router.back();
             } catch (e: unknown) {
-              Alert.alert(t("common.error"), e instanceof Error ? e.message : t("structureDetail.deleteFailed"));
+              Alert.alert(
+                t("common.error"),
+                e instanceof Error
+                  ? e.message
+                  : t("structureDetail.deleteFailed")
+              );
             }
           },
         },
@@ -84,79 +92,189 @@ export default function FeeStructureInfoPage() {
 
   if (error) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.errorText}>
-          {error instanceof Error ? error.message : t("common.failedToLoad")}
-        </Text>
-        <TouchableOpacity style={styles.retryBtn} onPress={() => refetch()}>
-          <Text style={styles.retryBtnText}>{t("common.retry")}</Text>
-        </TouchableOpacity>
+      <View style={{ flex: 1, backgroundColor: palette.surface }}>
+        <BackHeader title={t("structureDetail.title")} />
+        <EmptyState
+          icon={<AppIcon name="alert-circle-outline" size="xl" color="error" />}
+          title={
+            error instanceof Error ? error.message : t("common.failedToLoad")
+          }
+          action={{ label: t("common.retry"), onPress: () => refetch() }}
+        />
       </View>
     );
   }
 
   if (isLoading || !structure) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+      <View style={{ flex: 1, backgroundColor: palette.surface }}>
+        <BackHeader title={t("structureDetail.title")} />
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            padding: spacing.xl,
+          }}
+        >
+          <ActivityIndicator size="large" color={palette.primary} />
+        </View>
       </View>
     );
   }
 
+  const componentsTotal = (structure.components ?? []).reduce(
+    (sum, c) => sum + (c.amount ?? 0),
+    0
+  );
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backIcon}>
-          <Ionicons name="arrow-back" size={24} color={Colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t("structureDetail.title")}</Text>
-        <View style={styles.headerActions}>
-          <TouchableOpacity onPress={handleDelete} style={styles.headerIconBtn}>
-            <Ionicons name="trash-outline" size={24} color={Colors.error} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleEdit} style={styles.headerIconBtn}>
-            <Ionicons name="create-outline" size={24} color={Colors.primary} />
-          </TouchableOpacity>
-        </View>
+    <View style={{ flex: 1, backgroundColor: palette.surface }}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: spacing.marginMobile,
+          paddingTop: spacing.md,
+          paddingBottom: spacing.sm,
+          gap: spacing.sm,
+        }}
+      >
+        <AppIcon
+          name="arrow-back"
+          size="lg"
+          color="onSurface"
+          onPress={() => router.back()}
+          accessibilityLabel="Back"
+        />
+        <Text variant="headlineLg" color="onSurface" style={{ flex: 1 }}>
+          {t("structureDetail.title")}
+        </Text>
+        <AppIcon
+          name="trash-outline"
+          size="lg"
+          color="error"
+          onPress={handleDelete}
+          accessibilityLabel={t("common.delete")}
+        />
+        <AppIcon
+          name="create-outline"
+          size="lg"
+          color="primary"
+          onPress={handleEdit}
+          accessibilityLabel={t("structures.modal.editTitle")}
+        />
       </View>
 
-      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>{structure.name}</Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>{t("structureDetail.academicYear")}</Text>
-          <Text style={styles.sectionValue}>{academicYearName}</Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>{t("structureDetail.dueDate")}</Text>
-          <Text style={styles.sectionValue}>{formatDate(structure.due_date, locale)}</Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>{t("structureDetail.classes")}</Text>
-          <Text style={styles.sectionValue}>
-            {structure.class_name ?? t("common.allClasses")}
+      <ScrollView
+        contentContainerStyle={{
+          padding: spacing.marginMobile,
+          paddingTop: spacing.sm,
+          paddingBottom: spacing.xl * 2,
+          gap: spacing.lg,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Hero — structure name + total */}
+        <View
+          style={[
+            elevation.card,
+            {
+              backgroundColor: palette.surfaceContainerLowest,
+              borderRadius: radius.xl,
+              padding: spacing.lg,
+              borderLeftWidth: 4,
+              borderLeftColor: palette.primary,
+            },
+          ]}
+        >
+          <Text variant="headlineLg" color="onSurface" numberOfLines={2}>
+            {structure.name}
+          </Text>
+          <Text
+            variant="display"
+            color="onSurface"
+            style={{ marginTop: spacing.md }}
+          >
+            {formatCurrency(componentsTotal)}
+          </Text>
+          <Text variant="labelMd" color="onSurfaceVariant" style={{ marginTop: 2 }}>
+            {t("common.componentsLine", {
+              count: structure.components?.length ?? 0,
+            })}
           </Text>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>{t("structureDetail.components")}</Text>
+        {/* Info rows */}
+        <DetailCard title={t("structureDetail.title")}>
+          <DetailRow
+            icon="calendar-outline"
+            label={t("structureDetail.academicYear")}
+            value={academicYearName}
+          />
+          <DetailRow
+            icon="time-outline"
+            label={t("structureDetail.dueDate")}
+            value={formatDate(structure.due_date, locale)}
+          />
+          <DetailRow
+            icon="people-outline"
+            label={t("structureDetail.classes")}
+            value={structure.class_name ?? t("common.allClasses")}
+          />
+        </DetailCard>
+
+        {/* Components */}
+        <View
+          style={[
+            elevation.card,
+            {
+              backgroundColor: palette.surfaceContainerLowest,
+              borderRadius: radius.xl,
+              padding: spacing.lg,
+            },
+          ]}
+        >
+          <Text
+            variant="headlineMd"
+            color="onSurface"
+            style={{ marginBottom: spacing.md }}
+          >
+            {t("structureDetail.components")}
+          </Text>
           {structure.components?.length ? (
-            <View style={styles.componentsList}>
-              {structure.components.map((c) => (
-                <View key={c.id} style={styles.componentRow}>
-                  <Text style={styles.componentName}>
-                    {c.name} {c.is_optional ? t("structureDetail.optionalSuffix") : ""}
-                  </Text>
-                  <Text style={styles.componentAmount}>{formatCurrency(c.amount)}</Text>
-                </View>
-              ))}
-            </View>
+            structure.components.map((c, idx) => (
+              <View
+                key={c.id}
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  paddingVertical: spacing.sm,
+                  borderTopWidth: idx === 0 ? 0 : 1,
+                  borderTopColor: palette.outlineVariant,
+                }}
+              >
+                <Text
+                  variant="bodyMd"
+                  color="onSurface"
+                  style={{ flex: 1, marginRight: spacing.sm }}
+                  numberOfLines={1}
+                >
+                  {c.name}
+                  {c.is_optional
+                    ? ` ${t("structureDetail.optionalSuffix")}`
+                    : ""}
+                </Text>
+                <Text variant="labelMd" color="onSurface">
+                  {formatCurrency(c.amount)}
+                </Text>
+              </View>
+            ))
           ) : (
-            <Text style={styles.emptyText}>{t("structureDetail.noComponents")}</Text>
+            <Text variant="bodyMd" color="onSurfaceVariant">
+              {t("structureDetail.noComponents")}
+            </Text>
           )}
         </View>
       </ScrollView>
@@ -173,7 +291,35 @@ export default function FeeStructureInfoPage() {
           isUpdating={updateMut.isPending}
         />
       )}
-    </SafeAreaView>
+    </View>
+  );
+}
+
+function BackHeader({ title }: { title: string }) {
+  const { spacing } = useTheme();
+  const router = useRouter();
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: spacing.marginMobile,
+        paddingTop: spacing.md,
+        paddingBottom: spacing.sm,
+        gap: spacing.sm,
+      }}
+    >
+      <AppIcon
+        name="arrow-back"
+        size="lg"
+        color="onSurface"
+        onPress={() => router.back()}
+        accessibilityLabel="Back"
+      />
+      <Text variant="headlineLg" color="onSurface" numberOfLines={1} style={{ flex: 1 }}>
+        {title}
+      </Text>
+    </View>
   );
 }
 
@@ -181,7 +327,12 @@ interface StructureEditModalProps {
   visible: boolean;
   onClose: () => void;
   structure: FeeStructure;
-  onUpdate: (data: { name?: string; due_date?: string; class_ids?: string[]; components?: { name: string; amount: number; is_optional: boolean }[] }) => Promise<void>;
+  onUpdate: (data: {
+    name?: string;
+    due_date?: string;
+    class_ids?: string[];
+    components?: { name: string; amount: number; is_optional: boolean }[];
+  }) => Promise<void>;
   isUpdating: boolean;
 }
 
@@ -193,10 +344,13 @@ function StructureEditModal({
   isUpdating,
 }: StructureEditModalProps) {
   const { t } = useTranslation("finance");
+  const { palette, spacing, radius } = useTheme();
   const [name, setName] = useState(structure.name ?? "");
   const [classIds, setClassIds] = useState<string[]>(structure.class_ids ?? []);
   const [dueDate, setDueDate] = useState(structure.due_date ?? "");
-  const [components, setComponents] = useState<{ name: string; amount: string; is_optional: boolean }[]>(
+  const [components, setComponents] = useState<
+    { name: string; amount: string; is_optional: boolean }[]
+  >(
     structure.components?.map((c) => ({
       name: c.name,
       amount: String(c.amount ?? 0),
@@ -240,11 +394,17 @@ function StructureEditModal({
     setComponents(components.filter((_, idx) => idx !== i));
   };
 
-  const updateComponent = (i: number, field: string, value: string | boolean) => {
+  const updateComponent = (
+    i: number,
+    field: string,
+    value: string | boolean
+  ) => {
     const next = [...components];
     if (field === "name") next[i] = { ...next[i], name: value as string };
-    else if (field === "amount") next[i] = { ...next[i], amount: value as string };
-    else if (field === "is_optional") next[i] = { ...next[i], is_optional: value as boolean };
+    else if (field === "amount")
+      next[i] = { ...next[i], amount: value as string };
+    else if (field === "is_optional")
+      next[i] = { ...next[i], is_optional: value as boolean };
     setComponents(next);
   };
 
@@ -265,7 +425,10 @@ function StructureEditModal({
         is_optional: c.is_optional,
       }));
     if (comps.length === 0) {
-      Alert.alert(t("common.error"), t("structures.modal.alerts.componentsEdit"));
+      Alert.alert(
+        t("common.error"),
+        t("structures.modal.alerts.componentsEdit")
+      );
       return;
     }
     try {
@@ -276,29 +439,85 @@ function StructureEditModal({
         components: comps,
       });
     } catch (e: unknown) {
-      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("structures.modal.alerts.saveFailed"));
+      Alert.alert(
+        t("common.error"),
+        e instanceof Error ? e.message : t("structures.modal.alerts.saveFailed")
+      );
     }
+  };
+
+  const inputStyle = {
+    borderWidth: 1,
+    borderColor: palette.outlineVariant,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    color: palette.onSurface,
+    marginBottom: spacing.md,
   };
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>{t("structures.modal.editTitle")}</Text>
-            <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={24} color={Colors.text} />
-            </TouchableOpacity>
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: "rgba(0,0,0,0.5)",
+          justifyContent: "flex-end",
+        }}
+      >
+        <View
+          style={{
+            backgroundColor: palette.surface,
+            borderTopLeftRadius: radius.xl,
+            borderTopRightRadius: radius.xl,
+            maxHeight: "90%",
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: spacing.lg,
+              borderBottomWidth: 1,
+              borderBottomColor: palette.outlineVariant,
+            }}
+          >
+            <Text variant="headlineMd" color="onSurface">
+              {t("structures.modal.editTitle")}
+            </Text>
+            <AppIcon
+              name="close"
+              size="lg"
+              color="onSurface"
+              onPress={onClose}
+              accessibilityLabel={t("structures.modal.cancel")}
+            />
           </View>
-          <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
-            <Text style={styles.inputLabel}>{t("structures.modal.structureName")}</Text>
+          <ScrollView
+            style={{ padding: spacing.lg, maxHeight: 400 }}
+            showsVerticalScrollIndicator={false}
+          >
+            <Text
+              variant="labelMd"
+              color="onSurface"
+              style={{ marginBottom: spacing.sm }}
+            >
+              {t("structures.modal.structureName")}
+            </Text>
             <TextInput
-              style={styles.input}
+              style={inputStyle}
               value={name}
               onChangeText={setName}
               placeholder={t("structures.modal.namePlaceholder")}
+              placeholderTextColor={palette.onSurfaceVariant}
             />
-            <Text style={styles.inputLabel}>{t("structures.modal.classes")}</Text>
+            <Text
+              variant="labelMd"
+              color="onSurface"
+              style={{ marginBottom: spacing.sm }}
+            >
+              {t("structures.modal.classes")}
+            </Text>
             <ClassMultiSelect
               value={classIds}
               onChange={setClassIds}
@@ -311,30 +530,67 @@ function StructureEditModal({
               onChange={setDueDate}
               placeholder={t("structures.modal.dueDatePlaceholder")}
             />
-            <View style={styles.componentHeader}>
-              <Text style={styles.inputLabel}>{t("structures.modal.components")}</Text>
-              <TouchableOpacity onPress={addComponent} style={styles.addComponentBtn}>
-                <Ionicons name="add" size={20} color={Colors.primary} />
-                <Text style={styles.addComponentText}>{t("structures.modal.add")}</Text>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Text variant="labelMd" color="onSurface">
+                {t("structures.modal.components")}
+              </Text>
+              <TouchableOpacity
+                onPress={addComponent}
+                style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+              >
+                <AppIcon name="add" size="md" color="primary" />
+                <Text variant="labelMd" color="primary">
+                  {t("structures.modal.add")}
+                </Text>
               </TouchableOpacity>
             </View>
             {components.map((c, i) => (
-              <View key={i} style={styles.componentFormRow}>
+              <View
+                key={i}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginTop: spacing.sm,
+                }}
+              >
                 <TextInput
-                  style={[styles.input, styles.componentInput]}
+                  style={[inputStyle, { flex: 1, marginRight: spacing.sm, marginBottom: 0 }]}
                   value={c.name}
                   onChangeText={(v) => updateComponent(i, "name", v)}
                   placeholder={t("structures.modal.componentName")}
+                  placeholderTextColor={palette.onSurfaceVariant}
                 />
                 <TextInput
-                  style={[styles.input, styles.amountInput]}
+                  style={[
+                    inputStyle,
+                    { width: 90, marginRight: spacing.sm, marginBottom: 0 },
+                  ]}
                   value={c.amount}
                   onChangeText={(v) => updateComponent(i, "amount", v)}
                   placeholder={t("structures.modal.amount")}
+                  placeholderTextColor={palette.onSurfaceVariant}
                   keyboardType="decimal-pad"
                 />
-                <View style={styles.optionalRow}>
-                  <Text style={styles.optionalLabel}>{t("structures.modal.optional")}</Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    marginRight: spacing.sm,
+                  }}
+                >
+                  <Text
+                    variant="labelSm"
+                    color="onSurfaceVariant"
+                    style={{ marginRight: spacing.xs }}
+                  >
+                    {t("structures.modal.optional")}
+                  </Text>
                   <Switch
                     value={c.is_optional}
                     onValueChange={(v) => updateComponent(i, "is_optional", v)}
@@ -343,26 +599,52 @@ function StructureEditModal({
                 <TouchableOpacity
                   onPress={() => removeComponent(i)}
                   disabled={components.length <= 1}
-                  style={styles.removeBtn}
+                  style={{ padding: spacing.sm }}
                 >
-                  <Ionicons name="remove-circle-outline" size={22} color={Colors.error} />
+                  <AppIcon
+                    name="remove-circle-outline"
+                    size="lg"
+                    color="error"
+                  />
                 </TouchableOpacity>
               </View>
             ))}
           </ScrollView>
-          <View style={styles.modalFooter}>
-            <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
-              <Text style={styles.cancelBtnText}>{t("structures.modal.cancel")}</Text>
+          <View
+            style={{
+              flexDirection: "row",
+              gap: spacing.md,
+              padding: spacing.lg,
+              borderTopWidth: 1,
+              borderTopColor: palette.outlineVariant,
+            }}
+          >
+            <TouchableOpacity
+              style={{ flex: 1, padding: spacing.md, alignItems: "center" }}
+              onPress={onClose}
+            >
+              <Text variant="labelMd" color="onSurfaceVariant">
+                {t("structures.modal.cancel")}
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.submitBtn, isUpdating && styles.submitBtnDisabled]}
+              style={{
+                flex: 1,
+                backgroundColor: palette.primary,
+                padding: spacing.md,
+                borderRadius: radius.md,
+                alignItems: "center",
+                opacity: isUpdating ? 0.7 : 1,
+              }}
               onPress={handleSubmit}
               disabled={isUpdating}
             >
               {isUpdating ? (
-                <ActivityIndicator size="small" color={Colors.background} />
+                <ActivityIndicator size="small" color={palette.onPrimary} />
               ) : (
-                <Text style={styles.submitBtnText}>{t("structures.modal.update")}</Text>
+                <Text variant="labelMd" color="onPrimary">
+                  {t("structures.modal.update")}
+                </Text>
               )}
             </TouchableOpacity>
           </View>
@@ -371,115 +653,3 @@ function StructureEditModal({
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  backIcon: { padding: Spacing.sm, marginRight: Spacing.sm },
-  headerTitle: { flex: 1, fontSize: 22, fontWeight: "bold", color: Colors.text },
-  headerActions: { flexDirection: "row", gap: Spacing.sm, alignItems: "center" },
-  headerIconBtn: {
-    padding: Spacing.sm,
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.md,
-  },
-  actionLabel: { fontSize: 11, color: Colors.primary, marginTop: 2 },
-  actionBtnDanger: {},
-  actionLabelDanger: { fontSize: 11, color: Colors.error, marginTop: 2 },
-  content: { flex: 1 },
-  contentContainer: { padding: Spacing.lg },
-  card: {
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.lg,
-    padding: Spacing.lg,
-    marginBottom: Spacing.lg,
-  },
-  cardTitle: { fontSize: 20, fontWeight: "700", color: Colors.text },
-  section: { marginBottom: Spacing.lg },
-  sectionLabel: { fontSize: 13, color: Colors.textSecondary, marginBottom: Spacing.xs },
-  sectionValue: { fontSize: 16, color: Colors.text, fontWeight: "500" },
-  componentsList: {
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.md,
-    overflow: "hidden",
-  },
-  componentRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  componentName: { fontSize: 15, color: Colors.text },
-  componentAmount: { fontSize: 15, fontWeight: "600", color: Colors.text },
-  emptyText: { fontSize: 14, color: Colors.textSecondary },
-  center: { flex: 1, justifyContent: "center", alignItems: "center", padding: Spacing.xl },
-  errorText: { color: Colors.error, fontSize: 16, marginBottom: Spacing.md },
-  retryBtn: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    backgroundColor: Colors.primary,
-    borderRadius: Layout.borderRadius.md,
-  },
-  retryBtnText: { color: "#fff", fontWeight: "600" },
-
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "flex-end",
-  },
-  modalContent: {
-    backgroundColor: Colors.background,
-    borderTopLeftRadius: Layout.borderRadius.xl,
-    borderTopRightRadius: Layout.borderRadius.xl,
-    maxHeight: "90%",
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  modalTitle: { fontSize: 18, fontWeight: "700", color: Colors.text },
-  modalBody: { padding: Spacing.lg, maxHeight: 400 },
-  modalFooter: {
-    flexDirection: "row",
-    gap: Spacing.md,
-    padding: Spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: Colors.borderLight,
-  },
-  inputLabel: { fontSize: 14, fontWeight: "600", color: Colors.text, marginBottom: Spacing.sm },
-  input: {
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: Layout.borderRadius.md,
-    padding: Spacing.md,
-    fontSize: 16,
-    marginBottom: Spacing.md,
-  },
-  componentHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  componentFormRow: { flexDirection: "row", alignItems: "center", marginBottom: Spacing.sm },
-  componentInput: { flex: 1, marginRight: Spacing.sm },
-  amountInput: { width: 90, marginRight: Spacing.sm },
-  optionalRow: { flexDirection: "row", alignItems: "center", marginRight: Spacing.sm },
-  optionalLabel: { fontSize: 12, color: Colors.textSecondary, marginRight: Spacing.xs },
-  removeBtn: { padding: Spacing.sm },
-  addComponentBtn: { flexDirection: "row", alignItems: "center" },
-  addComponentText: { fontSize: 14, color: Colors.primary, marginLeft: Spacing.xs },
-  cancelBtn: { flex: 1, padding: Spacing.md, alignItems: "center" },
-  cancelBtnText: { fontSize: 16, color: Colors.textSecondary },
-  submitBtn: { flex: 1, backgroundColor: Colors.primary, padding: Spacing.md, borderRadius: Layout.borderRadius.md, alignItems: "center" },
-  submitBtnDisabled: { opacity: 0.7 },
-  submitBtnText: { fontSize: 16, fontWeight: "600", color: Colors.background },
-});

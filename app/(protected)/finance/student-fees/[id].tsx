@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   View,
-  Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
@@ -12,11 +11,9 @@ import {
   TextInput,
   Modal,
   Alert,
-  SafeAreaView,
   Platform,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 import {
   useStudentFee,
   useRecordPayment,
@@ -26,7 +23,9 @@ import {
 import { financeService } from "@/modules/finance/services/financeService";
 import type { RecordPaymentInput } from "@/modules/finance/types";
 import { calendarLocaleForLanguage } from "@/i18n";
-import { useTheme } from "@/common/theme";
+import { useTheme, type Palette } from "@/common/theme";
+import { Text } from "@/common/components/Text";
+import { AppIcon } from "@/common/components/AppIcon";
 import { Skeleton } from "@/common/components/Skeleton";
 import { EmptyState } from "@/common/components/EmptyState";
 import { formatCurrency } from "@/common/utils/formatCurrency";
@@ -56,7 +55,7 @@ export default function StudentFeeDetailPage() {
   const locale = calendarLocaleForLanguage(i18n.language ?? "en");
   const { id, action } = useLocalSearchParams<{ id: string; action?: string }>();
   const router = useRouter();
-  const { palette, spacing, radius, typography, elevation } = useTheme();
+  const { palette, spacing, radius, elevation } = useTheme();
 
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const consumedActionRef = React.useRef(false);
@@ -322,27 +321,21 @@ export default function StudentFeeDetailPage() {
 
   if (error) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: palette.surface }}>
+      <View style={{ flex: 1, backgroundColor: palette.surface }}>
         <BackHeader title={t("studentFeeDetail.title")} />
         <EmptyState
-          icon={
-            <Ionicons
-              name="alert-circle-outline"
-              size={36}
-              color={palette.error}
-            />
-          }
+          icon={<AppIcon name="alert-circle-outline" size="xl" color="error" />}
           title={
             error instanceof Error ? error.message : t("common.failedToLoad")
           }
         />
-      </SafeAreaView>
+      </View>
     );
   }
 
   if (isLoading && !data) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: palette.surface }}>
+      <View style={{ flex: 1, backgroundColor: palette.surface }}>
         <BackHeader title={t("studentFeeDetail.title")} />
         <View
           style={{
@@ -354,44 +347,38 @@ export default function StudentFeeDetailPage() {
           <Skeleton width="100%" height={120} radius={radius.xl} />
           <Skeleton width="100%" height={120} radius={radius.xl} />
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   if (!data) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: palette.surface }}>
+      <View style={{ flex: 1, backgroundColor: palette.surface }}>
         <BackHeader title={t("studentFeeDetail.title")} />
         <EmptyState
           icon={
-            <Ionicons
+            <AppIcon
               name="document-text-outline"
-              size={36}
-              color={palette.onSurfaceVariant}
+              size="xl"
+              color="onSurfaceVariant"
             />
           }
           title={t("common.notFound")}
         />
-      </SafeAreaView>
+      </View>
     );
   }
 
-  const heroAccent: "error" | "success" | "primary" =
+  const heroAccent: keyof Palette =
     data.status === "paid"
       ? "success"
       : data.status === "overdue"
         ? "error"
         : "primary";
-  const heroAccentColor =
-    heroAccent === "success"
-      ? palette.success
-      : heroAccent === "error"
-        ? palette.error
-        : palette.primary;
   const dueDays = daysUntil(data.due_date);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: palette.surface }}>
+    <View style={{ flex: 1, backgroundColor: palette.surface }}>
       <BackHeader title={t("studentFeeDetail.title")} />
 
       <ScrollView
@@ -413,7 +400,7 @@ export default function StudentFeeDetailPage() {
               borderRadius: radius.xl,
               padding: spacing.lg,
               borderLeftWidth: 4,
-              borderLeftColor: heroAccentColor,
+              borderLeftColor: palette[heroAccent],
             },
           ]}
         >
@@ -425,18 +412,14 @@ export default function StudentFeeDetailPage() {
             }}
           >
             <View style={{ flex: 1 }}>
-              <Text
-                style={[typography.labelSm, { color: palette.onSurfaceVariant }]}
-                numberOfLines={1}
-              >
+              <Text variant="labelSm" color="onSurfaceVariant" numberOfLines={1}>
                 {data.fee_structure_name ?? "—"}
               </Text>
               <Text
-                style={[
-                  typography.headlineLg,
-                  { color: palette.onSurface, marginTop: 2 },
-                ]}
+                variant="headlineLg"
+                color="onSurface"
                 numberOfLines={1}
+                style={{ marginTop: 2 }}
               >
                 {data.student_name ?? "—"}
               </Text>
@@ -445,19 +428,13 @@ export default function StudentFeeDetailPage() {
           </View>
 
           <Text
-            style={[
-              typography.display,
-              { color: palette.onSurface, marginTop: spacing.md },
-            ]}
+            variant="display"
+            color="onSurface"
+            style={{ marginTop: spacing.md }}
           >
             {formatCurrency(data.total_amount)}
           </Text>
-          <Text
-            style={[
-              typography.labelMd,
-              { color: palette.onSurfaceVariant, marginTop: 2 },
-            ]}
-          >
+          <Text variant="labelMd" color="onSurfaceVariant" style={{ marginTop: 2 }}>
             {t("studentFeeDetail.total", { defaultValue: "Total" })}
           </Text>
 
@@ -488,13 +465,13 @@ export default function StudentFeeDetailPage() {
               {downloading === "invoice" ? (
                 <ActivityIndicator size="small" color={palette.primary} />
               ) : (
-                <Ionicons
+                <AppIcon
                   name="document-text-outline"
-                  size={18}
-                  color={palette.primary}
+                  size="sm"
+                  color="primary"
                 />
               )}
-              <Text style={[typography.labelMd, { color: palette.primary }]}>
+              <Text variant="labelMd" color="primary">
                 {t("studentFeeDetail.downloadInvoice")}
               </Text>
             </Pressable>
@@ -513,12 +490,8 @@ export default function StudentFeeDetailPage() {
                   opacity: pressed ? 0.85 : 1,
                 })}
               >
-                <Ionicons
-                  name="card-outline"
-                  size={18}
-                  color={palette.onPrimary}
-                />
-                <Text style={[typography.labelMd, { color: palette.onPrimary }]}>
+                <AppIcon name="card-outline" size="sm" color="onPrimary" />
+                <Text variant="labelMd" color="onPrimary">
                   {t("studentFeeDetail.recordPayment")}
                 </Text>
               </Pressable>
@@ -541,14 +514,14 @@ export default function StudentFeeDetailPage() {
           <DetailRow
             label={t("studentFeeDetail.paid", { defaultValue: "Paid" })}
             value={formatCurrency(data.paid_amount)}
-            valueColor={palette.success}
+            valueColor="success"
           />
           <DetailRow
             label={t("studentFeeDetail.remaining", {
               defaultValue: "Remaining",
             })}
             value={formatCurrency(remaining)}
-            valueColor={remaining > 0 ? palette.warning : palette.onSurface}
+            valueColor={remaining > 0 ? "warning" : "onSurface"}
           />
           <DetailRow
             label={t("studentFeeDetail.dueDate", { defaultValue: "Due date" })}
@@ -578,8 +551,8 @@ export default function StudentFeeDetailPage() {
               opacity: pressed ? 0.7 : 1,
             })}
           >
-            <Ionicons name="trash-outline" size={16} color={palette.error} />
-            <Text style={[typography.labelSm, { color: palette.error }]}>
+            <AppIcon name="trash-outline" size="sm" color="error" />
+            <Text variant="labelSm" color="error">
               {t("studentFeeDetail.removeFromStructure")}
             </Text>
           </Pressable>
@@ -597,17 +570,14 @@ export default function StudentFeeDetailPage() {
           ]}
         >
           <Text
-            style={[
-              typography.headlineMd,
-              { color: palette.onSurface, marginBottom: spacing.md },
-            ]}
+            variant="headlineMd"
+            color="onSurface"
+            style={{ marginBottom: spacing.md }}
           >
             {t("studentFeeDetail.feeItems")}
           </Text>
           {(data.items ?? []).length === 0 ? (
-            <Text
-              style={[typography.bodyMd, { color: palette.onSurfaceVariant }]}
-            >
+            <Text variant="bodyMd" color="onSurfaceVariant">
               {t("studentFeeDetail.noFeeItems")}
             </Text>
           ) : (
@@ -634,19 +604,13 @@ export default function StudentFeeDetailPage() {
                   }}
                 >
                   <View style={{ flex: 1, marginRight: spacing.sm }}>
-                    <Text
-                      style={[
-                        typography.labelMd,
-                        { color: palette.onSurface },
-                      ]}
-                    >
+                    <Text variant="labelMd" color="onSurface">
                       {item.component_name ?? "—"}
                     </Text>
                     <Text
-                      style={[
-                        typography.labelSm,
-                        { color: palette.onSurfaceVariant, marginTop: 2 },
-                      ]}
+                      variant="labelSm"
+                      color="onSurfaceVariant"
+                      style={{ marginTop: 2 }}
                     >
                       {t("studentFeeDetail.itemMeta", {
                         total: formatCurrency(item.amount),
@@ -655,9 +619,7 @@ export default function StudentFeeDetailPage() {
                     </Text>
                   </View>
                   <View style={{ alignItems: "flex-end", gap: 4 }}>
-                    <Text
-                      style={[typography.labelSm, { color: palette.warning }]}
-                    >
+                    <Text variant="labelSm" color="warning">
                       {t("studentFeeDetail.itemLeft", {
                         amount: formatCurrency(itemRemaining),
                       })}
@@ -682,17 +644,14 @@ export default function StudentFeeDetailPage() {
           ]}
         >
           <Text
-            style={[
-              typography.headlineMd,
-              { color: palette.onSurface, marginBottom: spacing.md },
-            ]}
+            variant="headlineMd"
+            color="onSurface"
+            style={{ marginBottom: spacing.md }}
           >
             {t("studentFeeDetail.paymentHistory")}
           </Text>
           {(data.payments ?? []).length === 0 ? (
-            <Text
-              style={[typography.bodyMd, { color: palette.onSurfaceVariant }]}
-            >
+            <Text variant="bodyMd" color="onSurfaceVariant">
               {t("studentFeeDetail.noPaymentsYet")}
             </Text>
           ) : (
@@ -721,21 +680,15 @@ export default function StudentFeeDetailPage() {
                       alignItems: "center",
                     }}
                   >
-                    <Text
-                      style={[
-                        typography.labelMd,
-                        { color: palette.onSurface },
-                      ]}
-                    >
+                    <Text variant="labelMd" color="onSurface">
                       {formatCurrency(p.amount)}
                     </Text>
                     <StatusPill status={p.status} kind="payment" />
                   </View>
                   <Text
-                    style={[
-                      typography.labelSm,
-                      { color: palette.onSurfaceVariant, marginTop: 2 },
-                    ]}
+                    variant="labelSm"
+                    color="onSurfaceVariant"
+                    style={{ marginTop: 2 }}
                   >
                     {methodLine} • {formatDate(p.created_at, locale)}
                     {p.reference_number ? ` • ${p.reference_number}` : ""}
@@ -764,18 +717,13 @@ export default function StudentFeeDetailPage() {
                             color={palette.primary}
                           />
                         ) : (
-                          <Ionicons
+                          <AppIcon
                             name="receipt-outline"
-                            size={16}
-                            color={palette.primary}
+                            size="sm"
+                            color="primary"
                           />
                         )}
-                        <Text
-                          style={[
-                            typography.labelSm,
-                            { color: palette.primary },
-                          ]}
-                        >
+                        <Text variant="labelSm" color="primary">
                           {t("studentFeeDetail.receipt")}
                         </Text>
                       </Pressable>
@@ -788,17 +736,12 @@ export default function StudentFeeDetailPage() {
                           opacity: pressed ? 0.7 : 1,
                         })}
                       >
-                        <Ionicons
+                        <AppIcon
                           name="arrow-undo-outline"
-                          size={16}
-                          color={palette.error}
+                          size="sm"
+                          color="error"
                         />
-                        <Text
-                          style={[
-                            typography.labelSm,
-                            { color: palette.error },
-                          ]}
-                        >
+                        <Text variant="labelSm" color="error">
                           {t("studentFeeDetail.refund")}
                         </Text>
                       </Pressable>
@@ -832,12 +775,8 @@ export default function StudentFeeDetailPage() {
             opacity: pressed ? 0.85 : 1,
           })}
         >
-          <Ionicons
-            name="bar-chart-outline"
-            size={18}
-            color={palette.onSurface}
-          />
-          <Text style={[typography.labelMd, { color: palette.onSurface }]}>
+          <AppIcon name="bar-chart-outline" size="sm" color="onSurface" />
+          <Text variant="labelMd" color="onSurface">
             {t("studentFeeDetail.viewStatement", {
               defaultValue: "View statement",
             })}
@@ -860,9 +799,7 @@ export default function StudentFeeDetailPage() {
                 { borderBottomColor: palette.outlineVariant },
               ]}
             >
-              <Text
-                style={[typography.headlineMd, { color: palette.onSurface }]}
-              >
+              <Text variant="headlineMd" color="onSurface">
                 {t("studentFeeDetail.paymentModal.title")}
               </Text>
               <TouchableOpacity
@@ -872,7 +809,7 @@ export default function StudentFeeDetailPage() {
                   setOtherMethodDetail("");
                 }}
               >
-                <Ionicons name="close" size={24} color={palette.onSurface} />
+                <AppIcon name="close" size="lg" color="onSurface" />
               </TouchableOpacity>
             </View>
             <ScrollView style={{ padding: spacing.lg, maxHeight: 420 }}>
@@ -884,24 +821,18 @@ export default function StudentFeeDetailPage() {
                   marginBottom: spacing.lg,
                 }}
               >
-                <Text
-                  style={[
-                    typography.labelSm,
-                    { color: palette.onSurfaceVariant },
-                  ]}
-                >
+                <Text variant="labelSm" color="onSurfaceVariant">
                   {t("studentFeeDetail.paymentModal.remainingBalance")}
                 </Text>
-                <Text
-                  style={[
-                    typography.headlineLg,
-                    { color: palette.warning, marginTop: 2 },
-                  ]}
-                >
+                <Text variant="headlineLg" color="warning" style={{ marginTop: 2 }}>
                   {formatCurrency(remaining)}
                 </Text>
               </View>
-              <Text style={[typography.labelMd, { color: palette.onSurface, marginBottom: spacing.sm }]}>
+              <Text
+                variant="labelMd"
+                color="onSurface"
+                style={{ marginBottom: spacing.sm }}
+              >
                 {t("studentFeeDetail.paymentModal.amount")}
               </Text>
               <View
@@ -930,14 +861,13 @@ export default function StudentFeeDetailPage() {
                       opacity: pressed ? 0.85 : 1,
                     })}
                   >
-                    <Text style={[typography.labelMd, { color: palette.onSurface }]}>
+                    <Text variant="labelMd" color="onSurface">
                       {t(`studentFeeDetail.paymentModal.${key}`)}
                     </Text>
                     <Text
-                      style={[
-                        typography.labelSm,
-                        { color: palette.onSurfaceVariant, marginTop: 2 },
-                      ]}
+                      variant="labelSm"
+                      color="onSurfaceVariant"
+                      style={{ marginTop: 2 }}
                     >
                       {formatCurrency(Math.round(remaining * ratio))}
                     </Text>
@@ -952,7 +882,6 @@ export default function StudentFeeDetailPage() {
                     : palette.outlineVariant,
                   borderRadius: radius.md,
                   padding: spacing.md,
-                  fontSize: 16,
                   color: palette.onSurface,
                   marginBottom: spacing.md,
                 }}
@@ -967,10 +896,9 @@ export default function StudentFeeDetailPage() {
               />
               {amountExceedsRemaining && (
                 <Text
-                  style={[
-                    typography.labelSm,
-                    { color: palette.error, marginTop: -spacing.sm, marginBottom: spacing.md },
-                  ]}
+                  variant="labelSm"
+                  color="error"
+                  style={{ marginTop: -spacing.sm, marginBottom: spacing.md }}
                 >
                   {t("studentFeeDetail.paymentModal.amountExceeds")}
                 </Text>
@@ -978,19 +906,13 @@ export default function StudentFeeDetailPage() {
               {itemsWithRemaining.length > 0 && amountNum > 0 && (
                 <>
                   <View style={{ marginBottom: spacing.sm }}>
-                    <Text
-                      style={[
-                        typography.labelMd,
-                        { color: palette.onSurface },
-                      ]}
-                    >
+                    <Text variant="labelMd" color="onSurface">
                       {t("studentFeeDetail.paymentModal.splitTitle")}
                     </Text>
                     <Text
-                      style={[
-                        typography.labelSm,
-                        { color: palette.onSurfaceVariant, marginTop: 2 },
-                      ]}
+                      variant="labelSm"
+                      color="onSurfaceVariant"
+                      style={{ marginTop: 2 }}
                     >
                       {t("studentFeeDetail.paymentModal.splitHint")}
                     </Text>
@@ -1005,17 +927,12 @@ export default function StudentFeeDetailPage() {
                         onPress={handleAutoAllocate}
                         style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
                       >
-                        <Ionicons
+                        <AppIcon
                           name="flash-outline"
-                          size={16}
-                          color={palette.primary}
+                          size="sm"
+                          color="primary"
                         />
-                        <Text
-                          style={[
-                            typography.labelMd,
-                            { color: palette.primary },
-                          ]}
-                        >
+                        <Text variant="labelMd" color="primary">
                           {t("studentFeeDetail.paymentModal.autoFill")}
                         </Text>
                       </TouchableOpacity>
@@ -1028,17 +945,12 @@ export default function StudentFeeDetailPage() {
                             gap: 4,
                           }}
                         >
-                          <Ionicons
+                          <AppIcon
                             name="close-circle-outline"
-                            size={16}
-                            color={palette.onSurfaceVariant}
+                            size="sm"
+                            color="onSurfaceVariant"
                           />
-                          <Text
-                            style={[
-                              typography.labelMd,
-                              { color: palette.onSurfaceVariant },
-                            ]}
-                          >
+                          <Text variant="labelMd" color="onSurfaceVariant">
                             {t("studentFeeDetail.paymentModal.clear")}
                           </Text>
                         </TouchableOpacity>
@@ -1060,19 +972,16 @@ export default function StudentFeeDetailPage() {
                       >
                         <View style={{ flex: 1 }}>
                           <Text
-                            style={[
-                              typography.labelMd,
-                              { color: palette.onSurface },
-                            ]}
+                            variant="labelMd"
+                            color="onSurface"
                             numberOfLines={1}
                           >
                             {item.component_name ?? "—"}
                           </Text>
                           <Text
-                            style={[
-                              typography.labelSm,
-                              { color: palette.onSurfaceVariant, marginTop: 2 },
-                            ]}
+                            variant="labelSm"
+                            color="onSurfaceVariant"
+                            style={{ marginTop: 2 }}
                           >
                             {t("studentFeeDetail.paymentModal.left", {
                               amount: formatCurrency(itemRemaining),
@@ -1116,12 +1025,7 @@ export default function StudentFeeDetailPage() {
                             }}
                             onPress={() => handlePayFullForItem(item)}
                           >
-                            <Text
-                              style={[
-                                typography.labelSm,
-                                { color: palette.onPrimary },
-                              ]}
-                            >
+                            <Text variant="labelSm" color="onPrimary">
                               {t("studentFeeDetail.paymentModal.payFull")}
                             </Text>
                           </TouchableOpacity>
@@ -1131,10 +1035,9 @@ export default function StudentFeeDetailPage() {
                   })}
                   {useAllocations && allocationMismatch && (
                     <Text
-                      style={[
-                        typography.labelSm,
-                        { color: palette.error, marginBottom: spacing.md },
-                      ]}
+                      variant="labelSm"
+                      color="error"
+                      style={{ marginBottom: spacing.md }}
                     >
                       {t("studentFeeDetail.paymentModal.allocationMismatch", {
                         sum: formatCurrency(allocationSum),
@@ -1145,10 +1048,9 @@ export default function StudentFeeDetailPage() {
                 </>
               )}
               <Text
-                style={[
-                  typography.labelMd,
-                  { color: palette.onSurface, marginBottom: spacing.sm },
-                ]}
+                variant="labelMd"
+                color="onSurface"
+                style={{ marginBottom: spacing.sm }}
               >
                 {t("studentFeeDetail.paymentModal.paymentMethod")}
               </Text>
@@ -1187,22 +1089,14 @@ export default function StudentFeeDetailPage() {
                         opacity: pressed ? 0.85 : 1,
                       })}
                     >
-                      <Ionicons
-                        name={m.icon as any}
-                        size={18}
-                        color={
-                          active ? palette.onPrimary : palette.onSurfaceVariant
-                        }
+                      <AppIcon
+                        name={m.icon}
+                        size="sm"
+                        color={active ? "onPrimary" : "onSurfaceVariant"}
                       />
                       <Text
-                        style={[
-                          typography.labelMd,
-                          {
-                            color: active
-                              ? palette.onPrimary
-                              : palette.onSurface,
-                          },
-                        ]}
+                        variant="labelMd"
+                        color={active ? "onPrimary" : "onSurface"}
                       >
                         {t(`studentFeeDetail.paymentMethods.${m.id}`)}
                       </Text>
@@ -1213,10 +1107,9 @@ export default function StudentFeeDetailPage() {
               {method === "other" && (
                 <>
                   <Text
-                    style={[
-                      typography.labelMd,
-                      { color: palette.onSurface, marginBottom: spacing.sm },
-                    ]}
+                    variant="labelMd"
+                    color="onSurface"
+                    style={{ marginBottom: spacing.sm }}
                   >
                     {t("studentFeeDetail.paymentModal.otherDetailLabel")}
                   </Text>
@@ -1239,10 +1132,9 @@ export default function StudentFeeDetailPage() {
                 </>
               )}
               <Text
-                style={[
-                  typography.labelMd,
-                  { color: palette.onSurface, marginBottom: spacing.sm },
-                ]}
+                variant="labelMd"
+                color="onSurface"
+                style={{ marginBottom: spacing.sm }}
               >
                 {method === "cash"
                   ? t("studentFeeDetail.paymentModal.referenceOptional")
@@ -1265,10 +1157,9 @@ export default function StudentFeeDetailPage() {
                 placeholderTextColor={palette.onSurfaceVariant}
               />
               <Text
-                style={[
-                  typography.labelMd,
-                  { color: palette.onSurface, marginBottom: spacing.sm },
-                ]}
+                variant="labelMd"
+                color="onSurface"
+                style={{ marginBottom: spacing.sm }}
               >
                 {t("studentFeeDetail.paymentModal.notesOptional")}
               </Text>
@@ -1307,12 +1198,7 @@ export default function StudentFeeDetailPage() {
                   setOtherMethodDetail("");
                 }}
               >
-                <Text
-                  style={[
-                    typography.labelMd,
-                    { color: palette.onSurfaceVariant },
-                  ]}
-                >
+                <Text variant="labelMd" color="onSurfaceVariant">
                   {t("studentFeeDetail.paymentModal.cancel")}
                 </Text>
               </TouchableOpacity>
@@ -1332,9 +1218,7 @@ export default function StudentFeeDetailPage() {
                 {recordMut.isPending ? (
                   <ActivityIndicator size="small" color={palette.onPrimary} />
                 ) : (
-                  <Text
-                    style={[typography.labelMd, { color: palette.onPrimary }]}
-                  >
+                  <Text variant="labelMd" color="onPrimary">
                     {t("studentFeeDetail.paymentModal.record")}
                   </Text>
                 )}
@@ -1359,9 +1243,7 @@ export default function StudentFeeDetailPage() {
                 { borderBottomColor: palette.outlineVariant },
               ]}
             >
-              <Text
-                style={[typography.headlineMd, { color: palette.onSurface }]}
-              >
+              <Text variant="headlineMd" color="onSurface">
                 {t("studentFeeDetail.refundModal.title")}
               </Text>
               <TouchableOpacity
@@ -1370,7 +1252,7 @@ export default function StudentFeeDetailPage() {
                   setRefundPaymentId(null);
                 }}
               >
-                <Ionicons name="close" size={24} color={palette.onSurface} />
+                <AppIcon name="close" size="lg" color="onSurface" />
               </TouchableOpacity>
             </View>
             <View style={{ padding: spacing.lg }}>
@@ -1384,25 +1266,19 @@ export default function StudentFeeDetailPage() {
                   marginBottom: spacing.lg,
                 }}
               >
-                <Ionicons name="warning" size={28} color={palette.error} />
+                <AppIcon name="warning" size="lg" color="error" />
                 <Text
-                  style={[
-                    typography.bodyMd,
-                    {
-                      flex: 1,
-                      marginLeft: spacing.md,
-                      color: palette.onSurface,
-                    },
-                  ]}
+                  variant="bodyMd"
+                  color="onSurface"
+                  style={{ flex: 1, marginLeft: spacing.md }}
                 >
                   {t("studentFeeDetail.refundModal.warning")}
                 </Text>
               </View>
               <Text
-                style={[
-                  typography.labelMd,
-                  { color: palette.onSurface, marginBottom: spacing.sm },
-                ]}
+                variant="labelMd"
+                color="onSurface"
+                style={{ marginBottom: spacing.sm }}
               >
                 {t("studentFeeDetail.refundModal.reasonOptional")}
               </Text>
@@ -1439,12 +1315,7 @@ export default function StudentFeeDetailPage() {
                   setRefundPaymentId(null);
                 }}
               >
-                <Text
-                  style={[
-                    typography.labelMd,
-                    { color: palette.onSurfaceVariant },
-                  ]}
-                >
+                <Text variant="labelMd" color="onSurfaceVariant">
                   {t("studentFeeDetail.paymentModal.cancel")}
                 </Text>
               </TouchableOpacity>
@@ -1463,9 +1334,7 @@ export default function StudentFeeDetailPage() {
                 {refundMut.isPending ? (
                   <ActivityIndicator size="small" color={palette.onPrimary} />
                 ) : (
-                  <Text
-                    style={[typography.labelMd, { color: palette.onPrimary }]}
-                  >
+                  <Text variant="labelMd" color="onPrimary">
                     {t("studentFeeDetail.refundModal.confirmRefund")}
                   </Text>
                 )}
@@ -1474,12 +1343,12 @@ export default function StudentFeeDetailPage() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
 function BackHeader({ title }: { title: string }) {
-  const { palette, spacing, typography } = useTheme();
+  const { spacing } = useTheme();
   const router = useRouter();
   return (
     <View
@@ -1492,17 +1361,14 @@ function BackHeader({ title }: { title: string }) {
         gap: spacing.sm,
       }}
     >
-      <TouchableOpacity
+      <AppIcon
+        name="arrow-back"
+        size="lg"
+        color="onSurface"
         onPress={() => router.back()}
-        hitSlop={12}
-        style={{ padding: spacing.xs }}
-      >
-        <Ionicons name="chevron-back" size={26} color={palette.onSurface} />
-      </TouchableOpacity>
-      <Text
-        style={[typography.headlineLg, { color: palette.onSurface, flex: 1 }]}
-        numberOfLines={1}
-      >
+        accessibilityLabel="Back"
+      />
+      <Text variant="headlineLg" color="onSurface" numberOfLines={1} style={{ flex: 1 }}>
         {title}
       </Text>
     </View>
@@ -1516,9 +1382,8 @@ function DetailRow({
 }: {
   label: string;
   value: string;
-  valueColor?: string;
+  valueColor?: keyof Palette;
 }) {
-  const { palette, typography } = useTheme();
   return (
     <View
       style={{
@@ -1527,23 +1392,25 @@ function DetailRow({
         alignItems: "center",
       }}
     >
-      <Text
-        style={[typography.labelMd, { color: palette.onSurfaceVariant }]}
-      >
+      <Text variant="labelMd" color="onSurfaceVariant">
         {label}
       </Text>
-      <Text
-        style={[
-          typography.labelMd,
-          { color: valueColor ?? palette.onSurface },
-        ]}
-        numberOfLines={1}
-      >
+      <Text variant="labelMd" color={valueColor ?? "onSurface"} numberOfLines={1}>
         {value}
       </Text>
     </View>
   );
 }
+
+const STATUS_PILL_ACCENT: Record<string, keyof Palette> = {
+  paid: "success",
+  partial: "warning",
+  overdue: "error",
+  success: "success",
+  refunded: "onSurfaceVariant",
+  failed: "error",
+  unpaid: "onSurfaceVariant",
+};
 
 function StatusPill({
   status,
@@ -1553,17 +1420,8 @@ function StatusPill({
   kind?: "fee" | "payment";
 }) {
   const { t } = useTranslation("finance");
-  const { palette, typography, spacing, radius } = useTheme();
-  const colorMap: Record<string, string> = {
-    paid: palette.success,
-    partial: palette.warning,
-    overdue: palette.error,
-    success: palette.success,
-    refunded: palette.onSurfaceVariant,
-    failed: palette.error,
-    unpaid: palette.onSurfaceVariant,
-  };
-  const color = colorMap[status] ?? palette.onSurfaceVariant;
+  const { palette, spacing, radius } = useTheme();
+  const color = palette[STATUS_PILL_ACCENT[status] ?? "onSurfaceVariant"];
   const labelKey =
     kind === "payment"
       ? `paymentTxnStatuses.${status}`
@@ -1579,7 +1437,7 @@ function StatusPill({
         backgroundColor: `${color}15`,
       }}
     >
-      <Text style={[typography.labelSm, { color }]}>
+      <Text variant="labelSm" style={{ color }}>
         {t(labelKey, { defaultValue: status })}
       </Text>
     </View>

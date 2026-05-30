@@ -2,21 +2,18 @@ import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   View,
-  Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Pressable,
   ActivityIndicator,
   RefreshControl,
   TextInput,
   Modal,
   Alert,
   Switch,
-  SafeAreaView,
   FlatList,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 import {
   useStructures,
   useAcademicYears,
@@ -27,11 +24,14 @@ import {
 } from "@/modules/finance/hooks/useFinance";
 import { useAcademicYearContext } from "@/modules/academics/context/AcademicYearContext";
 import type { FeeStructure } from "@/modules/finance/types";
-import { Colors } from "@/common/constants/colors";
-import { Spacing, Layout } from "@/common/constants/spacing";
 import { ClassMultiSelect } from "@/common/components/ClassMultiSelect";
 import { calendarLocaleForLanguage } from "@/i18n";
 import { DateField } from "@/common/components/DateField";
+import { useTheme } from "@/common/theme";
+import { Text } from "@/common/components/Text";
+import { AppIcon } from "@/common/components/AppIcon";
+import { PressScale } from "@/common/components/PressScale";
+import { EmptyState } from "@/common/components/EmptyState";
 
 function formatDate(s: string, locale: string) {
   try {
@@ -45,6 +45,7 @@ export default function FeeStructuresPage() {
   const { t, i18n } = useTranslation("finance");
   const locale = calendarLocaleForLanguage(i18n.language ?? "en");
   const router = useRouter();
+  const { palette, spacing, radius, elevation } = useTheme();
   const { selectedAcademicYearId: contextYearId } = useAcademicYearContext();
   const [academicYearFilter, setAcademicYearFilter] = useState<string>("");
   const [modalOpen, setModalOpen] = useState(false);
@@ -53,152 +54,254 @@ export default function FeeStructuresPage() {
   const { data: classes = [] } = useClasses();
 
   useEffect(() => {
-    if (contextYearId) setAcademicYearFilter((prev) => (prev === "" ? contextYearId : prev));
+    if (contextYearId)
+      setAcademicYearFilter((prev) => (prev === "" ? contextYearId : prev));
   }, [contextYearId]);
 
-  const { data: structures = [], isLoading, error, refetch, isRefetching } = useStructures({
+  const {
+    data: structures = [],
+    isLoading,
+    error,
+    refetch,
+    isRefetching,
+  } = useStructures({
     academic_year_id: academicYearFilter || undefined,
   });
 
   const createMut = useCreateStructure();
   const updateMut = useUpdateStructure();
 
-  if (error) {
-    return (
-      <View style={styles.center}>
-        <Text style={styles.errorText}>
-          {error instanceof Error ? error.message : t("common.failedToLoad")}
-        </Text>
-      </View>
-    );
-  }
-
   const renderStructureItem = ({ item: s }: { item: FeeStructure }) => (
-    <TouchableOpacity
-      style={styles.classCard}
-      onPress={() => router.push(`/(protected)/finance/structures/${s.id}` as never)}
-      activeOpacity={0.7}
+    <PressScale
+      onPress={() =>
+        router.push(`/(protected)/finance/structures/${s.id}` as never)
+      }
+      style={[
+        elevation.card,
+        {
+          flexDirection: "row",
+          alignItems: "center",
+          backgroundColor: palette.surfaceContainerLowest,
+          borderRadius: radius.xl,
+          padding: spacing.md,
+          marginBottom: spacing.md,
+        },
+      ]}
     >
-      <View style={styles.classIcon}>
-        <Ionicons name="layers" size={24} color={Colors.primary} />
+      <View
+        style={{
+          width: 48,
+          height: 48,
+          borderRadius: radius.md,
+          backgroundColor: palette.primaryContainer,
+          alignItems: "center",
+          justifyContent: "center",
+          marginRight: spacing.md,
+        }}
+      >
+        <AppIcon name="layers" size="lg" color="onPrimaryContainer" />
       </View>
-      <View style={styles.classInfo}>
-        <Text style={styles.className}>{s.name}</Text>
-        <Text style={styles.classDetail}>
+      <View style={{ flex: 1 }}>
+        <Text variant="labelMd" color="onSurface" numberOfLines={1}>
+          {s.name}
+        </Text>
+        <Text
+          variant="labelSm"
+          color="onSurfaceVariant"
+          numberOfLines={1}
+          style={{ marginTop: 2 }}
+        >
           {t("structures.classDetail", {
             classes: s.class_name ?? t("common.allClasses"),
             date: formatDate(s.due_date, locale),
           })}
         </Text>
         {s.components?.length ? (
-          <View style={styles.statsRow}>
-            <View style={styles.stat}>
-              <Ionicons name="document-text-outline" size={14} color={Colors.textSecondary} />
-              <Text style={styles.statText}>
-                {t("common.componentsLine", { count: s.components.length })}
-              </Text>
-            </View>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 4,
+              marginTop: spacing.xs,
+            }}
+          >
+            <AppIcon
+              name="document-text-outline"
+              size="sm"
+              color="onSurfaceVariant"
+            />
+            <Text variant="labelSm" color="onSurfaceVariant">
+              {t("common.componentsLine", { count: s.components.length })}
+            </Text>
           </View>
         ) : null}
       </View>
-    </TouchableOpacity>
+      <AppIcon name="chevron-forward" size="md" color="onSurfaceVariant" />
+    </PressScale>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backIcon}>
-          <Ionicons name="arrow-back" size={24} color={Colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t("structures.title")}</Text>
-        <TouchableOpacity
-          style={styles.addButton}
+    <View style={{ flex: 1, backgroundColor: palette.surface }}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: spacing.marginMobile,
+          paddingTop: spacing.md,
+          paddingBottom: spacing.sm,
+          gap: spacing.sm,
+        }}
+      >
+        <AppIcon
+          name="arrow-back"
+          size="lg"
+          color="onSurface"
+          onPress={() => router.back()}
+          accessibilityLabel="Back"
+        />
+        <Text variant="headlineLg" color="onSurface" style={{ flex: 1 }}>
+          {t("structures.title")}
+        </Text>
+        <AppIcon
+          name="add"
+          size="lg"
+          color="primary"
           onPress={() => setModalOpen(true)}
-        >
-          <Ionicons name="add" size={24} color={Colors.primary} />
-        </TouchableOpacity>
+          accessibilityLabel={t("structures.createStructure")}
+        />
       </View>
 
-      <View style={styles.filterSection}>
-        <Text style={styles.filterLabel}>{t("structures.academicYear")}</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
-          <TouchableOpacity
-            style={[styles.filterChip, !academicYearFilter && styles.filterChipActive]}
+      {/* Academic year filter */}
+      <View
+        style={{
+          paddingHorizontal: spacing.marginMobile,
+          paddingTop: spacing.sm,
+          gap: spacing.sm,
+        }}
+      >
+        <Text variant="labelSm" color="onSurfaceVariant">
+          {t("structures.academicYear")}
+        </Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: spacing.sm }}
+        >
+          <Chip
+            active={!academicYearFilter}
+            label={t("common.all")}
             onPress={() => setAcademicYearFilter("")}
-          >
-            <Text style={[styles.filterChipText, !academicYearFilter && styles.filterChipTextActive]}>
-              {t("common.all")}
-            </Text>
-          </TouchableOpacity>
+          />
           {academicYears.map((ay) => (
-            <TouchableOpacity
+            <Chip
               key={ay.id}
-              style={[styles.filterChip, academicYearFilter === ay.id && styles.filterChipActive]}
-              onPress={() => setAcademicYearFilter(academicYearFilter === ay.id ? "" : ay.id)}
-            >
-              <Text
-                style={[
-                  styles.filterChipText,
-                  academicYearFilter === ay.id && styles.filterChipTextActive,
-                ]}
-              >
-                {ay.name}
-              </Text>
-            </TouchableOpacity>
+              active={academicYearFilter === ay.id}
+              label={ay.name}
+              onPress={() =>
+                setAcademicYearFilter(academicYearFilter === ay.id ? "" : ay.id)
+              }
+            />
           ))}
         </ScrollView>
       </View>
 
-      {isLoading && structures.length === 0 ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+      {error ? (
+        <View style={{ padding: spacing.lg, alignItems: "center" }}>
+          <Text variant="bodyMd" color="error">
+            {error instanceof Error ? error.message : t("common.failedToLoad")}
+          </Text>
+        </View>
+      ) : isLoading && structures.length === 0 ? (
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            padding: spacing.xl,
+          }}
+        >
+          <ActivityIndicator size="large" color={palette.primary} />
         </View>
       ) : (
         <FlatList
           data={structures}
           keyExtractor={(item) => item.id}
           renderItem={renderStructureItem}
-          contentContainerStyle={styles.listContent}
-          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+          contentContainerStyle={{
+            paddingHorizontal: spacing.marginMobile,
+            paddingTop: spacing.md,
+            paddingBottom: spacing.xl * 2,
+          }}
+          refreshControl={
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+          }
+          showsVerticalScrollIndicator={false}
           ListEmptyComponent={
-            <View style={styles.emptyState}>
-              <Ionicons name="layers-outline" size={48} color={Colors.textTertiary} />
-              <Text style={styles.emptyTitle}>{t("structures.emptyTitle")}</Text>
-              <Text style={styles.emptySubtext}>
-                {t("structures.emptySubtext")}
-              </Text>
-              <TouchableOpacity
-                style={styles.emptyCta}
-                onPress={() => setModalOpen(true)}
-              >
-                <Ionicons name="add" size={20} color="#fff" />
-                <Text style={styles.emptyCtaText}>{t("structures.createStructure")}</Text>
-              </TouchableOpacity>
-            </View>
+            <EmptyState
+              icon={
+                <AppIcon name="layers-outline" size="xl" color="onSurfaceVariant" />
+              }
+              title={t("structures.emptyTitle")}
+              description={t("structures.emptySubtext")}
+              action={{
+                label: t("structures.createStructure"),
+                onPress: () => setModalOpen(true),
+              }}
+            />
           }
         />
       )}
 
-        <StructureModal
-          visible={modalOpen}
-          onClose={() => setModalOpen(false)}
-          editingId={null}
-          structures={structures}
-          academicYears={academicYears}
-          allClasses={classes}
-          defaultAcademicYearId={contextYearId ?? undefined}
-          onCreate={async (data) => {
-            await createMut.mutateAsync(data);
-            setModalOpen(false);
-          }}
-          onUpdate={async (id, data) => {
-            await updateMut.mutateAsync({ id, data });
-            setModalOpen(false);
-          }}
-          isCreating={createMut.isPending}
-          isUpdating={updateMut.isPending}
-        />
-    </SafeAreaView>
+      <StructureModal
+        visible={modalOpen}
+        onClose={() => setModalOpen(false)}
+        editingId={null}
+        structures={structures}
+        academicYears={academicYears}
+        allClasses={classes}
+        defaultAcademicYearId={contextYearId ?? undefined}
+        onCreate={async (data) => {
+          await createMut.mutateAsync(data);
+          setModalOpen(false);
+        }}
+        onUpdate={async (id, data) => {
+          await updateMut.mutateAsync({ id, data });
+          setModalOpen(false);
+        }}
+        isCreating={createMut.isPending}
+        isUpdating={updateMut.isPending}
+      />
+    </View>
+  );
+}
+
+function Chip({
+  active,
+  label,
+  onPress,
+}: {
+  active: boolean;
+  label: string;
+  onPress: () => void;
+}) {
+  const { palette, spacing, radius } = useTheme();
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => ({
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.xs,
+        borderRadius: radius.full,
+        backgroundColor: active ? palette.primary : palette.surfaceContainerLow,
+        borderWidth: 1,
+        borderColor: active ? palette.primary : palette.outlineVariant,
+        opacity: pressed ? 0.85 : 1,
+      })}
+    >
+      <Text variant="labelSm" color={active ? "onPrimary" : "onSurface"}>
+        {label}
+      </Text>
+    </Pressable>
   );
 }
 
@@ -217,7 +320,15 @@ interface StructureModalProps {
     class_ids?: string[];
     components: { name: string; amount: number; is_optional: boolean }[];
   }) => Promise<void>;
-  onUpdate: (id: string, data: { name?: string; due_date?: string; class_ids?: string[]; components?: { name: string; amount: number; is_optional: boolean }[] }) => Promise<void>;
+  onUpdate: (
+    id: string,
+    data: {
+      name?: string;
+      due_date?: string;
+      class_ids?: string[];
+      components?: { name: string; amount: number; is_optional: boolean }[];
+    }
+  ) => Promise<void>;
   isCreating: boolean;
   isUpdating: boolean;
 }
@@ -236,6 +347,7 @@ function StructureModal({
   isUpdating,
 }: StructureModalProps) {
   const { t } = useTranslation("finance");
+  const { palette, spacing, radius } = useTheme();
   const editing = editingId ? structures.find((s) => s.id === editingId) : null;
 
   const [name, setName] = useState(editing?.name ?? "");
@@ -259,8 +371,12 @@ function StructureModal({
   useEffect(() => {
     if (visible) {
       setName(editing?.name ?? "");
-      setAcademicYearId(editing?.academic_year_id ?? defaultAcademicYearId ?? "");
-      setClassIds(editing?.class_ids ?? (editing?.class_id ? [editing.class_id] : []));
+      setAcademicYearId(
+        editing?.academic_year_id ?? defaultAcademicYearId ?? ""
+      );
+      setClassIds(
+        editing?.class_ids ?? (editing?.class_id ? [editing.class_id] : [])
+      );
       setDueDate(editing?.due_date ?? "");
       setComponents(
         editing?.components?.map((c) => ({
@@ -281,11 +397,17 @@ function StructureModal({
     setComponents(components.filter((_, idx) => idx !== i));
   };
 
-  const updateComponent = (i: number, field: string, value: string | boolean) => {
+  const updateComponent = (
+    i: number,
+    field: string,
+    value: string | boolean
+  ) => {
     const next = [...components];
     if (field === "name") next[i] = { ...next[i], name: value as string };
-    else if (field === "amount") next[i] = { ...next[i], amount: value as string };
-    else if (field === "is_optional") next[i] = { ...next[i], is_optional: value as boolean };
+    else if (field === "amount")
+      next[i] = { ...next[i], amount: value as string };
+    else if (field === "is_optional")
+      next[i] = { ...next[i], is_optional: value as boolean };
     setComponents(next);
   };
 
@@ -310,11 +432,17 @@ function StructureModal({
         is_optional: c.is_optional,
       }));
     if (!editingId && comps.length === 0) {
-      Alert.alert(t("common.error"), t("structures.modal.alerts.componentsCreate"));
+      Alert.alert(
+        t("common.error"),
+        t("structures.modal.alerts.componentsCreate")
+      );
       return;
     }
     if (editingId && comps.length === 0) {
-      Alert.alert(t("common.error"), t("structures.modal.alerts.componentsEdit"));
+      Alert.alert(
+        t("common.error"),
+        t("structures.modal.alerts.componentsEdit")
+      );
       return;
     }
 
@@ -336,11 +464,15 @@ function StructureModal({
         });
       }
     } catch (e: unknown) {
-      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("structures.modal.alerts.saveFailed"));
+      Alert.alert(
+        t("common.error"),
+        e instanceof Error ? e.message : t("structures.modal.alerts.saveFailed")
+      );
     }
   };
 
-  const effectiveAcademicYearId = academicYearId || (editing?.academic_year_id ?? "");
+  const effectiveAcademicYearId =
+    academicYearId || (editing?.academic_year_id ?? "");
   const { data: availableClasses = [] } = useAvailableClassesForStructure(
     effectiveAcademicYearId || undefined,
     editingId ?? undefined,
@@ -353,59 +485,121 @@ function StructureModal({
     section: c.section,
   }));
 
+  const inputStyle = {
+    borderWidth: 1,
+    borderColor: palette.outlineVariant,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    color: palette.onSurface,
+    marginBottom: spacing.md,
+  };
+
   return (
     <Modal visible={visible} animationType="slide" transparent>
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>
-              {editingId ? t("structures.modal.editTitle") : t("structures.modal.createTitle")}
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: "rgba(0,0,0,0.5)",
+          justifyContent: "flex-end",
+        }}
+      >
+        <View
+          style={{
+            backgroundColor: palette.surface,
+            borderTopLeftRadius: radius.xl,
+            borderTopRightRadius: radius.xl,
+            maxHeight: "90%",
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: spacing.lg,
+              borderBottomWidth: 1,
+              borderBottomColor: palette.outlineVariant,
+            }}
+          >
+            <Text variant="headlineMd" color="onSurface">
+              {editingId
+                ? t("structures.modal.editTitle")
+                : t("structures.modal.createTitle")}
             </Text>
-            <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={24} color={Colors.text} />
-            </TouchableOpacity>
+            <AppIcon
+              name="close"
+              size="lg"
+              color="onSurface"
+              onPress={onClose}
+              accessibilityLabel={t("structures.modal.cancel")}
+            />
           </View>
 
-          <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
-            <Text style={styles.inputLabel}>{t("structures.modal.structureName")}</Text>
-            <Text style={styles.helperText}>{t("structures.modal.structureNameHint")}</Text>
+          <ScrollView
+            style={{ padding: spacing.lg, maxHeight: 400 }}
+            showsVerticalScrollIndicator={false}
+          >
+            <Text
+              variant="labelMd"
+              color="onSurface"
+              style={{ marginBottom: spacing.sm }}
+            >
+              {t("structures.modal.structureName")}
+            </Text>
+            <Text
+              variant="labelSm"
+              color="onSurfaceVariant"
+              style={{ marginBottom: spacing.sm }}
+            >
+              {t("structures.modal.structureNameHint")}
+            </Text>
             <TextInput
-              style={styles.input}
+              style={inputStyle}
               value={name}
               onChangeText={setName}
               placeholder={t("structures.modal.namePlaceholder")}
+              placeholderTextColor={palette.onSurfaceVariant}
             />
 
             {!editingId && (
               <>
-                <Text style={styles.inputLabel}>{t("structures.modal.academicYear")}</Text>
+                <Text
+                  variant="labelMd"
+                  color="onSurface"
+                  style={{ marginBottom: spacing.sm }}
+                >
+                  {t("structures.modal.academicYear")}
+                </Text>
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  style={styles.chipRow}
+                  contentContainerStyle={{ gap: spacing.sm }}
+                  style={{ marginBottom: spacing.md }}
                 >
                   {academicYears.map((ay) => (
-                    <TouchableOpacity
+                    <Chip
                       key={ay.id}
-                      style={[styles.formChip, academicYearId === ay.id && styles.formChipActive]}
+                      active={academicYearId === ay.id}
+                      label={ay.name}
                       onPress={() => setAcademicYearId(ay.id)}
-                    >
-                      <Text
-                        style={[
-                          styles.formChipText,
-                          academicYearId === ay.id && styles.formChipTextActive,
-                        ]}
-                      >
-                        {ay.name}
-                      </Text>
-                    </TouchableOpacity>
+                    />
                   ))}
                 </ScrollView>
               </>
             )}
 
-            <Text style={styles.inputLabel}>{t("structures.modal.classes")}</Text>
-            <Text style={styles.helperText}>
+            <Text
+              variant="labelMd"
+              color="onSurface"
+              style={{ marginBottom: spacing.sm }}
+            >
+              {t("structures.modal.classes")}
+            </Text>
+            <Text
+              variant="labelSm"
+              color="onSurfaceVariant"
+              style={{ marginBottom: spacing.sm }}
+            >
               {t("structures.modal.classesHint")}
             </Text>
             <ClassMultiSelect
@@ -422,30 +616,67 @@ function StructureModal({
               placeholder={t("structures.modal.dueDatePlaceholder")}
             />
 
-            <View style={styles.componentHeader}>
-              <Text style={styles.inputLabel}>{t("structures.modal.components")}</Text>
-              <TouchableOpacity onPress={addComponent} style={styles.addComponentBtn}>
-                <Ionicons name="add" size={20} color={Colors.primary} />
-                <Text style={styles.addComponentText}>{t("structures.modal.add")}</Text>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Text variant="labelMd" color="onSurface">
+                {t("structures.modal.components")}
+              </Text>
+              <TouchableOpacity
+                onPress={addComponent}
+                style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+              >
+                <AppIcon name="add" size="md" color="primary" />
+                <Text variant="labelMd" color="primary">
+                  {t("structures.modal.add")}
+                </Text>
               </TouchableOpacity>
             </View>
             {components.map((c, i) => (
-              <View key={i} style={styles.componentFormRow}>
+              <View
+                key={i}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginTop: spacing.sm,
+                }}
+              >
                 <TextInput
-                  style={[styles.input, styles.componentInput]}
+                  style={[inputStyle, { flex: 1, marginRight: spacing.sm, marginBottom: 0 }]}
                   value={c.name}
                   onChangeText={(v) => updateComponent(i, "name", v)}
                   placeholder={t("structures.modal.componentName")}
+                  placeholderTextColor={palette.onSurfaceVariant}
                 />
                 <TextInput
-                  style={[styles.input, styles.amountInput]}
+                  style={[
+                    inputStyle,
+                    { width: 90, marginRight: spacing.sm, marginBottom: 0 },
+                  ]}
                   value={c.amount}
                   onChangeText={(v) => updateComponent(i, "amount", v)}
                   placeholder={t("structures.modal.amount")}
+                  placeholderTextColor={palette.onSurfaceVariant}
                   keyboardType="decimal-pad"
                 />
-                <View style={styles.optionalRow}>
-                  <Text style={styles.optionalLabel}>{t("structures.modal.optional")}</Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    marginRight: spacing.sm,
+                  }}
+                >
+                  <Text
+                    variant="labelSm"
+                    color="onSurfaceVariant"
+                    style={{ marginRight: spacing.xs }}
+                  >
+                    {t("structures.modal.optional")}
+                  </Text>
                   <Switch
                     value={c.is_optional}
                     onValueChange={(v) => updateComponent(i, "is_optional", v)}
@@ -454,27 +685,55 @@ function StructureModal({
                 <TouchableOpacity
                   onPress={() => removeComponent(i)}
                   disabled={components.length <= 1}
-                  style={styles.removeBtn}
+                  style={{ padding: spacing.sm }}
                 >
-                  <Ionicons name="remove-circle-outline" size={22} color={Colors.error} />
+                  <AppIcon
+                    name="remove-circle-outline"
+                    size="lg"
+                    color="error"
+                  />
                 </TouchableOpacity>
               </View>
             ))}
           </ScrollView>
 
-          <View style={styles.modalFooter}>
-            <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
-              <Text style={styles.cancelBtnText}>{t("structures.modal.cancel")}</Text>
+          <View
+            style={{
+              flexDirection: "row",
+              gap: spacing.md,
+              padding: spacing.lg,
+              borderTopWidth: 1,
+              borderTopColor: palette.outlineVariant,
+            }}
+          >
+            <TouchableOpacity
+              style={{ flex: 1, padding: spacing.md, alignItems: "center" }}
+              onPress={onClose}
+            >
+              <Text variant="labelMd" color="onSurfaceVariant">
+                {t("structures.modal.cancel")}
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.submitBtn, (isCreating || isUpdating) && styles.submitBtnDisabled]}
+              style={{
+                flex: 1,
+                backgroundColor: palette.primary,
+                padding: spacing.md,
+                borderRadius: radius.md,
+                alignItems: "center",
+                opacity: isCreating || isUpdating ? 0.7 : 1,
+              }}
               onPress={handleSubmit}
               disabled={isCreating || isUpdating}
             >
               {isCreating || isUpdating ? (
-                <ActivityIndicator size="small" color={Colors.background} />
+                <ActivityIndicator size="small" color={palette.onPrimary} />
               ) : (
-                <Text style={styles.submitBtnText}>{editingId ? t("structures.modal.update") : t("structures.modal.create")}</Text>
+                <Text variant="labelMd" color="onPrimary">
+                  {editingId
+                    ? t("structures.modal.update")
+                    : t("structures.modal.create")}
+                </Text>
               )}
             </TouchableOpacity>
           </View>
@@ -483,166 +742,3 @@ function StructureModal({
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  backIcon: { padding: Spacing.sm, marginRight: Spacing.sm },
-  headerTitle: { flex: 1, fontSize: 24, fontWeight: "bold", color: Colors.text },
-  addButton: {
-    padding: Spacing.sm,
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.md,
-  },
-  filterSection: {
-    padding: Spacing.md,
-    backgroundColor: Colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  filterLabel: { fontSize: 14, color: Colors.textSecondary, marginBottom: Spacing.sm },
-  filterScroll: { marginTop: Spacing.xs },
-  filterChip: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: Layout.borderRadius.md,
-    backgroundColor: Colors.backgroundSecondary,
-    marginRight: Spacing.sm,
-  },
-  filterChipActive: { backgroundColor: Colors.primary },
-  filterChipText: { fontSize: 14, color: Colors.text },
-  filterChipTextActive: { fontSize: 14, color: Colors.background, fontWeight: "600" },
-  listContent: { padding: Spacing.md },
-  center: { flex: 1, justifyContent: "center", alignItems: "center", padding: Spacing.xl },
-  emptyText: { color: Colors.textSecondary, fontSize: 16 },
-  classCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: Spacing.md,
-    backgroundColor: Colors.background,
-    borderRadius: Layout.borderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    marginBottom: Spacing.sm,
-  },
-  classIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: Layout.borderRadius.md,
-    backgroundColor: Colors.backgroundSecondary,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: Spacing.md,
-  },
-  classInfo: { flex: 1 },
-  className: { fontSize: 16, fontWeight: "600", color: Colors.text },
-  classDetail: { fontSize: 13, color: Colors.textSecondary, marginTop: 2 },
-  statsRow: { flexDirection: "row", marginTop: Spacing.xs, gap: Spacing.md },
-  stat: { flexDirection: "row", alignItems: "center", gap: 4 },
-  statText: { fontSize: 12, color: Colors.textSecondary },
-  cardActions: { flexDirection: "row", alignItems: "center", gap: Spacing.xs },
-  actionBtn: { alignItems: "center", paddingVertical: Spacing.xs, paddingHorizontal: Spacing.sm },
-  actionLabel: { fontSize: 10, color: Colors.primary, marginTop: 2 },
-  actionBtnDanger: {},
-  actionLabelDanger: { fontSize: 10, color: Colors.error, marginTop: 2 },
-  emptyState: {
-    alignItems: "center",
-    paddingVertical: Spacing.xxl,
-  },
-  emptyTitle: { fontSize: 18, fontWeight: "600", color: Colors.text, marginTop: Spacing.md },
-  emptySubtext: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    marginTop: Spacing.xs,
-    textAlign: "center",
-    paddingHorizontal: Spacing.xl,
-  },
-  emptyCta: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.sm,
-    marginTop: Spacing.lg,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    backgroundColor: Colors.primary,
-    borderRadius: Layout.borderRadius.md,
-  },
-  emptyCtaText: { color: "#fff", fontWeight: "600", fontSize: 15 },
-  errorText: { color: Colors.error, fontSize: 16 },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "flex-end",
-  },
-  modalContent: {
-    backgroundColor: Colors.background,
-    borderTopLeftRadius: Layout.borderRadius.xl,
-    borderTopRightRadius: Layout.borderRadius.xl,
-    maxHeight: "90%",
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  modalTitle: { fontSize: 18, fontWeight: "700", color: Colors.text },
-  modalBody: { padding: Spacing.lg, maxHeight: 400 },
-  modalFooter: {
-    flexDirection: "row",
-    gap: Spacing.md,
-    padding: Spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: Colors.borderLight,
-  },
-  inputLabel: { fontSize: 14, fontWeight: "600", color: Colors.text, marginBottom: Spacing.sm },
-  helperText: { fontSize: 12, color: Colors.textSecondary, marginBottom: Spacing.sm },
-  input: {
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: Layout.borderRadius.md,
-    padding: Spacing.md,
-    fontSize: 16,
-    marginBottom: Spacing.md,
-  },
-  chipRow: { marginBottom: Spacing.md },
-  formChip: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: Layout.borderRadius.md,
-    backgroundColor: Colors.backgroundSecondary,
-    marginRight: Spacing.sm,
-  },
-  formChipActive: { backgroundColor: Colors.primary },
-  formChipText: { fontSize: 14, color: Colors.text },
-  formChipTextActive: { fontSize: 14, color: Colors.background, fontWeight: "600" },
-  componentHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  componentFormRow: { flexDirection: "row", alignItems: "center", marginBottom: Spacing.sm },
-  componentInput: { flex: 1, marginRight: Spacing.sm },
-  amountInput: { width: 90, marginRight: Spacing.sm },
-  optionalRow: { flexDirection: "row", alignItems: "center", marginRight: Spacing.sm },
-  optionalLabel: { fontSize: 12, color: Colors.textSecondary, marginRight: Spacing.xs },
-  removeBtn: { padding: Spacing.sm },
-  addComponentBtn: { flexDirection: "row", alignItems: "center" },
-  addComponentText: { fontSize: 14, color: Colors.primary, marginLeft: Spacing.xs },
-  cancelBtn: { flex: 1, padding: Spacing.md, alignItems: "center" },
-  cancelBtnText: { fontSize: 16, color: Colors.textSecondary },
-  submitBtn: {
-    flex: 1,
-    backgroundColor: Colors.primary,
-    padding: Spacing.md,
-    borderRadius: Layout.borderRadius.md,
-    alignItems: "center",
-  },
-  submitBtnDisabled: { opacity: 0.7 },
-  submitBtnText: { fontSize: 16, fontWeight: "600", color: Colors.background },
-});
