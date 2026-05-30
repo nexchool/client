@@ -5,7 +5,6 @@ import {
   StyleSheet,
   SectionList,
   ActivityIndicator,
-  SafeAreaView,
   RefreshControl,
   Alert,
 } from "react-native";
@@ -26,6 +25,8 @@ interface ClassSection {
   title: string;
   /** Sort key: real grade_level if present, else a high sentinel so "Other" sinks. */
   order: number;
+  /** Fallback bucket for classes with no real grade_level — header is suppressed. */
+  isOther: boolean;
   data: ClassItem[];
 }
 
@@ -49,6 +50,7 @@ function groupByGrade(
       section = {
         title: hasGrade ? gradeLabel(cls.grade_level as number) : otherLabel,
         order: hasGrade ? (cls.grade_level as number) : Number.MAX_SAFE_INTEGER,
+        isOther: !hasGrade,
         data: [],
       };
       buckets.set(key, section);
@@ -103,7 +105,7 @@ export default function ClassesScreen() {
     fetchClasses({ academic_year_id: selectedAcademicYearId || undefined });
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: palette.surface }]}>
+    <View style={[styles.container, { backgroundColor: palette.surface }]}>
       <View
         style={[
           styles.header,
@@ -131,18 +133,20 @@ export default function ClassesScreen() {
           sections={sections}
           keyExtractor={(item) => item.id}
           stickySectionHeadersEnabled={false}
-          renderSectionHeader={({ section }) => (
-            <View
-              style={[
-                styles.sectionHeader,
-                { borderBottomColor: palette.outlineVariant },
-              ]}
-            >
-              <Text variant="headlineMd" color="onSurface">
-                {section.title}
-              </Text>
-            </View>
-          )}
+          renderSectionHeader={({ section }) =>
+            section.isOther ? null : (
+              <View
+                style={[
+                  styles.sectionHeader,
+                  { borderBottomColor: palette.outlineVariant },
+                ]}
+              >
+                <Text variant="headlineMd" color="onSurface">
+                  {section.title}
+                </Text>
+              </View>
+            )
+          }
           renderItem={({ item }) => (
             <ClassListItem
               item={item}
@@ -198,7 +202,7 @@ export default function ClassesScreen() {
           />
         </>
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 

@@ -1,7 +1,6 @@
 import React, { useEffect, useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View, ScrollView, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTheme } from '@/common/theme';
 import { Text } from '@/common/components/Text';
@@ -75,7 +74,7 @@ export default function StudentDetailScreen() {
     } as never);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: palette.surface }} edges={['top']}>
+    <View style={{ flex: 1, backgroundColor: palette.surface }}>
       {/* Header */}
       <View
         style={{
@@ -165,6 +164,6 @@ export default function StudentDetailScreen() {
           ) : null}
         </>
       )}
-    </SafeAreaView>
+    </View>
   );
 }

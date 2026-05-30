@@ -223,17 +223,17 @@ export default function TeacherDetailScreen() {
 
   if (loading && !currentTeacher) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: palette.surface }} edges={['top']}>
+      <View style={{ flex: 1, backgroundColor: palette.surface }}>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <ActivityIndicator size="large" color={palette.primary} />
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   if (!currentTeacher) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: palette.surface }} edges={['top']}>
+      <View style={{ flex: 1, backgroundColor: palette.surface }}>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl }}>
           <Text variant="bodyLg" color="error" style={{ marginBottom: spacing.lg, textAlign: 'center' }}>
             {t('detail.notFound')}
@@ -252,7 +252,7 @@ export default function TeacherDetailScreen() {
             </Text>
           </PressScale>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -288,7 +288,7 @@ export default function TeacherDetailScreen() {
   ].filter((r) => r.value != null && String(r.value).trim() !== '');
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: palette.surface }} edges={['top']}>
+    <View style={{ flex: 1, backgroundColor: palette.surface }}>
       {/* Header */}
       <View
         style={{
@@ -727,6 +727,6 @@ export default function TeacherDetailScreen() {
           </ScrollView>
         </SafeAreaView>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }

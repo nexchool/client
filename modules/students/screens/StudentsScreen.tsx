@@ -5,7 +5,6 @@ import {
   StyleSheet,
   FlatList,
   ActivityIndicator,
-  SafeAreaView,
   RefreshControl,
   TextInput,
   Pressable,
@@ -280,7 +279,7 @@ export default function StudentsScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: palette.surface }]}>
+    <View style={[styles.container, { backgroundColor: palette.surface }]}>
       <View
         style={[
           styles.header,
@@ -320,7 +319,7 @@ export default function StudentsScreen() {
           <AppIcon name="add" size="xl" color="onPrimary" />
         </Pressable>
       </Protected>
-    </SafeAreaView>
+    </View>
   );
 }
 

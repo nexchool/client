@@ -113,15 +113,20 @@ export const ClassListItem: React.FC<Props> = ({
         </View>
       ) : null}
 
-      {/* Footer: View Timetable action */}
+      {/* Footer: View Timetable action.
+          With a meta row, divide it off (divider + lg gap). Without one, the card
+          would otherwise be tall and empty — drop the divider and use a tight md gap. */}
       <View
         style={[
           styles.footer,
-          {
-            borderTopColor: palette.primaryContainer,
-            marginTop: spacing.lg,
-            paddingTop: spacing.md,
-          },
+          teacherName
+            ? {
+                borderTopWidth: StyleSheet.hairlineWidth,
+                borderTopColor: palette.primaryContainer,
+                marginTop: spacing.lg,
+                paddingTop: spacing.md,
+              }
+            : { marginTop: spacing.md },
         ]}
       >
         <PressScale
@@ -191,7 +196,6 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   footer: {
-    borderTopWidth: StyleSheet.hairlineWidth,
     flexDirection: "row",
     justifyContent: "flex-end",
     alignItems: "center",
