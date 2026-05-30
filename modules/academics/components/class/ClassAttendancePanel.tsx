@@ -2,16 +2,16 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   View,
-  Text,
   StyleSheet,
-  TouchableOpacity,
   ActivityIndicator,
   FlatList,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "@/common/constants/colors";
-import { Spacing, Layout } from "@/common/constants/spacing";
+import { useTheme } from "@/common/theme";
+import type { Palette } from "@/common/theme";
+import { Text } from "@/common/components/Text";
+import { AppIcon } from "@/common/components/AppIcon";
+import { PressScale } from "@/common/components/PressScale";
 import { attendanceV2Api } from "../../api/attendanceV2Api";
 import type { AttendanceSessionV2 } from "../../types";
 
@@ -32,9 +32,9 @@ function formatDate(dateStr: string | null | undefined): string {
   return `${parseInt(day, 10)} ${MONTHS[parseInt(month, 10) - 1]} ${year}`;
 }
 
-function statusColor(status: string): string {
-  if (status === "finalized") return Colors.success ?? "#22c55e";
-  return Colors.warning ?? "#f59e0b";
+function statusColorKey(status: string): keyof Palette {
+  if (status === "finalized") return "success";
+  return "warning";
 }
 
 function statusLabel(status: string, ta: (key: string, opts?: object) => string): string {
@@ -44,6 +44,7 @@ function statusLabel(status: string, ta: (key: string, opts?: object) => string)
 export function ClassAttendancePanel({ classId, classLabel, canMark, canViewHistory }: Props) {
   const { t } = useTranslation("classes");
   const { t: ta } = useTranslation("attendance");
+  const { palette, spacing, radius } = useTheme();
   const router = useRouter();
   const [items, setItems] = useState<AttendanceSessionV2[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,65 +79,94 @@ export function ClassAttendancePanel({ classId, classLabel, canMark, canViewHist
     } as any);
 
   return (
-    <View style={styles.root}>
+    <View style={{ paddingTop: spacing.xs }}>
       {/* Primary CTA */}
       {canMark && (
-        <TouchableOpacity style={styles.cta} onPress={() => openSession(today)} activeOpacity={0.85}>
-          <View style={styles.ctaIcon}>
-            <Ionicons name="checkbox-outline" size={22} color={Colors.primary} />
+        <PressScale
+          style={[
+            styles.cta,
+            {
+              backgroundColor: palette.primaryContainer,
+              borderRadius: radius.md,
+              padding: spacing.md,
+              marginBottom: spacing.lg,
+              gap: spacing.sm,
+            },
+          ]}
+          onPress={() => openSession(today)}
+        >
+          <View style={[styles.ctaIcon, { backgroundColor: palette.primary, borderRadius: radius.full }]}>
+            <AppIcon name="checkbox-outline" size="lg" color="onPrimary" />
           </View>
-          <View style={styles.ctaTextBlock}>
-            <Text style={styles.ctaTitle}>Mark Attendance</Text>
-            <Text style={styles.ctaSub}>Today · {formatDate(today)}</Text>
+          <View style={{ flex: 1 }}>
+            <Text variant="labelLg" color="onPrimaryContainer">{t("panels.classAttendance.markTitle", { defaultValue: "Mark Attendance" })}</Text>
+            <Text variant="labelSm" color="onPrimaryContainer" style={{ marginTop: 2 }}>
+              {t("panels.classAttendance.todayPrefix", { defaultValue: "Today" })} · {formatDate(today)}
+            </Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color={Colors.primary} />
-        </TouchableOpacity>
+          <AppIcon name="chevron-forward" size="md" color="onPrimaryContainer" />
+        </PressScale>
       )}
 
       {/* Session history */}
       {!canViewHistory ? (
-        <Text style={styles.muted}>{t("panels.classAttendance.noHistoryPermission")}</Text>
+        <Text variant="bodyMd" color="onSurfaceVariant" style={{ fontStyle: "italic" }}>
+          {t("panels.classAttendance.noHistoryPermission")}
+        </Text>
       ) : loading ? (
-        <View style={styles.loadingRow}>
-          <ActivityIndicator color={Colors.primary} />
+        <View style={{ paddingVertical: spacing.lg, alignItems: "center" }}>
+          <ActivityIndicator color={palette.primary} />
         </View>
       ) : (
         <>
-          <Text style={styles.sectionLabel}>Recent Sessions</Text>
+          <Text variant="overline" color="onSurfaceVariant" style={{ marginBottom: spacing.sm }}>
+            {t("panels.classAttendance.recentSessions", { defaultValue: "Recent Sessions" })}
+          </Text>
           <FlatList
             data={items.slice(0, 30)}
             keyExtractor={(i) => i.id}
             scrollEnabled={false}
-            ItemSeparatorComponent={() => <View style={styles.separator} />}
+            ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
             renderItem={({ item }) => {
               const date = item.session_date?.slice(0, 10) ?? today;
-              const color = statusColor(item.status);
+              const colorKey = statusColorKey(item.status);
+              const color = palette[colorKey];
               return (
-                <TouchableOpacity
-                  style={styles.card}
+                <PressScale
+                  style={[
+                    styles.card,
+                    {
+                      backgroundColor: palette.surfaceContainerLowest,
+                      borderColor: palette.surfaceContainerHighest,
+                      borderRadius: radius.md,
+                      paddingHorizontal: spacing.md,
+                      paddingVertical: spacing.md,
+                    },
+                  ]}
                   onPress={() => openSession(date)}
-                  activeOpacity={0.75}
                 >
                   <View style={styles.cardLeft}>
-                    <Text style={styles.cardDate}>{formatDate(item.session_date)}</Text>
+                    <Text variant="labelLg" color="onSurface">{formatDate(item.session_date)}</Text>
                     <View style={[styles.statusPill, { backgroundColor: color + "20" }]}>
                       <View style={[styles.statusDot, { backgroundColor: color }]} />
-                      <Text style={[styles.statusText, { color }]}>
+                      <Text variant="labelSm" style={{ color }}>
                         {statusLabel(item.status, ta)}
                       </Text>
                     </View>
                   </View>
                   <View style={styles.cardAction}>
-                    <Text style={styles.cardActionText}>View</Text>
-                    <Ionicons name="chevron-forward" size={16} color={Colors.primary} />
+                    <Text variant="labelMd" color="primary">{t("panels.classAttendance.view", { defaultValue: "View" })}</Text>
+                    <AppIcon name="chevron-forward" size="sm" color="primary" />
                   </View>
-                </TouchableOpacity>
+                </PressScale>
               );
             }}
             ListEmptyComponent={
-              <View style={styles.emptyState}>
-                <Ionicons name="document-outline" size={32} color={Colors.textTertiary} />
-                <Text style={styles.emptyTitle}>No attendance records yet</Text>
+              <View style={[styles.emptyState, { paddingVertical: spacing.xl * 2, gap: spacing.sm }]}>
+                <AppIcon name="document-outline" size="xl" color="outline" />
+                <Text variant="labelLg" color="onSurfaceVariant">
+                  {t("panels.classAttendance.emptyTitle", { defaultValue: "No attendance records yet" })}
+                </Text>
               </View>
             }
           />
@@ -147,53 +177,10 @@ export function ClassAttendancePanel({ classId, classLabel, canMark, canViewHist
 }
 
 const styles = StyleSheet.create({
-  root: {
-    paddingTop: Spacing.xs,
-  },
-  cta: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Colors.primary + "12",
-    borderWidth: 1.5,
-    borderColor: Colors.primary + "40",
-    borderRadius: Layout.borderRadius.md,
-    padding: Spacing.md,
-    marginBottom: Spacing.lg,
-    gap: Spacing.sm,
-  },
-  ctaIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.primary + "18",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  ctaTextBlock: { flex: 1 },
-  ctaTitle: { fontSize: 15, fontWeight: "700", color: Colors.primary },
-  ctaSub: { fontSize: 12, color: Colors.primary + "aa", marginTop: 2 },
-  sectionLabel: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: Colors.textSecondary,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-    marginBottom: Spacing.sm,
-  },
-  loadingRow: { paddingVertical: Spacing.lg, alignItems: "center" },
-  separator: { height: Spacing.sm },
-  card: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Colors.background,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    borderRadius: Layout.borderRadius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-  },
+  cta: { flexDirection: "row", alignItems: "center" },
+  ctaIcon: { width: 40, height: 40, alignItems: "center", justifyContent: "center" },
+  card: { flexDirection: "row", alignItems: "center", borderWidth: 1 },
   cardLeft: { flex: 1, gap: 6 },
-  cardDate: { fontSize: 15, fontWeight: "600", color: Colors.text },
   statusPill: {
     flexDirection: "row",
     alignItems: "center",
@@ -203,35 +190,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     gap: 5,
   },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  cardAction: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 2,
-    paddingLeft: Spacing.sm,
-  },
-  cardActionText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: Colors.primary,
-  },
-  emptyState: {
-    alignItems: "center",
-    paddingVertical: Spacing.xl * 2,
-    gap: Spacing.sm,
-  },
-  emptyTitle: {
-    fontSize: 15,
-    color: Colors.textSecondary,
-    fontWeight: "500",
-  },
-  muted: { fontSize: 14, color: Colors.textSecondary, fontStyle: "italic" },
+  statusDot: { width: 6, height: 6, borderRadius: 3 },
+  cardAction: { flexDirection: "row", alignItems: "center", gap: 2, paddingLeft: 8 },
+  emptyState: { alignItems: "center" },
 });

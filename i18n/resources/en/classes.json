@@ -52,7 +52,10 @@
     "selectSubjectStep": "1. Select subject *",
     "selectTeacherStep": "2. Select teacher",
     "noSubjectsCreateFirst": "No subjects. Create subjects first.",
-    "noAvailableTeachers": "No available teachers"
+    "noAvailableTeachers": "No available teachers",
+    "timetable": "Timetable",
+    "attendance": "Attendance",
+    "classTeacher": "Class Teacher"
   },
   "modal": {
     "titleCreate": "Create class",
@@ -163,7 +166,16 @@
       "noHistoryPermission": "You do not have permission to view class attendance history.",
       "recentSessions": "Recent sessions",
       "open": "Open",
-      "emptySessions": "No sessions recorded yet."
+      "emptySessions": "No sessions recorded yet.",
+      "markTitle": "Mark Attendance",
+      "todayPrefix": "Today",
+      "view": "View",
+      "emptyTitle": "No attendance records yet"
+    },
+    "activeTimetable": {
+      "title": "Timetable",
+      "emptyTitle": "No timetable available",
+      "emptyHint": "The active timetable will appear here once published."
     }
   }
 }

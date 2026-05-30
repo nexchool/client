@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   View,
-  Text,
   StyleSheet,
   ScrollView,
   ActivityIndicator,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "@/common/constants/colors";
-import { Spacing } from "@/common/constants/spacing";
+import { useTranslation } from "react-i18next";
+import { useTheme } from "@/common/theme";
+import { Text } from "@/common/components/Text";
+import { AppIcon } from "@/common/components/AppIcon";
 import { classAcademicApi } from "../../api/classAcademicApi";
 import type { BellSchedulePeriod, TimetableEntryV2 } from "../../types";
 
@@ -36,6 +36,8 @@ function derivePeriodsFromEntries(entries: TimetableEntryV2[]): BellSchedulePeri
 }
 
 export function ClassActiveTimetablePanel({ classId }: Props) {
+  const { t } = useTranslation("classes");
+  const { palette, spacing, radius } = useTheme();
   const [entries, setEntries] = useState<TimetableEntryV2[]>([]);
   const [lessonPeriods, setLessonPeriods] = useState<BellSchedulePeriod[]>([]);
   const [workingDays, setWorkingDays] = useState<number[]>([1, 2, 3, 4, 5, 6]);
@@ -89,43 +91,49 @@ export function ClassActiveTimetablePanel({ classId }: Props) {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator color={Colors.primary} />
+      <View style={{ paddingVertical: spacing.xl, alignItems: "center" }}>
+        <ActivityIndicator color={palette.primary} />
       </View>
     );
   }
 
   if (!hasActive || lessonPeriods.length === 0) {
     return (
-      <View style={styles.emptyState}>
-        <Ionicons name="calendar-outline" size={36} color={Colors.textTertiary} />
-        <Text style={styles.emptyTitle}>No timetable available</Text>
-        <Text style={styles.emptyHint}>The active timetable will appear here once published.</Text>
+      <View style={[styles.emptyState, { paddingVertical: spacing.xl * 2, gap: spacing.sm }]}>
+        <AppIcon name="calendar-outline" size="xl" color="outline" />
+        <Text variant="labelLg" color="onSurfaceVariant">
+          {t("panels.activeTimetable.emptyTitle", { defaultValue: "No timetable available" })}
+        </Text>
+        <Text variant="bodySm" color="onSurfaceVariant" style={{ textAlign: "center" }}>
+          {t("panels.activeTimetable.emptyHint", { defaultValue: "The active timetable will appear here once published." })}
+        </Text>
       </View>
     );
   }
 
   return (
     <View>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Timetable</Text>
+      <View style={{ marginBottom: spacing.md }}>
+        <Text variant="headlineMd" color="onSurface">
+          {t("panels.activeTimetable.title", { defaultValue: "Timetable" })}
+        </Text>
         {scheduleName ? (
-          <Text style={styles.headerSub}>{scheduleName}</Text>
+          <Text variant="bodySm" color="onSurfaceVariant" style={{ marginTop: 2 }}>{scheduleName}</Text>
         ) : null}
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View>
           {/* Column headers */}
-          <View style={styles.gridHeaderRow}>
+          <View style={[styles.gridHeaderRow, { borderBottomColor: palette.surfaceContainerHighest }]}>
             <View style={styles.dayLabelCell} />
             {lessonPeriods.map((lp) => (
-              <View key={lp.period_number} style={styles.periodHeaderCell}>
-                <Text style={styles.periodHeaderLabel} numberOfLines={1}>
+              <View key={lp.period_number} style={[styles.periodHeaderCell, { borderLeftColor: palette.surfaceContainerHighest }]}>
+                <Text variant="labelSm" color="onSurfaceVariant" style={{ textAlign: "center" }} numberOfLines={1}>
                   {lp.label || `P${lp.period_number}`}
                 </Text>
                 {(lp.starts_at || lp.ends_at) ? (
-                  <Text style={styles.periodHeaderTime}>
+                  <Text variant="labelSm" color="outline" style={{ textAlign: "center", marginTop: 1 }}>
                     {fmtTime(lp.starts_at)}
                     {lp.starts_at && lp.ends_at ? "–" : ""}
                     {fmtTime(lp.ends_at)}
@@ -137,26 +145,35 @@ export function ClassActiveTimetablePanel({ classId }: Props) {
 
           {/* Rows per working day */}
           {workingDays.map((dow) => (
-            <View key={dow} style={styles.gridRow}>
+            <View key={dow} style={[styles.gridRow, { borderBottomColor: palette.surfaceContainerHighest }]}>
               <View style={styles.dayLabelCell}>
-                <Text style={styles.dayLabel}>{DOW_LABELS[dow] ?? `D${dow}`}</Text>
+                <Text variant="labelSm" color="onSurfaceVariant" style={{ textAlign: "center" }}>
+                  {DOW_LABELS[dow] ?? `D${dow}`}
+                </Text>
               </View>
               {lessonPeriods.map((lp) => {
                 const entry = cellMap.get(`${dow}-${lp.period_number}`);
                 return (
-                  <View key={lp.period_number} style={[styles.cell, !entry && styles.cellEmpty]}>
+                  <View
+                    key={lp.period_number}
+                    style={[
+                      styles.cell,
+                      { borderLeftColor: palette.surfaceContainerHighest },
+                      !entry && { backgroundColor: palette.surfaceContainerLow },
+                    ]}
+                  >
                     {entry ? (
                       <>
-                        <Text style={styles.cellSubject} numberOfLines={2}>
+                        <Text variant="labelSm" color="onSurface" numberOfLines={2}>
                           {entry.subject_name ?? "—"}
                         </Text>
                         {entry.teacher_name ? (
-                          <Text style={styles.cellTeacher} numberOfLines={1}>
+                          <Text variant="labelSm" color="onSurfaceVariant" numberOfLines={1} style={{ marginTop: 3 }}>
                             {entry.teacher_name}
                           </Text>
                         ) : null}
                         {entry.room ? (
-                          <Text style={styles.cellRoom} numberOfLines={1}>
+                          <Text variant="labelSm" color="outline" numberOfLines={1} style={{ marginTop: 1 }}>
                             {entry.room}
                           </Text>
                         ) : null}
@@ -177,103 +194,22 @@ const CELL_WIDTH = 100;
 const DAY_WIDTH = 40;
 
 const styles = StyleSheet.create({
-  center: { paddingVertical: Spacing.xl, alignItems: "center" },
-  emptyState: {
-    alignItems: "center",
-    paddingVertical: Spacing.xl * 2,
-    gap: Spacing.sm,
-  },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: Colors.textSecondary,
-  },
-  emptyHint: {
-    fontSize: 13,
-    color: Colors.textTertiary,
-    textAlign: "center",
-  },
-  header: {
-    marginBottom: Spacing.md,
-  },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: Colors.text,
-  },
-  headerSub: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  gridHeaderRow: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-    marginBottom: 2,
-  },
-  dayLabelCell: {
-    width: DAY_WIDTH,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: Spacing.xs,
-  },
+  emptyState: { alignItems: "center" },
+  gridHeaderRow: { flexDirection: "row", borderBottomWidth: 1, marginBottom: 2 },
+  dayLabelCell: { width: DAY_WIDTH, justifyContent: "center", alignItems: "center", paddingVertical: 4 },
   periodHeaderCell: {
     width: CELL_WIDTH,
     alignItems: "center",
-    paddingVertical: Spacing.xs,
+    paddingVertical: 4,
     paddingHorizontal: 4,
     borderLeftWidth: 1,
-    borderLeftColor: Colors.borderLight,
   },
-  periodHeaderLabel: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: Colors.textSecondary,
-    textAlign: "center",
-  },
-  periodHeaderTime: {
-    fontSize: 9,
-    color: Colors.textTertiary,
-    textAlign: "center",
-    marginTop: 1,
-  },
-  gridRow: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  dayLabel: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: Colors.textSecondary,
-    textAlign: "center",
-  },
+  gridRow: { flexDirection: "row", borderBottomWidth: 1 },
   cell: {
     width: CELL_WIDTH,
     minHeight: 72,
     borderLeftWidth: 1,
-    borderLeftColor: Colors.borderLight,
     padding: 5,
     justifyContent: "center",
-  },
-  cellEmpty: {
-    backgroundColor: Colors.backgroundSecondary,
-  },
-  cellSubject: {
-    fontSize: 10,
-    fontWeight: "700",
-    color: Colors.text,
-    lineHeight: 14,
-  },
-  cellTeacher: {
-    fontSize: 9,
-    color: Colors.textSecondary,
-    marginTop: 3,
-  },
-  cellRoom: {
-    fontSize: 9,
-    color: Colors.textTertiary,
-    marginTop: 1,
   },
 });

@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import { View, StyleSheet, ActivityIndicator } from "react-native";
 import { useAuth } from "@/modules/auth/hooks/useAuth";
 import { classAcademicApi } from "@/modules/academics/api/classAcademicApi";
 import type {
   ClassSubjectOffering,
   SubjectTeacherAssignment,
 } from "@/modules/academics/types";
-import { Colors } from "@/common/constants/colors";
-import { Spacing, Layout } from "@/common/constants/spacing";
+import { useTheme } from "@/common/theme";
+import { Text } from "@/common/components/Text";
 
 function primaryTeacherName(assignments: SubjectTeacherAssignment[], classSubjectId: string): string | null {
   const forCs = assignments.filter((a) => a.class_subject_id === classSubjectId && a.is_active);
@@ -32,6 +32,7 @@ interface Props {
  */
 export function ClassSubjectsReadOnlyPanel({ classId }: Props) {
   const { isFeatureEnabled } = useAuth();
+  const { palette, spacing, radius } = useTheme();
   const timetable = isFeatureEnabled("timetable");
 
   const [offerings, setOfferings] = useState<ClassSubjectOffering[]>([]);
@@ -84,43 +85,45 @@ export function ClassSubjectsReadOnlyPanel({ classId }: Props) {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="small" color={Colors.primary} />
+      <View style={{ padding: spacing.xl, alignItems: "center" }}>
+        <ActivityIndicator size="small" color={palette.primary} />
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.section}>
-        <Text style={styles.error}>{error}</Text>
+      <View style={{ paddingVertical: spacing.sm }}>
+        <Text variant="bodySm" color="error">{error}</Text>
       </View>
     );
   }
 
   if (lines.length === 0) {
     return (
-      <View style={styles.section}>
-        <Text style={styles.empty}>No subjects assigned to this class.</Text>
+      <View style={{ paddingVertical: spacing.sm }}>
+        <Text variant="bodyMd" color="onSurfaceVariant" style={{ fontStyle: "italic" }}>
+          No subjects assigned to this class.
+        </Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.section}>
+    <View style={{ paddingVertical: spacing.sm }}>
       {lines.map((line) => (
-        <View key={line.id} style={styles.card}>
+        <View key={line.id} style={[styles.card, { paddingVertical: spacing.md, borderBottomColor: palette.surfaceContainerHighest }]}>
           <View style={styles.titleRow}>
-            <Text style={styles.subjectName}>{line.name}</Text>
-            <View style={styles.typeBadge}>
-              <Text style={styles.typeBadgeText}>{line.typeLabel}</Text>
+            <Text variant="labelLg" color="onSurface" style={{ flex: 1 }}>{line.name}</Text>
+            <View style={[styles.typeBadge, { backgroundColor: palette.primaryContainer, borderRadius: radius.sm }]}>
+              <Text variant="overline" color="onPrimaryContainer">{line.typeLabel}</Text>
             </View>
           </View>
           {line.teacher && (
-            <Text style={styles.teacherLine}>Teacher: {line.teacher}</Text>
+            <Text variant="bodySm" color="onSurfaceVariant">Teacher: {line.teacher}</Text>
           )}
           {!line.teacher && timetable && (
-            <Text style={styles.teacherEmpty}>No teacher assigned</Text>
+            <Text variant="bodySm" color="outline" style={{ fontStyle: "italic" }}>No teacher assigned</Text>
           )}
         </View>
       ))}
@@ -129,59 +132,7 @@ export function ClassSubjectsReadOnlyPanel({ classId }: Props) {
 }
 
 const styles = StyleSheet.create({
-  section: {
-    paddingVertical: Spacing.sm,
-  },
-  center: {
-    padding: Spacing.xl,
-    alignItems: "center",
-  },
-  card: {
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.sm,
-    marginBottom: 4,
-  },
-  subjectName: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: Colors.text,
-    flex: 1,
-  },
-  typeBadge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-    borderRadius: Layout.borderRadius.sm,
-    backgroundColor: Colors.primary + "15",
-  },
-  typeBadgeText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: Colors.primary,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  teacherLine: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-  },
-  teacherEmpty: {
-    fontSize: 13,
-    color: Colors.textTertiary,
-    fontStyle: "italic",
-  },
-  empty: {
-    fontSize: 15,
-    color: Colors.textSecondary,
-    fontStyle: "italic",
-  },
-  error: {
-    fontSize: 14,
-    color: Colors.error,
-  },
+  card: { borderBottomWidth: 1 },
+  titleRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 },
+  typeBadge: { paddingHorizontal: 8, paddingVertical: 2 },
 });

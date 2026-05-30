@@ -2,18 +2,17 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   View,
-  Text,
   StyleSheet,
-  TouchableOpacity,
   ActivityIndicator,
   Modal,
   ScrollView,
   Alert,
 } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
-import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "@/common/constants/colors";
-import { Spacing, Layout } from "@/common/constants/spacing";
+import { useTheme } from "@/common/theme";
+import { Text } from "@/common/components/Text";
+import { AppIcon } from "@/common/components/AppIcon";
+import { PressScale } from "@/common/components/PressScale";
 import { classAcademicApi } from "../../api/classAcademicApi";
 import { qk } from "../../hooks/queryKeys";
 import type { ClassSubjectOffering, SubjectTeacherAssignment } from "../../types";
@@ -25,6 +24,7 @@ type Props = { classId: string; canManage: boolean };
 
 export function SubjectTeachersPanel({ classId, canManage }: Props) {
   const { t } = useTranslation("classes");
+  const { palette, spacing, radius } = useTheme();
   const qc = useQueryClient();
   const [offerings, setOfferings] = useState<ClassSubjectOffering[]>([]);
   const [assignments, setAssignments] = useState<SubjectTeacherAssignment[]>([]);
@@ -77,8 +77,8 @@ export function SubjectTeachersPanel({ classId, canManage }: Props) {
     setTid("");
     setRole("primary");
     try {
-      const t = await teacherService.getTeachers({ status: "active" });
-      setTeachers(t.items);
+      const res = await teacherService.getTeachers({ status: "active" });
+      setTeachers(res.items);
     } catch {
       setTeachers([]);
     }
@@ -91,8 +91,8 @@ export function SubjectTeachersPanel({ classId, canManage }: Props) {
     setTid(row.teacher_id);
     setRole(row.role as "primary" | "assistant" | "guest");
     try {
-      const t = await teacherService.getTeachers({ status: "active" });
-      setTeachers(t.items);
+      const res = await teacherService.getTeachers({ status: "active" });
+      setTeachers(res.items);
     } catch {
       setTeachers([]);
     }
@@ -123,8 +123,8 @@ export function SubjectTeachersPanel({ classId, canManage }: Props) {
       await qc.invalidateQueries({ queryKey: qk.classSubjects(classId) });
       setModalOpen(false);
       load();
-    } catch (e: any) {
-      Alert.alert(t("panels.subjectTeachers.errorTitle"), e.message);
+    } catch (e) {
+      Alert.alert(t("panels.subjectTeachers.errorTitle"), e instanceof Error ? e.message : String(e));
     } finally {
       setSaving(false);
     }
@@ -141,8 +141,8 @@ export function SubjectTeachersPanel({ classId, canManage }: Props) {
             await classAcademicApi.deleteSubjectTeacher(classId, row.id);
             await qc.invalidateQueries({ queryKey: qk.subjectTeachers(classId) });
             load();
-          } catch (e: any) {
-            Alert.alert(t("panels.subjectTeachers.errorTitle"), e.message);
+          } catch (e) {
+            Alert.alert(t("panels.subjectTeachers.errorTitle"), e instanceof Error ? e.message : String(e));
           }
         },
       },
@@ -151,35 +151,39 @@ export function SubjectTeachersPanel({ classId, canManage }: Props) {
 
   if (loading && assignments.length === 0 && offerings.length === 0) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator color={Colors.primary} />
+      <View style={[styles.center, { padding: spacing.lg }]}>
+        <ActivityIndicator color={palette.primary} />
       </View>
     );
   }
 
   return (
     <View>
-      <View style={styles.head}>
-        <Text style={styles.hint}>{t("panels.subjectTeachers.hint")}</Text>
+      <View style={[styles.head, { marginBottom: spacing.sm }]}>
+        <Text variant="bodySm" color="onSurfaceVariant" style={{ flex: 1, marginRight: spacing.sm }}>
+          {t("panels.subjectTeachers.hint")}
+        </Text>
         {canManage && (
-          <TouchableOpacity style={styles.addBtn} onPress={openCreate} disabled={offerings.length === 0}>
-            <Ionicons name="add" size={18} color={offerings.length ? Colors.primary : Colors.textTertiary} />
-            <Text style={[styles.addTxt, offerings.length === 0 && { color: Colors.textTertiary }]}>
+          <PressScale style={styles.addBtn} onPress={openCreate} disabled={offerings.length === 0}>
+            <AppIcon name="add" size="sm" color={offerings.length ? "primary" : "outline"} />
+            <Text variant="labelMd" color={offerings.length ? "primary" : "outline"}>
               {t("panels.subjectTeachers.assign")}
             </Text>
-          </TouchableOpacity>
+          </PressScale>
         )}
       </View>
       {assignments.length === 0 ? (
-        <Text style={styles.empty}>{t("panels.subjectTeachers.empty")}</Text>
+        <Text variant="bodyMd" color="onSurfaceVariant" style={{ fontStyle: "italic" }}>
+          {t("panels.subjectTeachers.empty")}
+        </Text>
       ) : (
         assignments.map((a) => (
-          <View key={a.id} style={styles.row}>
+          <View key={a.id} style={[styles.row, { paddingVertical: spacing.sm, borderBottomColor: palette.surfaceContainerHighest }]}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.subj}>
+              <Text variant="labelLg" color="onSurface">
                 {subjectName.get(a.class_subject_id) ?? t("panels.subjectTeachers.subjectFallback")}
               </Text>
-              <Text style={styles.teacher}>{a.teacher_name ?? a.teacher_id}</Text>
+              <Text variant="bodySm" color="onSurfaceVariant" style={{ marginTop: 2 }}>{a.teacher_name ?? a.teacher_id}</Text>
               <View style={styles.badges}>
                 <StatusChip label={roleLabel(a.role)} variant={a.role === "primary" ? "primary" : "assistant"} />
                 <StatusChip
@@ -188,19 +192,15 @@ export function SubjectTeachersPanel({ classId, canManage }: Props) {
                 />
               </View>
               {(a.effective_from || a.effective_to) && (
-                <Text style={styles.dates}>
+                <Text variant="labelSm" color="onSurfaceVariant" style={{ marginTop: 4 }}>
                   {a.effective_from?.slice(0, 10) ?? "…"} → {a.effective_to?.slice(0, 10) ?? "…"}
                 </Text>
               )}
             </View>
             {canManage && (
               <View style={styles.actions}>
-                <TouchableOpacity onPress={() => openEdit(a)}>
-                  <Ionicons name="create-outline" size={20} color={Colors.primary} />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => remove(a)}>
-                  <Ionicons name="trash-outline" size={20} color={Colors.error} />
-                </TouchableOpacity>
+                <AppIcon name="create-outline" size="lg" color="primary" onPress={() => openEdit(a)} />
+                <AppIcon name="trash-outline" size="lg" color="error" onPress={() => remove(a)} />
               </View>
             )}
           </View>
@@ -208,52 +208,67 @@ export function SubjectTeachersPanel({ classId, canManage }: Props) {
       )}
 
       <Modal visible={modalOpen} animationType="slide" presentationStyle="formSheet">
-        <ScrollView style={styles.modal} contentContainerStyle={{ paddingBottom: 40 }}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>
+        <ScrollView style={[styles.modal, { padding: spacing.lg, backgroundColor: palette.surface }]} contentContainerStyle={{ paddingBottom: 40 }}>
+          <View style={[styles.modalHeader, { marginBottom: spacing.md }]}>
+            <Text variant="headlineMd" color="onSurface">
               {editing ? t("panels.subjectTeachers.modalEdit") : t("panels.subjectTeachers.modalAssign")}
             </Text>
-            <TouchableOpacity onPress={() => setModalOpen(false)}>
-              <Ionicons name="close" size={24} color={Colors.text} />
-            </TouchableOpacity>
+            <AppIcon name="close" size="lg" color="onSurface" onPress={() => setModalOpen(false)} />
           </View>
-          <Text style={styles.label}>{t("panels.subjectTeachers.classSubjectLabel")}</Text>
-          <View style={styles.chips}>
-            {offerings.map((o) => (
-              <TouchableOpacity
-                key={o.id}
-                style={[styles.chip, csId === o.id && styles.chipOn]}
-                onPress={() => setCsId(o.id)}
-              >
-                <Text style={[styles.chipTxt, csId === o.id && styles.chipTxtOn]}>{o.subject_name}</Text>
-              </TouchableOpacity>
-            ))}
+          <Text variant="labelLg" color="onSurface" style={{ marginTop: spacing.md }}>{t("panels.subjectTeachers.classSubjectLabel")}</Text>
+          <View style={[styles.chips, { marginTop: spacing.xs }]}>
+            {offerings.map((o) => {
+              const on = csId === o.id;
+              return (
+                <PressScale
+                  key={o.id}
+                  style={[styles.chip, { borderRadius: radius.sm, borderColor: on ? palette.primary : palette.outlineVariant, backgroundColor: on ? palette.primaryContainer : "transparent" }]}
+                  onPress={() => setCsId(o.id)}
+                >
+                  <Text variant="bodySm" color={on ? "onPrimaryContainer" : "onSurface"}>{o.subject_name}</Text>
+                </PressScale>
+              );
+            })}
           </View>
-          <Text style={styles.label}>{t("panels.subjectTeachers.teacherLabel")}</Text>
-          <View style={styles.chips}>
-            {teachers.map((teacher) => (
-              <TouchableOpacity
-                key={teacher.id}
-                style={[styles.chip, tid === teacher.id && styles.chipOn]}
-                onPress={() => setTid(teacher.id)}
-              >
-                <Text style={[styles.chipTxt, tid === teacher.id && styles.chipTxtOn]} numberOfLines={1}>
-                  {teacher.name}
-                </Text>
-              </TouchableOpacity>
-            ))}
+          <Text variant="labelLg" color="onSurface" style={{ marginTop: spacing.md }}>{t("panels.subjectTeachers.teacherLabel")}</Text>
+          <View style={[styles.chips, { marginTop: spacing.xs }]}>
+            {teachers.map((teacher) => {
+              const on = tid === teacher.id;
+              return (
+                <PressScale
+                  key={teacher.id}
+                  style={[styles.chip, { borderRadius: radius.sm, borderColor: on ? palette.primary : palette.outlineVariant, backgroundColor: on ? palette.primaryContainer : "transparent" }]}
+                  onPress={() => setTid(teacher.id)}
+                >
+                  <Text variant="bodySm" color={on ? "onPrimaryContainer" : "onSurface"} numberOfLines={1}>
+                    {teacher.name}
+                  </Text>
+                </PressScale>
+              );
+            })}
           </View>
-          <Text style={styles.label}>{t("panels.subjectTeachers.roleLabel")}</Text>
-          <View style={styles.rowRoles}>
-            {(["primary", "assistant", "guest"] as const).map((r) => (
-              <TouchableOpacity key={r} style={[styles.roleBtn, role === r && styles.roleBtnOn]} onPress={() => setRole(r)}>
-                <Text style={[styles.roleTxt, role === r && styles.roleTxtOn]}>{roleLabel(r)}</Text>
-              </TouchableOpacity>
-            ))}
+          <Text variant="labelLg" color="onSurface" style={{ marginTop: spacing.md }}>{t("panels.subjectTeachers.roleLabel")}</Text>
+          <View style={[styles.rowRoles, { marginTop: spacing.sm }]}>
+            {(["primary", "assistant", "guest"] as const).map((r) => {
+              const on = role === r;
+              return (
+                <PressScale
+                  key={r}
+                  style={[styles.roleBtn, { borderRadius: radius.sm, borderColor: on ? palette.primary : palette.outlineVariant, backgroundColor: on ? palette.primaryContainer : "transparent" }]}
+                  onPress={() => setRole(r)}
+                >
+                  <Text variant="bodySm" color={on ? "onPrimaryContainer" : "onSurface"}>{roleLabel(r)}</Text>
+                </PressScale>
+              );
+            })}
           </View>
-          <TouchableOpacity style={styles.primaryBtn} onPress={save} disabled={saving}>
-            <Text style={styles.primaryBtnTxt}>{saving ? t("panels.subjectTeachers.saving") : t("panels.subjectTeachers.save")}</Text>
-          </TouchableOpacity>
+          <PressScale
+            style={[styles.primaryBtn, { backgroundColor: palette.primary, padding: spacing.md, borderRadius: radius.md, marginTop: spacing.xl }]}
+            onPress={save}
+            disabled={saving}
+          >
+            <Text variant="labelLg" color="onPrimary">{saving ? t("panels.subjectTeachers.saving") : t("panels.subjectTeachers.save")}</Text>
+          </PressScale>
         </ScrollView>
       </Modal>
     </View>
@@ -261,56 +276,17 @@ export function SubjectTeachersPanel({ classId, canManage }: Props) {
 }
 
 const styles = StyleSheet.create({
-  center: { padding: Spacing.lg, alignItems: "center" },
-  head: { flexDirection: "row", justifyContent: "space-between", marginBottom: Spacing.sm },
-  hint: { flex: 1, fontSize: 13, color: Colors.textSecondary, marginRight: Spacing.sm },
+  center: { alignItems: "center" },
+  head: { flexDirection: "row", justifyContent: "space-between" },
   addBtn: { flexDirection: "row", alignItems: "center", gap: 4 },
-  addTxt: { color: Colors.primary, fontWeight: "600" },
-  empty: { fontSize: 14, color: Colors.textSecondary, fontStyle: "italic" },
-  row: {
-    flexDirection: "row",
-    paddingVertical: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  subj: { fontSize: 15, fontWeight: "700", color: Colors.text },
-  teacher: { fontSize: 14, color: Colors.textSecondary, marginTop: 2 },
+  row: { flexDirection: "row", borderBottomWidth: 1 },
   badges: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 6 },
-  dates: { fontSize: 11, color: Colors.textTertiary, marginTop: 4 },
   actions: { flexDirection: "row", gap: 12, alignItems: "center" },
-  modal: { flex: 1, padding: Spacing.lg, backgroundColor: Colors.background },
-  modalHeader: { flexDirection: "row", justifyContent: "space-between", marginBottom: Spacing.md },
-  modalTitle: { fontSize: 18, fontWeight: "700" },
-  label: { fontSize: 14, fontWeight: "600", marginTop: Spacing.md },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.sm, marginTop: Spacing.xs },
-  chip: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.sm,
-    borderRadius: Layout.borderRadius.sm,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    maxWidth: "100%",
-  },
-  chipOn: { borderColor: Colors.primary, backgroundColor: Colors.primary + "12" },
-  chipTxt: { fontSize: 13, color: Colors.text },
-  chipTxtOn: { color: Colors.primary, fontWeight: "700" },
-  rowRoles: { flexDirection: "row", gap: Spacing.sm, marginTop: Spacing.sm },
-  roleBtn: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: Layout.borderRadius.sm,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-  },
-  roleBtnOn: { borderColor: Colors.primary, backgroundColor: Colors.primary + "12" },
-  roleTxt: { fontSize: 13, color: Colors.text },
-  roleTxtOn: { color: Colors.primary, fontWeight: "700" },
-  primaryBtn: {
-    backgroundColor: Colors.primary,
-    padding: Spacing.md,
-    borderRadius: Layout.borderRadius.md,
-    alignItems: "center",
-    marginTop: Spacing.xl,
-  },
-  primaryBtnTxt: { color: "#fff", fontWeight: "700" },
+  modal: { flex: 1 },
+  modalHeader: { flexDirection: "row", justifyContent: "space-between" },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  chip: { paddingHorizontal: 8, paddingVertical: 8, borderWidth: 1, maxWidth: "100%" },
+  rowRoles: { flexDirection: "row", gap: 8 },
+  roleBtn: { paddingHorizontal: 16, paddingVertical: 8, borderWidth: 1 },
+  primaryBtn: { alignItems: "center" },
 });

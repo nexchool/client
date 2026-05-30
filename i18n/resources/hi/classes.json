@@ -52,7 +52,10 @@
     "selectSubjectStep": "1. विषय चुनें *",
     "selectTeacherStep": "2. शिक्षक चुनें",
     "noSubjectsCreateFirst": "कोई विषय नहीं। पहले विषय बनाएँ।",
-    "noAvailableTeachers": "कोई उपलब्ध शिक्षक नहीं"
+    "noAvailableTeachers": "कोई उपलब्ध शिक्षक नहीं",
+    "timetable": "समय-सारणी",
+    "attendance": "उपस्थिति",
+    "classTeacher": "कक्षा शिक्षक"
   },
   "modal": {
     "titleCreate": "कक्षा बनाएँ",
@@ -163,7 +166,16 @@
       "noHistoryPermission": "कक्षा उपस्थिति इतिहास देखने की अनुमति नहीं।",
       "recentSessions": "हाल के सत्र",
       "open": "खोलें",
-      "emptySessions": "अभी कोई सत्र दर्ज नहीं।"
+      "emptySessions": "अभी कोई सत्र दर्ज नहीं।",
+      "markTitle": "उपस्थिति दर्ज करें",
+      "todayPrefix": "आज",
+      "view": "देखें",
+      "emptyTitle": "अभी तक कोई उपस्थिति रिकॉर्ड नहीं"
+    },
+    "activeTimetable": {
+      "title": "समय-सारणी",
+      "emptyTitle": "कोई समय-सारणी उपलब्ध नहीं",
+      "emptyHint": "प्रकाशित होने पर सक्रिय समय-सारणी यहाँ दिखाई देगी।"
     }
   }
 }

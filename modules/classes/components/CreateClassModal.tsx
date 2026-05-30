@@ -2,19 +2,18 @@ import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   View,
-  Text,
   StyleSheet,
   Modal,
   TextInput,
-  TouchableOpacity,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "@/common/constants/colors";
-import { Spacing, Layout } from "@/common/constants/spacing";
+import { useTheme } from "@/common/theme";
+import { Text } from "@/common/components/Text";
+import { AppIcon } from "@/common/components/AppIcon";
+import { PressScale } from "@/common/components/PressScale";
 import type { CreateClassDTO } from "../types";
 import { DateField } from "@/common/components/DateField";
 import { useAcademicYears } from "@/modules/academics/hooks/useAcademicYears";
@@ -49,6 +48,7 @@ export const CreateClassModal: React.FC<Props> = ({
   classId,
 }) => {
   const { t } = useTranslation("classes");
+  const { palette, spacing, radius, typography } = useTheme();
   const isEditMode = !!initialData;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -167,9 +167,9 @@ export const CreateClassModal: React.FC<Props> = ({
         });
       }
       resetForm();
-    } catch (err: any) {
+    } catch (err) {
       setError(
-        err.message ||
+        (err instanceof Error ? err.message : "") ||
           (isEditMode ? t("modal.errUpdateFailed") : t("modal.errCreateFailed")),
       );
     } finally {
@@ -177,150 +177,157 @@ export const CreateClassModal: React.FC<Props> = ({
     }
   };
 
+  const inputStyle = [
+    styles.input,
+    typography.bodyMd,
+    {
+      borderColor: palette.outlineVariant,
+      borderRadius: radius.sm,
+      padding: spacing.md,
+      color: palette.onSurface,
+      backgroundColor: palette.surfaceContainerLow,
+    },
+  ];
+
+  const renderChip = (active: boolean, label: string, onPress: () => void, key: string) => (
+    <PressScale
+      key={key}
+      style={[
+        styles.chip,
+        {
+          marginRight: spacing.sm,
+          borderRadius: radius.sm,
+          borderColor: active ? palette.primary : palette.outlineVariant,
+          backgroundColor: active ? palette.primaryContainer : palette.surfaceContainerLow,
+        },
+      ]}
+      onPress={onPress}
+    >
+      <Text variant="bodySm" color={active ? "onPrimaryContainer" : "onSurface"} numberOfLines={1}>
+        {label}
+      </Text>
+    </PressScale>
+  );
+
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
       <KeyboardAvoidingView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: palette.surface }]}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Ionicons name="close" size={24} color={Colors.text} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>
+        <View style={[styles.header, { padding: spacing.lg, borderBottomColor: palette.surfaceContainerHighest }]}>
+          <AppIcon name="close" size="lg" color="onSurface" onPress={onClose} accessibilityLabel={t("modal.titleEdit")} />
+          <Text variant="headlineMd" color="onSurface">
             {isEditMode ? t("modal.titleEdit") : t("modal.titleCreate")}
           </Text>
           <View style={{ width: 40 }} />
         </View>
 
-        <ScrollView style={styles.form} showsVerticalScrollIndicator={false}>
+        <ScrollView style={[styles.form, { padding: spacing.lg }]} showsVerticalScrollIndicator={false}>
           {error && (
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{error}</Text>
+            <View
+              style={[
+                styles.errorContainer,
+                { backgroundColor: palette.errorContainer, padding: spacing.md, borderRadius: radius.sm, marginBottom: spacing.md, borderLeftColor: palette.error },
+              ]}
+            >
+              <Text variant="bodySm" color="onErrorContainer">{error}</Text>
             </View>
           )}
 
           {isEditMode ? (
             <>
-              <View style={styles.fieldContainer}>
-                <Text style={styles.fieldLabel}>{t("modal.standardGradeNumber")}</Text>
-                <Text style={styles.fieldHint}>{t("modal.standardHintEdit")}</Text>
+              <View style={[styles.fieldContainer, { marginBottom: spacing.md }]}>
+                <Text variant="labelMd" color="onSurface" style={{ marginBottom: spacing.xs }}>{t("modal.standardGradeNumber")}</Text>
+                <Text variant="bodySm" color="outline" style={{ marginBottom: spacing.sm }}>{t("modal.standardHintEdit")}</Text>
                 <TextInput
-                  style={styles.input}
+                  style={inputStyle}
                   value={standardNum}
                   onChangeText={setStandardNum}
                   placeholder={t("modal.placeholderStandard")}
                   keyboardType="number-pad"
-                  placeholderTextColor={Colors.textTertiary}
+                  placeholderTextColor={palette.outline}
                 />
               </View>
-              <View style={styles.fieldContainer}>
-                <Text style={styles.fieldLabel}>{t("modal.className")}</Text>
+              <View style={[styles.fieldContainer, { marginBottom: spacing.md }]}>
+                <Text variant="labelMd" color="onSurface" style={{ marginBottom: spacing.xs }}>{t("modal.className")}</Text>
                 <TextInput
-                  style={styles.input}
+                  style={inputStyle}
                   value={name}
                   onChangeText={setName}
                   placeholder={t("modal.placeholderName")}
-                  placeholderTextColor={Colors.textTertiary}
+                  placeholderTextColor={palette.outline}
                 />
               </View>
             </>
           ) : (
-            <>
-              <View style={styles.fieldContainer}>
-                <Text style={styles.fieldLabel}>{t("modal.standardGrade")}</Text>
-                <Text style={styles.fieldHint}>{t("modal.standardHintCreate")}</Text>
-                <TextInput
-                  style={styles.input}
-                  value={standardNum}
-                  onChangeText={setStandardNum}
-                  placeholder={t("modal.placeholderStandard")}
-                  keyboardType="number-pad"
-                  placeholderTextColor={Colors.textTertiary}
-                />
-                {standardNum.trim() && !Number.isNaN(parseInt(standardNum, 10)) ? (
-                  <Text style={styles.previewLabel}>
-                    {t("modal.classNamePreview", {
-                      grade: parseInt(standardNum, 10),
-                    })}
-                  </Text>
-                ) : null}
-              </View>
-            </>
+            <View style={[styles.fieldContainer, { marginBottom: spacing.md }]}>
+              <Text variant="labelMd" color="onSurface" style={{ marginBottom: spacing.xs }}>{t("modal.standardGrade")}</Text>
+              <Text variant="bodySm" color="outline" style={{ marginBottom: spacing.sm }}>{t("modal.standardHintCreate")}</Text>
+              <TextInput
+                style={inputStyle}
+                value={standardNum}
+                onChangeText={setStandardNum}
+                placeholder={t("modal.placeholderStandard")}
+                keyboardType="number-pad"
+                placeholderTextColor={palette.outline}
+              />
+              {standardNum.trim() && !Number.isNaN(parseInt(standardNum, 10)) ? (
+                <Text variant="labelLg" color="primary" style={{ marginTop: spacing.sm }}>
+                  {t("modal.classNamePreview", { grade: parseInt(standardNum, 10) })}
+                </Text>
+              ) : null}
+            </View>
           )}
 
-          <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>{t("modal.section")}</Text>
+          <View style={[styles.fieldContainer, { marginBottom: spacing.md }]}>
+            <Text variant="labelMd" color="onSurface" style={{ marginBottom: spacing.xs }}>{t("modal.section")}</Text>
             <TextInput
-              style={styles.input}
+              style={inputStyle}
               value={section}
               onChangeText={setSection}
               placeholder={t("modal.placeholderSection")}
-              placeholderTextColor={Colors.textTertiary}
+              placeholderTextColor={palette.outline}
             />
           </View>
 
-          <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>{t("modal.academicYear")}</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
+          <View style={[styles.fieldContainer, { marginBottom: spacing.md }]}>
+            <Text variant="labelMd" color="onSurface" style={{ marginBottom: spacing.xs }}>{t("modal.academicYear")}</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.xs }}>
               {academicYearsLoading ? (
-                <Text style={styles.placeholderText}>{t("modal.loading")}</Text>
+                <Text variant="bodySm" color="outline" style={{ paddingVertical: spacing.sm }}>{t("modal.loading")}</Text>
               ) : academicYears.length === 0 ? (
-                <Text style={styles.placeholderText}>{t("modal.noAcademicYears")}</Text>
+                <Text variant="bodySm" color="outline" style={{ paddingVertical: spacing.sm }}>{t("modal.noAcademicYears")}</Text>
               ) : (
-                academicYears.map((ay) => (
-                  <TouchableOpacity
-                    key={ay.id}
-                    style={[styles.chip, academicYearId === ay.id && styles.chipActive]}
-                    onPress={() => setAcademicYearId(ay.id)}
-                  >
-                    <Text style={[styles.chipText, academicYearId === ay.id && styles.chipTextActive]}>
-                      {ay.name}
-                    </Text>
-                  </TouchableOpacity>
-                ))
+                academicYears.map((ay) =>
+                  renderChip(academicYearId === ay.id, ay.name, () => setAcademicYearId(ay.id), ay.id)
+                )
               )}
             </ScrollView>
           </View>
 
-          <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>{t("modal.classTeacherOptional")}</Text>
-            <Text style={styles.fieldHint}>{t("modal.classTeacherHint")}</Text>
+          <View style={[styles.fieldContainer, { marginBottom: spacing.md }]}>
+            <Text variant="labelMd" color="onSurface" style={{ marginBottom: spacing.xs }}>{t("modal.classTeacherOptional")}</Text>
+            <Text variant="bodySm" color="outline" style={{ marginBottom: spacing.sm }}>{t("modal.classTeacherHint")}</Text>
             {teachersLoading ? (
-              <ActivityIndicator size="small" color={Colors.primary} style={styles.teacherLoader} />
+              <ActivityIndicator size="small" color={palette.primary} style={{ marginVertical: spacing.sm }} />
             ) : (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
-                <TouchableOpacity
-                  style={[styles.chip, !classTeacherId && styles.chipActive]}
-                  onPress={() => setClassTeacherId("")}
-                >
-                  <Text style={[styles.chipText, !classTeacherId && styles.chipTextActive]}>
-                    {t("modal.none")}
-                  </Text>
-                </TouchableOpacity>
-                {teachers.map((t) => (
-                  <TouchableOpacity
-                    key={t.id}
-                    style={[styles.chip, classTeacherId === t.user_id && styles.chipActive]}
-                    onPress={() => setClassTeacherId(classTeacherId === t.user_id ? "" : t.user_id)}
-                  >
-                    <Text
-                      style={[
-                        styles.chipText,
-                        classTeacherId === t.user_id && styles.chipTextActive,
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {t.name} ({t.employee_id})
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.xs }}>
+                {renderChip(!classTeacherId, t("modal.none"), () => setClassTeacherId(""), "none")}
+                {teachers.map((teacher) =>
+                  renderChip(
+                    classTeacherId === teacher.user_id,
+                    `${teacher.name} (${teacher.employee_id})`,
+                    () => setClassTeacherId(classTeacherId === teacher.user_id ? "" : teacher.user_id),
+                    teacher.id
+                  )
+                )}
               </ScrollView>
             )}
           </View>
 
-          <View style={styles.fieldContainer}>
+          <View style={[styles.fieldContainer, { marginBottom: spacing.md }]}>
             <DateField
               label={t("modal.startDate")}
               value={startDate}
@@ -330,7 +337,7 @@ export const CreateClassModal: React.FC<Props> = ({
             />
           </View>
 
-          <View style={styles.fieldContainer}>
+          <View style={[styles.fieldContainer, { marginBottom: spacing.md }]}>
             <DateField
               label={t("modal.endDate")}
               value={endDate}
@@ -340,19 +347,23 @@ export const CreateClassModal: React.FC<Props> = ({
             />
           </View>
 
-          <TouchableOpacity
-            style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+          <PressScale
+            style={[
+              styles.submitButton,
+              { backgroundColor: palette.primary, padding: spacing.md, borderRadius: radius.md, marginTop: spacing.lg },
+              loading && { opacity: 0.6 },
+            ]}
             onPress={handleSubmit}
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color="#FFFFFF" />
+              <ActivityIndicator color={palette.onPrimary} />
             ) : (
-              <Text style={styles.submitButtonText}>
+              <Text variant="labelLg" color="onPrimary">
                 {isEditMode ? t("modal.update") : t("modal.create")}
               </Text>
             )}
-          </TouchableOpacity>
+          </PressScale>
         </ScrollView>
       </KeyboardAvoidingView>
     </Modal>
@@ -360,104 +371,17 @@ export const CreateClassModal: React.FC<Props> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
+  container: { flex: 1 },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
   },
-  closeButton: {
-    padding: Spacing.sm,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: Colors.text,
-  },
-  form: {
-    flex: 1,
-    padding: Spacing.lg,
-  },
-  fieldContainer: {
-    marginBottom: Spacing.md,
-  },
-  fieldLabel: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: Colors.text,
-    marginBottom: Spacing.xs,
-  },
-  fieldHint: {
-    fontSize: 12,
-    color: Colors.textTertiary,
-    marginBottom: Spacing.sm,
-  },
-  teacherLoader: {
-    marginVertical: Spacing.sm,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    borderRadius: Layout.borderRadius.sm,
-    padding: Spacing.md,
-    fontSize: 16,
-    color: Colors.text,
-    backgroundColor: Colors.backgroundSecondary,
-  },
-  errorContainer: {
-    backgroundColor: "#FFF0F0",
-    padding: Spacing.md,
-    borderRadius: Layout.borderRadius.sm,
-    marginBottom: Spacing.md,
-    borderLeftWidth: 4,
-    borderLeftColor: Colors.error,
-  },
-  errorText: {
-    color: Colors.error,
-    fontSize: 14,
-  },
-  submitButton: {
-    backgroundColor: Colors.primary,
-    padding: Spacing.md,
-    borderRadius: Layout.borderRadius.md,
-    alignItems: "center",
-    marginTop: Spacing.lg,
-  },
-  submitButtonDisabled: {
-    opacity: 0.6,
-  },
-  submitButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  chipRow: { marginBottom: Spacing.xs },
-  chip: {
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    marginRight: Spacing.sm,
-    borderRadius: Layout.borderRadius.sm,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    backgroundColor: Colors.backgroundSecondary,
-  },
-  chipActive: {
-    borderColor: Colors.primary,
-    backgroundColor: Colors.primary + "20",
-  },
-  chipText: { fontSize: 14, color: Colors.text },
-  chipTextActive: { color: Colors.primary, fontWeight: "600" },
-  placeholderText: { fontSize: 14, color: Colors.textTertiary, paddingVertical: Spacing.sm },
-  previewLabel: {
-    marginTop: Spacing.sm,
-    fontSize: 14,
-    fontWeight: "600",
-    color: Colors.primary,
-  },
+  form: { flex: 1 },
+  fieldContainer: {},
+  input: { borderWidth: 1 },
+  errorContainer: { borderLeftWidth: 4 },
+  submitButton: { alignItems: "center" },
+  chip: { paddingVertical: 8, paddingHorizontal: 16, borderWidth: 1 },
 });

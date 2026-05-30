@@ -1,8 +1,9 @@
 import React from 'react';
-import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Ionicons } from '@expo/vector-icons';
 import { useTheme, type UseThemeResult } from '@/common/theme';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
 import { Skeleton } from '@/common/components/Skeleton';
 import { EmptyState } from '@/common/components/EmptyState';
 import { useMySubjects } from '@/modules/subjects/hooks/useMySubjects';
@@ -13,17 +14,17 @@ const KNOWN_TYPES = ['core', 'elective', 'activity'] as const;
 export function SubjectsScreen() {
   const { t } = useTranslation('subjects');
   const theme = useTheme();
-  const { palette, spacing } = theme;
+  const { palette, spacing, radius } = theme;
   const { data, isLoading, isError, refetch, isRefetching } = useMySubjects();
 
   const subjects = data ?? [];
 
   const renderHeader = () => (
     <View style={{ marginBottom: spacing.lg }}>
-      <Text style={[theme.typography.display, { color: palette.onSurface }]}>
+      <Text variant="display" color="onSurface">
         {t('mine.title')}
       </Text>
-      <Text style={[theme.typography.bodyMd, { color: palette.onSurfaceVariant, marginTop: spacing.xs }]}>
+      <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
         {t('mine.subtitle')}
       </Text>
     </View>
@@ -34,9 +35,9 @@ export function SubjectsScreen() {
       <View style={[styles.screen, { backgroundColor: palette.surface, padding: spacing.marginMobile }]}>
         {renderHeader()}
         <View style={{ gap: spacing.md }}>
-          <Skeleton width="100%" height={120} radius={theme.radius.xl} />
-          <Skeleton width="100%" height={120} radius={theme.radius.xl} />
-          <Skeleton width="100%" height={120} radius={theme.radius.xl} />
+          <Skeleton width="100%" height={120} radius={radius.xl} />
+          <Skeleton width="100%" height={120} radius={radius.xl} />
+          <Skeleton width="100%" height={120} radius={radius.xl} />
         </View>
       </View>
     );
@@ -52,7 +53,7 @@ export function SubjectsScreen() {
       contentContainerStyle={{
         padding: spacing.marginMobile,
         gap: spacing.md,
-        paddingBottom: spacing.xl * 3,
+        paddingBottom: spacing.xl * 2,
         flexGrow: 1,
       }}
       refreshControl={
@@ -61,13 +62,13 @@ export function SubjectsScreen() {
       ListEmptyComponent={
         isError ? (
           <EmptyState
-            icon={<Ionicons name="alert-circle-outline" size={36} color={palette.error} />}
+            icon={<AppIcon name="alert-circle-outline" size="xl" color="error" />}
             title={t('mine.errorTitle')}
             description={t('mine.errorBody')}
           />
         ) : (
           <EmptyState
-            icon={<Ionicons name="book-outline" size={36} color={palette.onSurfaceVariant} />}
+            icon={<AppIcon name="book-outline" size="xl" color="onSurfaceVariant" />}
             title={t('mine.emptyTitle')}
             description={t('mine.emptyBody')}
           />
@@ -79,7 +80,7 @@ export function SubjectsScreen() {
 
 function SubjectCard({ subject, theme }: { subject: MySubject; theme: UseThemeResult }) {
   const { t } = useTranslation('subjects');
-  const { palette, spacing, radius, typography, elevation } = theme;
+  const { palette, spacing, radius, elevation } = theme;
   const typeKey = KNOWN_TYPES.includes(subject.subject_type as (typeof KNOWN_TYPES)[number])
     ? subject.subject_type
     : 'other';
@@ -90,30 +91,39 @@ function SubjectCard({ subject, theme }: { subject: MySubject; theme: UseThemeRe
         elevation.card,
         {
           backgroundColor: palette.surfaceContainerLowest,
-          borderRadius: radius.xl,
+          borderRadius: radius.lg,
+          borderLeftWidth: 4,
+          borderLeftColor: palette.secondaryContainer,
           padding: spacing.lg,
           gap: spacing.md,
         },
       ]}
     >
       <View style={styles.cardHeader}>
-        <Text style={[typography.headlineMd, { color: palette.onSurface, flex: 1 }]} numberOfLines={2}>
-          {subject.name}
-        </Text>
+        <View
+          style={[
+            styles.iconChip,
+            { backgroundColor: palette.primaryContainer, borderRadius: radius.md },
+          ]}
+        >
+          <AppIcon name="book" size="md" color="onPrimaryContainer" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text variant="headlineMd" color="onSurface" numberOfLines={2}>
+            {subject.name}
+          </Text>
+          {subject.code ? (
+            <Text variant="labelMd" color="onSurfaceVariant" style={{ marginTop: spacing[2] }}>
+              {subject.code}
+            </Text>
+          ) : null}
+        </View>
         <View style={[styles.badge, { backgroundColor: palette.primaryContainer, borderRadius: radius.full }]}>
-          <Text style={[typography.labelSm, { color: palette.onPrimaryContainer }]}>
+          <Text variant="labelSm" color="onPrimaryContainer">
             {t(`mine.type.${typeKey}`)}
           </Text>
         </View>
       </View>
-
-      {subject.code ? (
-        <View style={[styles.codeChip, { backgroundColor: palette.surfaceContainerHigh, borderRadius: radius.sm }]}>
-          <Text style={[typography.labelSm, { color: palette.onSurfaceVariant, fontFamily: 'Inter_500Medium' }]}>
-            {subject.code}
-          </Text>
-        </View>
-      ) : null}
 
       {subject.classes.length > 0 ? (
         <View style={{ gap: spacing.sm }}>
@@ -128,7 +138,7 @@ function SubjectCard({ subject, theme }: { subject: MySubject; theme: UseThemeRe
 
 function ClassRow({ cls, theme }: { cls: MySubjectClass; theme: UseThemeResult }) {
   const { t } = useTranslation('subjects');
-  const { palette, spacing, radius, typography } = theme;
+  const { palette, spacing, radius } = theme;
   const teacherNames = cls.teachers.map((teacher) => teacher.teacher_name).filter(Boolean);
   const teacherLabel = teacherNames.length > 0 ? teacherNames.join(', ') : t('mine.teachersNone');
 
@@ -136,33 +146,33 @@ function ClassRow({ cls, theme }: { cls: MySubjectClass; theme: UseThemeResult }
     <View
       style={{
         backgroundColor: palette.surfaceContainerLow,
-        borderRadius: radius.lg,
+        borderRadius: radius.md,
         padding: spacing.md,
         gap: spacing.xs,
       }}
     >
       <View style={styles.classTopRow}>
-        <Text style={[typography.labelMd, { color: palette.onSurface, flex: 1 }]} numberOfLines={1}>
+        <Text variant="labelMd" color="onSurface" style={{ flex: 1 }} numberOfLines={1}>
           {cls.class_name}
         </Text>
-        <Text style={[typography.labelSm, { color: palette.onSurfaceVariant }]}>
+        <Text variant="labelSm" color="onSurfaceVariant">
           {t('mine.perWeek', { count: cls.weekly_periods })}
         </Text>
       </View>
       <View style={styles.classMetaRow}>
         <View style={styles.metaItem}>
-          <Ionicons
+          <AppIcon
             name={cls.is_mandatory ? 'lock-closed-outline' : 'options-outline'}
-            size={13}
-            color={palette.onSurfaceVariant}
+            size="sm"
+            color="onSurfaceVariant"
           />
-          <Text style={[typography.labelSm, { color: palette.onSurfaceVariant }]}>
+          <Text variant="labelSm" color="onSurfaceVariant">
             {cls.is_mandatory ? t('mine.mandatory') : t('mine.elective')}
           </Text>
         </View>
         <View style={styles.metaItem}>
-          <Ionicons name="person-outline" size={13} color={palette.onSurfaceVariant} />
-          <Text style={[typography.labelSm, { color: palette.onSurfaceVariant, flex: 1 }]} numberOfLines={1}>
+          <AppIcon name="person-outline" size="sm" color="onSurfaceVariant" />
+          <Text variant="labelSm" color="onSurfaceVariant" style={{ flex: 1 }} numberOfLines={1}>
             {teacherLabel}
           </Text>
         </View>
@@ -173,9 +183,9 @@ function ClassRow({ cls, theme }: { cls: MySubjectClass; theme: UseThemeResult }
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  cardHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  cardHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  iconChip: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   badge: { paddingHorizontal: 10, paddingVertical: 4 },
-  codeChip: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3 },
   classTopRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   classMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1 },

@@ -52,7 +52,10 @@
     "selectSubjectStep": "1. વિષય પસંદ કરો *",
     "selectTeacherStep": "2. શિક્ષક પસંદ કરો",
     "noSubjectsCreateFirst": "કોઈ વિષય નથી. પહેલા વિષય બનાવો.",
-    "noAvailableTeachers": "કોઈ શિક્ષક ઉપલબ્ધ નથી"
+    "noAvailableTeachers": "કોઈ શિક્ષક ઉપલબ્ધ નથી",
+    "timetable": "સમયપત્રક",
+    "attendance": "હાજરી",
+    "classTeacher": "વર્ગ શિક્ષક"
   },
   "modal": {
     "titleCreate": "વર્ગ બનાવો",
@@ -163,7 +166,16 @@
       "noHistoryPermission": "વર્ગ હાજરી ઇતિહાસ જોવાની મંજૂરી નથી.",
       "recentSessions": "તાજા સત્રો",
       "open": "ખોલો",
-      "emptySessions": "હજી કોઈ સત્ર નોંધાયું નથી."
+      "emptySessions": "હજી કોઈ સત્ર નોંધાયું નથી.",
+      "markTitle": "હાજરી નોંધો",
+      "todayPrefix": "આજે",
+      "view": "જુઓ",
+      "emptyTitle": "હજુ સુધી કોઈ હાજરી રેકોર્ડ નથી"
+    },
+    "activeTimetable": {
+      "title": "સમયપત્રક",
+      "emptyTitle": "કોઈ સમયપત્રક ઉપલબ્ધ નથી",
+      "emptyHint": "પ્રકાશિત થયા પછી સક્રિય સમયપત્રક અહીં દેખાશે."
     }
   }
 }
