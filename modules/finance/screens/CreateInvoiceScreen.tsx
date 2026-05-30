@@ -8,16 +8,17 @@
  *   items[] (fee_head, period?, amount, discount?, fine?), notes?
  */
 import React from 'react';
-import { Alert, BackHandler, Pressable, Text, View } from 'react-native';
+import { Alert, BackHandler, Pressable, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Ionicons } from '@expo/vector-icons';
 import { useForm, useFieldArray, type Path } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTheme } from '@/common/theme';
 import { ScreenContainer } from '@/common/components/ScreenContainer';
 import { Button } from '@/common/components/Button';
 import { Link } from '@/common/components/Link';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
 import {
   FormField,
   FormSelect,
@@ -43,7 +44,7 @@ const isoPlusDays = (days: number) => {
 
 export default function CreateInvoiceScreen() {
   const { t } = useTranslation('finance');
-  const { palette, spacing, radius, typography } = useTheme();
+  const { palette, spacing, radius } = useTheme();
 
   const createMutation = useCreateInvoice();
 
@@ -235,29 +236,29 @@ export default function CreateInvoiceScreen() {
           justifyContent: 'space-between',
         }}
       >
-        <Pressable
+        <AppIcon
+          name="arrow-back"
+          size="lg"
+          color="onSurface"
           onPress={handleBack}
-          hitSlop={12}
-          style={{ width: 44, height: 44, justifyContent: 'center' }}
-        >
-          <Ionicons name="chevron-back" size={24} color={palette.onSurface} />
-        </Pressable>
+          accessibilityLabel="Back"
+        />
         <Link onPress={handleBack}>
           {t('cancel', { defaultValue: 'Cancel' })}
         </Link>
       </View>
 
-      <Text
-        style={[
-          typography.display,
-          { color: palette.onSurface, marginTop: spacing.xs },
-        ]}
-      >
+      <Text variant="display" color="onSurface" style={{ marginTop: spacing.xs }}>
         {t('invoiceCreate.title', { defaultValue: 'New invoice' })}
       </Text>
 
       <View
-        style={{ gap: spacing.lg, paddingTop: spacing.lg, paddingBottom: 120 }}
+        style={{
+          gap: spacing.lg,
+          paddingTop: spacing.lg,
+          // Clear the sticky action bar (button + its padding) without a big empty band.
+          paddingBottom: spacing.xl * 3,
+        }}
       >
         <FormSection
           title={t('invoiceCreate.sectionStudent', {
@@ -326,12 +327,7 @@ export default function CreateInvoiceScreen() {
                   alignItems: 'center',
                 }}
               >
-                <Text
-                  style={[
-                    typography.labelMd,
-                    { color: palette.onSurfaceVariant },
-                  ]}
-                >
+                <Text variant="labelMd" color="onSurfaceVariant">
                   {t('invoiceCreate.itemNumber', {
                     defaultValue: 'Item {{n}}',
                     n: index + 1,
@@ -353,11 +349,7 @@ export default function CreateInvoiceScreen() {
                     defaultValue: 'Remove item',
                   })}
                 >
-                  <Ionicons
-                    name="close"
-                    size={18}
-                    color={palette.onSurfaceVariant}
-                  />
+                  <AppIcon name="close" size="md" color="onSurfaceVariant" />
                 </Pressable>
               </View>
 
@@ -423,10 +415,10 @@ export default function CreateInvoiceScreen() {
       <View
         style={{
           position: 'absolute',
-          bottom: 0,
+          bottom: spacing.lg,
           left: 0,
           right: 0,
-          padding: spacing.marginMobile,
+          paddingHorizontal: spacing.marginMobile,
           backgroundColor: palette.surface,
         }}
       >

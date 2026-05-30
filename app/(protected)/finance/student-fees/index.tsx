@@ -2,17 +2,13 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   View,
-  Text,
-  TouchableOpacity,
   RefreshControl,
   TextInput,
-  SafeAreaView,
   FlatList,
   ScrollView,
   Pressable,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 import {
   useStudentFees,
   useAcademicYears,
@@ -22,7 +18,9 @@ import { useAcademicYearContext } from "@/modules/academics/context/AcademicYear
 import { calendarLocaleForLanguage } from "@/i18n";
 import { ClassSelect } from "@/common/components/ClassSelect";
 import { ProfileAvatar } from "@/common/components/ProfileAvatar";
-import { useTheme } from "@/common/theme";
+import { useTheme, type Palette } from "@/common/theme";
+import { Text } from "@/common/components/Text";
+import { AppIcon } from "@/common/components/AppIcon";
 import { Skeleton } from "@/common/components/Skeleton";
 import { EmptyState } from "@/common/components/EmptyState";
 import { formatCurrency } from "@/common/utils/formatCurrency";
@@ -37,26 +35,24 @@ function formatDate(s: string, locale: string) {
 
 const STATUS_VALUES = ["", "overdue", "unpaid", "partial", "paid"] as const;
 
-function statusAccent(
-  status: string,
-  palette: ReturnType<typeof useTheme>["palette"]
-): string {
+/** Maps a (derived) student-fee status to its accent palette token. */
+function statusAccentToken(status: string): keyof Palette {
   switch (status) {
     case "paid":
-      return palette.success;
+      return "success";
     case "partial":
-      return palette.warning;
+      return "secondary";
     case "overdue":
-      return palette.error;
+      return "error";
     default:
-      return palette.onSurfaceVariant;
+      return "onSurfaceVariant";
   }
 }
 
 function StatusPill({ status }: { status: string }) {
   const { t } = useTranslation("finance");
-  const { palette, typography, spacing, radius } = useTheme();
-  const color = statusAccent(status, palette);
+  const { palette, spacing, radius } = useTheme();
+  const color = palette[statusAccentToken(status)];
   return (
     <View
       style={{
@@ -68,7 +64,7 @@ function StatusPill({ status }: { status: string }) {
         backgroundColor: `${color}15`,
       }}
     >
-      <Text style={[typography.labelSm, { color }]}>
+      <Text variant="labelSm" style={{ color }}>
         {t(`studentFeeStatuses.${status}`, { defaultValue: status })}
       </Text>
     </View>
@@ -97,7 +93,7 @@ export default function StudentFeesPage() {
   const { t, i18n } = useTranslation("finance");
   const locale = calendarLocaleForLanguage(i18n.language ?? "en");
   const router = useRouter();
-  const { palette, spacing, radius, typography, elevation } = useTheme();
+  const { palette, spacing, radius, elevation } = useTheme();
   const { selectedAcademicYearId: contextYearId } = useAcademicYearContext();
   const [academicYearId, setAcademicYearId] = useState<string>("");
   const [classId, setClassId] = useState<string>("");
@@ -156,7 +152,7 @@ export default function StudentFeesPage() {
     return (
       <Pressable
         onPress={() =>
-          router.push(`/(protected)/finance/student-fees/${sf.id}` as any)
+          router.push(`/(protected)/finance/student-fees/${sf.id}` as never)
         }
         style={({ pressed }) => [
           elevation.card,
@@ -181,18 +177,14 @@ export default function StudentFeesPage() {
             style={{ marginRight: spacing.md }}
           />
           <View style={{ flex: 1 }}>
-            <Text
-              style={[typography.labelMd, { color: palette.onSurface }]}
-              numberOfLines={1}
-            >
+            <Text variant="labelMd" color="onSurface" numberOfLines={1}>
               {sf.student_name ?? "—"}
             </Text>
             <Text
-              style={[
-                typography.labelSm,
-                { color: palette.onSurfaceVariant, marginTop: 2 },
-              ]}
+              variant="labelSm"
+              color="onSurfaceVariant"
               numberOfLines={1}
+              style={{ marginTop: 2 }}
             >
               {t("studentFeesList.feeDueLine", {
                 structure: sf.fee_structure_name ?? "—",
@@ -200,11 +192,7 @@ export default function StudentFeesPage() {
               })}
             </Text>
           </View>
-          <Ionicons
-            name="chevron-forward"
-            size={20}
-            color={palette.onSurfaceVariant}
-          />
+          <AppIcon name="chevron-forward" size="md" color="onSurfaceVariant" />
         </View>
 
         <View
@@ -215,18 +203,11 @@ export default function StudentFeesPage() {
             gap: spacing.sm,
           }}
         >
-          <Text style={[typography.headlineMd, { color: palette.onSurface }]}>
+          <Text variant="headlineMd" color="onSurface">
             {formatCurrency(total)}
           </Text>
-          <Text
-            style={[
-              typography.labelSm,
-              { color: palette.success },
-            ]}
-          >
-            {t("studentFeesList.paidLine", {
-              amount: formatCurrency(paid),
-            })}
+          <Text variant="labelSm" color="success">
+            {t("studentFeesList.paidLine", { amount: formatCurrency(paid) })}
           </Text>
         </View>
 
@@ -266,9 +247,7 @@ export default function StudentFeesPage() {
   };
 
   return (
-    <SafeAreaView
-      style={{ flex: 1, backgroundColor: palette.surface }}
-    >
+    <View style={{ flex: 1, backgroundColor: palette.surface }}>
       <View
         style={{
           flexDirection: "row",
@@ -279,26 +258,20 @@ export default function StudentFeesPage() {
           gap: spacing.sm,
         }}
       >
-        <TouchableOpacity
+        <AppIcon
+          name="arrow-back"
+          size="lg"
+          color="onSurface"
           onPress={() => router.back()}
-          hitSlop={12}
-          style={{ padding: spacing.xs }}
-        >
-          <Ionicons
-            name="chevron-back"
-            size={26}
-            color={palette.onSurface}
-          />
-        </TouchableOpacity>
-        <Text
-          style={[typography.headlineLg, { color: palette.onSurface, flex: 1 }]}
-        >
+          accessibilityLabel="Back"
+        />
+        <Text variant="headlineLg" color="onSurface" style={{ flex: 1 }}>
           {t("studentFeesList.title", { defaultValue: "Fee structure" })}
         </Text>
       </View>
 
       {/* KPI summary */}
-      {!error && (
+      {!error ? (
         <View
           style={{
             flexDirection: "row",
@@ -318,14 +291,14 @@ export default function StudentFeesPage() {
               },
             ]}
           >
-            <Text
-              style={[typography.labelSm, { color: palette.onSurfaceVariant }]}
-            >
+            <Text variant="labelSm" color="onSurfaceVariant">
               {t("studentFeesList.totalFees", { defaultValue: "Total fees" })}
             </Text>
             <Text
-              style={[typography.headlineMd, { color: palette.onSurface, marginTop: 2 }]}
+              variant="headlineMd"
+              color="onSurface"
               numberOfLines={1}
+              style={{ marginTop: 2 }}
             >
               {formatCurrency(totals.total)}
             </Text>
@@ -341,20 +314,20 @@ export default function StudentFeesPage() {
               },
             ]}
           >
-            <Text
-              style={[typography.labelSm, { color: palette.onSurfaceVariant }]}
-            >
+            <Text variant="labelSm" color="onSurfaceVariant">
               {t("studentFeesList.paidTotal", { defaultValue: "Paid" })}
             </Text>
             <Text
-              style={[typography.headlineMd, { color: palette.success, marginTop: 2 }]}
+              variant="headlineMd"
+              color="success"
               numberOfLines={1}
+              style={{ marginTop: 2 }}
             >
               {formatCurrency(totals.paid)}
             </Text>
           </View>
         </View>
-      )}
+      ) : null}
 
       {/* Search */}
       <View
@@ -368,31 +341,28 @@ export default function StudentFeesPage() {
           marginTop: spacing.md,
         }}
       >
-        <Ionicons
-          name="search"
-          size={20}
-          color={palette.onSurfaceVariant}
-          style={{ marginRight: spacing.sm }}
-        />
+        <AppIcon name="search" size="md" color="onSurfaceVariant" />
         <TextInput
-          style={[
-            typography.bodyMd,
-            { flex: 1, color: palette.onSurface, paddingVertical: spacing.sm },
-          ]}
+          style={{
+            flex: 1,
+            color: palette.onSurface,
+            paddingVertical: spacing.sm,
+            marginLeft: spacing.sm,
+          }}
           value={search}
           onChangeText={setSearch}
           placeholder={t("studentFeesList.searchPlaceholder")}
           placeholderTextColor={palette.onSurfaceVariant}
         />
-        {search.length > 0 && (
-          <TouchableOpacity onPress={() => setSearch("")} hitSlop={8}>
-            <Ionicons
-              name="close-circle"
-              size={20}
-              color={palette.onSurfaceVariant}
-            />
-          </TouchableOpacity>
-        )}
+        {search.length > 0 ? (
+          <AppIcon
+            name="close-circle"
+            size="md"
+            color="onSurfaceVariant"
+            onPress={() => setSearch("")}
+            accessibilityLabel="Clear search"
+          />
+        ) : null}
       </View>
 
       {/* Filters */}
@@ -403,9 +373,7 @@ export default function StudentFeesPage() {
           gap: spacing.sm,
         }}
       >
-        <Text
-          style={[typography.labelSm, { color: palette.onSurfaceVariant }]}
-        >
+        <Text variant="labelSm" color="onSurfaceVariant">
           {t("studentFeesList.academicYear")}
         </Text>
         <ScrollView
@@ -431,7 +399,9 @@ export default function StudentFeesPage() {
         </ScrollView>
 
         <Text
-          style={[typography.labelSm, { color: palette.onSurfaceVariant, marginTop: spacing.xs }]}
+          variant="labelSm"
+          color="onSurfaceVariant"
+          style={{ marginTop: spacing.xs }}
         >
           {t("studentFeesList.class")}
         </Text>
@@ -444,7 +414,9 @@ export default function StudentFeesPage() {
         />
 
         <Text
-          style={[typography.labelSm, { color: palette.onSurfaceVariant, marginTop: spacing.xs }]}
+          variant="labelSm"
+          color="onSurfaceVariant"
+          style={{ marginTop: spacing.xs }}
         >
           {t("studentFeesList.status")}
         </Text>
@@ -465,23 +437,13 @@ export default function StudentFeesPage() {
       </View>
 
       {error ? (
-        <View
-          style={{
-            padding: spacing.lg,
-            alignItems: "center",
-          }}
-        >
-          <Text style={[typography.bodyMd, { color: palette.error }]}>
+        <View style={{ padding: spacing.lg, alignItems: "center" }}>
+          <Text variant="bodyMd" color="error">
             {error instanceof Error ? error.message : t("common.failedToLoad")}
           </Text>
         </View>
       ) : isLoading && studentFees.length === 0 ? (
-        <View
-          style={{
-            padding: spacing.marginMobile,
-            gap: spacing.md,
-          }}
-        >
+        <View style={{ padding: spacing.marginMobile, gap: spacing.md }}>
           <Skeleton width="100%" height={112} radius={radius.xl} />
           <Skeleton width="100%" height={112} radius={radius.xl} />
           <Skeleton width="100%" height={112} radius={radius.xl} />
@@ -492,19 +454,21 @@ export default function StudentFeesPage() {
           keyExtractor={(item) => item.id}
           renderItem={renderFeeItem}
           contentContainerStyle={{
-            padding: spacing.marginMobile,
+            paddingHorizontal: spacing.marginMobile,
+            paddingTop: spacing.md,
             paddingBottom: spacing.xl * 2,
           }}
           refreshControl={
             <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
           }
+          showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <EmptyState
               icon={
-                <Ionicons
+                <AppIcon
                   name={search ? "search-outline" : "wallet-outline"}
-                  size={36}
-                  color={palette.onSurfaceVariant}
+                  size="xl"
+                  color="onSurfaceVariant"
                 />
               }
               title={
@@ -522,7 +486,9 @@ export default function StudentFeesPage() {
                   ? {
                       label: t("studentFeesList.goToStructures"),
                       onPress: () =>
-                        router.push("/(protected)/finance/structures" as any),
+                        router.push(
+                          "/(protected)/finance/structures" as never
+                        ),
                     }
                   : undefined
               }
@@ -530,7 +496,7 @@ export default function StudentFeesPage() {
           }
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -543,7 +509,7 @@ function Chip({
   label: string;
   onPress: () => void;
 }) {
-  const { palette, spacing, radius, typography } = useTheme();
+  const { palette, spacing, radius } = useTheme();
   return (
     <Pressable
       onPress={onPress}
@@ -557,12 +523,7 @@ function Chip({
         opacity: pressed ? 0.85 : 1,
       })}
     >
-      <Text
-        style={[
-          typography.labelSm,
-          { color: active ? palette.onPrimary : palette.onSurface },
-        ]}
-      >
+      <Text variant="labelSm" color={active ? "onPrimary" : "onSurface"}>
         {label}
       </Text>
     </Pressable>
