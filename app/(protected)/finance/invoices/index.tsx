@@ -43,7 +43,7 @@ function isOverdue(invoice: FeeInvoice): boolean {
 /** Maps a (resolved) invoice status to its accent palette token + badge glyph. */
 const STATUS_META: Record<string, { accent: keyof Palette; icon: IconName }> = {
   overdue: { accent: "error", icon: "warning-outline" },
-  unpaid: { accent: "error", icon: "time-outline" },
+  unpaid: { accent: "secondary", icon: "time-outline" },
   partial: { accent: "secondary", icon: "time-outline" },
   draft: { accent: "onSurfaceVariant", icon: "document-outline" },
   paid: { accent: "success", icon: "checkmark-circle-outline" },
