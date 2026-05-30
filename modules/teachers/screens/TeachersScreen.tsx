@@ -70,16 +70,7 @@ export default function TeachersScreen() {
   const departmentLabel = department ?? t("list.filterDepartmentAll");
 
   const renderToolbar = () => (
-    <View
-      style={[
-        styles.toolbar,
-        {
-          backgroundColor: palette.surfaceContainerLowest,
-          borderRadius: radius.xl,
-          ...elevation.card,
-        },
-      ]}
-    >
+    <View style={styles.toolbar}>
       <View
         style={[
           styles.searchContainer,

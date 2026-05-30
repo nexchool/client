@@ -102,16 +102,7 @@ export default function StudentsScreen() {
   const renderFilters = () => {
     const isActive = statusFilter !== "all";
     return (
-      <View
-        style={[
-          styles.toolbar,
-          {
-            backgroundColor: palette.surfaceContainerLowest,
-            borderRadius: radius.xl,
-            ...elevation.card,
-          },
-        ]}
-      >
+      <View style={styles.toolbar}>
         <View
           style={[
             styles.searchContainer,
