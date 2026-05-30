@@ -1,13 +1,12 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  View, Text, StyleSheet, SectionList, ActivityIndicator,
-  SafeAreaView, RefreshControl, TouchableOpacity, TextInput, Pressable,
+  View, StyleSheet, SectionList, ActivityIndicator,
+  RefreshControl, TextInput, Pressable,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '@/common/constants/colors';
-import { Spacing, Layout } from '@/common/constants/spacing';
-import { useTheme } from '@/common/theme';
+import { useTheme, Spacing } from '@/common/theme';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
 import { Protected } from '@/modules/permissions/components/Protected';
 import * as PERMS from '@/modules/permissions/constants/permissions';
 import { useAcademicYearContext } from '@/modules/academics/context/AcademicYearContext';
@@ -29,7 +28,7 @@ function useDebounce<T>(value: T, delay: number): T {
 
 export default function HolidaysScreen() {
   const { t } = useTranslation('holidays');
-  const { palette, elevation } = useTheme();
+  const { palette, spacing, radius, elevation } = useTheme();
   const { selectedAcademicYearId } = useAcademicYearContext();
   const {
     holidays, recurringHolidays, loading, error,
@@ -80,63 +79,103 @@ export default function HolidaysScreen() {
   // ── Render ─────────────────────────────────────────────────────────────────
   if (loading && !holidays.length && !recurringHolidays.length) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={[styles.container, { backgroundColor: palette.surface }]}>
         <ScreenHeader />
         <View style={styles.center}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+          <ActivityIndicator size="large" color={palette.primary} />
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { backgroundColor: palette.surface }]}>
       <ScreenHeader />
 
       {/* Search */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={17} color={Colors.textTertiary} style={styles.searchIcon} />
+      <View
+        style={[
+          styles.searchContainer,
+          {
+            backgroundColor: palette.surfaceContainerLowest,
+            borderRadius: radius.md,
+            borderColor: palette.outlineVariant,
+            marginHorizontal: spacing.marginMobile,
+            marginTop: spacing.xs,
+            marginBottom: spacing.sm,
+            paddingHorizontal: spacing.md,
+          },
+        ]}
+      >
+        <AppIcon name="search" size="md" color="onSurfaceVariant" />
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: palette.onSurface }]}
           placeholder={t('screen.searchPlaceholder')}
-          placeholderTextColor={Colors.textTertiary}
+          placeholderTextColor={palette.onSurfaceVariant}
           value={search}
           onChangeText={setSearch}
         />
         {!!search && (
-          <TouchableOpacity onPress={() => setSearch('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Ionicons name="close-circle" size={18} color={Colors.textTertiary} />
-          </TouchableOpacity>
+          <AppIcon
+            name="close-circle"
+            size="md"
+            color="onSurfaceVariant"
+            onPress={() => setSearch('')}
+            accessibilityLabel="Clear search"
+          />
         )}
       </View>
 
       {/* Filter tabs */}
-      <View style={styles.tabRow}>
-        {(['all', 'upcoming', 'recurring'] as FilterTab[]).map((tab) => (
-          <TouchableOpacity
-            key={tab}
-            style={[styles.tab, activeTab === tab && styles.tabActive]}
-            onPress={() => setActiveTab(tab)}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-              {t(`tabs.${tab}`)}
-            </Text>
-          </TouchableOpacity>
-        ))}
+      <View style={[styles.tabRow, { paddingHorizontal: spacing.marginMobile, paddingBottom: spacing.sm }]}>
+        {(['all', 'upcoming', 'recurring'] as FilterTab[]).map((tab) => {
+          const active = activeTab === tab;
+          return (
+            <Pressable
+              key={tab}
+              onPress={() => setActiveTab(tab)}
+              accessibilityRole="button"
+              style={({ pressed }) => [
+                styles.tab,
+                {
+                  backgroundColor: active ? palette.onSurface : palette.surfaceContainerLowest,
+                  borderColor: active ? palette.onSurface : palette.outlineVariant,
+                  opacity: pressed ? 0.85 : 1,
+                },
+              ]}
+            >
+              <Text variant="labelMd" style={{ color: active ? palette.surface : palette.onSurfaceVariant }}>
+                {t(`tabs.${tab}`)}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
 
       {/* Error state */}
       {!!error && (
-        <View style={styles.errorBanner}>
-          <Ionicons name="alert-circle-outline" size={16} color={Colors.error} />
-          <Text style={styles.errorText}>{error}</Text>
+        <View
+          style={[
+            styles.errorBanner,
+            {
+              backgroundColor: palette.errorContainer,
+              marginHorizontal: spacing.marginMobile,
+              marginBottom: spacing.sm,
+              padding: spacing.sm,
+              borderRadius: radius.md,
+              borderColor: palette.error + '35',
+              gap: spacing.xs,
+            },
+          ]}
+        >
+          <AppIcon name="alert-circle-outline" size="sm" color="error" />
+          <Text variant="labelMd" color="error" style={styles.flex}>{error}</Text>
         </View>
       )}
 
       {/* Summary counts */}
       {!error && (
-        <View style={styles.summaryRow}>
+        <View style={[styles.summaryRow, { paddingHorizontal: spacing.marginMobile, gap: spacing.md, marginBottom: spacing.md }]}>
           <SummaryChip count={holidays.length} label={t('summary.holidays')} />
           <SummaryChip count={recurringHolidays.length} label={t('summary.weeklyOff')} />
         </View>
@@ -148,22 +187,28 @@ export default function HolidaysScreen() {
         keyExtractor={(item) => item?.id ?? Math.random().toString()}
         renderItem={({ item }) => <HolidayListItem holiday={item} />}
         renderSectionHeader={({ section }) => (
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{section.title}</Text>
-            <Text style={styles.sectionCountText}>{section.data.length}</Text>
+          <View style={[styles.sectionHeader, { marginTop: spacing.md }]}>
+            <Text variant="labelSm" color="onSurfaceVariant">{section.title}</Text>
+            <Text variant="labelSm" color="onSurfaceVariant">{section.data.length}</Text>
           </View>
         )}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={{
+          paddingHorizontal: spacing.marginMobile,
+          paddingBottom: spacing[40] * 2.5,
+          flexGrow: 1,
+        }}
         refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={loadData} tintColor={Colors.primary} />
+          <RefreshControl refreshing={loading} onRefresh={loadData} tintColor={palette.primary} />
         }
         ListEmptyComponent={
           <View style={styles.center}>
-            <View style={styles.emptyIconWrap}>
-              <Ionicons name="calendar-outline" size={32} color={Colors.textTertiary} />
-            </View>
-            <Text style={styles.emptyTitle}>{t('empty.title')}</Text>
-            <Text style={styles.emptySubtitle}>{t('empty.hintReadOnly')}</Text>
+            <AppIcon name="calendar-outline" size="hero" color="outline" />
+            <Text variant="titleSm" color="onSurface" style={{ marginTop: spacing.lg }}>
+              {t('empty.title')}
+            </Text>
+            <Text variant="bodySm" color="onSurfaceVariant" style={styles.emptySubtitle}>
+              {t('empty.hintReadOnly')}
+            </Text>
           </View>
         }
         stickySectionHeadersEnabled={false}
@@ -176,8 +221,8 @@ export default function HolidaysScreen() {
           onPress={() => setShowFormModal(true)}
           style={({ pressed }) => ({
             position: 'absolute',
-            bottom: 96,
-            right: 20,
+            bottom: spacing.lg,
+            right: spacing.marginMobile,
             width: 56,
             height: 56,
             borderRadius: 28,
@@ -188,7 +233,7 @@ export default function HolidaysScreen() {
             ...elevation.card,
           })}
         >
-          <Ionicons name="add" size={28} color={palette.onPrimary} />
+          <AppIcon name="add" size="xl" color="onPrimary" />
         </Pressable>
       </Protected>
 
@@ -198,7 +243,7 @@ export default function HolidaysScreen() {
         onSubmit={handleCreateSubmit}
         mode="create"
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -206,19 +251,44 @@ export default function HolidaysScreen() {
 
 function ScreenHeader() {
   const { t } = useTranslation('holidays');
+  const { palette, spacing } = useTheme();
   return (
-    <View style={styles.header}>
-      <Text style={styles.headerTitle}>{t('screen.title')}</Text>
-      <Text style={styles.headerSubtitle}>{t('screen.subtitle')}</Text>
+    <View
+      style={[
+        styles.header,
+        {
+          paddingHorizontal: spacing.marginMobile,
+          paddingTop: spacing.sm,
+          paddingBottom: spacing.md,
+          backgroundColor: palette.surface,
+        },
+      ]}
+    >
+      <Text variant="headlineLg" color="onSurface">{t('screen.title')}</Text>
+      <Text variant="bodySm" color="onSurfaceVariant" style={{ marginTop: 4 }}>
+        {t('screen.subtitle')}
+      </Text>
     </View>
   );
 }
 
 function SummaryChip({ count, label }: { count: number; label: string }) {
+  const { palette, spacing, radius } = useTheme();
   return (
-    <View style={styles.summaryChip}>
-      <Text style={styles.summaryCount}>{count}</Text>
-      <Text style={styles.summaryLabel}>{label}</Text>
+    <View
+      style={[
+        styles.summaryChip,
+        {
+          backgroundColor: palette.surfaceContainerLowest,
+          borderColor: palette.outlineVariant,
+          borderRadius: radius.md,
+          paddingVertical: 12,
+          paddingHorizontal: spacing.md,
+        },
+      ]}
+    >
+      <Text variant="headlineMd" color="onSurface">{count}</Text>
+      <Text variant="bodySm" color="onSurfaceVariant">{label}</Text>
     </View>
   );
 }
@@ -226,98 +296,47 @@ function SummaryChip({ count, label }: { count: number; label: string }) {
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.backgroundTertiary },
+  container: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: Spacing.xl },
-  header: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.sm,
-    paddingBottom: Spacing.md,
-    backgroundColor: Colors.background,
-  },
-  headerTitle: { fontSize: 28, fontWeight: '600', color: Colors.text, letterSpacing: -0.5 },
-  headerSubtitle: { fontSize: 14, color: Colors.textSecondary, marginTop: 4, lineHeight: 20 },
+  header: {},
+  flex: { flex: 1 },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.background,
-    borderRadius: Layout.borderRadius.md,
-    paddingHorizontal: Spacing.md,
-    marginHorizontal: Spacing.lg,
-    marginTop: Spacing.xs,
-    marginBottom: Spacing.sm,
+    gap: Spacing.sm,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.borderLight,
   },
-  searchIcon: { marginRight: Spacing.sm },
-  searchInput: { flex: 1, fontSize: 16, color: Colors.text, paddingVertical: 12 },
+  searchInput: { flex: 1, paddingVertical: 12, padding: 0 },
   tabRow: {
     flexDirection: 'row',
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.sm,
     gap: 8,
   },
   tab: {
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: 100,
-    backgroundColor: Colors.background,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.borderLight,
   },
-  tabActive: {
-    backgroundColor: Colors.text,
-    borderColor: Colors.text,
-  },
-  tabText: { fontSize: 13, fontWeight: '500', color: Colors.textSecondary },
-  tabTextActive: { color: Colors.background },
   summaryRow: {
     flexDirection: 'row',
-    paddingHorizontal: Spacing.lg,
-    gap: Spacing.md,
-    marginBottom: Spacing.md,
   },
   summaryChip: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'baseline',
     gap: 6,
-    backgroundColor: Colors.background,
-    paddingVertical: 12,
-    paddingHorizontal: Spacing.md,
-    borderRadius: Layout.borderRadius.md,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.borderLight,
   },
-  summaryCount: { fontSize: 20, fontWeight: '600', color: Colors.text, letterSpacing: -0.3 },
-  summaryLabel: { fontSize: 13, color: Colors.textSecondary, fontWeight: '400' },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'baseline',
     justifyContent: 'space-between',
     marginBottom: 10,
-    marginTop: Spacing.md,
     paddingHorizontal: 2,
   },
-  sectionTitle: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary, letterSpacing: 0.2 },
-  sectionCountText: { fontSize: 12, fontWeight: '500', color: Colors.textTertiary },
-  listContent: { paddingHorizontal: Spacing.lg, paddingBottom: Spacing.xl, flexGrow: 1 },
   errorBanner: {
-    flexDirection: 'row', alignItems: 'center', gap: Spacing.xs,
-    backgroundColor: '#FFF5F5', marginHorizontal: Spacing.lg, marginBottom: Spacing.sm,
-    padding: Spacing.sm, borderRadius: Layout.borderRadius.md,
-    borderWidth: StyleSheet.hairlineWidth, borderColor: Colors.error + '35',
-  },
-  errorText: { fontSize: 13, color: Colors.error, flex: 1 },
-  emptyIconWrap: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: Colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: 'row', alignItems: 'center',
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.borderLight,
   },
-  emptyTitle: { fontSize: 17, fontWeight: '600', color: Colors.text, marginTop: Spacing.lg },
-  emptySubtitle: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center', marginTop: 8, lineHeight: 20, maxWidth: 280 },
+  emptySubtitle: { textAlign: 'center', marginTop: 8, maxWidth: 280 },
 });

@@ -1,110 +1,168 @@
 import React from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-} from "react-native";
-import { Colors } from "@/common/constants/colors";
-import { Spacing, Layout } from "@/common/constants/spacing";
+import { View, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
+import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme, type Palette } from "@/common/theme";
+import { Text } from "@/common/components/Text";
+import { AppIcon } from "@/common/components/AppIcon";
+import { PressScale } from "@/common/components/PressScale";
 import { Protected } from "@/modules/permissions/components/Protected";
 import { useUiRole } from "@/modules/permissions/hooks/useUiRole";
 import { useAuth } from "@/modules/auth/hooks/useAuth";
-import { useRouter } from "expo-router";
 import * as PERMS from "@/modules/permissions/constants/permissions";
 import { useAcademicsOverview } from "@/modules/academics/hooks/useAcademicsOverview";
+
+type IconName = keyof typeof Ionicons.glyphMap;
+
+interface ActionCardProps {
+  icon: IconName;
+  title: string;
+  subtitle: string;
+  primary?: boolean;
+  onPress?: () => void;
+}
+
+function ActionCard({ icon, title, subtitle, primary, onPress }: ActionCardProps) {
+  const { palette, spacing, radius } = useTheme();
+  const iconChipBg: keyof Palette = primary ? "primaryContainer" : "surface";
+  const iconChipFg: keyof Palette = primary ? "onPrimary" : "primary";
+
+  return (
+    <PressScale onPress={onPress ?? (() => {})}>
+      <View
+        style={[
+          styles.actionCard,
+          {
+            backgroundColor: primary ? palette.primary : palette.surfaceContainerLowest,
+            borderRadius: radius.lg,
+            borderColor: palette.outlineVariant,
+            padding: spacing.md,
+            marginBottom: spacing.md,
+            gap: spacing.md,
+          },
+        ]}
+      >
+        <View
+          style={[
+            styles.cardIcon,
+            { backgroundColor: palette[iconChipBg], borderRadius: radius.md },
+          ]}
+        >
+          <AppIcon name={icon} size="lg" color={iconChipFg} />
+        </View>
+        <View style={styles.cardText}>
+          <Text variant="labelLg" color={primary ? "onPrimary" : "onSurface"}>
+            {title}
+          </Text>
+          <Text variant="bodySm" color={primary ? "onPrimary" : "onSurfaceVariant"}>
+            {subtitle}
+          </Text>
+        </View>
+        <AppIcon
+          name="chevron-forward"
+          size="md"
+          color={primary ? "onPrimary" : "onSurfaceVariant"}
+        />
+      </View>
+    </PressScale>
+  );
+}
+
+function StatCard({ icon, value, label, loading }: { icon: IconName; value: number; label: string; loading: boolean }) {
+  const { palette, spacing, radius } = useTheme();
+  return (
+    <View
+      style={[
+        styles.statCard,
+        {
+          backgroundColor: palette.surfaceContainerLowest,
+          borderColor: palette.outlineVariant,
+          borderRadius: radius.lg,
+          padding: spacing.lg,
+        },
+      ]}
+    >
+      <AppIcon name={icon} size="xl" color="primary" />
+      {loading ? (
+        <ActivityIndicator size="small" color={palette.primary} style={{ marginTop: spacing.sm }} />
+      ) : (
+        <Text variant="headlineLg" color="onSurface" style={{ marginTop: spacing.sm }}>
+          {value}
+        </Text>
+      )}
+      <Text variant="bodySm" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
+        {label}
+      </Text>
+    </View>
+  );
+}
 
 export default function AcademicsScreen() {
   const { isAdmin, isTeacher, isStudent, isParent } = useUiRole();
   const { isFeatureEnabled } = useAuth();
   const router = useRouter();
+  const { palette, spacing } = useTheme();
   const { data: overview, isLoading: overviewLoading } = useAcademicsOverview(isAdmin);
+
+  const sectionTitleStyle = { marginBottom: spacing.md };
+
+  const roleSubtitle = (admin: string, teacher: string, learner: string) => {
+    if (isAdmin) return admin;
+    if (isTeacher) return teacher;
+    return learner;
+  };
 
   return (
     <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
+      style={[styles.container, { backgroundColor: palette.surface }]}
+      contentContainerStyle={{ paddingBottom: spacing.xl }}
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.header}>
-        <Text style={styles.title}>Academics</Text>
-        <Text style={styles.subtitle}>
+      <View style={[styles.header, { paddingHorizontal: spacing.marginMobile, paddingTop: spacing.md, paddingBottom: spacing.md }]}>
+        <Text variant="display" color="onSurface">Academics</Text>
+        <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
           {isAdmin && "Manage academic operations"}
           {isTeacher && "My teaching & classes"}
           {isStudent && "My learning & progress"}
-          {isParent && "Child&apos;s academic progress"}
+          {isParent && "Child's academic progress"}
         </Text>
       </View>
 
-      <View style={styles.content}>
+      <View style={{ gap: spacing.lg }}>
         <Protected anyPermissions={[PERMS.SYSTEM_MANAGE, PERMS.USER_MANAGE]}>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Overview</Text>
-            <View style={styles.statsGrid}>
-              <View style={styles.statCard}>
-                <Ionicons
-                  name="school-outline"
-                  size={32}
-                  color={Colors.primary}
-                />
-                {overviewLoading ? (
-                  <ActivityIndicator size="small" color={Colors.primary} style={{ marginTop: Spacing.sm }} />
-                ) : (
-                  <Text style={styles.statValue}>{overview?.total_classes ?? 0}</Text>
-                )}
-                <Text style={styles.statLabel}>Classes</Text>
-              </View>
-              <View style={styles.statCard}>
-                <Ionicons
-                  name="book-outline"
-                  size={32}
-                  color={Colors.primary}
-                />
-                {overviewLoading ? (
-                  <ActivityIndicator size="small" color={Colors.primary} style={{ marginTop: Spacing.sm }} />
-                ) : (
-                  <Text style={styles.statValue}>{overview?.total_subjects ?? 0}</Text>
-                )}
-                <Text style={styles.statLabel}>Subjects</Text>
-              </View>
+          <View style={[styles.section, { paddingHorizontal: spacing.marginMobile }]}>
+            <Text variant="headlineMd" color="onSurface" style={sectionTitleStyle}>Overview</Text>
+            <View style={[styles.statsGrid, { gap: spacing.md }]}>
+              <StatCard
+                icon="school-outline"
+                value={overview?.total_classes ?? 0}
+                label="Classes"
+                loading={overviewLoading}
+              />
+              <StatCard
+                icon="book-outline"
+                value={overview?.total_subjects ?? 0}
+                label="Subjects"
+                loading={overviewLoading}
+              />
             </View>
           </View>
         </Protected>
 
         {/* Classes Section - Visible to All */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
+        <View style={[styles.section, { paddingHorizontal: spacing.marginMobile }]}>
+          <Text variant="headlineMd" color="onSurface" style={sectionTitleStyle}>
             {isAdmin && "All Classes"}
             {isTeacher && "My Classes"}
             {(isStudent || isParent) && "Classes"}
           </Text>
 
-          <TouchableOpacity
-            style={styles.actionCard}
+          <ActionCard
+            icon="people-outline"
+            title="View Classes"
+            subtitle="See all class schedules"
             onPress={() => router.push("/(protected)/classes" as any)}
-          >
-            <View style={styles.cardContent}>
-              <View style={styles.cardIcon}>
-                <Ionicons
-                  name="people-outline"
-                  size={24}
-                  color={Colors.primary}
-                />
-              </View>
-              <View style={styles.cardText}>
-                <Text style={styles.cardTitle}>View Classes</Text>
-                <Text style={styles.cardSubtitle}>See all class schedules</Text>
-              </View>
-            </View>
-            <Ionicons
-              name="chevron-forward"
-              size={20}
-              color={Colors.textSecondary}
-            />
-          </TouchableOpacity>
+          />
         </View>
 
         {/* Attendance Section - only when plan has attendance feature enabled */}
@@ -117,103 +175,45 @@ export default function AcademicsScreen() {
               PERMS.ATTENDANCE_READ_ALL,
             ]}
           >
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Attendance</Text>
+            <View style={[styles.section, { paddingHorizontal: spacing.marginMobile }]}>
+              <Text variant="headlineMd" color="onSurface" style={sectionTitleStyle}>Attendance</Text>
 
-            {/* Teacher: Mark Attendance (not admin) */}
-            <Protected permission={PERMS.ATTENDANCE_MARK}>
-              {!isAdmin && (
-                <TouchableOpacity
-                  style={[styles.actionCard, styles.primaryCard]}
-                  onPress={() => router.push("/(protected)/attendance/my-classes" as any)}
-                >
-                  <View style={styles.cardContent}>
-                    <View style={[styles.cardIcon, styles.primaryIcon]}>
-                      <Ionicons
-                        name="checkbox-outline"
-                        size={24}
-                        color={Colors.background}
-                      />
-                    </View>
-                    <View style={styles.cardText}>
-                      <Text style={[styles.cardTitle, styles.primaryText]}>
-                        Mark Attendance
-                      </Text>
-                      <Text style={[styles.cardSubtitle, styles.primarySubtext]}>
-                        Take attendance for your classes
-                      </Text>
-                    </View>
-                  </View>
-                  <Ionicons
-                    name="chevron-forward"
-                    size={20}
-                    color={Colors.background}
+              {/* Teacher: Mark Attendance (not admin) */}
+              <Protected permission={PERMS.ATTENDANCE_MARK}>
+                {!isAdmin && (
+                  <ActionCard
+                    icon="checkbox-outline"
+                    title="Mark Attendance"
+                    subtitle="Take attendance for your classes"
+                    primary
+                    onPress={() => router.push("/(protected)/attendance/my-classes" as any)}
                   />
-                </TouchableOpacity>
-              )}
-            </Protected>
+                )}
+              </Protected>
 
-            {/* View Attendance (Student/Parent, not admin) */}
-            <Protected anyPermissions={[PERMS.ATTENDANCE_READ_SELF]}>
-              {!isAdmin && (
-                <TouchableOpacity
-                  style={styles.actionCard}
-                  onPress={() => router.push("/(protected)/attendance/my-attendance" as any)}
-                >
-                  <View style={styles.cardContent}>
-                    <View style={styles.cardIcon}>
-                      <Ionicons
-                        name="calendar-outline"
-                        size={24}
-                        color={Colors.primary}
-                      />
-                    </View>
-                    <View style={styles.cardText}>
-                      <Text style={styles.cardTitle}>My Attendance</Text>
-                      <Text style={styles.cardSubtitle}>
-                        View attendance history and percentage
-                      </Text>
-                    </View>
-                  </View>
-                  <Ionicons
-                    name="chevron-forward"
-                    size={20}
-                    color={Colors.textSecondary}
+              {/* View Attendance (Student/Parent, not admin) */}
+              <Protected anyPermissions={[PERMS.ATTENDANCE_READ_SELF]}>
+                {!isAdmin && (
+                  <ActionCard
+                    icon="calendar-outline"
+                    title="My Attendance"
+                    subtitle="View attendance history and percentage"
+                    onPress={() => router.push("/(protected)/attendance/my-attendance" as any)}
                   />
-                </TouchableOpacity>
-              )}
-            </Protected>
+                )}
+              </Protected>
 
-            {/* View Attendance (Admin) */}
-            <Protected permission={PERMS.ATTENDANCE_READ_ALL}>
-              <TouchableOpacity
-                style={styles.actionCard}
-                onPress={() => router.push("/(protected)/attendance/overview" as any)}
-              >
-                <View style={styles.cardContent}>
-                  <View style={styles.cardIcon}>
-                    <Ionicons
-                      name="stats-chart-outline"
-                      size={24}
-                      color={Colors.primary}
-                    />
-                  </View>
-                  <View style={styles.cardText}>
-                    <Text style={styles.cardTitle}>Attendance Overview</Text>
-                    <Text style={styles.cardSubtitle}>
-                      View all attendance records by class and date
-                    </Text>
-                  </View>
-                </View>
-                <Ionicons
-                  name="chevron-forward"
-                  size={20}
-                  color={Colors.textSecondary}
+              {/* View Attendance (Admin) */}
+              <Protected permission={PERMS.ATTENDANCE_READ_ALL}>
+                <ActionCard
+                  icon="stats-chart-outline"
+                  title="Attendance Overview"
+                  subtitle="View all attendance records by class and date"
+                  onPress={() => router.push("/(protected)/attendance/overview" as any)}
                 />
-              </TouchableOpacity>
-            </Protected>
-          </View>
-        </Protected>
+              </Protected>
+            </View>
+          </Protected>
         )}
 
         {/* Grades Section */}
@@ -225,62 +225,24 @@ export default function AcademicsScreen() {
             PERMS.GRADE_MANAGE,
           ]}
         >
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Grades & Marks</Text>
+          <View style={[styles.section, { paddingHorizontal: spacing.marginMobile }]}>
+            <Text variant="headlineMd" color="onSurface" style={sectionTitleStyle}>Grades & Marks</Text>
 
             {/* Teacher: Enter Grades */}
-            <Protected
-              anyPermissions={[PERMS.GRADE_CREATE, PERMS.GRADE_UPDATE]}
-            >
-              <TouchableOpacity style={styles.actionCard}>
-                <View style={styles.cardContent}>
-                  <View style={styles.cardIcon}>
-                    <Ionicons
-                      name="create-outline"
-                      size={24}
-                      color={Colors.primary}
-                    />
-                  </View>
-                  <View style={styles.cardText}>
-                    <Text style={styles.cardTitle}>Enter Grades</Text>
-                    <Text style={styles.cardSubtitle}>
-                      Add or update student grades
-                    </Text>
-                  </View>
-                </View>
-                <Ionicons
-                  name="chevron-forward"
-                  size={20}
-                  color={Colors.textSecondary}
-                />
-              </TouchableOpacity>
+            <Protected anyPermissions={[PERMS.GRADE_CREATE, PERMS.GRADE_UPDATE]}>
+              <ActionCard
+                icon="create-outline"
+                title="Enter Grades"
+                subtitle="Add or update student grades"
+              />
             </Protected>
 
             {/* View Grades */}
-            <TouchableOpacity style={styles.actionCard}>
-              <View style={styles.cardContent}>
-                <View style={styles.cardIcon}>
-                  <Ionicons
-                    name="ribbon-outline"
-                    size={24}
-                    color={Colors.primary}
-                  />
-                </View>
-                <View style={styles.cardText}>
-                  <Text style={styles.cardTitle}>View Grades</Text>
-                  <Text style={styles.cardSubtitle}>
-                    {isAdmin && "All grades and reports"}
-                    {isTeacher && "My class grades"}
-                    {(isStudent || isParent) && "Grades and report card"}
-                  </Text>
-                </View>
-              </View>
-              <Ionicons
-                name="chevron-forward"
-                size={20}
-                color={Colors.textSecondary}
-              />
-            </TouchableOpacity>
+            <ActionCard
+              icon="ribbon-outline"
+              title="View Grades"
+              subtitle={roleSubtitle("All grades and reports", "My class grades", "Grades and report card")}
+            />
           </View>
         </Protected>
 
@@ -293,185 +255,55 @@ export default function AcademicsScreen() {
             PERMS.ASSIGNMENT_MANAGE,
           ]}
         >
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Assignments</Text>
+          <View style={[styles.section, { paddingHorizontal: spacing.marginMobile }]}>
+            <Text variant="headlineMd" color="onSurface" style={sectionTitleStyle}>Assignments</Text>
 
             {/* Teacher: Create Assignment */}
-            <Protected
-              anyPermissions={[
-                PERMS.ASSIGNMENT_CREATE,
-                PERMS.ASSIGNMENT_MANAGE,
-              ]}
-            >
-              <TouchableOpacity style={styles.actionCard}>
-                <View style={styles.cardContent}>
-                  <View style={styles.cardIcon}>
-                    <Ionicons
-                      name="add-circle-outline"
-                      size={24}
-                      color={Colors.primary}
-                    />
-                  </View>
-                  <View style={styles.cardText}>
-                    <Text style={styles.cardTitle}>Create Assignment</Text>
-                    <Text style={styles.cardSubtitle}>
-                      Add new assignment for class
-                    </Text>
-                  </View>
-                </View>
-                <Ionicons
-                  name="chevron-forward"
-                  size={20}
-                  color={Colors.textSecondary}
-                />
-              </TouchableOpacity>
+            <Protected anyPermissions={[PERMS.ASSIGNMENT_CREATE, PERMS.ASSIGNMENT_MANAGE]}>
+              <ActionCard
+                icon="add-circle-outline"
+                title="Create Assignment"
+                subtitle="Add new assignment for class"
+              />
             </Protected>
 
             {/* View/Submit Assignments */}
-            <TouchableOpacity style={styles.actionCard}>
-              <View style={styles.cardContent}>
-                <View style={styles.cardIcon}>
-                  <Ionicons
-                    name="document-text-outline"
-                    size={24}
-                    color={Colors.primary}
-                  />
-                </View>
-                <View style={styles.cardText}>
-                  <Text style={styles.cardTitle}>
-                    {isStudent || isParent
-                      ? "View & Submit"
-                      : "View Assignments"}
-                  </Text>
-                  <Text style={styles.cardSubtitle}>
-                    {isAdmin && "All assignments"}
-                    {isTeacher && "My class assignments"}
-                    {(isStudent || isParent) && "Pending and completed"}
-                  </Text>
-                </View>
-              </View>
-              <Ionicons
-                name="chevron-forward"
-                size={20}
-                color={Colors.textSecondary}
-              />
-            </TouchableOpacity>
+            <ActionCard
+              icon="document-text-outline"
+              title={isStudent || isParent ? "View & Submit" : "View Assignments"}
+              subtitle={roleSubtitle("All assignments", "My class assignments", "Pending and completed")}
+            />
           </View>
         </Protected>
-
       </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  contentContainer: {
-    paddingBottom: Spacing.lg,
-  },
-  header: {
-    padding: Spacing.lg,
-    paddingBottom: Spacing.md,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "700",
-    color: Colors.text,
-    marginBottom: Spacing.xs,
-    fontFamily: "System",
-  },
-  subtitle: {
-    fontSize: 16,
-    color: Colors.textSecondary,
-    fontFamily: "System",
-  },
-  content: {
-    gap: Spacing.lg,
-  },
-  section: {
-    paddingHorizontal: Spacing.lg,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: Colors.text,
-    marginBottom: Spacing.md,
-    fontFamily: "System",
-  },
+  container: { flex: 1 },
+  header: {},
+  section: {},
   statsGrid: {
     flexDirection: "row",
-    gap: Spacing.md,
   },
   statCard: {
     flex: 1,
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.lg,
-    padding: Spacing.lg,
     alignItems: "center",
-  },
-  statValue: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: Colors.text,
-    marginTop: Spacing.sm,
-    fontFamily: "System",
-  },
-  statLabel: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    marginTop: Spacing.xs,
-    fontFamily: "System",
+    borderWidth: StyleSheet.hairlineWidth,
   },
   actionCard: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: Colors.backgroundSecondary,
-    borderRadius: Layout.borderRadius.lg,
-    padding: Spacing.md,
-    marginBottom: Spacing.md,
-  },
-  primaryCard: {
-    backgroundColor: Colors.primary,
-  },
-  cardContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   cardIcon: {
     width: 48,
     height: 48,
-    borderRadius: Layout.borderRadius.md,
-    backgroundColor: Colors.background,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: Spacing.md,
-  },
-  primaryIcon: {
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
   },
   cardText: {
     flex: 1,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: Colors.text,
-    marginBottom: 2,
-    fontFamily: "System",
-  },
-  primaryText: {
-    color: Colors.background,
-  },
-  cardSubtitle: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    fontFamily: "System",
-  },
-  primarySubtext: {
-    color: "rgba(255, 255, 255, 0.8)",
   },
 });

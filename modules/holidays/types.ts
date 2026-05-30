@@ -1,3 +1,5 @@
+import type { Palette } from '@/common/theme';
+
 export type HolidayType = 'public' | 'school' | 'regional' | 'optional' | 'weekly_off';
 
 export const HOLIDAY_TYPE_LABELS: Record<HolidayType, string> = {
@@ -8,12 +10,13 @@ export const HOLIDAY_TYPE_LABELS: Record<HolidayType, string> = {
   weekly_off: 'Weekly Off',
 };
 
-export const HOLIDAY_TYPE_COLORS: Record<HolidayType, string> = {
-  public: '#FF3B30',
-  school: '#000000',
-  regional: '#FF9500',
-  optional: '#86868B',
-  weekly_off: '#34C759',
+/** Palette token used to accent each holiday type (left stripe + badge). */
+export const HOLIDAY_TYPE_ACCENTS: Record<HolidayType, keyof Palette> = {
+  public: 'error',
+  school: 'primary',
+  regional: 'warning',
+  optional: 'onSurfaceVariant',
+  weekly_off: 'success',
 };
 
 export const DAY_NAMES: Record<number, string> = {

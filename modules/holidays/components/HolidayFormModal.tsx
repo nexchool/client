@@ -319,7 +319,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
                 borderRadius: radius.md,
                 padding: spacing.md,
                 color: palette.onSurface,
-                fontSize: 16,
+                ...typography.bodyMd,
               }}
               value={form.name}
               onChangeText={(v) => setField('name', v)}
@@ -568,7 +568,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
                 borderRadius: radius.md,
                 padding: spacing.md,
                 color: palette.onSurface,
-                fontSize: 16,
+                ...typography.bodyMd,
                 minHeight: 80,
                 paddingTop: spacing.sm,
               }}

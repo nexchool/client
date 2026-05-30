@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { calendarLocaleForLanguage } from '@/i18n';
-import { Colors } from '@/common/constants/colors';
-import { Spacing, Layout } from '@/common/constants/spacing';
-import { Holiday, HOLIDAY_TYPE_COLORS } from '../types';
+import { useTheme } from '@/common/theme';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
+import { Holiday, HOLIDAY_TYPE_ACCENTS } from '../types';
 
 interface HolidayListItemProps {
   holiday: Holiday;
@@ -22,6 +22,7 @@ export const HolidayListItem: React.FC<HolidayListItemProps> = ({
   canManage = !!(onEdit || onDelete),
 }) => {
   const { t, i18n } = useTranslation(['holidays', 'teacherLeaves']);
+  const { palette, spacing, radius, elevation } = useTheme();
   const locale = calendarLocaleForLanguage(i18n.language ?? 'en');
 
   const dateRange = useMemo(() => {
@@ -39,81 +40,102 @@ export const HolidayListItem: React.FC<HolidayListItemProps> = ({
     return `${fmt(holiday.start_date)} – ${fmt(holiday.end_date)}`;
   }, [holiday, locale, t]);
 
-  const typeColor = HOLIDAY_TYPE_COLORS[holiday.holiday_type] ?? Colors.text;
+  const accent = HOLIDAY_TYPE_ACCENTS[holiday.holiday_type] ?? 'onSurface';
+  const accentColor = palette[accent];
   const typeLabel = t(`holidayForm.types.${holiday.holiday_type}`, {
     ns: 'teacherLeaves',
     defaultValue: holiday.holiday_type,
   });
 
   return (
-    <View style={styles.container}>
-      <View style={[styles.accentDot, { backgroundColor: typeColor }]} />
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: palette.surfaceContainerLowest,
+          borderRadius: radius.md,
+          borderColor: palette.outlineVariant,
+          marginBottom: spacing.sm + 2,
+        },
+        elevation.card,
+      ]}
+    >
+      <View style={[styles.accentBar, { backgroundColor: accentColor }]} />
 
-      <View style={styles.body}>
+      <View style={[styles.body, { padding: spacing.md }]}>
         <View style={styles.topRow}>
-          <View style={styles.titleBlock}>
-            <View style={styles.titleRow}>
-              {holiday.is_recurring && (
-                <Ionicons name="repeat" size={14} color={Colors.textTertiary} style={styles.recurIcon} />
-              )}
-              <Text style={styles.name} numberOfLines={2}>
-                {holiday.name}
-              </Text>
-            </View>
+          <View style={styles.titleRow}>
+            {holiday.is_recurring && (
+              <AppIcon name="repeat" size="sm" color="onSurfaceVariant" style={styles.recurIcon} />
+            )}
+            <Text variant="labelLg" color="onSurface" numberOfLines={2} style={styles.name}>
+              {holiday.name}
+            </Text>
           </View>
 
           {canManage && (
-            <View style={styles.actions}>
+            <View style={[styles.actions, { gap: spacing.xs }]}>
               {onEdit && (
-                <TouchableOpacity
-                  style={styles.actionBtn}
+                <AppIcon
+                  name="pencil-outline"
+                  size="sm"
+                  color="onSurfaceVariant"
                   onPress={() => onEdit(holiday)}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 4 }}
-                >
-                  <Ionicons name="pencil-outline" size={16} color={Colors.textSecondary} />
-                </TouchableOpacity>
+                  accessibilityLabel="Edit holiday"
+                />
               )}
               {onDelete && (
-                <TouchableOpacity
-                  style={styles.actionBtn}
+                <AppIcon
+                  name="trash-outline"
+                  size="sm"
+                  color="error"
                   onPress={() => onDelete(holiday)}
-                  hitSlop={{ top: 8, bottom: 8, left: 4, right: 8 }}
-                >
-                  <Ionicons name="trash-outline" size={16} color={Colors.error} />
-                </TouchableOpacity>
+                  accessibilityLabel="Delete holiday"
+                />
               )}
             </View>
           )}
         </View>
 
-        <Text style={styles.dateLine}>{dateRange}</Text>
+        <Text variant="bodySm" color="onSurfaceVariant" style={{ marginTop: spacing.xs + 4 }}>
+          {dateRange}
+        </Text>
 
-        <View style={styles.metaRow}>
-          <View style={[styles.badge, { borderColor: typeColor + '40', backgroundColor: typeColor + '12' }]}>
-            <Text style={[styles.badgeText, { color: typeColor }]}>{typeLabel}</Text>
+        <View style={[styles.metaRow, { gap: spacing.sm, marginTop: spacing.sm + 2 }]}>
+          <View
+            style={[
+              styles.badge,
+              { borderColor: accentColor + '40', backgroundColor: accentColor + '12', borderRadius: radius.sm + 2 },
+            ]}
+          >
+            <Text variant="labelSm" style={{ color: accentColor }}>
+              {typeLabel}
+            </Text>
           </View>
           {!holiday.is_recurring && holiday.duration_days > 1 && (
-            <Text style={styles.durationText}>
+            <Text variant="labelSm" color="onSurfaceVariant">
               {t('list.durationDays', { count: holiday.duration_days })}
             </Text>
           )}
         </View>
 
         {holiday.falls_on_sunday && (
-          <View style={styles.warningRow}>
-            <Ionicons name="information-circle-outline" size={14} color={Colors.textTertiary} />
-            <Text style={styles.warningText}>{t('list.fallsOnSunday')}</Text>
+          <View style={[styles.warningRow, { gap: spacing.xs + 2, marginTop: spacing.sm + 2 }]}>
+            <AppIcon name="information-circle-outline" size="sm" color="onSurfaceVariant" />
+            <Text variant="labelSm" color="onSurfaceVariant" style={styles.flex}>
+              {t('list.fallsOnSunday')}
+            </Text>
           </View>
         )}
 
         {!!holiday.description && (
-          <Text style={styles.description} numberOfLines={3}>
+          <Text variant="bodySm" color="onSurfaceVariant" numberOfLines={3} style={{ marginTop: spacing.sm + 2 }}>
             {holiday.description}
           </Text>
         )}
 
         {!!holiday.academic_year_name && (
-          <Text style={styles.academicYear} numberOfLines={1}>
+          <Text variant="labelSm" color="onSurfaceVariant" numberOfLines={1} style={{ marginTop: spacing.xs + 4 }}>
             {holiday.academic_year_name}
           </Text>
         )}
@@ -125,34 +147,24 @@ export const HolidayListItem: React.FC<HolidayListItemProps> = ({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: Colors.background,
-    borderRadius: Layout.borderRadius.md,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.borderLight,
-    marginBottom: 10,
     overflow: 'hidden',
   },
-  accentDot: {
+  accentBar: {
     width: 3,
     alignSelf: 'stretch',
     opacity: 0.85,
   },
   body: {
     flex: 1,
-    paddingVertical: 14,
-    paddingHorizontal: Spacing.md,
-    paddingLeft: 12,
   },
   topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    gap: Spacing.sm,
-  },
-  titleBlock: {
-    flex: 1,
   },
   titleRow: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 6,
@@ -162,70 +174,26 @@ const styles = StyleSheet.create({
   },
   name: {
     flex: 1,
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.text,
-    letterSpacing: -0.2,
-    lineHeight: 22,
-  },
-  dateLine: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    marginTop: 8,
-    fontWeight: '400',
   },
   actions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  actionBtn: {
-    padding: Spacing.xs,
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 10,
   },
   badge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
     borderWidth: StyleSheet.hairlineWidth,
-  },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: '600',
-    letterSpacing: 0.2,
-  },
-  durationText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: Colors.textTertiary,
   },
   warningRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 6,
-    marginTop: 10,
   },
-  warningText: {
-    fontSize: 12,
-    color: Colors.textSecondary,
+  flex: {
     flex: 1,
-    lineHeight: 17,
-  },
-  description: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    marginTop: 10,
-    lineHeight: 19,
-  },
-  academicYear: {
-    fontSize: 12,
-    color: Colors.textTertiary,
-    marginTop: 8,
   },
 });
