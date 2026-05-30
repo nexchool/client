@@ -63,6 +63,7 @@
     "email": "Email",
     "phone": "Phone",
     "address": "Address",
+    "school": "School",
     "name": "Name",
     "relationship": "Relationship",
     "currentClass": "Current class",
