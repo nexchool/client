@@ -341,7 +341,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   toolbar: {
-    padding: Spacing.md,
     marginBottom: Spacing.md,
     gap: Spacing[12],
   },

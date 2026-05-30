@@ -257,7 +257,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   toolbar: {
-    padding: Spacing.md,
     marginBottom: Spacing.md,
     gap: Spacing[12],
   },
