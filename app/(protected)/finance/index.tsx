@@ -16,10 +16,7 @@ import { DashboardKpiCard } from "@/modules/home/components/DashboardKpiCard";
 import { FeeTrendChart } from "@/modules/home/components/FeeTrendChart";
 import { DashboardActionRow } from "@/modules/home/components/DashboardActionRow";
 import { useStudentAcademicDashboard } from "@/modules/academics/hooks/useAcademicQueries";
-
-function formatInr(value: number): string {
-  return `₹${Number(value).toLocaleString("en-IN")}`;
-}
+import { formatCurrency } from "@/common/utils/formatCurrency";
 
 export default function FinanceIndex() {
   const { isStudent } = useUiRole();
@@ -44,7 +41,8 @@ function AdminFinanceDashboard() {
 
   // Admin dashboard supplies the last-7-days collection series + month-over-month
   // trend that the finance summary endpoint does not. Reused honestly (labeled
-  // "last 7 days"), gated on the fees feature being enabled.
+  // "last 7 days"). Admin dashboard aggregate; the finance section is rendered
+  // only when feature_flags.fees_management is on.
   const { data: adminData } = useAdminDashboard();
   const finance = adminData?.finance;
   const collectionSeries = finance?.last_7_days_collection ?? [];
@@ -114,7 +112,7 @@ function AdminFinanceDashboard() {
           <View style={{ width: "48%" }}>
             <DashboardKpiCard
               label={t("dashboard.totalCollected", { defaultValue: "Total Collected" })}
-              value={formatInr(totalCollected)}
+              value={formatCurrency(totalCollected)}
               accentColor="success"
               iconName="wallet-outline"
               iconChipBg="surfaceContainerHigh"
@@ -129,7 +127,7 @@ function AdminFinanceDashboard() {
           <View style={{ width: "48%" }}>
             <DashboardKpiCard
               label={t("dashboard.totalOutstanding", { defaultValue: "Pending Fees" })}
-              value={formatInr(totalOutstanding)}
+              value={formatCurrency(totalOutstanding)}
               accentColor="secondary"
               iconName="hourglass-outline"
               iconChipBg="secondaryContainer"
@@ -303,7 +301,7 @@ function AdminFinanceDashboard() {
                   </Text>
                 </View>
                 <Text variant="labelMd" color="success">
-                  {formatInr(payment.amount)}
+                  {formatCurrency(payment.amount)}
                 </Text>
               </View>
             ))}
@@ -359,7 +357,7 @@ function StudentFinanceLanding() {
               }
               value={
                 totalOutstanding > 0
-                  ? formatInr(totalOutstanding)
+                  ? formatCurrency(totalOutstanding)
                   : t("student.noFeesDue", { defaultValue: "All paid" })
               }
               accentColor={heroAccent}
