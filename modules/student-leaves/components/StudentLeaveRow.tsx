@@ -1,8 +1,11 @@
 // client/modules/student-leaves/components/StudentLeaveRow.tsx
 import React from 'react';
-import { Pressable, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View } from 'react-native';
 import { useTheme } from '@/common/theme';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
+import { PressScale } from '@/common/components/PressScale';
+import { statusAccent } from '../constants';
 import type { StudentLeave } from '../types';
 
 type Props = {
@@ -20,55 +23,62 @@ const STATUS_LABEL: Record<StudentLeave['status'], string> = {
 };
 
 export function StudentLeaveRow({ leave, onPress, showStudentName }: Props) {
-  const { palette, spacing, radius, typography, elevation } = useTheme();
-
-  const statusBg =
-    leave.status === 'approved' ? `${palette.success}22`
-    : leave.status === 'rejected' ? `${palette.error}22`
-    : leave.status === 'cancelled' ? `${palette.outlineVariant}66`
-    : `${palette.warning}22`;
-  const statusFg =
-    leave.status === 'approved' ? palette.success
-    : leave.status === 'rejected' ? palette.error
-    : leave.status === 'cancelled' ? palette.onSurfaceVariant
-    : palette.warning;
+  const { palette, spacing, radius, elevation } = useTheme();
+  const accent = statusAccent(leave.status);
 
   return (
-    <Pressable
+    <PressScale
       onPress={() => onPress(leave)}
-      style={({ pressed }) => ({
-        backgroundColor: palette.surfaceContainerLowest,
-        borderRadius: radius.xl,
-        padding: spacing.lg,
-        gap: spacing.sm,
-        opacity: pressed ? 0.9 : 1,
-        ...elevation.card,
-      })}
+      style={[
+        {
+          backgroundColor: palette.surfaceContainerLowest,
+          borderRadius: radius.xl,
+          padding: spacing.lg,
+          gap: spacing.sm,
+          borderLeftWidth: 4,
+          borderLeftColor: palette[accent],
+        },
+        elevation.card,
+      ]}
     >
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Text style={[typography.labelMd, { color: palette.onSurface, textTransform: 'capitalize' }]}>
+        <Text variant="labelMd" color="onSurface" style={{ textTransform: 'capitalize' }}>
           {leave.leave_type}
         </Text>
-        <View style={{ backgroundColor: statusBg, paddingHorizontal: spacing.sm, paddingVertical: 4, borderRadius: radius.full }}>
-          <Text style={[typography.labelSm, { color: statusFg }]}>{STATUS_LABEL[leave.status]}</Text>
+        <View
+          style={{
+            backgroundColor: palette.surfaceContainer,
+            paddingHorizontal: spacing.sm,
+            paddingVertical: spacing.xs,
+            borderRadius: radius.full,
+            marginLeft: spacing.sm,
+          }}
+        >
+          <Text variant="labelSm" color={accent}>
+            {STATUS_LABEL[leave.status]}
+          </Text>
         </View>
       </View>
       {showStudentName && leave.student_name ? (
-        <Text style={[typography.bodyMd, { color: palette.onSurface }]}>{leave.student_name}</Text>
+        <Text variant="bodyMd" color="onSurface">
+          {leave.student_name}
+        </Text>
       ) : null}
-      <Text style={[typography.labelSm, { color: palette.onSurfaceVariant }]}>
+      <Text variant="labelSm" color="onSurfaceVariant">
         {leave.start_date} – {leave.end_date}
         {leave.half_day ? ` (${leave.half_day.toUpperCase()})` : ''}
       </Text>
-      <Text style={[typography.bodyMd, { color: palette.onSurfaceVariant }]} numberOfLines={2}>
+      <Text variant="bodyMd" color="onSurfaceVariant" numberOfLines={2}>
         {leave.reason}
       </Text>
       {leave.cancel_requested_at ? (
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-          <Ionicons name="time-outline" size={14} color={palette.warning} />
-          <Text style={[typography.labelSm, { color: palette.warning }]}>Cancellation pending</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+          <AppIcon name="time-outline" size="sm" color="warning" />
+          <Text variant="labelSm" color="warning">
+            Cancellation pending
+          </Text>
         </View>
       ) : null}
-    </Pressable>
+    </PressScale>
   );
 }

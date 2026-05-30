@@ -1,6 +1,9 @@
 {
+  "back": "Back",
+  "cancel": "Cancel",
   "list": {
     "title": "My leaves",
+    "newA11y": "Apply for leave",
     "empty": {
       "title": "No leaves yet",
       "body": "When you apply for a leave, it will show up here."
@@ -8,6 +11,8 @@
   },
   "queue": {
     "title": "Student leaves",
+    "tabNew": "New requests",
+    "tabCancel": "Cancellation requests",
     "adminBanner": "Showing requests where the class teacher is currently on leave.",
     "empty": {
       "title": "All clear",
@@ -16,6 +21,10 @@
   },
   "detail": {
     "leaveSuffix": "leave",
+    "cardTitle": "Leave details",
+    "dates": "Dates",
+    "reason": "Reason",
+    "decidedBy": "Decided by",
     "rejectedReason": "Rejected:",
     "cancelPending": "Cancellation is awaiting class teacher review.",
     "requestCancel": "Request cancellation"

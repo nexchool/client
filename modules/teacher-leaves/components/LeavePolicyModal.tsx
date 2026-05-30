@@ -2,27 +2,29 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   View,
-  Text,
   StyleSheet,
   SafeAreaView,
   ScrollView,
-  TouchableOpacity,
   Alert,
   ActivityIndicator,
   TextInput,
   Modal,
   Switch,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/common/theme";
+import { Text } from "@/common/components/Text";
+import { AppIcon } from "@/common/components/AppIcon";
+import { PressScale } from "@/common/components/PressScale";
 import { LeavePolicy } from "@/modules/teachers/types";
-import { leaveTypeColor, LEAVE_TYPE_ICONS } from "../utils/leaveColors";
+import { leaveTypeAccentToken, LEAVE_TYPE_ICONS } from "../utils/leaveColors";
+
+type PolicyFieldValue = boolean | number;
 
 export interface LeavePolicyModalProps {
   visible: boolean;
   policies: LeavePolicy[];
   policiesLoading: boolean;
-  onUpdate: (leaveType: string, field: string, value: any) => void;
+  onUpdate: (leaveType: string, field: string, value: PolicyFieldValue) => void;
   onSave: (leaveType: string) => Promise<void>;
   onClose: () => void;
   editingPolicies: Record<string, Partial<LeavePolicy>>;
@@ -45,8 +47,9 @@ export function LeavePolicyModal({
     setSaving(leaveType);
     try {
       await onSave(leaveType);
-    } catch (e: any) {
-      Alert.alert(t("policyModal.errorTitle"), e.message || t("policyModal.saveFailed"));
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : t("policyModal.saveFailed");
+      Alert.alert(t("policyModal.errorTitle"), msg);
     } finally {
       setSaving(null);
     }
@@ -62,19 +65,12 @@ export function LeavePolicyModal({
       borderBottomWidth: 1,
       borderBottomColor: palette.outlineVariant,
     },
-    title: { ...typography.headlineMd, color: palette.onSurface },
-    description: {
-      ...typography.bodyMd,
-      color: palette.onSurfaceVariant,
-      marginBottom: spacing.lg,
-    },
     loadingRow: {
       flexDirection: "row",
       alignItems: "center",
       gap: spacing.sm,
       paddingVertical: spacing.lg,
     },
-    loadingText: { ...typography.bodyMd, color: palette.onSurfaceVariant },
     card: {
       marginBottom: spacing.lg,
       borderRadius: radius.lg,
@@ -86,14 +82,12 @@ export function LeavePolicyModal({
     cardTitle: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 8,
+      gap: spacing.sm,
       padding: spacing.md,
       borderBottomWidth: 1,
       borderBottomColor: palette.outlineVariant,
       backgroundColor: palette.surfaceContainer,
     },
-    typeIcon: { fontSize: 18 },
-    typeName: { ...typography.labelMd, fontWeight: "700", letterSpacing: 0.5 },
     fieldRow: {
       flexDirection: "row",
       alignItems: "center",
@@ -103,7 +97,6 @@ export function LeavePolicyModal({
       borderBottomWidth: 1,
       borderBottomColor: palette.outlineVariant,
     },
-    fieldLabel: { ...typography.labelMd, color: palette.onSurface, flex: 1 },
     numInput: {
       width: 72,
       borderWidth: 1,
@@ -124,7 +117,6 @@ export function LeavePolicyModal({
       borderRadius: radius.md,
       alignItems: "center",
     },
-    saveBtnText: { ...typography.labelMd, color: palette.onPrimary, fontWeight: "700" },
   });
 
   return (
@@ -136,57 +128,61 @@ export function LeavePolicyModal({
     >
       <SafeAreaView style={s.container}>
         <View style={s.header}>
-          <TouchableOpacity onPress={onClose}>
-            <Ionicons name="close" size={22} color={palette.onSurface} />
-          </TouchableOpacity>
-          <Text style={s.title}>{t("policyModal.title")}</Text>
-          <View style={{ width: 22 }} />
+          <AppIcon name="close" size="lg" color="onSurface" onPress={onClose} />
+          <Text variant="headlineMd" color="onSurface">
+            {t("policyModal.title")}
+          </Text>
+          <View style={{ width: 24 }} />
         </View>
 
         <ScrollView contentContainerStyle={{ padding: spacing.lg }}>
-          <Text style={s.description}>{t("policyModal.description")}</Text>
+          <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginBottom: spacing.lg }}>
+            {t("policyModal.description")}
+          </Text>
 
           {policiesLoading ? (
             <View style={s.loadingRow}>
               <ActivityIndicator color={palette.primary} />
-              <Text style={s.loadingText}>{t("policyModal.loading")}</Text>
+              <Text variant="bodyMd" color="onSurfaceVariant">
+                {t("policyModal.loading")}
+              </Text>
             </View>
           ) : (
             policies.map((policy) => {
               const edits = editingPolicies[policy.leave_type] ?? {};
               const current = { ...policy, ...edits };
+              const typeAccent = leaveTypeAccentToken(policy.leave_type);
 
               return (
                 <View key={policy.leave_type} style={s.card}>
                   <View style={s.cardTitle}>
-                    <Text style={s.typeIcon}>{LEAVE_TYPE_ICONS[policy.leave_type]}</Text>
-                    <Text
-                      style={[s.typeName, { color: leaveTypeColor(policy.leave_type) }]}
-                    >
-                      {t(`leaveTypes.${policy.leave_type}`, {
-                        defaultValue: policy.leave_type,
-                      })}
+                    <AppIcon
+                      name={LEAVE_TYPE_ICONS[policy.leave_type] ?? "document-text-outline"}
+                      size="md"
+                      color={typeAccent}
+                    />
+                    <Text variant="labelMd" color={typeAccent}>
+                      {t(`leaveTypes.${policy.leave_type}`, { defaultValue: policy.leave_type })}
                     </Text>
                   </View>
 
                   <View style={s.fieldRow}>
-                    <Text style={s.fieldLabel}>{t("policyModal.unlimited")}</Text>
+                    <Text variant="labelMd" color="onSurface" style={{ flex: 1 }}>
+                      {t("policyModal.unlimited")}
+                    </Text>
                     <Switch
                       value={current.is_unlimited}
                       onValueChange={(v) => onUpdate(policy.leave_type, "is_unlimited", v)}
-                      trackColor={{
-                        false: palette.outlineVariant,
-                        true: palette.primary + "60",
-                      }}
-                      thumbColor={
-                        current.is_unlimited ? palette.primary : palette.onSurfaceVariant
-                      }
+                      trackColor={{ false: palette.outlineVariant, true: palette.primaryContainer }}
+                      thumbColor={current.is_unlimited ? palette.primary : palette.onSurfaceVariant}
                     />
                   </View>
 
                   {!current.is_unlimited && (
                     <View style={s.fieldRow}>
-                      <Text style={s.fieldLabel}>{t("policyModal.annualDays")}</Text>
+                      <Text variant="labelMd" color="onSurface" style={{ flex: 1 }}>
+                        {t("policyModal.annualDays")}
+                      </Text>
                       <TextInput
                         style={s.numInput}
                         value={String(current.total_days ?? policy.total_days)}
@@ -200,38 +196,33 @@ export function LeavePolicyModal({
                   )}
 
                   <View style={s.fieldRow}>
-                    <Text style={s.fieldLabel}>{t("policyModal.allowCarryForward")}</Text>
+                    <Text variant="labelMd" color="onSurface" style={{ flex: 1 }}>
+                      {t("policyModal.allowCarryForward")}
+                    </Text>
                     <Switch
                       value={current.is_carry_forward_allowed}
                       onValueChange={(v) =>
                         onUpdate(policy.leave_type, "is_carry_forward_allowed", v)
                       }
-                      trackColor={{
-                        false: palette.outlineVariant,
-                        true: palette.primary + "60",
-                      }}
+                      trackColor={{ false: palette.outlineVariant, true: palette.primaryContainer }}
                       thumbColor={
-                        current.is_carry_forward_allowed
-                          ? palette.primary
-                          : palette.onSurfaceVariant
+                        current.is_carry_forward_allowed ? palette.primary : palette.onSurfaceVariant
                       }
                     />
                   </View>
 
                   {current.is_carry_forward_allowed && (
                     <View style={s.fieldRow}>
-                      <Text style={s.fieldLabel}>{t("policyModal.maxCarryForward")}</Text>
+                      <Text variant="labelMd" color="onSurface" style={{ flex: 1 }}>
+                        {t("policyModal.maxCarryForward")}
+                      </Text>
                       <TextInput
                         style={s.numInput}
                         value={String(
                           current.max_carry_forward_days ?? policy.max_carry_forward_days
                         )}
                         onChangeText={(v) =>
-                          onUpdate(
-                            policy.leave_type,
-                            "max_carry_forward_days",
-                            parseInt(v, 10) || 0
-                          )
+                          onUpdate(policy.leave_type, "max_carry_forward_days", parseInt(v, 10) || 0)
                         }
                         keyboardType="numeric"
                         selectTextOnFocus
@@ -240,42 +231,30 @@ export function LeavePolicyModal({
                   )}
 
                   <View style={s.fieldRow}>
-                    <Text style={s.fieldLabel}>{t("policyModal.allowNegative")}</Text>
+                    <Text variant="labelMd" color="onSurface" style={{ flex: 1 }}>
+                      {t("policyModal.allowNegative")}
+                    </Text>
                     <Switch
                       value={current.allow_negative}
-                      onValueChange={(v) =>
-                        onUpdate(policy.leave_type, "allow_negative", v)
-                      }
-                      trackColor={{
-                        false: palette.outlineVariant,
-                        true: palette.warning + "80",
-                      }}
-                      thumbColor={
-                        current.allow_negative ? palette.warning : palette.onSurfaceVariant
-                      }
+                      onValueChange={(v) => onUpdate(policy.leave_type, "allow_negative", v)}
+                      trackColor={{ false: palette.outlineVariant, true: palette.warning }}
+                      thumbColor={current.allow_negative ? palette.warning : palette.onSurfaceVariant}
                     />
                   </View>
 
                   <View style={s.fieldRow}>
-                    <Text style={s.fieldLabel}>{t("policyModal.requireReason")}</Text>
+                    <Text variant="labelMd" color="onSurface" style={{ flex: 1 }}>
+                      {t("policyModal.requireReason")}
+                    </Text>
                     <Switch
                       value={current.requires_reason}
-                      onValueChange={(v) =>
-                        onUpdate(policy.leave_type, "requires_reason", v)
-                      }
-                      trackColor={{
-                        false: palette.outlineVariant,
-                        true: palette.primary + "60",
-                      }}
-                      thumbColor={
-                        current.requires_reason
-                          ? palette.primary
-                          : palette.onSurfaceVariant
-                      }
+                      onValueChange={(v) => onUpdate(policy.leave_type, "requires_reason", v)}
+                      trackColor={{ false: palette.outlineVariant, true: palette.primaryContainer }}
+                      thumbColor={current.requires_reason ? palette.primary : palette.onSurfaceVariant}
                     />
                   </View>
 
-                  <TouchableOpacity
+                  <PressScale
                     style={s.saveBtn}
                     onPress={() => handleSave(policy.leave_type)}
                     disabled={saving === policy.leave_type}
@@ -283,7 +262,7 @@ export function LeavePolicyModal({
                     {saving === policy.leave_type ? (
                       <ActivityIndicator size="small" color={palette.onPrimary} />
                     ) : (
-                      <Text style={s.saveBtnText}>
+                      <Text variant="labelMd" color="onPrimary">
                         {t("policyModal.savePolicy", {
                           type: t(`leaveTypes.${policy.leave_type}`, {
                             defaultValue: policy.leave_type,
@@ -291,7 +270,7 @@ export function LeavePolicyModal({
                         })}
                       </Text>
                     )}
-                  </TouchableOpacity>
+                  </PressScale>
                 </View>
               );
             })

@@ -1,15 +1,15 @@
 // client/modules/student-leaves/screens/StudentLeaveFormScreen.tsx
 import React from 'react';
-import { Alert, BackHandler, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, BackHandler, KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Ionicons } from '@expo/vector-icons';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
 
 import { useTheme } from '@/common/theme';
-import { ScreenContainer } from '@/common/components/ScreenContainer';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
 import { Button } from '@/common/components/Button';
 import { Link } from '@/common/components/Link';
 import { Skeleton } from '@/common/components/Skeleton';
@@ -22,7 +22,7 @@ import type { CreateStudentLeavePayload } from '../types';
 
 export default function StudentLeaveFormScreen() {
   const { t } = useTranslation('studentLeaves');
-  const { palette, spacing, typography } = useTheme();
+  const { spacing, palette, radius } = useTheme();
   const createMutation = useCreateStudentLeave();
 
   const myStudentQuery = useQuery({
@@ -101,11 +101,9 @@ export default function StudentLeaveFormScreen() {
 
     try {
       const created = await createMutation.mutateAsync(payload as unknown as CreateStudentLeavePayload);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      router.replace({ pathname: '/(protected)/student-leaves/[id]', params: { id: created.id } } as any);
+      router.replace({ pathname: '/(protected)/student-leaves/[id]', params: { id: created.id } } as never);
     } catch (err: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const e = err as any;
+      const e = err as { data?: { error?: { message?: string; details?: { detail?: string } } }; message?: string };
       const detail = e?.data?.error?.details?.detail || e?.data?.error?.message;
       const message = typeof detail === 'string' ? detail : (e?.message ?? t('error.submit.generic', { defaultValue: 'Please try again.' }));
       Alert.alert(t('error.submit.title', { defaultValue: 'Could not submit' }), message);
@@ -114,50 +112,64 @@ export default function StudentLeaveFormScreen() {
 
   if (myStudentQuery.isLoading) {
     return (
-      <ScreenContainer>
-        <Skeleton width="100%" height={400} radius={16} />
-      </ScreenContainer>
+      <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg }}>
+        <Skeleton width="100%" height={400} radius={radius.lg} />
+      </View>
     );
   }
 
   return (
-    <ScreenContainer keyboardOffset={20}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Pressable onPress={handleBack} hitSlop={12} style={{ width: 44, height: 44, justifyContent: 'center' }}>
-          <Ionicons name="chevron-back" size={24} color={palette.onSurface} />
-        </Pressable>
-        <Link onPress={handleBack}>{t('cancel', { defaultValue: 'Cancel' })}</Link>
-      </View>
-
-      <Text style={[typography.display, { color: palette.onSurface, marginTop: spacing.xs }]}>
-        {t('form.title', { defaultValue: 'Apply for leave' })}
-      </Text>
-
-      <ScrollView contentContainerStyle={{ gap: spacing.lg, paddingTop: spacing.lg, paddingBottom: 120 }}>
-        <FormSection title={t('form.sections.type', { defaultValue: 'Type & dates' })}>
-          <FormSelect control={control} name="leave_type" label={t('field.leaveType', { defaultValue: 'Leave type' })} options={LEAVE_TYPE_OPTIONS} />
-          <FormDatePicker control={control} name="start_date" label={t('field.startDate', { defaultValue: 'Start date' })} minDate={today} />
-          <FormDatePicker control={control} name="end_date" label={t('field.endDate', { defaultValue: 'End date' })} minDate={new Date(startDate)} />
-          {isSingleDay ? (
-            <FormSelect control={control} name="half_day" label={t('field.halfDay', { defaultValue: 'Day part' })} options={HALF_DAY_OPTIONS} />
-          ) : null}
-        </FormSection>
-
-        <FormSection title={t('form.sections.reason', { defaultValue: 'Reason' })}>
-          <FormField
-            control={control}
-            name="reason"
-            label={t('field.reason', { defaultValue: 'Reason' })}
-            placeholder={t('field.reasonPlaceholder', { defaultValue: 'Describe the reason for leave' })}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={20}
+    >
+      <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <AppIcon
+            name="arrow-back"
+            size="lg"
+            color="onSurface"
+            onPress={handleBack}
+            accessibilityLabel={t('back', { defaultValue: 'Back' })}
           />
-        </FormSection>
-      </ScrollView>
+          <Link onPress={handleBack}>{t('cancel', { defaultValue: 'Cancel' })}</Link>
+        </View>
 
-      <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: spacing.lg, backgroundColor: palette.surface }}>
-        <Button variant="primary" fullWidth loading={createMutation.isPending} onPress={handleSubmit(onSubmit)}>
-          {t('form.submit', { defaultValue: 'Submit request' })}
-        </Button>
+        <Text variant="display" color="onSurface" style={{ marginTop: spacing.xs }}>
+          {t('form.title', { defaultValue: 'Apply for leave' })}
+        </Text>
+
+        <ScrollView
+          contentContainerStyle={{ gap: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.xl * 3 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <FormSection title={t('form.sections.type', { defaultValue: 'Type & dates' })}>
+            <FormSelect control={control} name="leave_type" label={t('field.leaveType', { defaultValue: 'Leave type' })} options={LEAVE_TYPE_OPTIONS} />
+            <FormDatePicker control={control} name="start_date" label={t('field.startDate', { defaultValue: 'Start date' })} minDate={today} />
+            <FormDatePicker control={control} name="end_date" label={t('field.endDate', { defaultValue: 'End date' })} minDate={new Date(startDate)} />
+            {isSingleDay ? (
+              <FormSelect control={control} name="half_day" label={t('field.halfDay', { defaultValue: 'Day part' })} options={HALF_DAY_OPTIONS} />
+            ) : null}
+          </FormSection>
+
+          <FormSection title={t('form.sections.reason', { defaultValue: 'Reason' })}>
+            <FormField
+              control={control}
+              name="reason"
+              label={t('field.reason', { defaultValue: 'Reason' })}
+              placeholder={t('field.reasonPlaceholder', { defaultValue: 'Describe the reason for leave' })}
+            />
+          </FormSection>
+        </ScrollView>
+
+        <View style={{ paddingVertical: spacing.lg, backgroundColor: palette.surface }}>
+          <Button variant="primary" fullWidth loading={createMutation.isPending} onPress={handleSubmit(onSubmit)}>
+            {t('form.submit', { defaultValue: 'Submit request' })}
+          </Button>
+        </View>
       </View>
-    </ScreenContainer>
+    </KeyboardAvoidingView>
   );
 }

@@ -21,9 +21,8 @@ export function ApproveLeaveActions({ leaveId }: Props) {
     try {
       await approveMutation.mutateAsync(leaveId);
     } catch (err: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const e = err as any;
-      Alert.alert(t('actions.error', { defaultValue: 'Action failed' }), e?.message ?? 'Try again');
+      const message = err instanceof Error ? err.message : 'Try again';
+      Alert.alert(t('actions.error', { defaultValue: 'Action failed' }), message);
     }
   };
 
@@ -34,9 +33,8 @@ export function ApproveLeaveActions({ leaveId }: Props) {
       setReason('');
       setRejecting(false);
     } catch (err: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const e = err as any;
-      Alert.alert(t('actions.error', { defaultValue: 'Action failed' }), e?.message ?? 'Try again');
+      const message = err instanceof Error ? err.message : 'Try again';
+      Alert.alert(t('actions.error', { defaultValue: 'Action failed' }), message);
     }
   };
 

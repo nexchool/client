@@ -1,11 +1,17 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { View, StyleSheet } from "react-native";
 import { useTheme } from "@/common/theme";
+import { Text } from "@/common/components/Text";
+import { AppIcon } from "@/common/components/AppIcon";
+import { PressScale } from "@/common/components/PressScale";
 import { ProfileAvatar } from "@/common/components/ProfileAvatar";
 import { TeacherLeave } from "@/modules/teachers/types";
-import { statusColor, leaveTypeColor, LEAVE_TYPE_ICONS } from "../utils/leaveColors";
+import {
+  statusAccentToken,
+  leaveTypeAccentToken,
+  LEAVE_TYPE_ICONS,
+} from "../utils/leaveColors";
 import { ApproveRejectActions } from "./ApproveRejectActions";
 
 export interface LeaveRequestRowProps {
@@ -19,6 +25,7 @@ export interface LeaveRequestRowProps {
 /**
  * Single leave-request row: avatar + teacher name, leave type/dates/reason,
  * status pill, and (when permitted) approve / reject / balance actions.
+ * Left accent bar reflects the request status (Stitch "Pending Requests" card).
  */
 export function LeaveRequestRow({
   leave,
@@ -28,27 +35,32 @@ export function LeaveRequestRow({
   onOpenBalance,
 }: LeaveRequestRowProps) {
   const { t } = useTranslation("teacherLeaves");
-  const { palette, spacing, radius, typography } = useTheme();
+  const { palette, spacing, radius, elevation } = useTheme();
 
   const leaveTypeLabel = (type: string) =>
     t(`leaveTypes.${type}`, { defaultValue: type });
   const statusLabel = (status: string) =>
     t(`status.${status}`, { defaultValue: status });
 
+  const statusAccent = statusAccentToken(leave.status);
+  const typeAccent = leaveTypeAccentToken(leave.leave_type);
+  const typeIcon = LEAVE_TYPE_ICONS[leave.leave_type] ?? "document-text-outline";
+
   const s = StyleSheet.create({
     card: {
       marginBottom: spacing.md,
-      padding: spacing.md,
-      borderRadius: radius.lg,
-      borderWidth: 1,
-      borderColor: palette.outlineVariant,
+      padding: spacing.lg,
+      borderRadius: radius.xl,
+      borderLeftWidth: 4,
+      borderLeftColor: palette[statusAccent],
       backgroundColor: palette.surfaceContainerLowest,
+      gap: spacing.sm,
     },
-    cardHeader: {
+    headerRow: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "flex-start",
-      marginBottom: spacing.sm,
+      gap: spacing.sm,
     },
     teacherInfo: {
       flexDirection: "row",
@@ -56,117 +68,88 @@ export function LeaveRequestRow({
       gap: spacing.sm,
       flex: 1,
     },
-    teacherName: { ...typography.bodyMd, fontWeight: "600", color: palette.onSurface },
-    employeeId: {
-      ...typography.labelSm,
-      color: palette.onSurfaceVariant,
-      marginTop: 1,
-    },
     statusBadge: {
       paddingHorizontal: spacing.sm,
-      paddingVertical: 3,
-      borderRadius: radius.md,
-    },
-    statusText: { ...typography.labelSm, fontWeight: "600" },
-    leaveDetails: { gap: 6, marginBottom: spacing.sm },
-    detailRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-    detailText: { ...typography.labelMd, color: palette.onSurfaceVariant },
-    reasonText: { fontStyle: "italic", flex: 1 },
-    workingDaysTag: {
-      paddingHorizontal: 6,
-      paddingVertical: 1,
+      paddingVertical: spacing.xs,
+      borderRadius: radius.full,
       backgroundColor: palette.surfaceContainer,
-      borderRadius: radius.sm,
-      borderWidth: 1,
-      borderColor: palette.outlineVariant,
     },
-    workingDaysText: {
-      ...typography.labelSm,
-      fontWeight: "600",
-      color: palette.onSurfaceVariant,
+    metaRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      flexWrap: "wrap",
+      gap: spacing.sm,
     },
+    typePill: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.xs,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: radius.DEFAULT,
+      backgroundColor: palette.surfaceContainerLow,
+    },
+    detailRow: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
   });
 
-  const itemStatusColor = statusColor(leave.status, palette);
-
   return (
-    <View style={s.card}>
-      <View style={s.cardHeader}>
+    <View style={[s.card, elevation.card]}>
+      <View style={s.headerRow}>
         <View style={s.teacherInfo}>
           <ProfileAvatar
             uri={leave.teacher_profile_picture}
-            size={36}
+            size={40}
             name={leave.teacher_name}
             iconColor={palette.primary}
-            placeholderBg={palette.primary + "25"}
-            style={{ marginRight: spacing.sm }}
+            placeholderBg={palette.surfaceContainerHigh}
           />
-          <View>
-            <Text style={s.teacherName}>{leave.teacher_name ?? "—"}</Text>
+          <View style={{ flex: 1 }}>
+            <Text variant="labelLg" color="onSurface" numberOfLines={1}>
+              {leave.teacher_name ?? "—"}
+            </Text>
             {leave.teacher_employee_id ? (
-              <Text style={s.employeeId}>#{leave.teacher_employee_id}</Text>
+              <Text variant="labelSm" color="onSurfaceVariant">
+                #{leave.teacher_employee_id}
+              </Text>
             ) : null}
           </View>
         </View>
-        <View style={[s.statusBadge, { backgroundColor: itemStatusColor + "20" }]}>
-          <Text style={[s.statusText, { color: itemStatusColor }]}>
+        <View style={s.statusBadge}>
+          <Text variant="labelSm" color={statusAccent}>
             {statusLabel(leave.status)}
           </Text>
         </View>
       </View>
 
-      <View style={s.leaveDetails}>
-        <View style={s.detailRow}>
-          <Text style={{ fontSize: 13 }}>
-            {LEAVE_TYPE_ICONS[leave.leave_type] ?? "📋"}
-          </Text>
-          <Text
-            style={[
-              s.detailText,
-              { color: leaveTypeColor(leave.leave_type), fontWeight: "600" },
-            ]}
-          >
+      <View style={s.metaRow}>
+        <View style={s.typePill}>
+          <AppIcon name={typeIcon} size="sm" color={typeAccent} />
+          <Text variant="labelSm" color={typeAccent}>
             {leaveTypeLabel(leave.leave_type)}
           </Text>
-          {leave.working_days != null && (
-            <View style={s.workingDaysTag}>
-              <Text style={s.workingDaysText}>
-                {t("screen.workingDaysShort", { count: leave.working_days })}
-              </Text>
-            </View>
-          )}
         </View>
         <View style={s.detailRow}>
-          <Ionicons
-            name="calendar-outline"
-            size={14}
-            color={palette.onSurfaceVariant}
-          />
-          <Text style={s.detailText}>
+          <AppIcon name="calendar-outline" size="sm" color="onSurfaceVariant" />
+          <Text variant="labelMd" color="onSurfaceVariant">
             {t("screen.dateRange", { start: leave.start_date, end: leave.end_date })}
           </Text>
         </View>
-        {leave.reason ? (
-          <View style={s.detailRow}>
-            <Ionicons
-              name="chatbubble-outline"
-              size={14}
-              color={palette.onSurfaceVariant}
-            />
-            <Text style={[s.detailText, s.reasonText]}>{leave.reason}</Text>
-          </View>
-        ) : null}
-        <View style={s.detailRow}>
-          <Ionicons
-            name="time-outline"
-            size={14}
-            color={palette.onSurfaceVariant}
-          />
-          <Text style={s.detailText}>
-            {t("screen.applied", { date: leave.created_at.slice(0, 10) })}
+        {leave.working_days != null ? (
+          <Text variant="labelSm" color="onSurfaceVariant">
+            {t("screen.workingDaysShort", { count: leave.working_days })}
           </Text>
-        </View>
+        ) : null}
       </View>
+
+      {leave.reason ? (
+        <Text variant="bodyMd" color="onSurface" style={{ fontStyle: "italic" }}>
+          {leave.reason}
+        </Text>
+      ) : null}
+
+      <Text variant="labelSm" color="onSurfaceVariant">
+        {t("screen.applied", { date: leave.created_at.slice(0, 10) })}
+      </Text>
 
       {canManage && leave.status === "pending" ? (
         <ApproveRejectActions
@@ -176,38 +159,28 @@ export function LeaveRequestRow({
           showBalance
         />
       ) : canManage ? (
-        <BalanceOnly onPress={() => onOpenBalance(leave)} />
+        <View style={{ flexDirection: "row", marginTop: spacing.xs }}>
+          <PressScale
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: spacing.xs,
+              paddingVertical: spacing.sm,
+              paddingHorizontal: spacing.md,
+              borderRadius: radius.DEFAULT,
+              borderWidth: 1,
+              borderColor: palette.outlineVariant,
+              backgroundColor: palette.surfaceContainerLow,
+            }}
+            onPress={() => onOpenBalance(leave)}
+          >
+            <AppIcon name="wallet-outline" size="sm" color="primary" />
+            <Text variant="labelMd" color="primary">
+              {t("screen.balance")}
+            </Text>
+          </PressScale>
+        </View>
       ) : null}
-    </View>
-  );
-}
-
-function BalanceOnly({ onPress }: { onPress: () => void }) {
-  const { t } = useTranslation("teacherLeaves");
-  const { palette, spacing, radius, typography } = useTheme();
-
-  const s = StyleSheet.create({
-    wrap: { flexDirection: "row", marginTop: spacing.sm },
-    balanceBtn: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 4,
-      paddingVertical: spacing.sm,
-      paddingHorizontal: spacing.md,
-      borderRadius: radius.md,
-      borderWidth: 1,
-      borderColor: palette.primary + "30",
-      backgroundColor: palette.primaryContainer + "20",
-    },
-    balanceBtnText: { ...typography.labelMd, color: palette.primary, fontWeight: "600" },
-  });
-
-  return (
-    <View style={s.wrap}>
-      <TouchableOpacity style={s.balanceBtn} onPress={onPress}>
-        <Ionicons name="wallet-outline" size={14} color={palette.primary} />
-        <Text style={s.balanceBtnText}>{t("screen.balance")}</Text>
-      </TouchableOpacity>
     </View>
   );
 }

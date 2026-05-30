@@ -1,11 +1,11 @@
 // client/modules/student-leaves/screens/StudentLeavesScreen.tsx
 import React, { useState } from 'react';
-import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/common/theme';
-import { ScreenContainer } from '@/common/components/ScreenContainer';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
 import { EmptyState } from '@/common/components/EmptyState';
 import { useMyStudentLeaves } from '../hooks/useStudentLeaves';
 import { StudentLeaveRow } from '../components/StudentLeaveRow';
@@ -23,24 +23,21 @@ const FILTERS: { value: Filter; label: string }[] = [
 
 export default function StudentLeavesScreen() {
   const { t } = useTranslation('studentLeaves');
-  const { palette, spacing, radius, typography, elevation } = useTheme();
+  const { palette, spacing, radius, elevation } = useTheme();
   const [filter, setFilter] = useState<Filter>('all');
   const { data: leaves = [], isLoading, refetch, isRefetching } = useMyStudentLeaves(
     filter === 'all' ? undefined : filter,
   );
 
   const handleRowPress = (leave: StudentLeave) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    router.push({ pathname: '/(protected)/student-leaves/[id]', params: { id: leave.id } } as any);
+    router.push({ pathname: '/(protected)/student-leaves/[id]', params: { id: leave.id } } as never);
   };
 
   return (
-    <ScreenContainer>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Text style={[typography.display, { color: palette.onSurface }]}>
-          {t('list.title', { defaultValue: 'My leaves' })}
-        </Text>
-      </View>
+    <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg }}>
+      <Text variant="display" color="onSurface">
+        {t('list.title', { defaultValue: 'My leaves' })}
+      </Text>
 
       <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md, flexWrap: 'wrap' }}>
         {FILTERS.map((f) => {
@@ -62,9 +59,7 @@ export default function StudentLeavesScreen() {
                 justifyContent: 'center',
               })}
             >
-              <Text
-                style={[typography.labelMd, { color: active ? palette.onTertiaryContainer : palette.onSurface }]}
-              >
+              <Text variant="labelMd" color={active ? 'onTertiaryContainer' : 'onSurface'}>
                 {f.label}
               </Text>
             </Pressable>
@@ -81,28 +76,28 @@ export default function StudentLeavesScreen() {
         ListEmptyComponent={
           !isLoading ? (
             <EmptyState
-              icon={<Ionicons name="calendar-outline" size={28} color={palette.onSurfaceVariant} />}
+              icon={<AppIcon name="calendar-outline" size="xl" color="onSurfaceVariant" />}
               title={t('list.empty.title', { defaultValue: 'No leaves yet' })}
               description={t('list.empty.body', { defaultValue: 'When you apply for a leave, it will show up here.' })}
             />
           ) : null
         }
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
-        contentContainerStyle={{ paddingBottom: 120 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: spacing.xl * 3 }}
       />
 
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Apply for leave"
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        onPress={() => router.push('/(protected)/student-leaves/new' as any)}
+        accessibilityLabel={t('list.newA11y', { defaultValue: 'Apply for leave' })}
+        onPress={() => router.push('/(protected)/student-leaves/new' as never)}
         style={({ pressed }) => ({
           position: 'absolute',
-          bottom: 96,
-          right: 20,
+          bottom: spacing.lg,
+          right: spacing.marginMobile,
           width: 56,
           height: 56,
-          borderRadius: 28,
+          borderRadius: radius.full,
           backgroundColor: palette.primary,
           alignItems: 'center',
           justifyContent: 'center',
@@ -110,8 +105,8 @@ export default function StudentLeavesScreen() {
           ...elevation.card,
         })}
       >
-        <Ionicons name="add" size={28} color={palette.onPrimary} />
+        <AppIcon name="add" size="xl" color="onPrimary" />
       </Pressable>
-    </ScreenContainer>
+    </View>
   );
 }

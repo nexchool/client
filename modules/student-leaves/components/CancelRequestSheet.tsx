@@ -1,8 +1,9 @@
 // client/modules/student-leaves/components/CancelRequestSheet.tsx
 import React, { useState } from 'react';
-import { Modal, Pressable, Text, View } from 'react-native';
+import { Modal, Pressable, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
+import { Text } from '@/common/components/Text';
 import { Input } from '@/common/components/Input';
 import { Button } from '@/common/components/Button';
 import { Link } from '@/common/components/Link';
@@ -16,7 +17,7 @@ type Props = {
 
 export function CancelRequestSheet({ visible, onClose, onSubmit, loading }: Props) {
   const { t } = useTranslation('studentLeaves');
-  const { palette, spacing, radius, typography } = useTheme();
+  const { palette, spacing, radius } = useTheme();
   const [reason, setReason] = useState('');
 
   const handleSubmit = async () => {
@@ -42,10 +43,10 @@ export function CancelRequestSheet({ visible, onClose, onSubmit, loading }: Prop
           <View style={{ alignItems: 'center' }}>
             <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: palette.outlineVariant }} />
           </View>
-          <Text style={[typography.headlineMd, { color: palette.onSurface }]}>
+          <Text variant="headlineMd" color="onSurface">
             {t('cancel.title', { defaultValue: 'Request cancellation' })}
           </Text>
-          <Text style={[typography.bodyMd, { color: palette.onSurfaceVariant }]}>
+          <Text variant="bodyMd" color="onSurfaceVariant">
             {t('cancel.body', { defaultValue: 'Your class teacher will be asked to approve the cancellation.' })}
           </Text>
           <Input

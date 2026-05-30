@@ -2,20 +2,20 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   View,
-  Text,
   StyleSheet,
   SafeAreaView,
   ScrollView,
-  TouchableOpacity,
   Alert,
   ActivityIndicator,
   TextInput,
   Modal,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/common/theme";
+import { Text } from "@/common/components/Text";
+import { AppIcon } from "@/common/components/AppIcon";
+import { PressScale } from "@/common/components/PressScale";
 import { LeaveBalance } from "@/modules/teachers/types";
-import { leaveTypeColor, LEAVE_TYPE_ICONS } from "../utils/leaveColors";
+import { leaveTypeAccentToken, LEAVE_TYPE_ICONS } from "../utils/leaveColors";
 
 export interface LeaveBalanceModalProps {
   visible: boolean;
@@ -54,8 +54,9 @@ export function LeaveBalanceModal({
       setEditingType(null);
       setEditDays("");
       setEditNotes("");
-    } catch (e: any) {
-      Alert.alert(t("balanceModal.errorTitle"), e.message || t("balanceModal.updateFailed"));
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : t("balanceModal.updateFailed");
+      Alert.alert(t("balanceModal.errorTitle"), msg);
     } finally {
       setSaving(false);
     }
@@ -71,42 +72,33 @@ export function LeaveBalanceModal({
       borderBottomWidth: 1,
       borderBottomColor: palette.outlineVariant,
     },
-    backBtn: { padding: 4 },
-    title: { ...typography.headlineMd, color: palette.onSurface },
-    subtitle: { ...typography.labelMd, color: palette.onSurfaceVariant, marginTop: 2 },
     loadingRow: {
       flexDirection: "row",
       alignItems: "center",
       gap: spacing.sm,
       paddingVertical: spacing.lg,
     },
-    loadingText: { ...typography.bodyMd, color: palette.onSurfaceVariant },
     balanceRow: {
       flexDirection: "row",
       marginBottom: spacing.lg,
       backgroundColor: palette.surfaceContainerLow,
       borderRadius: radius.lg,
-      borderWidth: 1,
-      borderColor: palette.outlineVariant,
       overflow: "hidden",
     },
     typeAccent: { width: 4 },
     typeHeader: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 6,
+      gap: spacing.xs,
       padding: spacing.md,
-      paddingBottom: 4,
+      paddingBottom: spacing.xs,
     },
-    typeIcon: { fontSize: 16 },
-    typeName: { ...typography.labelMd, fontWeight: "700", letterSpacing: 0.5, flex: 1 },
     unlimitedBadge: {
-      paddingHorizontal: 8,
+      paddingHorizontal: spacing.sm,
       paddingVertical: 2,
-      backgroundColor: palette.success + "20",
+      backgroundColor: palette.surfaceContainer,
       borderRadius: radius.sm,
     },
-    unlimitedText: { ...typography.labelSm, color: palette.success },
     statsGrid: {
       flexDirection: "row",
       paddingHorizontal: spacing.md,
@@ -120,55 +112,28 @@ export function LeaveBalanceModal({
       borderRadius: radius.md,
       paddingVertical: spacing.sm,
     },
-    statValue: { ...typography.headlineMd, color: palette.onSurface },
-    statLabel: {
-      ...typography.labelSm,
-      color: palette.onSurfaceVariant,
-      marginTop: 2,
-    },
-    carryForward: {
-      ...typography.labelSm,
-      color: palette.primary,
-      paddingHorizontal: spacing.md,
-      paddingBottom: 4,
-      fontStyle: "italic",
-    },
-    notes: {
-      ...typography.labelSm,
-      color: palette.onSurfaceVariant,
-      paddingHorizontal: spacing.md,
-      paddingBottom: 4,
-      fontStyle: "italic",
-    },
     adjustBtn: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 6,
+      gap: spacing.xs,
       margin: spacing.md,
-      marginTop: 4,
+      marginTop: spacing.xs,
       paddingVertical: spacing.sm,
       paddingHorizontal: spacing.md,
-      backgroundColor: palette.primaryContainer + "20",
+      backgroundColor: palette.surfaceContainerLow,
       borderRadius: radius.md,
       borderWidth: 1,
-      borderColor: palette.primary + "30",
+      borderColor: palette.outlineVariant,
       alignSelf: "flex-start",
     },
-    adjustBtnText: { ...typography.labelMd, color: palette.primary, fontWeight: "600" },
     editBox: {
       margin: spacing.md,
-      marginTop: 4,
+      marginTop: spacing.xs,
       padding: spacing.md,
       backgroundColor: palette.surfaceContainerLowest,
       borderRadius: radius.md,
       borderWidth: 1,
       borderColor: palette.outlineVariant,
-    },
-    editLabel: {
-      ...typography.labelMd,
-      color: palette.onSurface,
-      marginBottom: 4,
-      marginTop: 8,
     },
     editInput: {
       borderWidth: 1,
@@ -189,7 +154,6 @@ export function LeaveBalanceModal({
       borderColor: palette.outlineVariant,
       alignItems: "center",
     },
-    cancelEditText: { ...typography.labelMd, color: palette.onSurfaceVariant, fontWeight: "500" },
     saveBtn: {
       flex: 2,
       paddingVertical: spacing.sm,
@@ -197,7 +161,6 @@ export function LeaveBalanceModal({
       backgroundColor: palette.primary,
       alignItems: "center",
     },
-    saveBtnText: { ...typography.labelMd, color: palette.onPrimary, fontWeight: "700" },
   });
 
   return (
@@ -209,12 +172,14 @@ export function LeaveBalanceModal({
     >
       <SafeAreaView style={s.container}>
         <View style={s.header}>
-          <TouchableOpacity onPress={onClose} style={s.backBtn}>
-            <Ionicons name="close" size={22} color={palette.onSurface} />
-          </TouchableOpacity>
+          <AppIcon name="close" size="lg" color="onSurface" onPress={onClose} />
           <View style={{ flex: 1 }}>
-            <Text style={s.title}>{t("balanceModal.title")}</Text>
-            <Text style={s.subtitle}>{teacherName}</Text>
+            <Text variant="headlineMd" color="onSurface">
+              {t("balanceModal.title")}
+            </Text>
+            <Text variant="labelMd" color="onSurfaceVariant">
+              {teacherName}
+            </Text>
           </View>
         </View>
 
@@ -222,143 +187,162 @@ export function LeaveBalanceModal({
           {balancesLoading ? (
             <View style={s.loadingRow}>
               <ActivityIndicator color={palette.primary} />
-              <Text style={s.loadingText}>{t("balanceModal.loading")}</Text>
+              <Text variant="bodyMd" color="onSurfaceVariant">
+                {t("balanceModal.loading")}
+              </Text>
             </View>
           ) : (
-            balances.map((bal) => (
-              <View key={bal.leave_type} style={s.balanceRow}>
-                <View
-                  style={[s.typeAccent, { backgroundColor: leaveTypeColor(bal.leave_type) }]}
-                />
-                <View style={{ flex: 1 }}>
-                  <View style={s.typeHeader}>
-                    <Text style={s.typeIcon}>{LEAVE_TYPE_ICONS[bal.leave_type]}</Text>
-                    <Text style={[s.typeName, { color: leaveTypeColor(bal.leave_type) }]}>
-                      {t(`leaveTypes.${bal.leave_type}`, { defaultValue: bal.leave_type })}
-                    </Text>
-                    {bal.is_unlimited && (
-                      <View style={s.unlimitedBadge}>
-                        <Text style={s.unlimitedText}>{t("balanceModal.unlimited")}</Text>
-                      </View>
-                    )}
-                  </View>
-
-                  {!bal.is_unlimited && (
-                    <View style={s.statsGrid}>
-                      <View style={s.statBox}>
-                        <Text style={s.statValue}>
-                          {bal.allocated_days + bal.carried_forward_days}
-                        </Text>
-                        <Text style={s.statLabel}>{t("balanceModal.statTotal")}</Text>
-                      </View>
-                      <View style={s.statBox}>
-                        <Text style={[s.statValue, { color: palette.error }]}>
-                          {bal.used_days.toFixed(1)}
-                        </Text>
-                        <Text style={s.statLabel}>{t("balanceModal.statUsed")}</Text>
-                      </View>
-                      <View style={s.statBox}>
-                        <Text style={[s.statValue, { color: palette.warning }]}>
-                          {bal.pending_days.toFixed(1)}
-                        </Text>
-                        <Text style={s.statLabel}>{t("balanceModal.statPending")}</Text>
-                      </View>
-                      <View style={s.statBox}>
-                        <Text
-                          style={[
-                            s.statValue,
-                            {
-                              color:
-                                bal.available_days <= 0
-                                  ? palette.error
-                                  : bal.available_days <= 2
-                                  ? palette.warning
-                                  : palette.success,
-                            },
-                          ]}
-                        >
-                          {bal.available_days.toFixed(1)}
-                        </Text>
-                        <Text style={s.statLabel}>{t("balanceModal.statAvailable")}</Text>
-                      </View>
+            balances.map((bal) => {
+              const typeAccent = leaveTypeAccentToken(bal.leave_type);
+              const availColor: "error" | "warning" | "success" =
+                bal.available_days <= 0 ? "error" : bal.available_days <= 2 ? "warning" : "success";
+              return (
+                <View key={bal.leave_type} style={s.balanceRow}>
+                  <View style={[s.typeAccent, { backgroundColor: palette[typeAccent] }]} />
+                  <View style={{ flex: 1 }}>
+                    <View style={s.typeHeader}>
+                      <AppIcon
+                        name={LEAVE_TYPE_ICONS[bal.leave_type] ?? "document-text-outline"}
+                        size="md"
+                        color={typeAccent}
+                      />
+                      <Text variant="labelMd" color={typeAccent} style={{ flex: 1 }}>
+                        {t(`leaveTypes.${bal.leave_type}`, { defaultValue: bal.leave_type })}
+                      </Text>
+                      {bal.is_unlimited ? (
+                        <View style={s.unlimitedBadge}>
+                          <Text variant="labelSm" color="success">
+                            {t("balanceModal.unlimited")}
+                          </Text>
+                        </View>
+                      ) : null}
                     </View>
-                  )}
 
-                  {bal.carried_forward_days > 0 && (
-                    <Text style={s.carryForward}>
-                      {t("balanceModal.carryForward", { days: bal.carried_forward_days })}
-                    </Text>
-                  )}
-                  {bal.notes && (
-                    <Text style={s.notes}>
-                      {t("balanceModal.notePrefix")}
-                      {bal.notes}
-                    </Text>
-                  )}
-
-                  {!bal.is_unlimited &&
-                    (editingType === bal.leave_type ? (
-                      <View style={s.editBox}>
-                        <Text style={s.editLabel}>{t("balanceModal.setAllocated")}</Text>
-                        <TextInput
-                          style={s.editInput}
-                          value={editDays}
-                          onChangeText={setEditDays}
-                          keyboardType="numeric"
-                          placeholder={String(bal.allocated_days)}
-                          placeholderTextColor={palette.onSurfaceVariant}
-                        />
-                        <Text style={s.editLabel}>{t("balanceModal.adminNote")}</Text>
-                        <TextInput
-                          style={[s.editInput, { height: 60, textAlignVertical: "top" }]}
-                          value={editNotes}
-                          onChangeText={setEditNotes}
-                          placeholder={t("balanceModal.adminNotePlaceholder")}
-                          placeholderTextColor={palette.onSurfaceVariant}
-                          multiline
-                        />
-                        <View style={s.editActions}>
-                          <TouchableOpacity
-                            style={s.cancelEditBtn}
-                            onPress={() => {
-                              setEditingType(null);
-                              setEditDays("");
-                              setEditNotes("");
-                            }}
-                          >
-                            <Text style={s.cancelEditText}>{t("balanceModal.cancel")}</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity
-                            style={s.saveBtn}
-                            onPress={handleSave}
-                            disabled={saving}
-                          >
-                            {saving ? (
-                              <ActivityIndicator size="small" color={palette.onPrimary} />
-                            ) : (
-                              <Text style={s.saveBtnText}>{t("balanceModal.save")}</Text>
-                            )}
-                          </TouchableOpacity>
+                    {!bal.is_unlimited && (
+                      <View style={s.statsGrid}>
+                        <View style={s.statBox}>
+                          <Text variant="headlineMd" color="onSurface">
+                            {bal.allocated_days + bal.carried_forward_days}
+                          </Text>
+                          <Text variant="labelSm" color="onSurfaceVariant">
+                            {t("balanceModal.statTotal")}
+                          </Text>
+                        </View>
+                        <View style={s.statBox}>
+                          <Text variant="headlineMd" color="error">
+                            {bal.used_days.toFixed(1)}
+                          </Text>
+                          <Text variant="labelSm" color="onSurfaceVariant">
+                            {t("balanceModal.statUsed")}
+                          </Text>
+                        </View>
+                        <View style={s.statBox}>
+                          <Text variant="headlineMd" color="warning">
+                            {bal.pending_days.toFixed(1)}
+                          </Text>
+                          <Text variant="labelSm" color="onSurfaceVariant">
+                            {t("balanceModal.statPending")}
+                          </Text>
+                        </View>
+                        <View style={s.statBox}>
+                          <Text variant="headlineMd" color={availColor}>
+                            {bal.available_days.toFixed(1)}
+                          </Text>
+                          <Text variant="labelSm" color="onSurfaceVariant">
+                            {t("balanceModal.statAvailable")}
+                          </Text>
                         </View>
                       </View>
-                    ) : (
-                      <TouchableOpacity
-                        style={s.adjustBtn}
-                        onPress={() => {
-                          setEditingType(bal.leave_type);
-                          setEditDays(String(bal.allocated_days));
-                          setEditNotes("");
-                        }}
+                    )}
+
+                    {bal.carried_forward_days > 0 && (
+                      <Text
+                        variant="labelSm"
+                        color="primary"
+                        style={{ paddingHorizontal: spacing.md, paddingBottom: spacing.xs, fontStyle: "italic" }}
                       >
-                        <Ionicons name="create-outline" size={14} color={palette.primary} />
-                        <Text style={s.adjustBtnText}>
-                          {t("balanceModal.adjustAllocation")}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
+                        {t("balanceModal.carryForward", { days: bal.carried_forward_days })}
+                      </Text>
+                    )}
+                    {bal.notes ? (
+                      <Text
+                        variant="labelSm"
+                        color="onSurfaceVariant"
+                        style={{ paddingHorizontal: spacing.md, paddingBottom: spacing.xs, fontStyle: "italic" }}
+                      >
+                        {t("balanceModal.notePrefix")}
+                        {bal.notes}
+                      </Text>
+                    ) : null}
+
+                    {!bal.is_unlimited &&
+                      (editingType === bal.leave_type ? (
+                        <View style={s.editBox}>
+                          <Text variant="labelMd" color="onSurface" style={{ marginBottom: spacing.xs, marginTop: spacing.sm }}>
+                            {t("balanceModal.setAllocated")}
+                          </Text>
+                          <TextInput
+                            style={s.editInput}
+                            value={editDays}
+                            onChangeText={setEditDays}
+                            keyboardType="numeric"
+                            placeholder={String(bal.allocated_days)}
+                            placeholderTextColor={palette.onSurfaceVariant}
+                          />
+                          <Text variant="labelMd" color="onSurface" style={{ marginBottom: spacing.xs, marginTop: spacing.sm }}>
+                            {t("balanceModal.adminNote")}
+                          </Text>
+                          <TextInput
+                            style={[s.editInput, { height: 60, textAlignVertical: "top" }]}
+                            value={editNotes}
+                            onChangeText={setEditNotes}
+                            placeholder={t("balanceModal.adminNotePlaceholder")}
+                            placeholderTextColor={palette.onSurfaceVariant}
+                            multiline
+                          />
+                          <View style={s.editActions}>
+                            <PressScale
+                              style={s.cancelEditBtn}
+                              onPress={() => {
+                                setEditingType(null);
+                                setEditDays("");
+                                setEditNotes("");
+                              }}
+                            >
+                              <Text variant="labelMd" color="onSurfaceVariant">
+                                {t("balanceModal.cancel")}
+                              </Text>
+                            </PressScale>
+                            <PressScale style={s.saveBtn} onPress={handleSave} disabled={saving}>
+                              {saving ? (
+                                <ActivityIndicator size="small" color={palette.onPrimary} />
+                              ) : (
+                                <Text variant="labelMd" color="onPrimary">
+                                  {t("balanceModal.save")}
+                                </Text>
+                              )}
+                            </PressScale>
+                          </View>
+                        </View>
+                      ) : (
+                        <PressScale
+                          style={s.adjustBtn}
+                          onPress={() => {
+                            setEditingType(bal.leave_type);
+                            setEditDays(String(bal.allocated_days));
+                            setEditNotes("");
+                          }}
+                        >
+                          <AppIcon name="create-outline" size="sm" color="primary" />
+                          <Text variant="labelMd" color="primary">
+                            {t("balanceModal.adjustAllocation")}
+                          </Text>
+                        </PressScale>
+                      ))}
+                  </View>
                 </View>
-              </View>
-            ))
+              );
+            })
           )}
         </ScrollView>
       </SafeAreaView>

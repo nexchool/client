@@ -1,8 +1,10 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { View, StyleSheet } from "react-native";
 import { useTheme } from "@/common/theme";
+import { Text } from "@/common/components/Text";
+import { AppIcon } from "@/common/components/AppIcon";
+import { PressScale } from "@/common/components/PressScale";
 
 export interface ApproveRejectActionsProps {
   onApprove: () => void;
@@ -23,7 +25,7 @@ export function ApproveRejectActions({
   showBalance,
 }: ApproveRejectActionsProps) {
   const { t } = useTranslation("teacherLeaves");
-  const { palette, spacing, radius, typography } = useTheme();
+  const { palette, spacing, radius } = useTheme();
 
   const s = StyleSheet.create({
     container: {
@@ -32,63 +34,64 @@ export function ApproveRejectActions({
       marginTop: spacing.sm,
       flexWrap: "wrap",
     },
-    approveBtn: {
-      flex: 1,
-      flexDirection: "row",
-      justifyContent: "center",
-      alignItems: "center",
-      gap: 4,
-      backgroundColor: palette.success + "15",
-      paddingVertical: spacing.sm,
-      borderRadius: radius.md,
-      borderWidth: 1,
-      borderColor: palette.success + "40",
-      minWidth: 90,
-    },
-    approveBtnText: { ...typography.labelMd, color: palette.success, fontWeight: "600" },
     rejectBtn: {
       flex: 1,
       flexDirection: "row",
       justifyContent: "center",
       alignItems: "center",
-      gap: 4,
-      backgroundColor: palette.error + "15",
+      gap: spacing.xs,
+      backgroundColor: "transparent",
       paddingVertical: spacing.sm,
-      borderRadius: radius.md,
+      borderRadius: radius.DEFAULT,
       borderWidth: 1,
-      borderColor: palette.error + "40",
+      borderColor: palette.error,
       minWidth: 90,
     },
-    rejectBtnText: { ...typography.labelMd, color: palette.error, fontWeight: "600" },
+    approveBtn: {
+      flex: 1,
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "center",
+      gap: spacing.xs,
+      backgroundColor: palette.primary,
+      paddingVertical: spacing.sm,
+      borderRadius: radius.DEFAULT,
+      minWidth: 90,
+    },
     balanceBtn: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 4,
+      gap: spacing.xs,
       paddingVertical: spacing.sm,
       paddingHorizontal: spacing.md,
-      borderRadius: radius.md,
+      borderRadius: radius.DEFAULT,
       borderWidth: 1,
-      borderColor: palette.primary + "30",
-      backgroundColor: palette.primaryContainer + "20",
+      borderColor: palette.outlineVariant,
+      backgroundColor: palette.surfaceContainerLow,
     },
-    balanceBtnText: { ...typography.labelMd, color: palette.primary, fontWeight: "600" },
   });
 
   return (
     <View style={s.container}>
-      <TouchableOpacity style={s.approveBtn} onPress={onApprove}>
-        <Ionicons name="checkmark-circle-outline" size={16} color={palette.success} />
-        <Text style={s.approveBtnText}>{t("screen.approve")}</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={s.rejectBtn} onPress={onReject}>
-        <Ionicons name="close-circle-outline" size={16} color={palette.error} />
-        <Text style={s.rejectBtnText}>{t("screen.reject")}</Text>
-      </TouchableOpacity>
+      <PressScale style={s.rejectBtn} onPress={onReject}>
+        <AppIcon name="close-circle-outline" size="sm" color="error" />
+        <Text variant="labelMd" color="error">
+          {t("screen.reject")}
+        </Text>
+      </PressScale>
+      <PressScale style={s.approveBtn} onPress={onApprove}>
+        <AppIcon name="checkmark-circle-outline" size="sm" color="onPrimary" />
+        <Text variant="labelMd" color="onPrimary">
+          {t("screen.approve")}
+        </Text>
+      </PressScale>
       {showBalance && onOpenBalance && (
-        <TouchableOpacity style={s.balanceBtn} onPress={onOpenBalance}>
-          <Ionicons name="wallet-outline" size={14} color={palette.primary} />
-          <Text style={s.balanceBtnText}>{t("screen.balance")}</Text>
-        </TouchableOpacity>
+        <PressScale style={s.balanceBtn} onPress={onOpenBalance}>
+          <AppIcon name="wallet-outline" size="sm" color="primary" />
+          <Text variant="labelMd" color="primary">
+            {t("screen.balance")}
+          </Text>
+        </PressScale>
       )}
     </View>
   );
