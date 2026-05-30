@@ -295,7 +295,7 @@ export default function StudentsScreen() {
           onPress={() => router.push("/(protected)/students/new" as any)}
           style={({ pressed }) => ({
             position: "absolute",
-            bottom: spacing[40] * 2 + spacing.md,
+            bottom: spacing.lg,
             right: spacing.marginMobile,
             width: 56,
             height: 56,

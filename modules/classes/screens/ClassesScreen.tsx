@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: "absolute",
-    bottom: Spacing[40] * 2 + Spacing.md,
+    bottom: Spacing.lg,
     right: Spacing.marginMobile,
     width: 56,
     height: 56,
