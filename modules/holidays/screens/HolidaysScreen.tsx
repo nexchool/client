@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
   },
   tab: {
     paddingVertical: 8,
-    paddingHorizontal: 14,
+    paddingHorizontal: Spacing.md,
     borderRadius: 100,
     borderWidth: StyleSheet.hairlineWidth,
   },
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'baseline',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginBottom: Spacing.sm,
     paddingHorizontal: 2,
   },
   errorBanner: {

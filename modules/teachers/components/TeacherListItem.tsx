@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: Spacing.xs,
     alignSelf: "stretch",
-    paddingVertical: 10,
+    paddingVertical: Spacing.sm,
   },
   accent: {
     height: 3,

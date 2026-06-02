@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1 },
   cardHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   iconChip: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  badge: { paddingHorizontal: 10, paddingVertical: 4 },
+  badge: { paddingHorizontal: 8, paddingVertical: 4 },
   classTopRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   classMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1 },

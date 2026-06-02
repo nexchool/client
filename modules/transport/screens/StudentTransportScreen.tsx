@@ -217,7 +217,7 @@ export default function StudentTransportScreen() {
                     <Text variant="overline" color="warning">
                       {ex.type}
                     </Text>
-                    <Text variant="bodyMd" color="onSurface" style={{ marginTop: 4 }}>
+                    <Text variant="bodyMd" color="onSurface" style={{ marginTop: spacing.xs }}>
                       {ex.description}
                     </Text>
                   </View>
@@ -239,7 +239,7 @@ function StopCard({ label, stop }: { label: string; stop: RouteStop | null }) {
         <Text variant="overline" color="onSurfaceVariant">
           {label}
         </Text>
-        <Text variant="bodyMd" color="outline" style={{ marginTop: 4 }}>
+        <Text variant="bodyMd" color="outline" style={{ marginTop: spacing.xs }}>
           —
         </Text>
       </View>
@@ -250,7 +250,7 @@ function StopCard({ label, stop }: { label: string; stop: RouteStop | null }) {
       <Text variant="overline" color="onSurfaceVariant">
         {label}
       </Text>
-      <Text variant="headlineMd" color="onSurface" numberOfLines={1} style={{ marginTop: 4 }}>
+      <Text variant="headlineMd" color="onSurface" numberOfLines={1} style={{ marginTop: spacing.xs }}>
         {stop.eta ?? stop.scheduled_time ?? '—'}
       </Text>
       <Text variant="bodyMd" color="onSurfaceVariant" numberOfLines={2} style={{ marginTop: 2 }}>

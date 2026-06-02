@@ -31,7 +31,7 @@ export function DashboardActionRow({
 
   return (
     <PressScale onPress={onPress}>
-      <View style={[styles.row, { gap: spacing.md, paddingVertical: spacing.sm }]}>
+      <View style={[styles.row, { gap: spacing.md, paddingVertical: spacing.md }]}>
         <View
           style={[
             styles.iconChip,

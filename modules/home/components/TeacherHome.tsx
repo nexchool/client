@@ -78,7 +78,7 @@ export function TeacherHome() {
     <ScrollView
       contentContainerStyle={{
         padding: spacing.marginMobile,
-        gap: spacing.xl,
+        gap: spacing.lg,
         paddingBottom: spacing.xl * 3,
       }}
       refreshControl={<RefreshControl refreshing={!!isRefetching} onRefresh={() => refetch()} />}

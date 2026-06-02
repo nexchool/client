@@ -86,7 +86,7 @@ export function HomeKpiCard({
             {value}
           </Text>
           {secondaryText ? (
-            <View style={[styles.secondaryRow, { marginTop: 4, gap: 4 }]}>
+            <View style={[styles.secondaryRow, { marginTop: spacing.xs, gap: spacing.xs }]}>
               {secondaryIcon ? (
                 <AppIcon
                   name={secondaryIcon}

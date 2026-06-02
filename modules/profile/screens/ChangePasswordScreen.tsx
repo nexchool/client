@@ -226,7 +226,7 @@ export default function ChangePasswordScreen() {
           })}
         />
         {next.length > 0 ? (
-          <View style={{ flexDirection: 'row', gap: 4, marginTop: -spacing.xs }}>
+          <View style={{ flexDirection: 'row', gap: spacing.xs, marginTop: -spacing.xs }}>
             {[0, 1, 2, 3].map((i) => {
               // Server rule is length>=8 AND has digit. Meter colors must
               // not say "warning" for a password that the server will accept.

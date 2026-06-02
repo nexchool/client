@@ -177,7 +177,7 @@ export function AdminHome() {
           },
         ]}
       >
-        <Text variant="headlineMd" color="onSurface" style={{ marginBottom: spacing.sm }}>
+        <Text variant="headlineMd" color="onSurface" style={{ marginBottom: spacing.md }}>
           {t('admin.quickActions', { defaultValue: 'Quick Actions' })}
         </Text>
         <DashboardActionRow

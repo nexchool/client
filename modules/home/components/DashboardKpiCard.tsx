@@ -89,7 +89,7 @@ export function DashboardKpiCard({
             {value}
           </Text>
           {trend ? (
-            <View style={[styles.trendRow, { marginTop: 4, gap: 4 }]}>
+            <View style={[styles.trendRow, { marginTop: spacing.xs, gap: spacing.xs }]}>
               <AppIcon name={TONE_ICON[trend.tone]} size="sm" color={TONE_COLOR[trend.tone]} />
               <Text variant="labelSm" color={TONE_COLOR[trend.tone]} numberOfLines={1}>
                 {trend.label}

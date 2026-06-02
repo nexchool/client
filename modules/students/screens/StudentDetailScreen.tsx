@@ -148,7 +148,7 @@ export default function StudentDetailScreen() {
                 {
                   position: 'absolute',
                   right: spacing.marginMobile,
-                  bottom: spacing.xl,
+                  bottom: spacing.lg,
                   width: 56,
                   height: 56,
                   borderRadius: radius.full,
