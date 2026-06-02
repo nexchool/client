@@ -45,10 +45,17 @@ export default function ClassDetailScreen() {
       hasPermission(PERMS.ATTENDANCE_READ_ALL) ||
       canAttendanceMark);
 
-  const canManageClassTeachers = hasPermission(PERMS.CLASS_TEACHER_MANAGE);
-  const canViewTeachers = canManageClassTeachers || hasPermission(PERMS.TEACHER_READ);
-  const canManageSubjectTeachers = hasPermission(PERMS.CLASS_SUBJECT_MANAGE);
-  const canViewSubjects = hasPermission(PERMS.CLASS_SUBJECT_READ) || canManageSubjectTeachers;
+  // Gates mirror the server permission contracts so a visible tab never
+  // 403s into a misleading empty state (class_academic_routes.py):
+  //   GET /class-teachers  -> class_teacher.manage | class.read | class.manage
+  //   GET /subjects, /subject-teachers -> class_subject.read|manage | class.manage
+  const canManageClass = hasPermission(PERMS.CLASS_MANAGE);
+  const canManageClassTeachers = hasPermission(PERMS.CLASS_TEACHER_MANAGE) || canManageClass;
+  const canViewTeachers =
+    canManageClassTeachers || hasPermission(PERMS.CLASS_READ);
+  const canManageSubjectTeachers = hasPermission(PERMS.CLASS_SUBJECT_MANAGE) || canManageClass;
+  const canViewSubjects =
+    canManageSubjectTeachers || hasPermission(PERMS.CLASS_SUBJECT_READ);
 
   const visibleTabs = useMemo<TabItem[]>(() => {
     const items: TabItem[] = [{ key: "students", label: t("detail.students") }];
