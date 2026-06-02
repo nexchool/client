@@ -1,9 +1,11 @@
 // client/modules/audit/components/AuditFilterBar.tsx
 import React, { useState } from 'react';
-import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useTheme } from '@/common/theme';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
 import { ACTION_OPTIONS, MODULE_OPTIONS, AuditSelectOption } from '../constants';
 import type { AuditFilters } from '../types';
 
@@ -19,7 +21,7 @@ function parseIsoDate(value?: string): Date {
 }
 
 export function AuditFilterBar({ filters, onChange }: Props) {
-  const { palette, spacing, radius, typography } = useTheme();
+  const { palette, spacing, radius } = useTheme();
   const { t } = useTranslation('audit');
   const [showFrom, setShowFrom] = useState(false);
   const [showTo, setShowTo] = useState(false);
@@ -73,19 +75,22 @@ export function AuditFilterBar({ filters, onChange }: Props) {
               justifyContent: 'center',
             })}
           >
-            <Text style={[typography.labelSm, { color: palette.onSurfaceVariant }]}>{label}</Text>
-            <Text style={[typography.bodyMd, { color: current ? palette.onSurface : palette.onSurfaceVariant }]}>
+            <Text variant="labelSm" color="onSurfaceVariant">
+              {label}
+            </Text>
+            <Text variant="bodyMd" color={current ? 'onSurface' : 'onSurfaceVariant'}>
               {current ?? t('filter.any')}
             </Text>
           </Pressable>
           {current ? (
-            <Pressable
+            <AppIcon
+              name="close"
+              size="sm"
+              color="onSurfaceVariant"
               onPress={() => onChange({ ...filters, [field]: undefined })}
-              hitSlop={8}
               style={{ paddingHorizontal: spacing.sm }}
-            >
-              <Text style={[typography.bodyMd, { color: palette.onSurfaceVariant }]}>×</Text>
-            </Pressable>
+              accessibilityLabel={t('filter.clear', { defaultValue: 'Clear' })}
+            />
           ) : null}
         </View>
         {show ? (
@@ -117,7 +122,7 @@ export function AuditFilterBar({ filters, onChange }: Props) {
         justifyContent: 'center',
       })}
     >
-      <Text style={[typography.labelMd, { color: active ? palette.onTertiaryContainer : palette.onSurface }]}>
+      <Text variant="labelMd" color={active ? 'onTertiaryContainer' : 'onSurface'}>
         {displayLabel}
       </Text>
     </Pressable>
@@ -127,7 +132,7 @@ export function AuditFilterBar({ filters, onChange }: Props) {
   const activeAction = filters.action ?? '';
 
   return (
-    <View style={{ gap: spacing.sm, padding: spacing.md, backgroundColor: palette.surfaceContainerLowest }}>
+    <View style={{ gap: spacing.sm }}>
       <View style={{ flexDirection: 'row', gap: spacing.md }}>
         {dateControl(t('filter.from'), 'date_from', showFrom, setShowFrom, () => setShowFrom(false))}
         {dateControl(t('filter.to'), 'date_to', showTo, setShowTo, () => setShowTo(false))}

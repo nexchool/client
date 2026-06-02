@@ -1,11 +1,11 @@
 // client/modules/audit/screens/AuditLogScreen.tsx
 import React, { useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, Text, View, RefreshControl } from 'react-native';
+import { ActivityIndicator, FlatList, View, RefreshControl } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/common/theme';
-import { ScreenContainer } from '@/common/components/ScreenContainer';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
 import { EmptyState } from '@/common/components/EmptyState';
 import { Skeleton } from '@/common/components/Skeleton';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
@@ -17,7 +17,7 @@ import { AuditDetailSheet } from '../components/AuditDetailSheet';
 import type { AuditFilters, AuditLogEntry } from '../types';
 
 function Header() {
-  const { palette, spacing, typography } = useTheme();
+  const { spacing } = useTheme();
   const { t } = useTranslation('audit');
   return (
     <View
@@ -28,14 +28,16 @@ function Header() {
         marginBottom: spacing.md,
       }}
     >
-      <Pressable
+      <AppIcon
+        name="chevron-back"
+        size="lg"
+        color="onSurface"
         onPress={() => router.back()}
-        hitSlop={12}
-        style={{ width: 44, height: 44, justifyContent: 'center' }}
-      >
-        <Ionicons name="chevron-back" size={24} color={palette.onSurface} />
-      </Pressable>
-      <Text style={[typography.display, { color: palette.onSurface }]}>{t('title')}</Text>
+        accessibilityLabel={t('title')}
+      />
+      <Text variant="display" color="onSurface">
+        {t('title')}
+      </Text>
     </View>
   );
 }
@@ -63,21 +65,21 @@ export default function AuditLogScreen() {
 
   if (!canView) {
     return (
-      <ScreenContainer scrollable={false}>
+      <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg }}>
         <Header />
         <EmptyState
-          icon={<Ionicons name="lock-closed-outline" size={28} color={palette.onSurfaceVariant} />}
+          icon={<AppIcon name="lock-closed-outline" size="xl" color="onSurfaceVariant" />}
           title={t('notAuthorized.title')}
           description={t('notAuthorized.description')}
         />
-      </ScreenContainer>
+      </View>
     );
   }
 
   const items = data?.pages.flatMap((p) => p.items) ?? [];
 
   return (
-    <ScreenContainer scrollable={false}>
+    <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg }}>
       <Header />
 
       <AuditFilterBar filters={filters} onChange={setFilters} />
@@ -109,10 +111,10 @@ export default function AuditLogScreen() {
           ListEmptyComponent={
             <EmptyState
               icon={
-                <Ionicons
+                <AppIcon
                   name={isError ? 'alert-circle-outline' : 'document-text-outline'}
-                  size={28}
-                  color={isError ? palette.error : palette.onSurfaceVariant}
+                  size="xl"
+                  color={isError ? 'error' : 'onSurfaceVariant'}
                 />
               }
               title={isError ? t('error.title') : t('empty.title')}
@@ -130,6 +132,6 @@ export default function AuditLogScreen() {
         visible={selected !== null}
         onClose={() => setSelected(null)}
       />
-    </ScreenContainer>
+    </View>
   );
 }

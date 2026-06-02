@@ -1,7 +1,10 @@
 // client/modules/audit/components/AuditRow.tsx
 import React from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { View } from 'react-native';
 import { useTheme } from '@/common/theme';
+import { Text } from '@/common/components/Text';
+import { PressScale } from '@/common/components/PressScale';
+import type { Palette } from '@/common/theme';
 import type { AuditLogEntry } from '../types';
 
 function relativeTime(dateStr: string | null | undefined): string {
@@ -18,27 +21,32 @@ function relativeTime(dateStr: string | null | undefined): string {
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
+// Soft accent on the avatar, tinted by the actor's role so scanning a long
+// log groups visually. Falls back to the neutral secondary container.
+const ROLE_ACCENT: Record<string, keyof Palette> = {
+  admin: 'primary',
+  principal: 'tertiary',
+  teacher: 'secondary',
+  staff: 'secondary',
+};
+
 type Props = {
   entry: AuditLogEntry;
   onPress: (entry: AuditLogEntry) => void;
 };
 
 export function AuditRow({ entry, onPress }: Props) {
-  const { palette, spacing, radius, typography } = useTheme();
+  const { palette, spacing, radius, avatarSize } = useTheme();
   const initial = (entry.actor_name?.trim()?.[0] ?? '?').toUpperCase();
+  const accent = ROLE_ACCENT[entry.actor_role?.toLowerCase()] ?? 'secondary';
 
   return (
-    <Pressable
-      onPress={() => onPress(entry)}
-      style={({ pressed }) => ({
-        backgroundColor: pressed ? palette.surfaceContainer : palette.surfaceContainerLowest,
-      })}
-    >
+    <PressScale onPress={() => onPress(entry)}>
       <View
         style={{
           flexDirection: 'row',
           alignItems: 'flex-start',
-          padding: spacing.md,
+          paddingVertical: spacing.md,
           gap: spacing.md,
           borderBottomWidth: 1,
           borderBottomColor: palette.surfaceContainerHigh,
@@ -46,23 +54,22 @@ export function AuditRow({ entry, onPress }: Props) {
       >
         <View
           style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: palette.secondaryContainer,
+            width: avatarSize.md,
+            height: avatarSize.md,
+            borderRadius: radius.full,
+            backgroundColor: palette.surfaceContainer,
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
-          <Text style={[typography.labelMd, { color: palette.onSecondaryContainer }]}>{initial}</Text>
+          <Text variant="labelMd" style={{ color: palette[accent] }}>
+            {initial}
+          </Text>
         </View>
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: spacing.sm }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}>
-              <Text
-                style={[typography.bodyMd, { color: palette.onSurface, flexShrink: 1 }]}
-                numberOfLines={1}
-              >
+              <Text variant="bodyMd" color="onSurface" style={{ flexShrink: 1 }} numberOfLines={1}>
                 {entry.actor_name}
               </Text>
               <View
@@ -70,31 +77,28 @@ export function AuditRow({ entry, onPress }: Props) {
                   paddingHorizontal: spacing.sm,
                   paddingVertical: 2,
                   borderRadius: radius.full,
-                  backgroundColor: palette.tertiaryContainer,
+                  backgroundColor: palette.surfaceContainer,
                 }}
               >
-                <Text style={[typography.labelSm, { color: palette.onTertiaryContainer }]} numberOfLines={1}>
+                <Text variant="labelSm" style={{ color: palette[accent] }} numberOfLines={1}>
                   {entry.actor_role}
                 </Text>
               </View>
             </View>
-            <Text style={[typography.labelSm, { color: palette.onSurfaceVariant }]}>
+            <Text variant="labelSm" color="onSurfaceVariant">
               {relativeTime(entry.created_at)}
             </Text>
           </View>
-          <Text style={[typography.labelMd, { color: palette.onSurfaceVariant, marginTop: 2 }]}>
+          <Text variant="labelMd" color="onSurfaceVariant" style={{ marginTop: 2 }}>
             {entry.action} · {entry.module}
           </Text>
           {entry.description ? (
-            <Text
-              style={[typography.labelMd, { color: palette.onSurface, marginTop: 2 }]}
-              numberOfLines={1}
-            >
+            <Text variant="labelMd" color="onSurface" style={{ marginTop: 2 }} numberOfLines={1}>
               {entry.description}
             </Text>
           ) : null}
         </View>
       </View>
-    </Pressable>
+    </PressScale>
   );
 }
