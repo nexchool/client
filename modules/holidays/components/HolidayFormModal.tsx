@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  View, Text, Modal, TextInput,
+  View, Modal, TextInput,
   TouchableOpacity, ScrollView, KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/common/theme';
 import { Button } from '@/common/components/Button';
 import { Link } from '@/common/components/Link';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
 import { Holiday, CreateHolidayDTO, HolidayType } from '../types';
 import { validateHolidayData } from '../validation/schemas';
 import { DateField } from '@/common/components/DateField';
@@ -63,6 +64,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
 }) => {
   const { t } = useTranslation('teacherLeaves');
   const { palette, spacing, radius, typography } = useTheme();
+  const { bodyMd: bodyMdType } = typography;
   const trZod = useCallback((msg: string) => {
     const key = ZOD_MSG_KEYS[msg];
     return key ? t(key) : msg;
@@ -172,24 +174,16 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
     }
   };
 
-  const sectionLabelStyle = [
-    typography.labelSm,
-    {
-      color: palette.onSurfaceVariant,
-      textTransform: 'uppercase' as const,
-      letterSpacing: 0.5,
-      marginBottom: spacing.sm,
-    },
-  ];
+  const sectionLabelStyle = {
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
+    marginBottom: spacing.sm,
+  };
 
-  const fieldLabelStyle = [
-    typography.labelMd,
-    {
-      color: palette.onSurface,
-      marginBottom: spacing.xs,
-      marginTop: spacing.sm,
-    },
-  ];
+  const fieldLabelStyle = {
+    marginBottom: spacing.xs,
+    marginTop: spacing.sm,
+  };
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
@@ -228,11 +222,11 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
               marginBottom: spacing.md,
             }}
           >
-            <Text style={[typography.headlineMd, { color: palette.onSurface }]}>
+            <Text variant="headlineMd" color="onSurface">
               {mode === 'edit' ? t('holidayForm.titleEdit') : t('holidayForm.titleAdd')}
             </Text>
             <TouchableOpacity onPress={onClose} style={{ padding: spacing.xs }}>
-              <Ionicons name="close" size={24} color={palette.onSurface} />
+              <AppIcon name="close" size="lg" color="onSurface" />
             </TouchableOpacity>
           </View>
 
@@ -251,8 +245,8 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
                 borderColor: palette.error + '30',
               }}
             >
-              <Ionicons name="alert-circle-outline" size={16} color={palette.error} />
-              <Text style={[typography.labelSm, { color: palette.error, flex: 1 }]}>
+              <AppIcon name="alert-circle-outline" size="sm" color="error" />
+              <Text variant="labelSm" color="error" style={{ flex: 1 }}>
                 {submitError}
               </Text>
             </View>
@@ -261,7 +255,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
           <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
             {/* ─── Holiday Mode Tabs ─────────────────────────────── */}
-            <Text style={sectionLabelStyle}>{t('holidayForm.sectionSchedule')}</Text>
+            <Text variant="labelSm" color="onSurfaceVariant" style={sectionLabelStyle}>{t('holidayForm.sectionSchedule')}</Text>
             <View
               style={{
                 flexDirection: 'row',
@@ -288,19 +282,15 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
                     }}
                     onPress={() => handleModeChange(m)}
                   >
-                    <Ionicons
+                    <AppIcon
                       name={m === 'single' ? 'today-outline' : m === 'range' ? 'calendar-outline' : 'repeat-outline'}
-                      size={15}
-                      color={active ? palette.onPrimary : palette.onSurfaceVariant}
+                      size="sm"
+                      color={active ? 'onPrimary' : 'onSurfaceVariant'}
                     />
                     <Text
-                      style={[
-                        typography.labelSm,
-                        {
-                          fontWeight: '600',
-                          color: active ? palette.onPrimary : palette.onSurfaceVariant,
-                        },
-                      ]}
+                      variant="labelSm"
+                      color={active ? 'onPrimary' : 'onSurfaceVariant'}
+                      style={{ fontWeight: '600' }}
                     >
                       {m === 'single' ? t('holidayForm.modeSingle') : m === 'range' ? t('holidayForm.modeRange') : t('holidayForm.modeRecurring')}
                     </Text>
@@ -310,7 +300,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
             </View>
 
             {/* ─── Name ─────────────────────────────────────────── */}
-            <Text style={fieldLabelStyle}>{t('holidayForm.nameLabel')}</Text>
+            <Text variant="labelMd" color="onSurface" style={fieldLabelStyle}>{t('holidayForm.nameLabel')}</Text>
             <TextInput
               style={{
                 backgroundColor: palette.surfaceContainerLow,
@@ -319,7 +309,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
                 borderRadius: radius.md,
                 padding: spacing.md,
                 color: palette.onSurface,
-                ...typography.bodyMd,
+                ...bodyMdType,
               }}
               value={form.name}
               onChangeText={(v) => setField('name', v)}
@@ -327,7 +317,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
               placeholderTextColor={palette.outline}
             />
             {fieldErrors.name && (
-              <Text style={[typography.labelSm, { color: palette.error, marginTop: 3, marginBottom: 4 }]}>
+              <Text variant="labelSm" color="error" style={{ marginTop: 3, marginBottom: 4 }}>
                 {fieldErrors.name}
               </Text>
             )}
@@ -373,7 +363,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
 
             {holidayMode === 'recurring' && (
               <>
-                <Text style={fieldLabelStyle}>{t('holidayForm.repeatsEvery')}</Text>
+                <Text variant="labelMd" color="onSurface" style={fieldLabelStyle}>{t('holidayForm.repeatsEvery')}</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.xs }}>
                   {([0, 1, 2, 3, 4, 5, 6] as const).map((dow) => {
                     const active = form.recurring_day_of_week === dow;
@@ -396,13 +386,9 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
                         }}
                       >
                         <Text
-                          style={[
-                            typography.labelSm,
-                            {
-                              fontWeight: '600',
-                              color: active ? palette.onPrimary : palette.onSurface,
-                            },
-                          ]}
+                          variant="labelSm"
+                          color={active ? 'onPrimary' : 'onSurface'}
+                          style={{ fontWeight: '600' }}
                         >
                           {t(`holidayForm.daysShort.${dow}`)}
                         </Text>
@@ -411,7 +397,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
                   })}
                 </View>
                 {fieldErrors.recurring_day_of_week && (
-                  <Text style={[typography.labelSm, { color: palette.error, marginTop: 3, marginBottom: 4 }]}>
+                  <Text variant="labelSm" color="error" style={{ marginTop: 3, marginBottom: 4 }}>
                     {fieldErrors.recurring_day_of_week}
                   </Text>
                 )}
@@ -428,9 +414,11 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
                     borderColor: palette.outlineVariant,
                   }}
                 >
-                  <Ionicons name="information-circle-outline" size={14} color={palette.onSurfaceVariant} />
+                  <AppIcon name="information-circle-outline" size="sm" color="onSurfaceVariant" />
                   <Text
-                    style={[typography.labelSm, { color: palette.onSurfaceVariant, flex: 1, lineHeight: 18 }]}
+                    variant="labelSm"
+                    color="onSurfaceVariant"
+                    style={{ flex: 1, lineHeight: 18 }}
                   >
                     {t('holidayForm.recurringInfo')}
                   </Text>
@@ -439,7 +427,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
             )}
 
             {/* ─── Holiday Category ─────────────────────────────── */}
-            <Text style={fieldLabelStyle}>{t('holidayForm.categoryLabel')}</Text>
+            <Text variant="labelMd" color="onSurface" style={fieldLabelStyle}>{t('holidayForm.categoryLabel')}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.xs }}>
               {HOLIDAY_TYPES.map((ht) => {
                 const active = form.holiday_type === ht;
@@ -459,20 +447,16 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
                     }}
                     onPress={() => setField('holiday_type', ht)}
                   >
-                    <Ionicons
+                    <AppIcon
                       name={TYPE_ICONS[ht]}
-                      size={14}
-                      color={active ? palette.onPrimary : palette.onSurfaceVariant}
+                      size="sm"
+                      color={active ? 'onPrimary' : 'onSurfaceVariant'}
                       style={{ marginRight: 4 }}
                     />
                     <Text
-                      style={[
-                        typography.labelSm,
-                        {
-                          fontWeight: '600',
-                          color: active ? palette.onPrimary : palette.onSurface,
-                        },
-                      ]}
+                      variant="labelSm"
+                      color={active ? 'onPrimary' : 'onSurface'}
+                      style={{ fontWeight: '600' }}
                     >
                       {t(`holidayForm.types.${ht}`)}
                     </Text>
@@ -481,7 +465,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
               })}
             </ScrollView>
             {fieldErrors.holiday_type && (
-              <Text style={[typography.labelSm, { color: palette.error, marginTop: 3, marginBottom: 4 }]}>
+              <Text variant="labelSm" color="error" style={{ marginTop: 3, marginBottom: 4 }}>
                 {fieldErrors.holiday_type}
               </Text>
             )}
@@ -489,7 +473,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
             {/* ─── Academic Year ────────────────────────────────── */}
             {academicYears.length > 0 && (
               <>
-                <Text style={fieldLabelStyle}>{t('holidayForm.academicYear')}</Text>
+                <Text variant="labelMd" color="onSurface" style={fieldLabelStyle}>{t('holidayForm.academicYear')}</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.xs }}>
                   {(() => {
                     const active = !form.academic_year_id;
@@ -509,13 +493,9 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
                         onPress={() => setField('academic_year_id', '')}
                       >
                         <Text
-                          style={[
-                            typography.labelSm,
-                            {
-                              fontWeight: '600',
-                              color: active ? palette.onPrimary : palette.onSurface,
-                            },
-                          ]}
+                          variant="labelSm"
+                          color={active ? 'onPrimary' : 'onSurface'}
+                          style={{ fontWeight: '600' }}
                         >
                           {t('holidayForm.allYears')}
                         </Text>
@@ -541,13 +521,9 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
                         onPress={() => setField('academic_year_id', ay.id)}
                       >
                         <Text
-                          style={[
-                            typography.labelSm,
-                            {
-                              fontWeight: '600',
-                              color: active ? palette.onPrimary : palette.onSurface,
-                            },
-                          ]}
+                          variant="labelSm"
+                          color={active ? 'onPrimary' : 'onSurface'}
+                          style={{ fontWeight: '600' }}
                         >
                           {ay.name}
                         </Text>
@@ -559,7 +535,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
             )}
 
             {/* ─── Description ─────────────────────────────────── */}
-            <Text style={fieldLabelStyle}>{t('holidayForm.descriptionLabel')}</Text>
+            <Text variant="labelMd" color="onSurface" style={fieldLabelStyle}>{t('holidayForm.descriptionLabel')}</Text>
             <TextInput
               style={{
                 backgroundColor: palette.surfaceContainerLow,
@@ -568,7 +544,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
                 borderRadius: radius.md,
                 padding: spacing.md,
                 color: palette.onSurface,
-                ...typography.bodyMd,
+                ...bodyMdType,
                 minHeight: 80,
                 paddingTop: spacing.sm,
               }}
@@ -581,7 +557,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
               textAlignVertical="top"
             />
             {fieldErrors.description && (
-              <Text style={[typography.labelSm, { color: palette.error, marginTop: 3, marginBottom: 4 }]}>
+              <Text variant="labelSm" color="error" style={{ marginTop: 3, marginBottom: 4 }}>
                 {fieldErrors.description}
               </Text>
             )}

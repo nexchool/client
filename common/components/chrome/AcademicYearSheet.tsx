@@ -1,9 +1,10 @@
 import React from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
 import { Button } from '@/common/components/Button';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
 import { useAcademicYearContext } from '@/modules/academics/context/AcademicYearContext';
 
 type Props = {
@@ -13,7 +14,7 @@ type Props = {
 
 export function AcademicYearSheet({ visible, onClose }: Props) {
   const { t } = useTranslation('common');
-  const { palette, spacing, radius, typography } = useTheme();
+  const { palette, spacing, radius } = useTheme();
   const { selectedAcademicYearId, setSelectedAcademicYearId, academicYears } =
     useAcademicYearContext();
 
@@ -47,20 +48,10 @@ export function AcademicYearSheet({ visible, onClose }: Props) {
             { backgroundColor: palette.outlineVariant, alignSelf: 'center' },
           ]}
         />
-        <Text
-          style={[
-            typography.headlineMd,
-            { color: palette.onSurface, marginTop: spacing.md },
-          ]}
-        >
+        <Text variant="headlineMd" color="onSurface" style={{ marginTop: spacing.md }}>
           {t('academicYearPicker.title', { defaultValue: 'Academic Year' })}
         </Text>
-        <Text
-          style={[
-            typography.bodyMd,
-            { color: palette.onSurfaceVariant, marginTop: spacing.xs },
-          ]}
-        >
+        <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
           {t('academicYearPicker.subtitle', {
             defaultValue: 'Select the year to view data for.',
           })}
@@ -94,18 +85,14 @@ export function AcademicYearSheet({ visible, onClose }: Props) {
                 ]}
               >
                 <Text
-                  style={[
-                    typography.bodyLg,
-                    {
-                      color: isSelected ? palette.onPrimaryContainer : palette.onSurface,
-                      flex: 1,
-                    },
-                  ]}
+                  variant="bodyLg"
+                  color={isSelected ? 'onPrimaryContainer' : 'onSurface'}
+                  style={{ flex: 1 }}
                 >
                   {ay.name}
                 </Text>
                 {isSelected ? (
-                  <Ionicons name="checkmark" size={20} color={palette.onPrimaryContainer} />
+                  <AppIcon name="checkmark" size="md" color="onPrimaryContainer" />
                 ) : null}
               </Pressable>
             );

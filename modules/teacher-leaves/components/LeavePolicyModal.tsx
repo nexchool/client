@@ -40,7 +40,7 @@ export function LeavePolicyModal({
   editingPolicies,
 }: LeavePolicyModalProps) {
   const { t } = useTranslation("teacherLeaves");
-  const { palette, spacing, radius, typography } = useTheme();
+  const { palette, spacing, radius, typography: { bodyMd: bodyMdType } } = useTheme();
   const [saving, setSaving] = useState<string | null>(null);
 
   const handleSave = async (leaveType: string) => {
@@ -104,7 +104,7 @@ export function LeavePolicyModal({
       borderRadius: radius.md,
       paddingHorizontal: spacing.sm,
       paddingVertical: 6,
-      ...typography.bodyMd,
+      ...bodyMdType,
       color: palette.onSurface,
       textAlign: "center",
       backgroundColor: palette.surfaceContainerLowest,

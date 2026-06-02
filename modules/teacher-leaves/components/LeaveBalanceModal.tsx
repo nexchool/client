@@ -35,7 +35,7 @@ export function LeaveBalanceModal({
   onClose,
 }: LeaveBalanceModalProps) {
   const { t } = useTranslation("teacherLeaves");
-  const { palette, spacing, radius, typography } = useTheme();
+  const { palette, spacing, radius, typography: { bodyMd: bodyMdType } } = useTheme();
   const [editingType, setEditingType] = useState<string | null>(null);
   const [editDays, setEditDays] = useState("");
   const [editNotes, setEditNotes] = useState("");
@@ -141,7 +141,7 @@ export function LeaveBalanceModal({
       borderRadius: radius.md,
       paddingHorizontal: spacing.sm,
       paddingVertical: spacing.sm,
-      ...typography.bodyMd,
+      ...bodyMdType,
       color: palette.onSurface,
       backgroundColor: palette.surfaceContainerLowest,
     },

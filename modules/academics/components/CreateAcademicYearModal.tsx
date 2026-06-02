@@ -28,7 +28,7 @@ export function CreateAcademicYearModal({
   onSuccess,
 }: CreateAcademicYearModalProps) {
   const { t } = useTranslation("common");
-  const { palette, spacing, radius, typography } = useTheme();
+  const { palette, spacing, radius, typography: { bodyMd: bodyMdType } } = useTheme();
   const [name, setName] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -148,7 +148,7 @@ export function CreateAcademicYearModal({
           <TextInput
             style={[
               styles.input,
-              typography.bodyMd,
+              bodyMdType,
               {
                 borderColor: palette.outlineVariant,
                 borderRadius: radius.sm,

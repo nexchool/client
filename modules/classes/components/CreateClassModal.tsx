@@ -48,7 +48,7 @@ export const CreateClassModal: React.FC<Props> = ({
   classId,
 }) => {
   const { t } = useTranslation("classes");
-  const { palette, spacing, radius, typography } = useTheme();
+  const { palette, spacing, radius, typography: { bodyMd: bodyMdType } } = useTheme();
   const isEditMode = !!initialData;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -179,7 +179,7 @@ export const CreateClassModal: React.FC<Props> = ({
 
   const inputStyle = [
     styles.input,
-    typography.bodyMd,
+    bodyMdType,
     {
       borderColor: palette.outlineVariant,
       borderRadius: radius.sm,

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
-import { Alert, Dimensions, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Dimensions, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Text } from '@/common/components/Text';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
@@ -23,7 +24,7 @@ function todayIso(): string {
 
 export function ScheduleOverrideSheet({ visible, onClose, defaultDate, defaultSlotId }: Props) {
   const { t } = useTranslation('schedule');
-  const { palette, spacing, radius, typography } = useTheme();
+  const { palette, spacing, radius } = useTheme();
   const { teachers, fetchTeachers } = useTeachers();
   const createMutation = useCreateScheduleOverride();
 
@@ -138,7 +139,7 @@ export function ScheduleOverrideSheet({ visible, onClose, defaultDate, defaultSl
             marginBottom: spacing.md,
           }}
         />
-        <Text style={[typography.headlineMd, { color: palette.onSurface }]}>
+        <Text variant="headlineMd" color="onSurface">
           {t('override.title', { defaultValue: 'Override period' })}
         </Text>
         <ScrollView

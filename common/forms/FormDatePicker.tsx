@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Controller, type Control, type FieldPath, type FieldValues } from 'react-hook-form';
-import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/common/theme';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
 
 type Props<TForm extends FieldValues> = {
   control: Control<TForm>;
@@ -28,7 +29,7 @@ export function FormDatePicker<TForm extends FieldValues>({
   maxDate,
   disabled,
 }: Props<TForm>) {
-  const { palette, spacing, radius, typography } = useTheme();
+  const { palette, spacing, radius } = useTheme();
   const [showAndroidPicker, setShowAndroidPicker] = useState(false);
 
   return (
@@ -48,10 +49,9 @@ export function FormDatePicker<TForm extends FieldValues>({
         return (
           <View style={{ width: '100%' }}>
             <Text
-              style={[
-                typography.labelMd,
-                { color: palette.onSurfaceVariant, marginBottom: 6, includeFontPadding: false },
-              ]}
+              variant="labelMd"
+              color="onSurfaceVariant"
+              style={{ marginBottom: 6, includeFontPadding: false }}
             >
               {label}
             </Text>
@@ -71,15 +71,10 @@ export function FormDatePicker<TForm extends FieldValues>({
                 },
               ]}
             >
-              <Text
-                style={[
-                  typography.bodyMd,
-                  { color: dateValue ? palette.onSurface : palette.outline },
-                ]}
-              >
+              <Text variant="bodyMd" color={dateValue ? 'onSurface' : 'outline'}>
                 {dateValue ? dateValue.toLocaleDateString() : 'Tap to pick date'}
               </Text>
-              <Ionicons name="calendar-outline" size={20} color={palette.onSurfaceVariant} />
+              <AppIcon name="calendar-outline" size="md" color="onSurfaceVariant" />
             </Pressable>
             {Platform.OS === 'ios' && !disabled ? (
               <DateTimePicker
@@ -102,14 +97,9 @@ export function FormDatePicker<TForm extends FieldValues>({
               />
             ) : null}
             <Text
-              style={[
-                typography.labelSm,
-                {
-                  color: error ? palette.error : palette.onSurfaceVariant,
-                  marginTop: 6,
-                  minHeight: 16,
-                },
-              ]}
+              variant="labelSm"
+              color={error ? 'error' : 'onSurfaceVariant'}
+              style={{ marginTop: 6, minHeight: 16 }}
               numberOfLines={2}
             >
               {error?.message ?? helper ?? ' '}

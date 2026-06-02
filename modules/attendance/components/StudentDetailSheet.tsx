@@ -30,6 +30,7 @@ export function StudentDetailSheet({
 }: Props) {
   const { t } = useTranslation('attendance');
   const { palette, spacing, radius, typography } = useTheme();
+  const { bodyMd: bodyMdType } = typography;
   const [status, setStatus] = useState<AttendanceStatus>(currentStatus);
   const [remarks, setRemarks] = useState<string>(currentRemarks);
 
@@ -94,7 +95,7 @@ export function StudentDetailSheet({
               placeholderTextColor={palette.outline}
               multiline
               style={[
-                typography.bodyMd,
+                bodyMdType,
                 {
                   backgroundColor: palette.surfaceContainerLow,
                   borderRadius: radius.DEFAULT,
