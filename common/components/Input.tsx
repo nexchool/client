@@ -105,7 +105,7 @@ export function Input({
       <Text
         style={[
           typography.labelSm,
-          { color: helperColor, marginTop: 6, minHeight: 16, includeFontPadding: false },
+          { color: helperColor, marginTop: 4, minHeight: 14, includeFontPadding: false },
         ]}
         numberOfLines={2}
       >

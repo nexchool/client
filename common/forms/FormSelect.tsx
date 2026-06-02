@@ -92,8 +92,8 @@ export function FormSelect<TForm extends FieldValues>({
                 typography.labelSm,
                 {
                   color: error ? palette.error : palette.onSurfaceVariant,
-                  marginTop: 6,
-                  minHeight: 16,
+                  marginTop: 4,
+                  minHeight: 14,
                 },
               ]}
               numberOfLines={2}

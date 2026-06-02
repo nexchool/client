@@ -17,12 +17,12 @@ export function FormSection({ title, children }: Props) {
           backgroundColor: palette.surfaceContainerLowest,
           borderRadius: radius.xl,
           padding: spacing.lg,
-          gap: spacing.md,
+          gap: spacing.sm,
         },
       ]}
     >
       {title ? (
-        <Text style={[typography.headlineMd, { color: palette.onSurface }]}>
+        <Text style={[typography.headlineMd, { color: palette.onSurface, marginBottom: spacing.xs }]}>
           {title}
         </Text>
       ) : null}
