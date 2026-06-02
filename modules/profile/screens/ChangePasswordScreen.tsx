@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/common/theme';
 import { ScreenContainer } from '@/common/components/ScreenContainer';
 import { Input } from '@/common/components/Input';
 import { Button } from '@/common/components/Button';
 import { Link } from '@/common/components/Link';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
 import { changePassword } from '@/modules/auth/services/authService';
 import { ApiException } from '@/common/services/api';
 
@@ -29,7 +30,7 @@ function passwordStrength(p: string): {
 
 export default function ChangePasswordScreen() {
   const { t } = useTranslation('profile');
-  const { palette, spacing, typography } = useTheme();
+  const { palette, spacing } = useTheme();
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -133,14 +134,8 @@ export default function ChangePasswordScreen() {
 
   if (submitted) {
     return (
-      <ScreenContainer>
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={12}
-          style={{ width: 44, height: 44, justifyContent: 'center' }}
-        >
-          <Ionicons name="chevron-back" size={24} color={palette.onSurface} />
-        </Pressable>
+      <ScreenContainer topInset={false}>
+        <AppIcon name="chevron-back" size="lg" color="onSurface" onPress={() => router.back()} />
         <View style={{ alignItems: 'center', marginTop: spacing.xl * 2 }}>
           <View
             style={{
@@ -152,30 +147,23 @@ export default function ChangePasswordScreen() {
               justifyContent: 'center',
             }}
           >
-            <Ionicons name="checkmark" size={36} color={palette.success} />
+            <AppIcon name="checkmark" size="xl" color="success" />
           </View>
           <Text
-            style={[
-              typography.headlineMd,
-              {
-                color: palette.onSurface,
-                marginTop: spacing.lg,
-                textAlign: 'center',
-              },
-            ]}
+            variant="headlineMd"
+            color="onSurface"
+            style={{ marginTop: spacing.lg, textAlign: 'center' }}
           >
             {t('changePassword.successTitle', { defaultValue: 'Password updated' })}
           </Text>
           <Text
-            style={[
-              typography.bodyMd,
-              {
-                color: palette.onSurfaceVariant,
-                marginTop: spacing.sm,
-                textAlign: 'center',
-                paddingHorizontal: spacing.lg,
-              },
-            ]}
+            variant="bodyMd"
+            color="onSurfaceVariant"
+            style={{
+              marginTop: spacing.sm,
+              textAlign: 'center',
+              paddingHorizontal: spacing.lg,
+            }}
           >
             {t('changePassword.successBody', {
               defaultValue: 'Use your new password from now on.',
@@ -194,29 +182,13 @@ export default function ChangePasswordScreen() {
   }
 
   return (
-    <ScreenContainer>
-      <Pressable
-        onPress={() => router.back()}
-        hitSlop={12}
-        style={{ width: 44, height: 44, justifyContent: 'center' }}
-      >
-        <Ionicons name="chevron-back" size={24} color={palette.onSurface} />
-      </Pressable>
+    <ScreenContainer topInset={false}>
+      <AppIcon name="chevron-back" size="lg" color="onSurface" onPress={() => router.back()} />
 
-      <Text
-        style={[
-          typography.headlineLg,
-          { color: palette.onSurface, marginTop: spacing.md },
-        ]}
-      >
+      <Text variant="headlineLg" color="onSurface" style={{ marginTop: spacing.md }}>
         {t('changePassword.title', { defaultValue: 'Change password' })}
       </Text>
-      <Text
-        style={[
-          typography.bodyMd,
-          { color: palette.onSurfaceVariant, marginTop: spacing.xs },
-        ]}
-      >
+      <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
         {t('changePassword.subtitle', {
           defaultValue: "Choose a strong password you haven't used before",
         })}
