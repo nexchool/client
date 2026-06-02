@@ -1,9 +1,9 @@
 import React from 'react';
 import { Image, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
 import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
 import { Student } from '../types';
 
 const AVATAR = 112;
@@ -84,7 +84,7 @@ export function StudentDetailHero({ student }: { student: Student }) {
                 backgroundColor: palette.surfaceContainer,
               }}
             >
-              <Ionicons name="ellipse" size={10} color={palette.primary} />
+              <AppIcon name="ellipse" size="sm" color="primary" />
               <Text variant="labelSm" color="onSurface">
                 {student.student_status}
               </Text>

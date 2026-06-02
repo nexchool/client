@@ -12,7 +12,7 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import type { Ionicons } from "@expo/vector-icons";
 import {
   useStudentDocuments,
   useUploadStudentDocument,
@@ -68,7 +68,7 @@ function FileTypeIcon({
         justifyContent: "center",
       }}
     >
-      <Ionicons name={iconName} size={22} color={palette.onTertiaryContainer} />
+      <AppIcon name={iconName} size="md" color="onTertiaryContainer" />
     </View>
   );
 }

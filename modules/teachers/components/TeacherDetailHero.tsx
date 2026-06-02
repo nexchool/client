@@ -1,6 +1,5 @@
 import React from 'react';
 import { Image, Linking, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
 import { Text } from '@/common/components/Text';
@@ -100,7 +99,7 @@ export function TeacherDetailHero({ teacher, canUpdate, onEdit }: Props) {
               backgroundColor: palette.surfaceContainer,
             }}
           >
-            <Ionicons name="ellipse" size={10} color={palette.primary} />
+            <AppIcon name="ellipse" size="sm" color="primary" />
             <Text variant="labelSm" color="onSurface">
               {t(`status.${teacher.status.toLowerCase()}`, { defaultValue: teacher.status })}
             </Text>

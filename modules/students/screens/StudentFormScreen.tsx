@@ -11,15 +11,16 @@
  * Section is not collected here — derived later from class assignment.
  */
 import React from 'react';
-import { Alert, BackHandler, Pressable, Text, View } from 'react-native';
+import { Alert, BackHandler, Pressable, View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Ionicons } from '@expo/vector-icons';
 import { useForm, type Path } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTheme } from '@/common/theme';
 import { ScreenContainer } from '@/common/components/ScreenContainer';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
 import { Button } from '@/common/components/Button';
 import { Link } from '@/common/components/Link';
 import { Skeleton } from '@/common/components/Skeleton';
@@ -60,7 +61,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 export default function StudentFormScreen() {
   const { t } = useTranslation('students');
-  const { palette, spacing, typography } = useTheme();
+  const { palette, spacing } = useTheme();
   const params = useLocalSearchParams<{ id?: string }>();
   const isEdit = !!params.id;
 
@@ -283,7 +284,7 @@ export default function StudentFormScreen() {
   }
 
   return (
-    <ScreenContainer keyboardOffset={20}>
+    <ScreenContainer keyboardOffset={20} topInset={false}>
       <View
         style={{
           flexDirection: 'row',
@@ -296,7 +297,7 @@ export default function StudentFormScreen() {
           hitSlop={12}
           style={{ width: 44, height: 44, justifyContent: 'center' }}
         >
-          <Ionicons name="chevron-back" size={24} color={palette.onSurface} />
+          <AppIcon name="chevron-back" size="lg" color="onSurface" />
         </Pressable>
         {!isEdit ? (
           <Link onPress={handleBack}>
@@ -305,12 +306,7 @@ export default function StudentFormScreen() {
         ) : null}
       </View>
 
-      <Text
-        style={[
-          typography.display,
-          { color: palette.onSurface, marginTop: spacing.xs },
-        ]}
-      >
+      <Text variant="display" color="onSurface" style={{ marginTop: spacing.xs }}>
         {isEdit
           ? t('form.editTitle', { defaultValue: 'Edit student' })
           : t('form.newTitle', { defaultValue: 'New student' })}

@@ -228,7 +228,7 @@ export default function CreateInvoiceScreen() {
   };
 
   return (
-    <ScreenContainer keyboardOffset={20}>
+    <ScreenContainer keyboardOffset={20} topInset={false}>
       <View
         style={{
           flexDirection: 'row',

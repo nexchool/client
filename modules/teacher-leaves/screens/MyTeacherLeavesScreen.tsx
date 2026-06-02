@@ -345,6 +345,7 @@ interface ApplyModalProps {
 function ApplyModal({ visible, balances, onClose, onSubmit }: ApplyModalProps) {
   const { t } = useTranslation("teacherLeaves");
   const { palette, spacing, radius, typography } = useTheme();
+  const { bodyMd: bodyMdType } = typography;
   const [leaveStart, setLeaveStart] = useState("");
   const [leaveEnd, setLeaveEnd] = useState("");
   const [leaveType, setLeaveType] = useState("casual");
@@ -546,7 +547,7 @@ function ApplyModal({ visible, balances, onClose, onSubmit }: ApplyModalProps) {
       borderRadius: radius.DEFAULT,
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
-      ...typography.bodyMd,
+      ...bodyMdType,
       color: palette.onSurface,
       backgroundColor: palette.surfaceContainerLow,
     },
