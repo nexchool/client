@@ -19,8 +19,11 @@ import { useAuth } from "@/modules/auth/hooks/useAuth";
 import * as PERMS from "@/modules/permissions/constants/permissions";
 import { ClassActiveTimetablePanel } from "@/modules/academics/components/class/ClassActiveTimetablePanel";
 import { ClassAttendancePanel } from "@/modules/academics/components/class/ClassAttendancePanel";
+import { ClassTeachersPanel } from "@/modules/academics/components/class/ClassTeachersPanel";
+import { SubjectTeachersPanel } from "@/modules/academics/components/class/SubjectTeachersPanel";
+import { ClassSubjectsReadOnlyPanel } from "@/modules/classes/components/ClassSubjectsReadOnlyPanel";
 
-type HubTab = "students" | "timetable" | "attendance";
+type HubTab = "students" | "teachers" | "subjects" | "timetable" | "attendance";
 
 export default function ClassDetailScreen() {
   const { t } = useTranslation("classes");
@@ -42,12 +45,19 @@ export default function ClassDetailScreen() {
       hasPermission(PERMS.ATTENDANCE_READ_ALL) ||
       canAttendanceMark);
 
+  const canManageClassTeachers = hasPermission(PERMS.CLASS_TEACHER_MANAGE);
+  const canViewTeachers = canManageClassTeachers || hasPermission(PERMS.TEACHER_READ);
+  const canManageSubjectTeachers = hasPermission(PERMS.CLASS_SUBJECT_MANAGE);
+  const canViewSubjects = hasPermission(PERMS.CLASS_SUBJECT_READ) || canManageSubjectTeachers;
+
   const visibleTabs = useMemo<TabItem[]>(() => {
     const items: TabItem[] = [{ key: "students", label: t("detail.students") }];
+    if (canViewTeachers) items.push({ key: "teachers", label: t("detail.teachers") });
+    if (canViewSubjects) items.push({ key: "subjects", label: t("detail.subjects", { defaultValue: "Subjects" }) });
     if (canTimetable) items.push({ key: "timetable", label: t("detail.timetable") });
     if (canAttendanceView) items.push({ key: "attendance", label: t("detail.attendance") });
     return items;
-  }, [canTimetable, canAttendanceView, t]);
+  }, [canViewTeachers, canViewSubjects, canTimetable, canAttendanceView, t]);
 
   const [tab, setTab] = useState<HubTab>("students");
   const [refreshing, setRefreshing] = useState(false);
@@ -187,6 +197,26 @@ export default function ClassDetailScreen() {
                 <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.lg, fontStyle: "italic" }}>
                   {t("detail.noStudents")}
                 </Text>
+              )}
+            </View>
+          )}
+
+          {tab === "teachers" && id && (
+            <View style={{ paddingTop: spacing.md }}>
+              <ClassTeachersPanel classId={id} canManage={canManageClassTeachers} />
+            </View>
+          )}
+
+          {tab === "subjects" && id && (
+            <View style={{ paddingTop: spacing.md }}>
+              <ClassSubjectsReadOnlyPanel classId={id} />
+              {canManageSubjectTeachers && (
+                <View style={{ marginTop: spacing.lg }}>
+                  <Text variant="overline" color="onSurfaceVariant" style={{ marginBottom: spacing.sm }}>
+                    {t("detail.subjectTeachers", { defaultValue: "Subject Teachers" })}
+                  </Text>
+                  <SubjectTeachersPanel classId={id} canManage={canManageSubjectTeachers} />
+                </View>
               )}
             </View>
           )}
