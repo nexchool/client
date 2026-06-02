@@ -1,8 +1,11 @@
 // client/modules/search/components/SearchResultRow.tsx
 import React from 'react';
-import { Pressable, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View } from 'react-native';
+import type { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/common/theme';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
+import { PressScale } from '@/common/components/PressScale';
 
 type Props = {
   icon: keyof typeof Ionicons.glyphMap;
@@ -12,18 +15,17 @@ type Props = {
 };
 
 export function SearchResultRow({ icon, primary, secondary, onPress }: Props) {
-  const { palette, spacing, radius, typography } = useTheme();
+  const { palette, spacing, radius } = useTheme();
   return (
-    <Pressable
+    <PressScale
       onPress={onPress}
-      style={({ pressed }) => ({
+      style={{
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.md,
         paddingVertical: spacing.sm,
         paddingHorizontal: spacing.xs,
-        opacity: pressed ? 0.7 : 1,
-      })}
+      }}
     >
       <View
         style={{
@@ -35,19 +37,19 @@ export function SearchResultRow({ icon, primary, secondary, onPress }: Props) {
           justifyContent: 'center',
         }}
       >
-        <Ionicons name={icon} size={20} color={palette.onSurfaceVariant} />
+        <AppIcon name={icon} size="md" color="onSurfaceVariant" />
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={[typography.bodyMd, { color: palette.onSurface }]} numberOfLines={1}>
+        <Text variant="bodyMd" color="onSurface" numberOfLines={1}>
           {primary}
         </Text>
         {secondary ? (
-          <Text style={[typography.labelSm, { color: palette.onSurfaceVariant }]} numberOfLines={1}>
+          <Text variant="labelSm" color="onSurfaceVariant" numberOfLines={1}>
             {secondary}
           </Text>
         ) : null}
       </View>
-      <Ionicons name="chevron-forward" size={18} color={palette.onSurfaceVariant} />
-    </Pressable>
+      <AppIcon name="chevron-forward" size="sm" color="onSurfaceVariant" />
+    </PressScale>
   );
 }

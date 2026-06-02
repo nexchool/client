@@ -1,21 +1,22 @@
 // client/modules/search/screens/SearchScreen.tsx
 import React from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/common/theme';
 import { ScreenContainer } from '@/common/components/ScreenContainer';
 import { Input } from '@/common/components/Input';
 import { Skeleton } from '@/common/components/Skeleton';
 import { EmptyState } from '@/common/components/EmptyState';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
 import { useSearch } from '../hooks/useSearch';
 import { SearchGroupSection } from '../components/SearchGroupSection';
 import { SearchResultRow } from '../components/SearchResultRow';
 
 export default function SearchScreen() {
   const { t } = useTranslation('search');
-  const { palette, spacing, typography } = useTheme();
+  const { spacing } = useTheme();
   const { query, setQuery, enabled, results, isFetching } = useSearch();
 
   const go = (pathname: string, id: string) => router.push({ pathname, params: { id } } as any);
@@ -27,11 +28,15 @@ export default function SearchScreen() {
     (results?.fees.length ?? 0);
 
   return (
-    <ScreenContainer>
+    <ScreenContainer topInset={false}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={{ width: 44, height: 44, justifyContent: 'center' }}>
-          <Ionicons name="chevron-back" size={24} color={palette.onSurface} />
-        </Pressable>
+        <AppIcon
+          name="chevron-back"
+          size="lg"
+          color="onSurface"
+          onPress={() => router.back()}
+          accessibilityLabel={t('back', { defaultValue: 'Back' })}
+        />
         <View style={{ flex: 1 }}>
           <Input
             label=""
@@ -41,9 +46,7 @@ export default function SearchScreen() {
             autoCapitalize="none"
             rightSlot={
               query ? (
-                <Pressable onPress={() => setQuery('')} hitSlop={8}>
-                  <Ionicons name="close-circle" size={18} color={palette.onSurfaceVariant} />
-                </Pressable>
+                <AppIcon name="close-circle" size="sm" color="onSurfaceVariant" onPress={() => setQuery('')} />
               ) : undefined
             }
           />
@@ -52,8 +55,8 @@ export default function SearchScreen() {
 
       {!enabled ? (
         <View style={{ alignItems: 'center', marginTop: spacing.xl * 2 }}>
-          <Ionicons name="search-outline" size={48} color={palette.outlineVariant} />
-          <Text style={[typography.bodyMd, { color: palette.onSurfaceVariant, marginTop: spacing.md }]}>
+          <AppIcon name="search-outline" size="hero" color="outlineVariant" />
+          <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.md }}>
             {t('prompt', { defaultValue: 'Type to search' })}
           </Text>
         </View>
@@ -65,7 +68,7 @@ export default function SearchScreen() {
         </View>
       ) : totalHits === 0 ? (
         <EmptyState
-          icon={<Ionicons name="search-outline" size={28} color={palette.onSurfaceVariant} />}
+          icon={<AppIcon name="search-outline" size="xl" color="onSurfaceVariant" />}
           title={t('empty.title', { defaultValue: 'No matches' })}
           description={t('empty.body', { defaultValue: 'Nothing found for your search.' })}
         />
