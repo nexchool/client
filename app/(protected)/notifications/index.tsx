@@ -1,9 +1,10 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { RefreshControl, SectionList, Text, View } from "react-native";
+import { RefreshControl, SectionList, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/common/theme";
+import { Text } from "@/common/components/Text";
+import { AppIcon } from "@/common/components/AppIcon";
 import { EmptyState } from "@/common/components/EmptyState";
 import { Link } from "@/common/components/Link";
 import { Skeleton } from "@/common/components/Skeleton";
@@ -30,7 +31,7 @@ import type { AppNotification } from "@/modules/notifications/types";
 export default function NotificationsListScreen() {
   const { t } = useTranslation("notifications");
   const router = useRouter();
-  const { palette, spacing, radius, typography } = useTheme();
+  const { spacing, radius } = useTheme();
   const { isFeatureEnabled, hasAnyPermission } = useAuth();
   const canUse = isFeatureEnabled("notifications");
   const canFinanceDeepLink = canOpenFinanceDeepLinks(isFeatureEnabled, hasAnyPermission);
@@ -67,7 +68,7 @@ export default function NotificationsListScreen() {
   if (!canUse) {
     return (
       <View style={{ flex: 1, padding: spacing.marginMobile, alignItems: "center", justifyContent: "center" }}>
-        <Text style={[typography.bodyMd, { color: palette.onSurfaceVariant }]}>
+        <Text variant="bodyMd" color="onSurfaceVariant">
           {t("unavailable", { defaultValue: "Notifications are unavailable." })}
         </Text>
       </View>
@@ -79,7 +80,7 @@ export default function NotificationsListScreen() {
   return (
     <View style={{ flex: 1, padding: spacing.marginMobile, gap: spacing.lg }}>
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-        <Text style={[typography.display, { color: palette.onSurface }]}>
+        <Text variant="display" color="onSurface">
           {t("title", { defaultValue: "Notifications" })}
         </Text>
         {hasUnread ? (
@@ -106,7 +107,7 @@ export default function NotificationsListScreen() {
         </View>
       ) : listQuery.error ? (
         <EmptyState
-          icon={<Ionicons name="alert-circle-outline" size={36} color={palette.error} />}
+          icon={<AppIcon name="alert-circle-outline" size="xl" color="error" />}
           title={t("loadError", { defaultValue: "Could not load notifications" })}
           action={{ label: t("retry", { defaultValue: "Retry" }), onPress: () => listQuery.refetch() }}
         />
@@ -124,10 +125,9 @@ export default function NotificationsListScreen() {
           )}
           renderSectionHeader={({ section }) => (
             <Text
-              style={[
-                typography.labelMd,
-                { color: palette.onSurfaceVariant, marginTop: spacing.lg, marginBottom: spacing.xs },
-              ]}
+              variant="labelMd"
+              color="onSurfaceVariant"
+              style={{ marginTop: spacing.lg, marginBottom: spacing.xs }}
             >
               {t(`section.${section.key}`, {
                 defaultValue:
@@ -138,7 +138,7 @@ export default function NotificationsListScreen() {
           renderSectionFooter={() => <View style={{ height: spacing.sm }} />}
           ListEmptyComponent={
             <EmptyState
-              icon={<Ionicons name="mail-open-outline" size={36} color={palette.onSurfaceVariant} />}
+              icon={<AppIcon name="mail-open-outline" size="xl" color="onSurfaceVariant" />}
               title={t("empty.title", { defaultValue: "You're all caught up" })}
             />
           }

@@ -1,10 +1,11 @@
 // client/modules/notifications/components/NotificationRow.tsx
 import React, { useRef } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
-import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
+import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
 import { stripHtmlToPlainText } from '@/modules/notifications/formatNotificationBody';
 import type { AppNotification } from '@/modules/notifications/types';
 
@@ -31,7 +32,7 @@ type Props = {
 
 export function NotificationRow({ item, isLast, onPress, onMarkRead }: Props) {
   const { t } = useTranslation('notifications');
-  const { palette, spacing, typography } = useTheme();
+  const { palette, spacing, radius } = useTheme();
   const swipeRef = useRef<Swipeable>(null);
   const isUnread = !item.read_at;
   const preview = stripHtmlToPlainText(item.body);
@@ -55,42 +56,41 @@ export function NotificationRow({ item, isLast, onPress, onMarkRead }: Props) {
       >
         <View style={{ width: 8, paddingTop: 6 }}>
           {isUnread ? (
-            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: palette.primary }} />
+            <View style={{ width: 8, height: 8, borderRadius: radius.full, backgroundColor: palette.primary }} />
           ) : null}
         </View>
         <View
           style={{
             width: 40,
             height: 40,
-            borderRadius: 20,
+            borderRadius: radius.full,
             backgroundColor: palette.secondaryContainer,
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
-          <Ionicons
+          <AppIcon
             name={isUnread ? 'notifications' : 'notifications-outline'}
-            size={20}
-            color={palette.onSecondaryContainer}
+            size="md"
+            color="onSecondaryContainer"
           />
         </View>
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: spacing.sm }}>
             <Text
-              style={[
-                isUnread ? typography.labelLg : typography.bodyMd,
-                { color: palette.onSurface, flex: 1 },
-              ]}
+              variant={isUnread ? 'labelLg' : 'bodyMd'}
+              color="onSurface"
+              style={{ flex: 1 }}
               numberOfLines={1}
             >
               {item.title}
             </Text>
-            <Text style={[typography.labelSm, { color: palette.onSurfaceVariant }]}>
+            <Text variant="labelSm" color="onSurfaceVariant">
               {relativeTime(item.created_at)}
             </Text>
           </View>
           {preview ? (
-            <Text style={[typography.labelMd, { color: palette.onSurfaceVariant, marginTop: 2 }]} numberOfLines={2}>
+            <Text variant="labelMd" color="onSurfaceVariant" style={{ marginTop: 2 }} numberOfLines={2}>
               {preview}
             </Text>
           ) : null}
@@ -116,8 +116,8 @@ export function NotificationRow({ item, isLast, onPress, onMarkRead }: Props) {
         width: 96,
       }}
     >
-      <Ionicons name="checkmark-done" size={20} color={palette.onPrimary} />
-      <Text style={[typography.labelSm, { color: palette.onPrimary, marginTop: 2 }]}>
+      <AppIcon name="checkmark-done" size="md" color="onPrimary" />
+      <Text variant="labelSm" color="onPrimary" style={{ marginTop: 2 }}>
         {t('swipe.markRead', { defaultValue: 'Mark read' })}
       </Text>
     </Pressable>

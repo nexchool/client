@@ -1,8 +1,9 @@
 // client/modules/notifications/components/NotificationFilterChips.tsx
 import React from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
+import { Text } from '@/common/components/Text';
 import type { NotificationCategory } from '../utils/notificationGrouping';
 
 export type StatusFilter = 'all' | 'unread';
@@ -19,7 +20,7 @@ const CATEGORIES: NotificationCategory[] = ['all', 'announcements', 'fees', 'lea
 
 export function NotificationFilterChips({ status, onStatusChange, category, onCategoryChange }: Props) {
   const { t } = useTranslation('notifications');
-  const { palette, spacing, radius, typography } = useTheme();
+  const { palette, spacing, radius } = useTheme();
 
   const chip = (active: boolean, label: string, onPress: () => void, key: string) => (
     <Pressable
@@ -29,16 +30,14 @@ export function NotificationFilterChips({ status, onStatusChange, category, onCa
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.sm,
         borderRadius: radius.full,
-        backgroundColor: active ? palette.tertiaryContainer : palette.surfaceContainerLowest,
-        borderWidth: active ? 0 : 1,
-        borderColor: palette.outlineVariant,
+        backgroundColor: active ? palette.primaryContainer : palette.surfaceContainer,
         opacity: pressed ? 0.85 : 1,
         minHeight: 40,
         alignItems: 'center',
         justifyContent: 'center',
       })}
     >
-      <Text style={[typography.labelMd, { color: active ? palette.onTertiaryContainer : palette.onSurface }]}>
+      <Text variant="labelMd" color={active ? 'onPrimaryContainer' : 'onSurfaceVariant'}>
         {label}
       </Text>
     </Pressable>
