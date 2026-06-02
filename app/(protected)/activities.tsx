@@ -1,10 +1,11 @@
 import React from "react";
 import { View, StyleSheet, ScrollView } from "react-native";
-import { useTheme, Spacing, type Palette } from "@/common/theme";
+import { useRouter } from "expo-router";
+import { useTheme, type Palette } from "@/common/theme";
 import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
 import { PressScale } from "@/common/components/PressScale";
-import { Ionicons } from "@expo/vector-icons";
+import type { Ionicons } from "@expo/vector-icons";
 import { Protected } from "@/modules/permissions/components/Protected";
 import { useUiRole } from "@/modules/permissions/hooks/useUiRole";
 import * as PERMS from "@/modules/permissions/constants/permissions";
@@ -16,17 +17,16 @@ interface ActionCardProps {
   title: string;
   subtitle: string;
   primary?: boolean;
-  badge?: string;
-  onPress?: () => void;
+  onPress: () => void;
 }
 
-function ActionCard({ icon, title, subtitle, primary, badge, onPress }: ActionCardProps) {
+function ActionCard({ icon, title, subtitle, primary, onPress }: ActionCardProps) {
   const { palette, spacing, radius } = useTheme();
   const iconChipBg: keyof Palette = primary ? "primaryContainer" : "surface";
   const iconChipFg: keyof Palette = primary ? "onPrimary" : "primary";
 
   return (
-    <PressScale onPress={onPress ?? (() => {})}>
+    <PressScale onPress={onPress}>
       <View
         style={[
           styles.actionCard,
@@ -56,11 +56,6 @@ function ActionCard({ icon, title, subtitle, primary, badge, onPress }: ActionCa
             {subtitle}
           </Text>
         </View>
-        {badge != null && (
-          <View style={[styles.badge, { backgroundColor: palette.error }]}>
-            <Text variant="labelSm" color="onError">{badge}</Text>
-          </View>
-        )}
         <AppIcon
           name="chevron-forward"
           size="md"
@@ -74,6 +69,7 @@ function ActionCard({ icon, title, subtitle, primary, badge, onPress }: ActionCa
 export default function ActivitiesScreen() {
   const { isAdmin, isTeacher } = useUiRole();
   const { palette, spacing } = useTheme();
+  const router = useRouter();
 
   return (
     <ScrollView
@@ -91,19 +87,6 @@ export default function ActivitiesScreen() {
       </View>
 
       <View style={{ gap: spacing.lg }}>
-        {/* Events & Calendar */}
-        <View style={[styles.section, { paddingHorizontal: spacing.marginMobile }]}>
-          <Text variant="headlineMd" color="onSurface" style={{ marginBottom: spacing.md }}>
-            Events &amp; Calendar
-          </Text>
-
-          <ActionCard icon="calendar-outline" title="School Calendar" subtitle="View upcoming events" />
-
-          <Protected anyPermissions={[PERMS.SYSTEM_MANAGE, PERMS.USER_MANAGE]}>
-            <ActionCard icon="add-circle-outline" title="Create Event" subtitle="Add school-wide event" />
-          </Protected>
-        </View>
-
         {/* Announcements */}
         <View style={[styles.section, { paddingHorizontal: spacing.marginMobile }]}>
           <Text variant="headlineMd" color="onSurface" style={{ marginBottom: spacing.md }}>
@@ -118,6 +101,7 @@ export default function ActivitiesScreen() {
               title="Post Announcement"
               subtitle={isAdmin ? "School-wide announcement" : "Class announcement"}
               primary
+              onPress={() => router.push("/(protected)/announcements/new")}
             />
           </Protected>
 
@@ -125,17 +109,8 @@ export default function ActivitiesScreen() {
             icon="notifications-outline"
             title="View Announcements"
             subtitle="Recent updates and news"
+            onPress={() => router.push("/(protected)/announcements")}
           />
-        </View>
-
-        {/* Extracurricular */}
-        <View style={[styles.section, { paddingHorizontal: spacing.marginMobile }]}>
-          <Text variant="headlineMd" color="onSurface" style={{ marginBottom: spacing.md }}>
-            Extracurricular
-          </Text>
-
-          <ActionCard icon="trophy-outline" title="Sports" subtitle="Sports events and teams" />
-          <ActionCard icon="musical-notes-outline" title="Clubs & Societies" subtitle="Join and participate" />
         </View>
 
         {/* Notifications */}
@@ -148,7 +123,7 @@ export default function ActivitiesScreen() {
             icon="notifications-outline"
             title="All Notifications"
             subtitle="View all updates"
-            badge="5"
+            onPress={() => router.push("/(protected)/notifications")}
           />
         </View>
       </View>
@@ -173,13 +148,5 @@ const styles = StyleSheet.create({
   },
   cardText: {
     flex: 1,
-  },
-  badge: {
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: Spacing.sm,
   },
 });
