@@ -7,7 +7,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 import { useTheme } from '@/common/theme';
 
 type Props = {
@@ -18,6 +18,14 @@ type Props = {
   keyboardOffset?: number;
   /** Disable horizontal margins (full-bleed). Default false. */
   noHorizontalPadding?: boolean;
+  /**
+   * Apply the top safe-area inset. Default true (correct for standalone
+   * `(auth)/*` screens). Set false for PROTECTED screens rendered inside
+   * AppShell — AppHeader already owns the top inset, so a second one here
+   * produces a phantom top gap. With it off we still keep the
+   * KeyboardAvoidingView + ScrollView this container provides.
+   */
+  topInset?: boolean;
 };
 
 export function ScreenContainer({
@@ -25,10 +33,14 @@ export function ScreenContainer({
   scrollable = true,
   keyboardOffset = 0,
   noHorizontalPadding = false,
+  topInset = true,
 }: Props) {
   const { palette, spacing, mode } = useTheme();
 
   const horizontalPadding = noHorizontalPadding ? 0 : spacing.marginMobile;
+  const edges: Edge[] = topInset
+    ? ['top', 'left', 'right', 'bottom']
+    : ['left', 'right', 'bottom'];
 
   const inner = scrollable ? (
     <ScrollView
@@ -49,7 +61,7 @@ export function ScreenContainer({
   );
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: palette.surface }]}>
+    <SafeAreaView edges={edges} style={[styles.safe, { backgroundColor: palette.surface }]}>
       <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'} />
       <KeyboardAvoidingView
         style={styles.flex}
