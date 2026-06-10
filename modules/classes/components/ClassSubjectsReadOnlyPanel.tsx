@@ -123,7 +123,7 @@ export function ClassSubjectsReadOnlyPanel({ classId }: Props) {
             <Text variant="bodySm" color="onSurfaceVariant">Teacher: {line.teacher}</Text>
           )}
           {!line.teacher && timetable && (
-            <Text variant="bodySm" color="outline" style={{ fontStyle: "italic" }}>No teacher assigned</Text>
+            <Text variant="bodySm" color="onSurfaceVariant" style={{ fontStyle: "italic" }}>No teacher assigned</Text>
           )}
         </View>
       ))}

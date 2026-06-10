@@ -133,7 +133,7 @@ export function ClassActiveTimetablePanel({ classId }: Props) {
                   {lp.label || `P${lp.period_number}`}
                 </Text>
                 {(lp.starts_at || lp.ends_at) ? (
-                  <Text variant="labelSm" color="outline" style={{ textAlign: "center", marginTop: 1 }}>
+                  <Text variant="labelSm" color="onSurfaceVariant" style={{ textAlign: "center", marginTop: 1 }}>
                     {fmtTime(lp.starts_at)}
                     {lp.starts_at && lp.ends_at ? "–" : ""}
                     {fmtTime(lp.ends_at)}
@@ -173,7 +173,7 @@ export function ClassActiveTimetablePanel({ classId }: Props) {
                           </Text>
                         ) : null}
                         {entry.room ? (
-                          <Text variant="labelSm" color="outline" numberOfLines={1} style={{ marginTop: 1 }}>
+                          <Text variant="labelSm" color="onSurfaceVariant" numberOfLines={1} style={{ marginTop: 1 }}>
                             {entry.room}
                           </Text>
                         ) : null}

@@ -239,7 +239,7 @@ function StopCard({ label, stop }: { label: string; stop: RouteStop | null }) {
         <Text variant="overline" color="onSurfaceVariant">
           {label}
         </Text>
-        <Text variant="bodyMd" color="outline" style={{ marginTop: spacing.xs }}>
+        <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
           —
         </Text>
       </View>

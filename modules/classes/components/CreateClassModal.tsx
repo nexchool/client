@@ -240,7 +240,7 @@ export const CreateClassModal: React.FC<Props> = ({
             <>
               <View style={[styles.fieldContainer, { marginBottom: spacing.md }]}>
                 <Text variant="labelMd" color="onSurface" style={{ marginBottom: spacing.xs }}>{t("modal.standardGradeNumber")}</Text>
-                <Text variant="bodySm" color="outline" style={{ marginBottom: spacing.sm }}>{t("modal.standardHintEdit")}</Text>
+                <Text variant="bodySm" color="onSurfaceVariant" style={{ marginBottom: spacing.sm }}>{t("modal.standardHintEdit")}</Text>
                 <TextInput
                   style={inputStyle}
                   value={standardNum}
@@ -264,7 +264,7 @@ export const CreateClassModal: React.FC<Props> = ({
           ) : (
             <View style={[styles.fieldContainer, { marginBottom: spacing.md }]}>
               <Text variant="labelMd" color="onSurface" style={{ marginBottom: spacing.xs }}>{t("modal.standardGrade")}</Text>
-              <Text variant="bodySm" color="outline" style={{ marginBottom: spacing.sm }}>{t("modal.standardHintCreate")}</Text>
+              <Text variant="bodySm" color="onSurfaceVariant" style={{ marginBottom: spacing.sm }}>{t("modal.standardHintCreate")}</Text>
               <TextInput
                 style={inputStyle}
                 value={standardNum}
@@ -296,9 +296,9 @@ export const CreateClassModal: React.FC<Props> = ({
             <Text variant="labelMd" color="onSurface" style={{ marginBottom: spacing.xs }}>{t("modal.academicYear")}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.xs }}>
               {academicYearsLoading ? (
-                <Text variant="bodySm" color="outline" style={{ paddingVertical: spacing.sm }}>{t("modal.loading")}</Text>
+                <Text variant="bodySm" color="onSurfaceVariant" style={{ paddingVertical: spacing.sm }}>{t("modal.loading")}</Text>
               ) : academicYears.length === 0 ? (
-                <Text variant="bodySm" color="outline" style={{ paddingVertical: spacing.sm }}>{t("modal.noAcademicYears")}</Text>
+                <Text variant="bodySm" color="onSurfaceVariant" style={{ paddingVertical: spacing.sm }}>{t("modal.noAcademicYears")}</Text>
               ) : (
                 academicYears.map((ay) =>
                   renderChip(academicYearId === ay.id, ay.name, () => setAcademicYearId(ay.id), ay.id)
@@ -309,7 +309,7 @@ export const CreateClassModal: React.FC<Props> = ({
 
           <View style={[styles.fieldContainer, { marginBottom: spacing.md }]}>
             <Text variant="labelMd" color="onSurface" style={{ marginBottom: spacing.xs }}>{t("modal.classTeacherOptional")}</Text>
-            <Text variant="bodySm" color="outline" style={{ marginBottom: spacing.sm }}>{t("modal.classTeacherHint")}</Text>
+            <Text variant="bodySm" color="onSurfaceVariant" style={{ marginBottom: spacing.sm }}>{t("modal.classTeacherHint")}</Text>
             {teachersLoading ? (
               <ActivityIndicator size="small" color={palette.primary} style={{ marginVertical: spacing.sm }} />
             ) : (
