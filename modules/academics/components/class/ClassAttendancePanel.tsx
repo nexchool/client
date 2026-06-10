@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import {
   View,
   StyleSheet,
@@ -37,7 +38,7 @@ function statusColorKey(status: string): keyof Palette {
   return "warning";
 }
 
-function statusLabel(status: string, ta: (key: string, opts?: object) => string): string {
+function statusLabel(status: string, ta: TFunction): string {
   return ta(`status.${status}`, { defaultValue: status.charAt(0).toUpperCase() + status.slice(1) });
 }
 

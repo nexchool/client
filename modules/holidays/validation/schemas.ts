@@ -9,7 +9,7 @@ export const createHolidaySchema = z.discriminatedUnion('is_recurring', [
     name: z.string().min(1, 'Name is required').max(120, 'Max 120 characters'),
     description: z.string().max(500, 'Max 500 characters').optional(),
     holiday_type: z.enum(['public', 'school', 'regional', 'optional', 'weekly_off'], {
-      errorMap: () => ({ message: 'Select a valid holiday type' }),
+      message: 'Select a valid holiday type',
     }),
     start_date: z
       .string()
@@ -34,10 +34,10 @@ export const createHolidaySchema = z.discriminatedUnion('is_recurring', [
     name: z.string().min(1, 'Name is required').max(120, 'Max 120 characters'),
     description: z.string().max(500, 'Max 500 characters').optional(),
     holiday_type: z.enum(['public', 'school', 'regional', 'optional', 'weekly_off'], {
-      errorMap: () => ({ message: 'Select a valid holiday type' }),
+      message: 'Select a valid holiday type',
     }),
     recurring_day_of_week: z
-      .number({ required_error: 'Day of week is required' })
+      .number({ error: 'Day of week is required' })
       .int()
       .min(0, 'Must be 0-6')
       .max(6, 'Must be 0-6'),
