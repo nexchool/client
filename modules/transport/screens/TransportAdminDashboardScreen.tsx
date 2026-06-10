@@ -7,7 +7,9 @@ import { AppIcon } from "@/common/components/AppIcon";
 import { PressScale } from "@/common/components/PressScale";
 import { Skeleton } from "@/common/components/Skeleton";
 import { EmptyState } from "@/common/components/EmptyState";
+import { router } from "expo-router";
 import { DashboardKpiCard } from "@/modules/home/components/DashboardKpiCard";
+import { DashboardActionRow } from "@/modules/home/components/DashboardActionRow";
 import { useTransportDashboard } from "../hooks/useTransportAdmin";
 
 /** Occupancy → accent token: green under 70%, amber 70–89%, red 90%+. */
@@ -161,6 +163,20 @@ export function TransportAdminDashboardScreen() {
           ))}
         </View>
       ) : null}
+
+      <View style={cardStyle}>
+        <Text variant="headlineMd" color="onSurface" style={{ marginBottom: spacing.sm }}>
+          {t("dashboard.manage", { defaultValue: "Manage" })}
+        </Text>
+        <DashboardActionRow
+          title={t("dashboard.routes", { defaultValue: "Routes" })}
+          subtitle={t("dashboard.routesSub", { defaultValue: "Routes, stops and timings" })}
+          iconName="git-branch-outline"
+          iconChipBg="primaryContainer"
+          iconChipFg="onPrimaryContainer"
+          onPress={() => router.push("/(protected)/transport/routes" as never)}
+        />
+      </View>
 
       <View style={cardStyle}>
         <Text variant="headlineMd" color="onSurface" style={{ marginBottom: spacing.sm }}>
