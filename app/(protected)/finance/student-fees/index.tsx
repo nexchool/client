@@ -24,6 +24,7 @@ import { AppIcon } from "@/common/components/AppIcon";
 import { Skeleton } from "@/common/components/Skeleton";
 import { EmptyState } from "@/common/components/EmptyState";
 import { formatCurrency } from "@/common/utils/formatCurrency";
+import { useDebounce } from "@/common/hooks/useDebounce";
 
 function formatDate(s: string, locale: string) {
   try {
@@ -99,6 +100,8 @@ export default function StudentFeesPage() {
   const [classId, setClassId] = useState<string>("");
   const [status, setStatus] = useState<string>("");
   const [search, setSearch] = useState("");
+  // Debounce so the list doesn't refetch on every keystroke.
+  const debouncedSearch = useDebounce(search, 350);
 
   const { data: academicYears = [] } = useAcademicYears(false);
   const { data: classes = [] } = useClasses();
@@ -118,7 +121,7 @@ export default function StudentFeesPage() {
     academic_year_id: academicYearId || undefined,
     class_id: classId || undefined,
     status: status || undefined,
-    search: search.trim() || undefined,
+    search: debouncedSearch.trim() || undefined,
     include_items: true,
   });
 

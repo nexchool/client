@@ -18,6 +18,7 @@ import { EmptyState } from '@/common/components/EmptyState';
 import { useStudentFees } from '@/modules/finance/hooks/useFinance';
 import type { StudentFee } from '@/modules/finance/types';
 import { formatCurrency } from '@/common/utils/formatCurrency';
+import { useDebounce } from '@/common/hooks/useDebounce';
 
 type Props = {
   visible: boolean;
@@ -37,20 +38,22 @@ export function RecordPaymentPicker({ visible, onClose }: Props) {
   const { t } = useTranslation('home');
   const { palette, spacing, radius } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
+  // Debounce so typing a name doesn't fire 3 queries per keystroke.
+  const debouncedQuery = useDebounce(searchQuery, 350);
 
   const { data: unpaidFees = [], isLoading: loadingUnpaid } = useStudentFees({
     status: 'unpaid',
-    search: searchQuery,
+    search: debouncedQuery,
     include_items: false,
   });
   const { data: partialFees = [], isLoading: loadingPartial } = useStudentFees({
     status: 'partial',
-    search: searchQuery,
+    search: debouncedQuery,
     include_items: false,
   });
   const { data: overdueFees = [], isLoading: loadingOverdue } = useStudentFees({
     status: 'overdue',
-    search: searchQuery,
+    search: debouncedQuery,
     include_items: false,
   });
 
