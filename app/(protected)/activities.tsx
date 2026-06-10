@@ -23,7 +23,7 @@ interface ActionCardProps {
 function ActionCard({ icon, title, subtitle, primary, onPress }: ActionCardProps) {
   const { palette, spacing, radius } = useTheme();
   const iconChipBg: keyof Palette = primary ? "primaryContainer" : "surface";
-  const iconChipFg: keyof Palette = primary ? "onPrimary" : "primary";
+  const iconChipFg: keyof Palette = primary ? "onPrimaryContainer" : "primary";
 
   return (
     <PressScale onPress={onPress}>
