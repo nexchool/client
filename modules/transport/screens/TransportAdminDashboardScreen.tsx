@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { View, ScrollView, RefreshControl } from "react-native";
-import { useTheme, type Palette } from "@/common/theme";
+import { useTheme } from "@/common/theme";
 import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
 import { PressScale } from "@/common/components/PressScale";
@@ -11,13 +11,7 @@ import { router } from "expo-router";
 import { DashboardKpiCard } from "@/modules/home/components/DashboardKpiCard";
 import { DashboardActionRow } from "@/modules/home/components/DashboardActionRow";
 import { useTransportDashboard } from "../hooks/useTransportAdmin";
-
-/** Occupancy → accent token: green under 70%, amber 70–89%, red 90%+. */
-function occupancyTone(percent: number): keyof Palette {
-  if (percent >= 90) return "error";
-  if (percent >= 70) return "warning";
-  return "success";
-}
+import { occupancyTone, clampPercent } from "../utils/occupancy";
 
 export function TransportAdminDashboardScreen() {
   const { t } = useTranslation("transport");
@@ -176,6 +170,30 @@ export function TransportAdminDashboardScreen() {
           iconChipFg="onPrimaryContainer"
           onPress={() => router.push("/(protected)/transport/routes" as never)}
         />
+        <DashboardActionRow
+          title={t("dashboard.buses", { defaultValue: "Buses" })}
+          subtitle={t("dashboard.busesSub", { defaultValue: "Fleet, occupancy and crew" })}
+          iconName="bus-outline"
+          iconChipBg="secondaryContainer"
+          iconChipFg="onSecondaryContainer"
+          onPress={() => router.push("/(protected)/transport/buses" as never)}
+        />
+        <DashboardActionRow
+          title={t("dashboard.drivers", { defaultValue: "Drivers" })}
+          subtitle={t("dashboard.driversSub", { defaultValue: "Crew contacts and licences" })}
+          iconName="people-outline"
+          iconChipBg="tertiaryContainer"
+          iconChipFg="onTertiaryContainer"
+          onPress={() => router.push("/(protected)/transport/drivers" as never)}
+        />
+        <DashboardActionRow
+          title={t("dashboard.enrolment", { defaultValue: "Enrolment" })}
+          subtitle={t("dashboard.enrolmentSub", { defaultValue: "Students riding the buses" })}
+          iconName="school-outline"
+          iconChipBg="primaryContainer"
+          iconChipFg="onPrimaryContainer"
+          onPress={() => router.push("/(protected)/transport/enrolment" as never)}
+        />
       </View>
 
       <View style={cardStyle}>
@@ -217,7 +235,7 @@ export function TransportAdminDashboardScreen() {
             {t("dashboard.busOccupancy", { defaultValue: "Bus occupancy" })}
           </Text>
           {occupancy.map((b, idx) => {
-            const pct = Math.min(100, Math.max(0, Math.round(b.occupancy_percent ?? 0)));
+            const pct = clampPercent(b.occupancy_percent);
             const tone = occupancyTone(pct);
             return (
               <View key={b.bus_id} style={{ paddingVertical: spacing.sm, ...rowBorder(idx === occupancy.length - 1) }}>

@@ -16,6 +16,7 @@ export const transportAdminKeys = {
   busDetails: (id: string, ay: string) =>
     ["transport", "admin", "busDetails", id, ay] as const,
   drivers: () => ["transport", "admin", "drivers"] as const,
+  driver: (id: string) => ["transport", "admin", "driver", id] as const,
   routes: () => ["transport", "admin", "routes"] as const,
   route: (id: string) => ["transport", "admin", "route", id] as const,
   routeStops: (id: string) => ["transport", "admin", "routeStops", id] as const,
@@ -63,6 +64,15 @@ export function useTransportDrivers(enabled = true) {
     queryKey: transportAdminKeys.drivers(),
     queryFn: () => transportAdminService.listDrivers(),
     enabled,
+    staleTime: STALE,
+  });
+}
+
+export function useTransportDriver(driverId: string | undefined, enabled = true) {
+  return useQuery({
+    queryKey: transportAdminKeys.driver(driverId ?? ""),
+    queryFn: () => transportAdminService.getDriver(driverId!),
+    enabled: !!driverId && enabled,
     staleTime: STALE,
   });
 }
