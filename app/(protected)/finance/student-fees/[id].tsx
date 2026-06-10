@@ -224,19 +224,21 @@ export default function StudentFeeDetailPage() {
   const handleDownloadInvoice = async () => {
     if (!id) return;
     setDownloading("invoice");
+    const filename = `invoice_${data?.fee_structure_name?.replace(/\s+/g, "_") ?? id}`;
     try {
-      const blob = await financeService.downloadInvoicePdf(id);
       if (Platform.OS === "web") {
+        const blob = await financeService.downloadInvoicePdf(id);
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `invoice_${data?.fee_structure_name?.replace(/\s+/g, "_") ?? id}.pdf`;
+        a.download = `${filename}.pdf`;
         a.click();
         URL.revokeObjectURL(url);
       } else {
-        Alert.alert(
-          t("studentFeeDetail.alerts.pdfInvoiceTitle"),
-          t("studentFeeDetail.alerts.pdfInvoiceBody")
+        await financeService.shareInvoicePdf(
+          id,
+          filename,
+          t("studentFeeDetail.alerts.pdfInvoiceTitle")
         );
       }
     } catch (e) {
@@ -253,19 +255,21 @@ export default function StudentFeeDetailPage() {
 
   const handleDownloadReceipt = async (paymentId: string) => {
     setDownloading(paymentId);
+    const filename = `receipt_${paymentId.slice(0, 8)}`;
     try {
-      const blob = await financeService.downloadReceiptPdf(paymentId);
       if (Platform.OS === "web") {
+        const blob = await financeService.downloadReceiptPdf(paymentId);
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `receipt_${paymentId.slice(0, 8)}.pdf`;
+        a.download = `${filename}.pdf`;
         a.click();
         URL.revokeObjectURL(url);
       } else {
-        Alert.alert(
-          t("studentFeeDetail.alerts.pdfReceiptTitle"),
-          t("studentFeeDetail.alerts.pdfReceiptBody")
+        await financeService.shareReceiptPdf(
+          paymentId,
+          filename,
+          t("studentFeeDetail.alerts.pdfReceiptTitle")
         );
       }
     } catch (e) {

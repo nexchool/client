@@ -49,19 +49,21 @@ export default function InvoiceDetailPage() {
   //   Web: createObjectURL + anchor click. Native: Alert (informational; download not supported in-app).
   //   This is NOT `react-native-pdf`; just remote PDF fetch as Blob.
   const handleDownloadInvoice = async () => {
+    const filename = `invoice_${invoice?.invoice_number ?? id}`;
     try {
-      const blob = await feesService.downloadInvoicePdf(id!);
       if (Platform.OS === "web") {
+        const blob = await feesService.downloadInvoicePdf(id!);
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `invoice_${invoice?.invoice_number ?? id}.pdf`;
+        a.download = `${filename}.pdf`;
         a.click();
         URL.revokeObjectURL(url);
       } else {
-        Alert.alert(
-          t("invoiceDetail.alerts.pdfInvoiceTitle"),
-          t("invoiceDetail.alerts.pdfInvoiceBody")
+        await feesService.shareInvoicePdf(
+          id!,
+          filename,
+          t("invoiceDetail.alerts.pdfInvoiceTitle")
         );
       }
     } catch (e) {
@@ -73,19 +75,21 @@ export default function InvoiceDetailPage() {
   };
 
   const handleDownloadReceipt = async (paymentId: string) => {
+    const filename = `receipt_${paymentId.slice(0, 8)}`;
     try {
-      const blob = await feesService.downloadReceiptPdf(paymentId);
       if (Platform.OS === "web") {
+        const blob = await feesService.downloadReceiptPdf(paymentId);
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `receipt_${paymentId}.pdf`;
+        a.download = `${filename}.pdf`;
         a.click();
         URL.revokeObjectURL(url);
       } else {
-        Alert.alert(
-          t("invoiceDetail.alerts.pdfReceiptTitle"),
-          t("invoiceDetail.alerts.pdfReceiptBody")
+        await feesService.shareReceiptPdf(
+          paymentId,
+          filename,
+          t("invoiceDetail.alerts.pdfReceiptTitle")
         );
       }
     } catch (e) {
@@ -111,8 +115,23 @@ export default function InvoiceDetailPage() {
     }
   };
 
-  const handleShare = () => {
-    Alert.alert(t("invoiceDetail.share", { defaultValue: "Share" }), "Coming soon");
+  const handleShare = async () => {
+    if (Platform.OS === "web") {
+      await handleDownloadInvoice();
+      return;
+    }
+    try {
+      await feesService.shareInvoicePdf(
+        id!,
+        `invoice_${invoice?.invoice_number ?? id}`,
+        t("invoiceDetail.share", { defaultValue: "Share invoice" })
+      );
+    } catch (e) {
+      Alert.alert(
+        t("common.error"),
+        e instanceof Error ? e.message : t("invoiceDetail.alerts.downloadFailed")
+      );
+    }
   };
 
   if (isLoading && !invoice) {

@@ -10,6 +10,7 @@ import {
   getRefreshToken,
   getTenantId,
 } from "@/common/utils/storage";
+import { downloadAndSharePdf } from "@/common/utils/sharePdf";
 import type {
   FeeStructure,
   StudentFee,
@@ -281,4 +282,12 @@ export const financeService = {
     if (w) w.onload = () => { w.print(); setTimeout(() => URL.revokeObjectURL(blobUrl), 2000); };
     else { window.open(blobUrl); setTimeout(() => URL.revokeObjectURL(blobUrl), 5000); }
   },
+
+  /** Native: download the student-fee invoice PDF and open the share/save sheet. */
+  shareInvoicePdf: (studentFeeId: string, filename: string, dialogTitle?: string): Promise<void> =>
+    downloadAndSharePdf(`/api/finance/student-fees/${studentFeeId}/download-invoice`, filename, dialogTitle),
+
+  /** Native: download the payment receipt PDF and open the share/save sheet. */
+  shareReceiptPdf: (paymentId: string, filename: string, dialogTitle?: string): Promise<void> =>
+    downloadAndSharePdf(`/api/finance/payments/${paymentId}/download-receipt`, filename, dialogTitle),
 };

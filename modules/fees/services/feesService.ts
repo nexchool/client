@@ -14,6 +14,7 @@ import {
   getRefreshToken,
   getTenantId,
 } from "@/common/utils/storage";
+import { downloadAndSharePdf } from "@/common/utils/sharePdf";
 
 export interface FeeInvoiceItem {
   id: string;
@@ -185,4 +186,12 @@ export const feesService = {
     if (!res.ok) throw new Error("Failed to download receipt PDF");
     return await res.blob();
   },
+
+  /** Native: download the invoice PDF and open the share/save sheet. */
+  shareInvoicePdf: (invoiceId: string, filename: string, dialogTitle?: string): Promise<void> =>
+    downloadAndSharePdf(`/api/fees/invoices/${invoiceId}/download`, filename, dialogTitle),
+
+  /** Native: download the receipt PDF and open the share/save sheet. */
+  shareReceiptPdf: (paymentId: string, filename: string, dialogTitle?: string): Promise<void> =>
+    downloadAndSharePdf(`/api/fees/receipts/${paymentId}/download`, filename, dialogTitle),
 };
