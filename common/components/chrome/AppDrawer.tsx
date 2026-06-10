@@ -53,6 +53,7 @@ const ITEMS: readonly DrawerItem[] = [
   { key: 'leaves', label: 'My leaves', icon: 'briefcase-outline', iconActive: 'briefcase', route: '/(protected)/my-leaves', roles: ['admin', 'teacher', 'student'] },
   { key: 'student-leaves', label: 'Student leaves', icon: 'calendar-outline', iconActive: 'calendar', route: '/(protected)/approve-student-leaves', roles: ['admin', 'teacher'] },
   { key: 'finance', label: 'Finance', icon: 'wallet-outline', iconActive: 'wallet', route: '/(protected)/finance', roles: ['admin', 'student'], flag: 'fees_management' },
+  { key: 'transport', label: 'Transport', icon: 'bus-outline', iconActive: 'bus', route: '/(protected)/transport', roles: ['admin'], flag: 'transport' },
   // 'activities' is not a server-side plan feature key (see server/core/feature_flags.py).
   // Leaving unflagged so the item shows whenever the tenant exists.
   { key: 'activities', label: 'Activities', icon: 'sparkles-outline', iconActive: 'sparkles', route: '/(protected)/activities', roles: ['admin', 'teacher', 'student'] },
