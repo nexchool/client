@@ -18,6 +18,7 @@ import enSchedule from "./resources/en/schedule.json";
 import enSearch from "./resources/en/search.json";
 import enTimetable from "./resources/en/timetable.json";
 import enTransport from "./resources/en/transport.json";
+import enHostel from "./resources/en/hostel.json";
 import enSubjects from "./resources/en/subjects.json";
 import enAudit from "./resources/en/audit.json";
 import guCommon from "./resources/gu/common.json";
@@ -40,6 +41,7 @@ import guSchedule from "./resources/gu/schedule.json";
 import guSearch from "./resources/gu/search.json";
 import guTimetable from "./resources/gu/timetable.json";
 import guTransport from "./resources/gu/transport.json";
+import guHostel from "./resources/gu/hostel.json";
 import guSubjects from "./resources/gu/subjects.json";
 import guAudit from "./resources/gu/audit.json";
 import hiCommon from "./resources/hi/common.json";
@@ -62,6 +64,7 @@ import hiSchedule from "./resources/hi/schedule.json";
 import hiSearch from "./resources/hi/search.json";
 import hiTimetable from "./resources/hi/timetable.json";
 import hiTransport from "./resources/hi/transport.json";
+import hiHostel from "./resources/hi/hostel.json";
 import hiSubjects from "./resources/hi/subjects.json";
 import hiAudit from "./resources/hi/audit.json";
 
@@ -94,6 +97,7 @@ export const I18N_NAMESPACES = [
   "search",
   "timetable",
   "transport",
+  "hostel",
   "subjects",
   "audit",
 ] as const;
@@ -121,6 +125,7 @@ export const resources = {
     search: enSearch,
     timetable: enTimetable,
     transport: enTransport,
+    hostel: enHostel,
     subjects: enSubjects,
     audit: enAudit,
   },
@@ -145,6 +150,7 @@ export const resources = {
     search: guSearch,
     timetable: guTimetable,
     transport: guTransport,
+    hostel: guHostel,
     subjects: guSubjects,
     audit: guAudit,
   },
@@ -169,6 +175,7 @@ export const resources = {
     search: hiSearch,
     timetable: hiTimetable,
     transport: hiTransport,
+    hostel: hiHostel,
     subjects: hiSubjects,
     audit: hiAudit,
   },
