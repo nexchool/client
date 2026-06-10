@@ -107,11 +107,12 @@ export function TransportBusesScreen() {
     <View style={{ flex: 1, backgroundColor: palette.surface }}>
       <TransportHeader title={t("buses.title", { defaultValue: "Buses" })} onBack={() => router.back()} />
       {error ? (
-        <View style={{ padding: spacing.lg, alignItems: "center" }}>
-          <Text variant="bodyMd" color="error">
-            {error instanceof Error ? error.message : t("common.failedToLoad", { defaultValue: "Failed to load" })}
-          </Text>
-        </View>
+        <EmptyState
+          icon={<AppIcon name="alert-circle-outline" size="xl" color="error" />}
+          title={t("common.failedToLoad", { defaultValue: "Failed to load" })}
+          description={error instanceof Error ? error.message : undefined}
+          action={{ label: t("common.tryAgain", { defaultValue: "Try again" }), onPress: () => refetch() }}
+        />
       ) : isLoading && buses.length === 0 ? (
         <View style={{ paddingHorizontal: spacing.marginMobile, paddingTop: spacing.md, gap: spacing.md }}>
           <Skeleton width="100%" height={96} radius={radius.xl} />

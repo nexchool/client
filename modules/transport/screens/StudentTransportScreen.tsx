@@ -1,5 +1,5 @@
 import React from 'react';
-import { Linking, RefreshControl, ScrollView, View } from 'react-native';
+import { RefreshControl, ScrollView, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
@@ -11,6 +11,7 @@ import { ProfileAvatar } from '@/common/components/ProfileAvatar';
 import { Text } from '@/common/components/Text';
 import { AppIcon } from '@/common/components/AppIcon';
 import { PressScale } from '@/common/components/PressScale';
+import { callPhone, messagePhone } from '@/common/utils/phone';
 
 export default function StudentTransportScreen() {
   const { t } = useTranslation('transport');
@@ -18,12 +19,10 @@ export default function StudentTransportScreen() {
   const { data, isLoading, isRefetching, refetch } = useStudentTransport();
 
   const openTel = (phone: string | null | undefined) => {
-    if (!phone) return;
-    void Linking.openURL(`tel:${phone}`);
+    void callPhone(phone);
   };
   const openSms = (phone: string | null | undefined) => {
-    if (!phone) return;
-    void Linking.openURL(`sms:${phone}`);
+    void messagePhone(phone);
   };
 
   return (

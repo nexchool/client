@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { View, ScrollView, RefreshControl, Linking } from "react-native";
+import { View, ScrollView, RefreshControl } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTheme } from "@/common/theme";
 import { Text } from "@/common/components/Text";
@@ -10,6 +10,7 @@ import { Skeleton } from "@/common/components/Skeleton";
 import { EmptyState } from "@/common/components/EmptyState";
 import { TransportHeader } from "../components/TransportHeader";
 import { useTransportDriver } from "../hooks/useTransportAdmin";
+import { callPhone } from "@/common/utils/phone";
 
 type IconName = React.ComponentProps<typeof AppIcon>["name"];
 
@@ -104,7 +105,7 @@ export function TransportDriverDetailScreen() {
 
             {driver?.phone ? (
               <PressScale
-                onPress={() => Linking.openURL(`tel:${driver.phone}`)}
+                onPress={() => callPhone(driver.phone)}
                 style={{
                   flexDirection: "row",
                   alignItems: "center",

@@ -1,10 +1,11 @@
 import React from 'react';
-import { Image, Linking, View } from 'react-native';
+import { Image, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
 import { Text } from '@/common/components/Text';
 import { PressScale } from '@/common/components/PressScale';
 import { AppIcon } from '@/common/components/AppIcon';
+import { callPhone } from '@/common/utils/phone';
 import { Teacher } from '../types';
 
 const AVATAR = 112;
@@ -31,7 +32,7 @@ export function TeacherDetailHero({ teacher, canUpdate, onEdit }: Props) {
   const phone = teacher.phone?.trim();
 
   const handleCall = () => {
-    if (phone) Linking.openURL(`tel:${phone}`);
+    void callPhone(phone);
   };
 
   return (

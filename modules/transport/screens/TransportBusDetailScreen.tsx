@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { View, ScrollView, RefreshControl, Linking } from "react-native";
+import { View, ScrollView, RefreshControl } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTheme } from "@/common/theme";
 import { Text } from "@/common/components/Text";
@@ -11,6 +11,7 @@ import { EmptyState } from "@/common/components/EmptyState";
 import { TransportHeader } from "../components/TransportHeader";
 import { useTransportBusDetails } from "../hooks/useTransportAdmin";
 import { occupancyTone, clampPercent } from "../utils/occupancy";
+import { callPhone } from "@/common/utils/phone";
 
 export function TransportBusDetailScreen() {
   const { t } = useTranslation("transport");
@@ -55,10 +56,6 @@ export function TransportBusDetailScreen() {
   const route = data?.route;
   const students = data?.students ?? [];
   const timeline = data?.schedule_timeline ?? [];
-
-  const call = (phone?: string | null) => {
-    if (phone) Linking.openURL(`tel:${phone}`);
-  };
 
   return (
     <View style={{ flex: 1, backgroundColor: palette.surface }}>
@@ -142,7 +139,7 @@ export function TransportBusDetailScreen() {
                   </View>
                   {driver.phone ? (
                     <PressScale
-                      onPress={() => call(driver.phone)}
+                      onPress={() => callPhone(driver.phone)}
                       style={{ padding: spacing.sm, backgroundColor: palette.primaryContainer, borderRadius: radius.full }}
                     >
                       <AppIcon name="call" size="md" color="onPrimaryContainer" />
@@ -166,7 +163,7 @@ export function TransportBusDetailScreen() {
                   </View>
                   {helper.phone ? (
                     <PressScale
-                      onPress={() => call(helper.phone)}
+                      onPress={() => callPhone(helper.phone)}
                       style={{ padding: spacing.sm, backgroundColor: palette.secondaryContainer, borderRadius: radius.full }}
                     >
                       <AppIcon name="call" size="md" color="onSecondaryContainer" />
@@ -257,6 +254,18 @@ export function TransportBusDetailScreen() {
                     ) : null}
                   </View>
                 ))}
+              </View>
+            ) : data?.is_timeline_holiday ? (
+              <View style={cardStyle}>
+                <Text variant="headlineMd" color="onSurface" style={{ marginBottom: spacing.sm }}>
+                  {t("busDetail.schedule", { defaultValue: "Today's schedule" })}
+                </Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.sm }}>
+                  <AppIcon name="sunny-outline" size="md" color="onSurfaceVariant" />
+                  <Text variant="bodyMd" color="onSurfaceVariant">
+                    {t("busDetail.holiday", { defaultValue: "No service today — holiday" })}
+                  </Text>
+                </View>
               </View>
             ) : null}
           </>

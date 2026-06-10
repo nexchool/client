@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { View, FlatList, RefreshControl, Linking } from "react-native";
+import { View, FlatList, RefreshControl } from "react-native";
 import { useRouter } from "expo-router";
 import { useTheme } from "@/common/theme";
 import { Text } from "@/common/components/Text";
@@ -10,6 +10,7 @@ import { Skeleton } from "@/common/components/Skeleton";
 import { EmptyState } from "@/common/components/EmptyState";
 import { TransportHeader } from "../components/TransportHeader";
 import { useTransportDrivers } from "../hooks/useTransportAdmin";
+import { callPhone } from "@/common/utils/phone";
 import type { TransportDriver } from "../adminTypes";
 
 export function TransportDriversScreen() {
@@ -74,7 +75,7 @@ export function TransportDriversScreen() {
         ) : null}
         {d.phone ? (
           <PressScale
-            onPress={() => Linking.openURL(`tel:${d.phone}`)}
+            onPress={() => callPhone(d.phone)}
             style={{ padding: spacing.sm, backgroundColor: palette.primaryContainer, borderRadius: radius.full }}
           >
             <AppIcon name="call" size="md" color="onPrimaryContainer" />
@@ -90,11 +91,12 @@ export function TransportDriversScreen() {
     <View style={{ flex: 1, backgroundColor: palette.surface }}>
       <TransportHeader title={t("drivers.title", { defaultValue: "Drivers" })} onBack={() => router.back()} />
       {error ? (
-        <View style={{ padding: spacing.lg, alignItems: "center" }}>
-          <Text variant="bodyMd" color="error">
-            {error instanceof Error ? error.message : t("common.failedToLoad", { defaultValue: "Failed to load" })}
-          </Text>
-        </View>
+        <EmptyState
+          icon={<AppIcon name="alert-circle-outline" size="xl" color="error" />}
+          title={t("common.failedToLoad", { defaultValue: "Failed to load" })}
+          description={error instanceof Error ? error.message : undefined}
+          action={{ label: t("common.tryAgain", { defaultValue: "Try again" }), onPress: () => refetch() }}
+        />
       ) : isLoading && drivers.length === 0 ? (
         <View style={{ paddingHorizontal: spacing.marginMobile, paddingTop: spacing.md, gap: spacing.md }}>
           <Skeleton width="100%" height={76} radius={radius.xl} />
