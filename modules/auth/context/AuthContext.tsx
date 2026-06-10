@@ -7,6 +7,7 @@ import React, {
   ReactNode,
 } from "react";
 import { AppState, AppStateStatus } from "react-native";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   getAccessToken,
   getRefreshToken,
@@ -101,6 +102,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const [tenantName, setTenantNameState] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const lastAuthSnapshotRefreshRef = useRef(0);
+  const queryClient = useQueryClient();
 
   // Refresh user + permissions + enabled_features from GET /profile so admin-side edits (name, photo)
   // and plan/permission changes apply after cold start or when returning from background — without re-login.
@@ -214,6 +216,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       tasks.push(deleteTenantName());
     }
     await Promise.all(tasks);
+    // Drop any prior tenant's cached queries so a new session never reads cross-tenant data
+    // (queryKeys here are not tenant-scoped; isolation relies on clearing on session change).
+    queryClient.clear();
     setUser(data.user);
     setTenantNameState(data.tenant_name ?? null);
     setPermissionsState(data.permissions || []);
@@ -258,6 +263,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const logout = async () => {
     await unregisterDevicePushNotifications().catch(() => {});
     await clearAuth();
+    queryClient.clear();
     setUser(null);
     setTenantNameState(null);
     setPermissionsState([]);

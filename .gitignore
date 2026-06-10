@@ -78,3 +78,5 @@ package-lock.json
 # logs / dumps
 *.log
 *.dump
+
+graphify-out/
