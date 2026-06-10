@@ -335,6 +335,8 @@ export default function AnnouncementComposerScreen() {
           padding: spacing.lg,
           backgroundColor: palette.surface,
           gap: spacing.sm,
+          borderTopWidth: 1,
+          borderTopColor: palette.outlineVariant,
         }}
       >
         {isPublished ? (

@@ -420,6 +420,8 @@ export default function CreateInvoiceScreen() {
           right: 0,
           paddingHorizontal: spacing.marginMobile,
           backgroundColor: palette.surface,
+          borderTopWidth: 1,
+          borderTopColor: palette.outlineVariant,
         }}
       >
         <Button

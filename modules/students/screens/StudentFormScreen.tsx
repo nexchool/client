@@ -400,6 +400,8 @@ export default function StudentFormScreen() {
           right: 0,
           padding: spacing.marginMobile,
           backgroundColor: palette.surface,
+          borderTopWidth: 1,
+          borderTopColor: palette.outlineVariant,
         }}
       >
         <Button
