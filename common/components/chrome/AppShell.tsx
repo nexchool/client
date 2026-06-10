@@ -11,7 +11,7 @@ type Props = {
 };
 
 export function AppShell({ children }: Props) {
-  const { palette } = useTheme();
+  const { palette, mode } = useTheme();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
@@ -19,7 +19,10 @@ export function AppShell({ children }: Props) {
       edges={['left', 'right']}
       style={[styles.safe, { backgroundColor: palette.surface }]}
     >
-      <StatusBar barStyle="dark-content" backgroundColor={palette.surface} />
+      <StatusBar
+        barStyle={mode === 'dark' ? 'light-content' : 'dark-content'}
+        backgroundColor={palette.surface}
+      />
       <AppHeader onMenuPress={() => setDrawerOpen(true)} />
       <View style={styles.content}>{children}</View>
       <BottomTabBar />
