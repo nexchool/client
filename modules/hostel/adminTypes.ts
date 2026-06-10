@@ -118,9 +118,12 @@ export interface HostelVisitorLog {
   check_in_at: string;
   check_out_at: string | null;
   purpose: string | null;
-  /** Server enrichment. */
+  /** Server enrichment — the student being visited. */
   student_name?: string | null;
   admission_number?: string | null;
+  /** Server enrichment — the visitor. */
+  visitor_name?: string | null;
+  visitor_phone?: string | null;
 }
 
 export interface OccupancyRow {
