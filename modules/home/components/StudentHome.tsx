@@ -58,11 +58,17 @@ export function StudentHome() {
   const attendancePct = data?.attendance_summary?.percentage ?? 0;
   const attendanceTarget = 85;
 
-  // NOTE: /api/finance/student-fees requires finance.read/manage/collect, which
-  // the Student role does NOT hold — calling it from a student session returns
-  // 403. So we render a neutral fees state rather than firing a failing query.
-  const pendingFeesAmount: number | undefined = undefined;
-  const pendingFeesDays: number | null = null;
+  // Fees come from the student dashboard's self-scoped fees_summary, present
+  // only when the fees_management feature is on for the tenant. Show "Due in N
+  // days" only for a future due date; an overdue balance is conveyed by the
+  // error styling that pendingFeesAmount triggers.
+  const fees = isFeatureEnabled?.('fees_management') ? data?.fees_summary : null;
+  const pendingFeesAmount: number | undefined =
+    fees && fees.total_outstanding > 0 ? fees.total_outstanding : undefined;
+  const pendingFeesDays: number | null =
+    pendingFeesAmount && fees?.days_until_due != null && fees.days_until_due >= 0
+      ? fees.days_until_due
+      : null;
 
   // Notification list shape may be `Notification[]` or `{ results: [] }` or paginated.
   // Flatten defensively.
@@ -259,7 +265,7 @@ export function StudentHome() {
               style={{ marginTop: 4 }}
               numberOfLines={1}
             >
-              {pendingFeesAmount ? `₹${pendingFeesAmount}` : t('student.noFeesDue', { defaultValue: 'All paid' })}
+              {pendingFeesAmount ? `₹${pendingFeesAmount.toLocaleString('en-IN')}` : t('student.noFeesDue', { defaultValue: 'All paid' })}
             </Text>
             {pendingFeesDays != null ? (
               <Text variant="labelSm" color="outline" style={{ marginTop: 4 }} numberOfLines={1}>

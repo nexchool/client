@@ -182,6 +182,11 @@ export interface StudentDashboardResponse {
     percentage: number;
     source?: string;
   } | null;
+  fees_summary: {
+    total_outstanding: number;
+    days_until_due: number | null;
+    overdue_count: number;
+  } | null;
 }
 
 export interface AttendanceSessionV2 {
