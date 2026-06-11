@@ -181,6 +181,7 @@ export const financeService = {
     if (data.allocations && data.allocations.length > 0) {
       body.allocations = data.allocations.map((a) => ({ item_id: a.item_id, amount: a.amount }));
     }
+    if (data.idempotency_key) body.idempotency_key = data.idempotency_key;
     const res = await apiPost<{ payment: { id: string }; student_fee: StudentFee }>(
       "/api/finance/payments",
       body

@@ -59,6 +59,10 @@ export default function StudentFeeDetailPage() {
 
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const consumedActionRef = React.useRef(false);
+  // A fresh dedup token per opened payment attempt; if it reaches the server
+  // twice (a retry / lost-response), the server returns the original payment
+  // instead of charging again.
+  const idempotencyKeyRef = React.useRef<string>("");
 
   useEffect(() => {
     if (action === "record" && !consumedActionRef.current) {
@@ -66,6 +70,12 @@ export default function StudentFeeDetailPage() {
       setPaymentModalOpen(true);
     }
   }, [action]);
+
+  useEffect(() => {
+    if (paymentModalOpen) {
+      idempotencyKeyRef.current = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    }
+  }, [paymentModalOpen]);
 
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState("cash");
@@ -173,6 +183,7 @@ export default function StudentFeeDetailPage() {
         method_detail:
           method === "other" ? otherMethodDetail.trim() : undefined,
         notes: notes || undefined,
+        idempotency_key: idempotencyKeyRef.current || undefined,
       };
       if (useAllocations) {
         payload.allocations = itemsWithRemaining

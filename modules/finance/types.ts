@@ -94,4 +94,6 @@ export interface RecordPaymentInput {
   method_detail?: string;
   notes?: string;
   allocations?: PaymentAllocation[];
+  /** Per-attempt dedup token so a retry / double-submit never double-charges. */
+  idempotency_key?: string;
 }
