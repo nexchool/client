@@ -257,7 +257,7 @@ export default function MarkAttendanceScreen() {
       // ===== PRESERVED MUTATION =====
       // Payload shape: { class_id, date, records: [{ student_id, status, remarks? }] }
       // POST /api/attendance/mark — see attendanceService.markAttendance.
-      await markAttendance({
+      const res = await markAttendance({
         class_id: classId,
         date: selectedDate,
         records,
@@ -273,9 +273,26 @@ export default function MarkAttendanceScreen() {
         return;
       }
       // Also re-fetch the local legacy state.
-      Alert.alert(t('mark.successTitle'), t('mark.successBody'), [
-        { text: t('mark.ok'), onPress: () => fetchClassAttendance(classId, selectedDate) },
-      ]);
+      const skipped = Array.isArray(res?.skipped) ? res.skipped : [];
+      if (skipped.length > 0) {
+        // The server refused some rows (e.g. a student moved out of this class
+        // since the roster loaded). Warn instead of pretending all saved.
+        const roster = classAttendance?.attendance ?? [];
+        const nameOf = (sid: string) =>
+          roster.find((s) => s.student_id === sid)?.student_name ?? sid;
+        const lines = skipped
+          .map((s) => `• ${nameOf(s.student_id)} — ${s.reason}`)
+          .join('\n');
+        Alert.alert(
+          t('mark.partialTitle', { defaultValue: 'Saved with warnings' }),
+          `${t('mark.partialBody', { defaultValue: 'Some records were not saved:' })}\n${lines}`,
+          [{ text: t('mark.ok'), onPress: () => fetchClassAttendance(classId, selectedDate) }]
+        );
+      } else {
+        Alert.alert(t('mark.successTitle'), t('mark.successBody'), [
+          { text: t('mark.ok'), onPress: () => fetchClassAttendance(classId, selectedDate) },
+        ]);
+      }
       // ===== END PRESERVED MUTATION =====
     } catch (err: any) {
       if (!isMountedRef.current) return;

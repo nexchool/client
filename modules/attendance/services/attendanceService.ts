@@ -4,6 +4,7 @@ import {
   StudentAttendanceData,
   MyClassItem,
   MarkAttendanceDTO,
+  MarkAttendanceResult,
 } from "../types";
 
 export const attendanceService = {
@@ -12,7 +13,7 @@ export const attendanceService = {
   },
 
   markAttendance: async (data: MarkAttendanceDTO) => {
-    return await apiPost<any>("/api/attendance/mark", data);
+    return await apiPost<MarkAttendanceResult>("/api/attendance/mark", data);
   },
 
   getClassAttendance: async (classId: string, date: string) => {

@@ -75,3 +75,12 @@ export interface MarkAttendanceDTO {
     remarks?: string;
   }[];
 }
+
+export interface MarkAttendanceResult {
+  message?: string;
+  created?: number;
+  updated?: number;
+  session_id?: string;
+  /** Records the server refused (student not in this class / invalid status). */
+  skipped?: { student_id: string; reason: string }[];
+}
