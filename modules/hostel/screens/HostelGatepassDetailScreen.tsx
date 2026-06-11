@@ -1,6 +1,17 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { View, ScrollView, RefreshControl, Alert } from "react-native";
+import {
+  View,
+  ScrollView,
+  RefreshControl,
+  Alert,
+  Modal,
+  Pressable,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+} from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTheme, type Palette } from "@/common/theme";
 import { Text } from "@/common/components/Text";
@@ -80,6 +91,10 @@ export function HostelGatepassDetailScreen() {
   const checkout = useGatepassCheckout();
   const checkin = useGatepassCheckin();
   const [busy, setBusy] = useState(false);
+  // Reject collects an optional reason (sheet below) — it lands in the audit
+  // trail and the pass notes so the student sees why.
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
 
   const cardStyle = [
     elevation.card,
@@ -133,6 +148,26 @@ export function HostelGatepassDetailScreen() {
     );
   };
 
+  const submitReject = async () => {
+    if (!gp) return;
+    try {
+      setBusy(true);
+      await reject.mutateAsync({
+        id: gp.id,
+        reason: rejectReason.trim() || undefined,
+      });
+      setRejectOpen(false);
+      setRejectReason("");
+    } catch (e) {
+      Alert.alert(
+        t("common.actionFailed", { defaultValue: "Action failed" }),
+        e instanceof Error ? e.message : t("common.tryAgain", { defaultValue: "Try again" })
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const canApprove = hasPermission(PERM_GP_APPROVE);
   const canGate = hasPermission(PERM_GP_GATEKEEPER);
   const meta = gp ? gatepassStatusMeta(gp.status) : null;
@@ -183,13 +218,7 @@ export function HostelGatepassDetailScreen() {
                   icon="close"
                   tone="error"
                   disabled={busy}
-                  onPress={() =>
-                    run(
-                      () => reject.mutateAsync({ id: gp.id }),
-                      t("gatepass.confirmReject", { defaultValue: "Reject this gate pass?" }),
-                      true
-                    )
-                  }
+                  onPress={() => setRejectOpen(true)}
                 />
                 <ActionButton
                   label={t("gatepass.approve", { defaultValue: "Approve" })}
@@ -287,6 +316,80 @@ export function HostelGatepassDetailScreen() {
           </>
         ) : null}
       </ScrollView>
+
+      <Modal
+        visible={rejectOpen}
+        transparent
+        animationType="slide"
+        onRequestClose={() => !busy && setRejectOpen(false)}
+      >
+        <Pressable
+          style={[StyleSheet.absoluteFillObject, { backgroundColor: "rgba(0,0,0,0.4)" }]}
+          onPress={() => !busy && setRejectOpen(false)}
+        />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={{ position: "absolute", bottom: 0, left: 0, right: 0 }}
+        >
+          <View
+            style={{
+              backgroundColor: palette.surfaceContainerLowest,
+              borderTopLeftRadius: radius.xl,
+              borderTopRightRadius: radius.xl,
+              padding: spacing.lg,
+              paddingBottom: spacing.xl,
+              gap: spacing.md,
+            }}
+          >
+            <View
+              style={{
+                alignSelf: "center",
+                width: 36,
+                height: 4,
+                borderRadius: 2,
+                backgroundColor: palette.outlineVariant,
+              }}
+            />
+            <Text variant="headlineMd" color="onSurface">
+              {t("gatepass.confirmReject", { defaultValue: "Reject this gate pass?" })}
+            </Text>
+            <TextInput
+              value={rejectReason}
+              onChangeText={setRejectReason}
+              placeholder={t("gatepass.rejectReasonPlaceholder", {
+                defaultValue: "Reason (optional) — visible to the student",
+              })}
+              placeholderTextColor={palette.onSurfaceVariant}
+              multiline
+              editable={!busy}
+              style={{
+                minHeight: 80,
+                textAlignVertical: "top",
+                backgroundColor: palette.surfaceContainerHigh,
+                borderRadius: radius.lg,
+                padding: spacing.md,
+                color: palette.onSurface,
+              }}
+            />
+            <View style={{ flexDirection: "row", gap: spacing.sm }}>
+              <ActionButton
+                label={t("common.cancel", { defaultValue: "Cancel" })}
+                icon="close"
+                tone="secondary"
+                disabled={busy}
+                onPress={() => setRejectOpen(false)}
+              />
+              <ActionButton
+                label={t("gatepass.reject", { defaultValue: "Reject" })}
+                icon="close-circle-outline"
+                tone="error"
+                disabled={busy}
+                onPress={submitReject}
+              />
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 }
