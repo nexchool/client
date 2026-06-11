@@ -35,7 +35,7 @@ type DrawerItem = {
   iconActive: keyof typeof Ionicons.glyphMap;
   route: string;
   roles: Role[];
-  flag?: 'fees_management' | 'hostel' | 'transport' | 'notifications' | 'attendance' | 'timetable' | 'schedule_management' | 'holiday_management' | 'library' | 'inventory' | 'examinations' | 'reports' | 'search' | 'academics_advanced' | 'student_management' | 'teacher_management' | 'class_management';
+  flag?: 'fees_management' | 'hostel' | 'transport' | 'notifications' | 'attendance' | 'timetable' | 'schedule_management' | 'holiday_management' | 'search' | 'academics_advanced' | 'student_management' | 'teacher_management' | 'class_management';
 };
 
 const ITEMS: readonly DrawerItem[] = [
