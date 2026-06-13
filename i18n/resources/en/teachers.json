@@ -78,7 +78,7 @@
     "periodNumberLabel": "Period number",
     "availableLabel": "Available",
     "availabilitySwitchHint": "Turn off to mark this slot as unavailable (e.g. the teacher has a meeting).",
-    "saveSlot": "Save slot",
+    "saveSlot": "Save availability",
     "deleteSlotTitle": "Delete slot",
     "deleteSlotMessage": "Remove {{day}} period {{period}}?",
     "leaveRequestsTitle": "Leave requests",
