@@ -73,13 +73,6 @@ export const ALL_TABS: TabConfig[] = [
   //     PERMS.GRADE_CREATE,
   //   ],
   // },
-  // {
-  //   name: 'activities',
-  //   title: 'Activities',
-  //   icon: 'calendar',
-  //   iconOutline: 'calendar-outline',
-  //   // Visible to all authenticated users
-  // },
   {
     name: 'finance',
     title: 'Finance',

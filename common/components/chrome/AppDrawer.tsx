@@ -28,6 +28,17 @@ import { AppIcon } from '@/common/components/AppIcon';
 
 type Role = 'admin' | 'teacher' | 'student' | 'parent' | 'unknown';
 
+/** Drawer sections, in display order. Dashboard sits above all sections. */
+type SectionKey = 'people' | 'academics' | 'operations' | 'communication' | 'admin';
+
+const SECTIONS: { key: SectionKey; labelKey: string; fallback: string }[] = [
+  { key: 'people', labelKey: 'section.people', fallback: 'People' },
+  { key: 'academics', labelKey: 'section.academics', fallback: 'Academics' },
+  { key: 'operations', labelKey: 'section.operations', fallback: 'Operations' },
+  { key: 'communication', labelKey: 'section.communication', fallback: 'Communication' },
+  { key: 'admin', labelKey: 'section.admin', fallback: 'Admin' },
+];
+
 type DrawerItem = {
   key: string;
   label: string;
@@ -35,30 +46,41 @@ type DrawerItem = {
   iconActive: keyof typeof Ionicons.glyphMap;
   route: string;
   roles: Role[];
+  /** Section grouping; omitted = top-level anchor (Dashboard). */
+  section?: SectionKey;
   flag?: 'fees_management' | 'hostel' | 'transport' | 'notifications' | 'attendance' | 'timetable' | 'schedule_management' | 'holiday_management' | 'search' | 'academics_advanced' | 'student_management' | 'teacher_management' | 'class_management';
 };
 
 const ITEMS: readonly DrawerItem[] = [
+  // Top anchor — Home/Schedule also live in the bottom tab bar; Dashboard stays
+  // here as the drawer's landing row.
   { key: 'dashboard', label: 'Dashboard', icon: 'grid-outline', iconActive: 'grid', route: '/(protected)/home', roles: ['admin', 'teacher', 'student', 'parent'] },
-  { key: 'students', label: 'Students', icon: 'people-outline', iconActive: 'people', route: '/(protected)/students', roles: ['admin', 'teacher'] },
-  { key: 'teachers', label: 'Teachers', icon: 'person-outline', iconActive: 'person', route: '/(protected)/teachers', roles: ['admin'] },
-  { key: 'classes', label: 'Classes', icon: 'school-outline', iconActive: 'school', route: '/(protected)/classes', roles: ['admin', 'teacher'] },
-  { key: 'subjects', label: 'Subjects', icon: 'book-outline', iconActive: 'book', route: '/(protected)/subjects', roles: ['admin', 'teacher', 'student'], flag: 'class_management' },
-  { key: 'academics', label: 'Academics', icon: 'library-outline', iconActive: 'library', route: '/(protected)/academics', roles: ['admin'] },
-  { key: 'attendance', label: 'Attendance', icon: 'checkmark-done-outline', iconActive: 'checkmark-done', route: '/(protected)/attendance/overview', roles: ['admin', 'teacher'] },
-  { key: 'schedule', label: 'Schedule', icon: 'time-outline', iconActive: 'time', route: '/(protected)/schedule/today', roles: ['admin', 'teacher', 'student', 'parent'] },
-  { key: 'holidays', label: 'Holidays', icon: 'flag-outline', iconActive: 'flag', route: '/(protected)/holidays', roles: ['admin', 'teacher', 'student', 'parent'] },
-  { key: 'announcements', label: 'Announcements', icon: 'megaphone-outline', iconActive: 'megaphone', route: '/(protected)/announcements', roles: ['admin', 'teacher', 'student', 'parent'] },
-  { key: 'audit-log', label: 'Audit log', icon: 'shield-checkmark-outline', iconActive: 'shield-checkmark', route: '/(protected)/audit-log', roles: ['admin'] },
-  { key: 'leaves', label: 'My leaves', icon: 'briefcase-outline', iconActive: 'briefcase', route: '/(protected)/my-leaves', roles: ['admin', 'teacher', 'student'] },
-  { key: 'student-leaves', label: 'Student leaves', icon: 'calendar-outline', iconActive: 'calendar', route: '/(protected)/approve-student-leaves', roles: ['admin', 'teacher'] },
-  { key: 'finance', label: 'Finance', icon: 'wallet-outline', iconActive: 'wallet', route: '/(protected)/finance', roles: ['admin', 'student'], flag: 'fees_management' },
-  { key: 'transport', label: 'Transport', icon: 'bus-outline', iconActive: 'bus', route: '/(protected)/transport', roles: ['admin'], flag: 'transport' },
-  { key: 'hostel', label: 'Hostel', icon: 'bed-outline', iconActive: 'bed', route: '/(protected)/hostel', roles: ['admin'], flag: 'hostel' },
-  // 'activities' is not a server-side plan feature key (see server/core/feature_flags.py).
-  // Leaving unflagged so the item shows whenever the tenant exists.
-  { key: 'activities', label: 'Activities', icon: 'sparkles-outline', iconActive: 'sparkles', route: '/(protected)/activities', roles: ['admin', 'teacher', 'student'] },
-  { key: 'my-transport', label: 'My Transport', icon: 'bus-outline', iconActive: 'bus', route: '/(protected)/my-transport', roles: ['student'], flag: 'transport' },
+
+  // People
+  { key: 'students', label: 'Students', icon: 'people-outline', iconActive: 'people', route: '/(protected)/students', roles: ['admin', 'teacher'], section: 'people' },
+  { key: 'teachers', label: 'Teachers', icon: 'person-outline', iconActive: 'person', route: '/(protected)/teachers', roles: ['admin'], section: 'people' },
+  { key: 'classes', label: 'Classes', icon: 'school-outline', iconActive: 'school', route: '/(protected)/classes', roles: ['admin', 'teacher'], section: 'people' },
+  { key: 'subjects', label: 'Subjects', icon: 'book-outline', iconActive: 'book', route: '/(protected)/subjects', roles: ['admin', 'teacher', 'student'], flag: 'class_management', section: 'people' },
+
+  // Academics
+  { key: 'academics', label: 'Academics', icon: 'library-outline', iconActive: 'library', route: '/(protected)/academics', roles: ['admin'], section: 'academics' },
+  { key: 'attendance', label: 'Attendance', icon: 'checkmark-done-outline', iconActive: 'checkmark-done', route: '/(protected)/attendance/overview', roles: ['admin', 'teacher'], section: 'academics' },
+  { key: 'timetable', label: 'Timetable', icon: 'calendar-number-outline', iconActive: 'calendar-number', route: '/(protected)/timetable', roles: ['admin', 'teacher'], flag: 'timetable', section: 'academics' },
+  { key: 'holidays', label: 'Holidays', icon: 'flag-outline', iconActive: 'flag', route: '/(protected)/holidays', roles: ['admin', 'teacher', 'student', 'parent'], section: 'academics' },
+
+  // Operations
+  { key: 'finance', label: 'Finance', icon: 'wallet-outline', iconActive: 'wallet', route: '/(protected)/finance', roles: ['admin', 'student'], flag: 'fees_management', section: 'operations' },
+  { key: 'transport', label: 'Transport', icon: 'bus-outline', iconActive: 'bus', route: '/(protected)/transport', roles: ['admin'], flag: 'transport', section: 'operations' },
+  { key: 'my-transport', label: 'My transport', icon: 'bus-outline', iconActive: 'bus', route: '/(protected)/my-transport', roles: ['student'], flag: 'transport', section: 'operations' },
+  { key: 'hostel', label: 'Hostel', icon: 'bed-outline', iconActive: 'bed', route: '/(protected)/hostel', roles: ['admin'], flag: 'hostel', section: 'operations' },
+  { key: 'leaves', label: 'My leaves', icon: 'briefcase-outline', iconActive: 'briefcase', route: '/(protected)/my-leaves', roles: ['admin', 'teacher', 'student'], section: 'operations' },
+  { key: 'student-leaves', label: 'Student leaves', icon: 'calendar-outline', iconActive: 'calendar', route: '/(protected)/approve-student-leaves', roles: ['admin', 'teacher'], section: 'operations' },
+
+  // Communication
+  { key: 'announcements', label: 'Announcements', icon: 'megaphone-outline', iconActive: 'megaphone', route: '/(protected)/announcements', roles: ['admin', 'teacher', 'student', 'parent'], section: 'communication' },
+
+  // Admin
+  { key: 'audit-log', label: 'Audit log', icon: 'shield-checkmark-outline', iconActive: 'shield-checkmark', route: '/(protected)/audit-log', roles: ['admin'], section: 'admin' },
 ];
 
 /**
@@ -171,6 +193,56 @@ export function AppDrawer({ visible, onClose }: Props) {
     );
   };
 
+  const renderRow = (item: DrawerItem) => {
+    const active = isItemActive(item.route, pathname);
+    return (
+      <Pressable
+        key={item.key}
+        onPress={() => handleNav(item.route)}
+        style={({ pressed }) => [
+          styles.row,
+          {
+            backgroundColor: active
+              ? palette.primaryContainer
+              : pressed
+                ? palette.surfaceContainerHigh
+                : 'transparent',
+            borderRadius: radius.lg,
+            marginHorizontal: spacing.sm,
+            paddingHorizontal: spacing.md,
+            paddingVertical: spacing.sm + spacing.xs,
+            gap: spacing.md,
+          },
+        ]}
+      >
+        {active ? (
+          <View
+            style={{
+              position: 'absolute',
+              left: 0,
+              top: spacing.sm,
+              bottom: spacing.sm,
+              width: 3,
+              borderRadius: 2,
+              backgroundColor: palette.primary,
+            }}
+          />
+        ) : null}
+        <AppIcon
+          name={active ? item.iconActive : item.icon}
+          size="lg"
+          color={active ? 'onPrimaryContainer' : 'onSurfaceVariant'}
+        />
+        <Text
+          variant={active ? 'labelLg' : 'labelMd'}
+          color={active ? 'onPrimaryContainer' : 'onSurfaceVariant'}
+        >
+          {item.label}
+        </Text>
+      </Pressable>
+    );
+  };
+
   return (
     <Modal visible={mounted} transparent animationType="none" onRequestClose={onClose} statusBarTranslucent>
       <Animated.View
@@ -234,43 +306,33 @@ export function AppDrawer({ visible, onClose }: Props) {
               </Text>
             </View>
           ) : (
-            visibleItems.map((item, idx) => {
-              const active = isItemActive(item.route, pathname);
-              return (
-                <Pressable
-                  key={item.key}
-                  onPress={() => handleNav(item.route)}
-                  style={({ pressed }) => [
-                    styles.row,
-                    {
-                      backgroundColor: active
-                        ? palette.primary
-                        : pressed
-                          ? palette.surfaceContainerHigh
-                          : 'transparent',
-                      borderRadius: radius.lg,
-                      marginHorizontal: spacing.sm,
-                      paddingHorizontal: spacing.md,
-                      paddingVertical: spacing.sm + spacing.xs,
-                      gap: spacing.md,
-                      marginTop: idx === 0 ? 0 : spacing.xs,
-                    },
-                  ]}
-                >
-                  <AppIcon
-                    name={active ? item.iconActive : item.icon}
-                    size="lg"
-                    color={active ? 'onPrimary' : 'onSurfaceVariant'}
-                  />
-                  <Text
-                    variant={active ? 'labelLg' : 'labelMd'}
-                    color={active ? 'onPrimary' : 'onSurfaceVariant'}
-                  >
-                    {item.label}
-                  </Text>
-                </Pressable>
-              );
-            })
+            <>
+              {/* Dashboard anchor (no section header) */}
+              {visibleItems.filter((i) => !i.section).map(renderRow)}
+              {/* Grouped sections — empty sections (after role/flag filter) are hidden */}
+              {SECTIONS.map((sec) => {
+                const items = visibleItems.filter((i) => i.section === sec.key);
+                if (items.length === 0) return null;
+                return (
+                  <View key={sec.key} style={{ marginTop: spacing.md }}>
+                    <Text
+                      variant="labelSm"
+                      color="onSurfaceVariant"
+                      style={{
+                        paddingHorizontal: spacing.lg,
+                        marginBottom: spacing.xs,
+                        textTransform: 'uppercase',
+                        letterSpacing: 0.6,
+                        opacity: 0.7,
+                      }}
+                    >
+                      {t(sec.labelKey, { defaultValue: sec.fallback })}
+                    </Text>
+                    {items.map(renderRow)}
+                  </View>
+                );
+              })}
+            </>
           )}
         </ScrollView>
 
@@ -292,7 +354,7 @@ export function AppDrawer({ visible, onClose }: Props) {
                   styles.row,
                   {
                     backgroundColor: settingsActive
-                      ? palette.primary
+                      ? palette.primaryContainer
                       : pressed
                         ? palette.surfaceContainerHigh
                         : 'transparent',
@@ -306,11 +368,11 @@ export function AppDrawer({ visible, onClose }: Props) {
                 <AppIcon
                   name={settingsActive ? 'settings' : 'settings-outline'}
                   size="lg"
-                  color={settingsActive ? 'onPrimary' : 'onSurfaceVariant'}
+                  color={settingsActive ? 'onPrimaryContainer' : 'onSurfaceVariant'}
                 />
                 <Text
                   variant={settingsActive ? 'labelLg' : 'labelMd'}
-                  color={settingsActive ? 'onPrimary' : 'onSurfaceVariant'}
+                  color={settingsActive ? 'onPrimaryContainer' : 'onSurfaceVariant'}
                 >
                   {t('settings', { defaultValue: 'Settings' })}
                 </Text>
