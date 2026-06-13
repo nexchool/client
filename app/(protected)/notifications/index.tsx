@@ -146,7 +146,7 @@ export default function NotificationsListScreen() {
             <RefreshControl refreshing={!!listQuery.isRefetching} onRefresh={() => listQuery.refetch()} />
           }
           stickySectionHeadersEnabled={false}
-          contentContainerStyle={{ paddingBottom: spacing.xl * 2 }}
+          contentContainerStyle={{ paddingBottom: spacing.scrollBottom }}
         />
       )}
     </View>

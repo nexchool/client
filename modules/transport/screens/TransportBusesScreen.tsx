@@ -127,7 +127,7 @@ export function TransportBusesScreen() {
           contentContainerStyle={{
             paddingHorizontal: spacing.marginMobile,
             paddingTop: spacing.md,
-            paddingBottom: spacing.xl * 2,
+            paddingBottom: spacing.scrollBottom,
           }}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           showsVerticalScrollIndicator={false}

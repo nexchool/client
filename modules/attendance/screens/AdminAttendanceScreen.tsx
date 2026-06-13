@@ -127,7 +127,7 @@ export default function AdminAttendanceScreen() {
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: spacing.marginMobile,
-          paddingBottom: spacing.xl * 2,
+          paddingBottom: spacing.scrollBottom,
           gap: spacing.md,
         }}
         showsVerticalScrollIndicator={false}

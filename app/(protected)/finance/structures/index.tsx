@@ -230,7 +230,7 @@ export default function FeeStructuresPage() {
           contentContainerStyle={{
             paddingHorizontal: spacing.marginMobile,
             paddingTop: spacing.md,
-            paddingBottom: spacing.xl * 2,
+            paddingBottom: spacing.scrollBottom,
           }}
           refreshControl={
             <RefreshControl refreshing={isRefetching} onRefresh={refetch} />

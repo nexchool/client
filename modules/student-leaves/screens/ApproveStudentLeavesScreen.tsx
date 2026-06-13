@@ -108,7 +108,7 @@ export default function ApproveStudentLeavesScreen({
         }
         refreshControl={<RefreshControl refreshing={active.isRefetching} onRefresh={active.refetch} />}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: spacing.xl * 2 }}
+        contentContainerStyle={{ paddingBottom: spacing.scrollBottom }}
       />
     </View>
   );

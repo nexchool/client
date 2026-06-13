@@ -257,7 +257,7 @@ export default function CreateInvoiceScreen() {
           gap: spacing.lg,
           paddingTop: spacing.lg,
           // Clear the sticky action bar (button + its padding) without a big empty band.
-          paddingBottom: spacing.xl * 3,
+          paddingBottom: spacing.scrollBottom,
         }}
       >
         <FormSection

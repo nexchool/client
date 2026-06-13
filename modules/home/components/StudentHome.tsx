@@ -85,7 +85,7 @@ export function StudentHome() {
       contentContainerStyle={{
         padding: spacing.marginMobile,
         gap: spacing.lg,
-        paddingBottom: spacing.xl * 3,
+        paddingBottom: spacing.scrollBottom,
       }}
       refreshControl={<RefreshControl refreshing={!!isRefetching} onRefresh={() => refetch()} />}
       showsVerticalScrollIndicator={false}

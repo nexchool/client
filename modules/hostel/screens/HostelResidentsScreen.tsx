@@ -133,7 +133,7 @@ export function HostelResidentsScreen() {
           contentContainerStyle={{
             paddingHorizontal: spacing.marginMobile,
             paddingTop: spacing.xs,
-            paddingBottom: spacing.xl * 2,
+            paddingBottom: spacing.scrollBottom,
           }}
           keyboardShouldPersistTaps="handled"
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}

@@ -17,6 +17,13 @@ export const Spacing = {
   xl: space[32],
   marginMobile: space[20],
   gutter: space[16],
+  /**
+   * Bottom inset for scrollable list content — one value so the last row clears
+   * the bottom tab bar and breathes, replacing the per-screen xl*2 / xl*3 mix.
+   * Footer-overlap screens (absolute action bars) keep their own larger
+   * clearance; this is for plain scroll/list screens.
+   */
+  scrollBottom: 96,
 } as const;
 
 export const Radius = {

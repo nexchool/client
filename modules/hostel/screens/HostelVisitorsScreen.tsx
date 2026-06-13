@@ -193,7 +193,7 @@ export function HostelVisitorsScreen() {
           contentContainerStyle={{
             paddingHorizontal: spacing.marginMobile,
             paddingTop: spacing.xs,
-            paddingBottom: spacing.xl * 2,
+            paddingBottom: spacing.scrollBottom,
           }}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           showsVerticalScrollIndicator={false}

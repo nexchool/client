@@ -399,7 +399,7 @@ export default function StudentFeeDetailPage() {
       <ScrollView
         contentContainerStyle={{
           padding: spacing.marginMobile,
-          paddingBottom: spacing.xl * 3,
+          paddingBottom: spacing.scrollBottom,
           gap: spacing.lg,
         }}
         refreshControl={

@@ -141,7 +141,7 @@ export default function StudentLeaveFormScreen() {
         </Text>
 
         <ScrollView
-          contentContainerStyle={{ gap: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.xl * 3 }}
+          contentContainerStyle={{ gap: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.scrollBottom }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >

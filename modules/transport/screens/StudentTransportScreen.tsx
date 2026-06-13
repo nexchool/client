@@ -28,7 +28,7 @@ export default function StudentTransportScreen() {
   return (
     <View style={{ flex: 1 }}>
       <ScrollView
-        contentContainerStyle={{ padding: spacing.marginMobile, gap: spacing.lg, paddingBottom: spacing.xl * 3 }}
+        contentContainerStyle={{ padding: spacing.marginMobile, gap: spacing.lg, paddingBottom: spacing.scrollBottom }}
         refreshControl={<RefreshControl refreshing={!!isRefetching} onRefresh={() => refetch()} />}
       >
         <AppIcon name="chevron-back" size="lg" color="onSurface" onPress={() => router.back()} />

@@ -70,7 +70,7 @@ export default function AnnouncementInboxScreen() {
         }
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: spacing.xl * 2 }}
+        contentContainerStyle={{ paddingBottom: spacing.scrollBottom }}
       />
     </View>
   );

@@ -94,7 +94,7 @@ export default function AnnouncementRecipientsScreen() {
           )}
           ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: spacing.xl * 2 }}
+          contentContainerStyle={{ paddingBottom: spacing.scrollBottom }}
         />
       )}
     </View>

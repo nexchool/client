@@ -68,7 +68,7 @@ export default function StudentLeavesScreen() {
         }
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: spacing.xl * 3 }}
+        contentContainerStyle={{ paddingBottom: spacing.scrollBottom }}
       />
 
       <Pressable

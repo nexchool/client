@@ -170,7 +170,7 @@ export default function FeeStructureInfoPage() {
         contentContainerStyle={{
           padding: spacing.marginMobile,
           paddingTop: spacing.sm,
-          paddingBottom: spacing.xl * 2,
+          paddingBottom: spacing.scrollBottom,
           gap: spacing.lg,
         }}
         showsVerticalScrollIndicator={false}

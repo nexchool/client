@@ -76,7 +76,7 @@ export default function StudentLeaveDetailScreen() {
       />
 
       <ScrollView
-        contentContainerStyle={{ gap: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.xl * 2 }}
+        contentContainerStyle={{ gap: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.scrollBottom }}
         showsVerticalScrollIndicator={false}
       >
         {/* Heading + status pill */}

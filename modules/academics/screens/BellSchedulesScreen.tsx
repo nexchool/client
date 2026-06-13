@@ -91,7 +91,7 @@ export default function BellSchedulesScreen() {
       contentContainerStyle={{
         padding: spacing.marginMobile,
         gap: spacing.lg,
-        paddingBottom: spacing.xl * 3,
+        paddingBottom: spacing.scrollBottom,
       }}
       showsVerticalScrollIndicator={false}
     >
@@ -244,7 +244,7 @@ function BellDetailScreen({
       contentContainerStyle={{
         padding: spacing.marginMobile,
         gap: spacing.lg,
-        paddingBottom: spacing.xl * 3,
+        paddingBottom: spacing.scrollBottom,
       }}
       showsVerticalScrollIndicator={false}
     >

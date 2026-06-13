@@ -95,7 +95,7 @@ export default function MyAttendanceScreen() {
   return (
     <>
       <ScrollView
-        contentContainerStyle={{ padding: spacing.marginMobile, gap: spacing.lg, paddingBottom: spacing.xl * 3 }}
+        contentContainerStyle={{ padding: spacing.marginMobile, gap: spacing.lg, paddingBottom: spacing.scrollBottom }}
         refreshControl={<RefreshControl refreshing={!!isRefetching} onRefresh={() => refetch()} />}
       >
         <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>

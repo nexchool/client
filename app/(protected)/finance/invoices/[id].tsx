@@ -177,7 +177,7 @@ export default function InvoiceDetailPage() {
         contentContainerStyle={{
           padding: spacing.marginMobile,
           paddingTop: spacing.sm,
-          paddingBottom: spacing.xl * 3,
+          paddingBottom: spacing.scrollBottom,
           gap: spacing.lg,
         }}
         showsVerticalScrollIndicator={false}

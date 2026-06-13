@@ -53,7 +53,7 @@ export function SubjectsScreen() {
       contentContainerStyle={{
         padding: spacing.marginMobile,
         gap: spacing.md,
-        paddingBottom: spacing.xl * 2,
+        paddingBottom: spacing.scrollBottom,
         flexGrow: 1,
       }}
       refreshControl={

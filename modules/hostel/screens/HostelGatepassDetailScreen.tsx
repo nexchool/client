@@ -179,7 +179,7 @@ export function HostelGatepassDetailScreen() {
         onBack={() => router.back()}
       />
       <ScrollView
-        contentContainerStyle={{ padding: spacing.marginMobile, gap: spacing.lg, paddingBottom: spacing.xl * 2 }}
+        contentContainerStyle={{ padding: spacing.marginMobile, gap: spacing.lg, paddingBottom: spacing.scrollBottom }}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} />}
         showsVerticalScrollIndicator={false}
       >
