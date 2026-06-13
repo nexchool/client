@@ -12,7 +12,7 @@ import { Text } from '@/common/components/Text';
 import { AppIcon } from '@/common/components/AppIcon';
 import { Holiday, CreateHolidayDTO, HolidayType } from '../types';
 import { validateHolidayData } from '../validation/schemas';
-import { DateField } from '@/common/components/DateField';
+import { DatePicker } from '@/common/components/datepicker';
 import { useAcademicYears } from '@/modules/academics/hooks/useAcademicYears';
 import { useAcademicYearContext } from '@/modules/academics/context/AcademicYearContext';
 
@@ -325,13 +325,12 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
             {/* ─── Date inputs ──────────────────────────────────── */}
             {holidayMode === 'single' && (
               <>
-                <DateField
+                <DatePicker
                   label={t('holidayForm.dateLabel')}
                   value={form.start_date}
                   onChange={(v) => setField('start_date', v)}
                   placeholder={t('holidayForm.datePlaceholder')}
                   error={fieldErrors.start_date}
-                  useOverlayInsideModal
                 />
               </>
             )}
@@ -339,23 +338,21 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
             {holidayMode === 'range' && (
               <View style={{ flexDirection: 'row' }}>
                 <View style={{ flex: 1 }}>
-                  <DateField
+                  <DatePicker
                     label={t('holidayForm.startDateLabel')}
                     value={form.start_date}
                     onChange={(v) => setField('start_date', v)}
                     placeholder={t('holidayForm.datePlaceholder')}
                     error={fieldErrors.start_date}
-                    useOverlayInsideModal
                   />
                 </View>
                 <View style={{ flex: 1, marginLeft: spacing.md }}>
-                  <DateField
+                  <DatePicker
                     label={t('holidayForm.endDateLabel')}
                     value={form.end_date}
                     onChange={(v) => setField('end_date', v)}
                     placeholder={t('holidayForm.datePlaceholder')}
                     error={fieldErrors.end_date}
-                    useOverlayInsideModal
                   />
                 </View>
               </View>

@@ -26,6 +26,14 @@ type Props = {
    * KeyboardAvoidingView + ScrollView this container provides.
    */
   topInset?: boolean;
+  /**
+   * Pinned action bar rendered BELOW the scroll area (in layout, not
+   * absolutely positioned) — replaces the per-screen absolute footer +
+   * hand-tuned ScrollView paddingBottom pattern.
+   */
+  footer?: ReactNode;
+  /** Vertical gap between top-level children (design rhythm: spacing.lg). */
+  contentGap?: number;
 };
 
 export function ScreenContainer({
@@ -34,6 +42,8 @@ export function ScreenContainer({
   keyboardOffset = 0,
   noHorizontalPadding = false,
   topInset = true,
+  footer,
+  contentGap,
 }: Props) {
   const { palette, spacing, mode } = useTheme();
 
@@ -46,7 +56,12 @@ export function ScreenContainer({
     <ScrollView
       contentContainerStyle={[
         styles.scrollContent,
-        { paddingHorizontal: horizontalPadding },
+        {
+          paddingHorizontal: horizontalPadding,
+          ...(contentGap != null ? { gap: contentGap } : null),
+          // Breathing room above an in-layout footer (or the screen bottom).
+          paddingBottom: footer ? spacing.md : 0,
+        },
       ]}
       keyboardShouldPersistTaps="handled"
       automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
@@ -55,7 +70,15 @@ export function ScreenContainer({
       {children}
     </ScrollView>
   ) : (
-    <View style={[styles.staticContent, { paddingHorizontal: horizontalPadding }]}>
+    <View
+      style={[
+        styles.staticContent,
+        {
+          paddingHorizontal: horizontalPadding,
+          ...(contentGap != null ? { gap: contentGap } : null),
+        },
+      ]}
+    >
       {children}
     </View>
   );
@@ -69,6 +92,19 @@ export function ScreenContainer({
         keyboardVerticalOffset={keyboardOffset}
       >
         {inner}
+        {footer ? (
+          <View
+            style={{
+              paddingHorizontal: horizontalPadding,
+              paddingVertical: spacing.md,
+              borderTopWidth: 1,
+              borderTopColor: palette.surfaceContainerHigh,
+              backgroundColor: palette.surface,
+            }}
+          >
+            {footer}
+          </View>
+        ) : null}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
