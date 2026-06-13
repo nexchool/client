@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, BackHandler, KeyboardAvoidingView, ScrollView, View, Platform } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useForm, Controller } from 'react-hook-form';
@@ -12,6 +11,7 @@ import { AppIcon } from '@/common/components/AppIcon';
 import { Button } from '@/common/components/Button';
 import { Link } from '@/common/components/Link';
 import { Skeleton } from '@/common/components/Skeleton';
+import { DatePicker } from '@/common/components/datepicker';
 import { FormField, FormSection, FormTextArea } from '@/common/forms';
 
 import { AudiencePicker } from '../components/AudiencePicker';
@@ -45,7 +45,6 @@ export default function AnnouncementComposerScreen() {
 
   const [previewVisible, setPreviewVisible] = useState(false);
   const [templateSheetVisible, setTemplateSheetVisible] = useState(false);
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [scheduledDate, setScheduledDate] = useState<Date>(() => {
     const d = new Date();
     d.setHours(d.getHours() + 1);
@@ -345,6 +344,15 @@ export default function AnnouncementComposerScreen() {
           </Button>
         ) : (
           <>
+            {/* Pick the send time first, then act — replaces the old raw
+                DateTimePicker that lost the time on Android and auto-submitted. */}
+            <DatePicker
+              mode="datetime"
+              label={t('schedule.forLabel', { defaultValue: 'Schedule for' })}
+              value={scheduledDate.toISOString()}
+              onChange={(iso) => setScheduledDate(new Date(iso))}
+              minimumDate={new Date()}
+            />
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
               <View style={{ flex: 1 }}>
                 <Button variant="ghost" fullWidth onPress={handleSubmit(onSaveDraft)} disabled={submittingAny}>
@@ -355,7 +363,7 @@ export default function AnnouncementComposerScreen() {
                 <Button
                   variant="ghost"
                   fullWidth
-                  onPress={() => setShowDatePicker(true)}
+                  onPress={handleSubmit(onSchedule)}
                   disabled={submittingAny}
                 >
                   {isScheduled
@@ -375,32 +383,6 @@ export default function AnnouncementComposerScreen() {
           </>
         )}
       </View>
-
-      {showDatePicker ? (
-        <DateTimePicker
-          value={scheduledDate}
-          mode={Platform.OS === 'ios' ? 'datetime' : 'date'}
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={(_, d) => {
-            setShowDatePicker(Platform.OS === 'ios');
-            if (d) {
-              setScheduledDate(d);
-              if (Platform.OS === 'android') {
-                // Android fires once; submit immediately after picking.
-                handleSubmit(onSchedule)();
-              }
-            }
-          }}
-          minimumDate={new Date()}
-        />
-      ) : null}
-      {Platform.OS === 'ios' && showDatePicker ? (
-        <View style={{ position: 'absolute', bottom: 200, right: spacing.lg }}>
-          <Button variant="primary" onPress={() => { setShowDatePicker(false); handleSubmit(onSchedule)(); }}>
-            {t('schedule.confirm', { defaultValue: 'Confirm' })}
-          </Button>
-        </View>
-      ) : null}
 
       <TemplatePickerSheet
         visible={templateSheetVisible}

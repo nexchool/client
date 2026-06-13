@@ -24,7 +24,7 @@ import { Holiday } from "@/modules/holidays/types";
 import { useHolidays } from "@/modules/holidays/hooks/useHolidays";
 import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
 import * as PERMS from "@/modules/permissions/constants/permissions";
-import { DateField } from "@/common/components/DateField";
+import { DatePicker } from '@/common/components/datepicker';
 import { calendarLocaleForLanguage } from "@/i18n";
 import { statusAccentToken } from "../utils/leaveColors";
 
@@ -659,24 +659,22 @@ function ApplyModal({ visible, balances, onClose, onSubmit }: ApplyModalProps) {
           {/* Dates */}
           <View style={am.dateRow}>
             <View style={{ flex: 1 }}>
-              <DateField
+              <DatePicker
                 label={t("tracker.applyModal.startDate")}
                 value={leaveStart}
                 onChange={onStart}
                 placeholder={t("tracker.applyModal.datePlaceholder")}
-                useOverlayInsideModal
               />
             </View>
             <View style={am.arrow}>
               <AppIcon name="arrow-forward" size="sm" color="onSurfaceVariant" />
             </View>
             <View style={{ flex: 1 }}>
-              <DateField
+              <DatePicker
                 label={t("tracker.applyModal.endDate")}
                 value={leaveEnd}
                 onChange={onEnd}
                 placeholder={t("tracker.applyModal.datePlaceholder")}
-                useOverlayInsideModal
               />
             </View>
           </View>

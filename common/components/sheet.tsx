@@ -65,6 +65,7 @@ export function FieldTrigger({
   display,
   placeholder,
   error,
+  helper,
   disabled,
   onPress,
   icon = 'chevron-down',
@@ -73,6 +74,7 @@ export function FieldTrigger({
   display: string;
   placeholder: string;
   error?: string;
+  helper?: string;
   disabled?: boolean;
   onPress: () => void;
   icon?: AppIconName;
@@ -119,7 +121,7 @@ export function FieldTrigger({
         style={{ marginTop: 4, minHeight: 14 }}
         numberOfLines={2}
       >
-        {error ?? ' '}
+        {error ?? helper ?? ' '}
       </Text>
     </View>
   );

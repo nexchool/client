@@ -15,7 +15,7 @@ import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
 import { PressScale } from "@/common/components/PressScale";
 import type { CreateClassDTO } from "../types";
-import { DateField } from "@/common/components/DateField";
+import { DatePicker } from '@/common/components/datepicker';
 import { useAcademicYears } from "@/modules/academics/hooks/useAcademicYears";
 import { useAcademicYearContext } from "@/modules/academics/context/AcademicYearContext";
 import { classService } from "@/modules/classes/services/classService";
@@ -328,22 +328,20 @@ export const CreateClassModal: React.FC<Props> = ({
           </View>
 
           <View style={[styles.fieldContainer, { marginBottom: spacing.md }]}>
-            <DateField
+            <DatePicker
               label={t("modal.startDate")}
               value={startDate}
               onChange={setStartDate}
               placeholder={t("modal.datePlaceholder")}
-              useOverlayInsideModal
             />
           </View>
 
           <View style={[styles.fieldContainer, { marginBottom: spacing.md }]}>
-            <DateField
+            <DatePicker
               label={t("modal.endDate")}
               value={endDate}
               onChange={setEndDate}
               placeholder={t("modal.datePlaceholder")}
-              useOverlayInsideModal
             />
           </View>
 

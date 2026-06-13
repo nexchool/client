@@ -14,7 +14,7 @@ import { useTheme } from "@/common/theme";
 import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
 import { academicYearService, type AcademicYear } from "../services/academicYearService";
-import { DateField } from "@/common/components/DateField";
+import { DatePicker } from '@/common/components/datepicker';
 
 interface CreateAcademicYearModalProps {
   visible: boolean;
@@ -165,14 +165,14 @@ export function CreateAcademicYearModal({
             editable={!loading}
           />
 
-          <DateField
+          <DatePicker
             label={t("academicYearCreate.startDate")}
             value={startDate}
             onChange={setStartDate}
             placeholder={t("academicYearCreate.datePlaceholder")}
           />
 
-          <DateField
+          <DatePicker
             label={t("academicYearCreate.endDate")}
             value={endDate}
             onChange={setEndDate}

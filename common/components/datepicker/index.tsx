@@ -26,6 +26,7 @@ export type DatePickerProps = {
   minimumDate?: Date;
   maximumDate?: Date;
   error?: string;
+  helper?: string;
   disabled?: boolean;
 };
 
@@ -50,6 +51,7 @@ export function DatePicker({
   minimumDate,
   maximumDate,
   error,
+  helper,
   disabled,
 }: DatePickerProps) {
   const { t } = useTranslation();
@@ -94,6 +96,7 @@ export function DatePicker({
         display={display}
         placeholder={placeholder ?? t('datePicker.placeholder', { defaultValue: 'Select date' })}
         error={error}
+        helper={helper}
         disabled={disabled}
         onPress={openSheet}
         icon="calendar-outline"

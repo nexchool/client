@@ -21,7 +21,7 @@ import {
 import type { FeeStructure } from "@/modules/finance/types";
 import { ClassMultiSelect } from "@/common/components/ClassMultiSelect";
 import { calendarLocaleForLanguage } from "@/i18n";
-import { DateField } from "@/common/components/DateField";
+import { DatePicker } from '@/common/components/datepicker';
 import { useTheme } from "@/common/theme";
 import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
@@ -524,7 +524,7 @@ function StructureEditModal({
               options={classOptions}
               placeholder={t("structures.modal.classesPlaceholder")}
             />
-            <DateField
+            <DatePicker
               label={t("structures.modal.dueDate")}
               value={dueDate}
               onChange={setDueDate}

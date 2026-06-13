@@ -4,7 +4,7 @@ import { View, FlatList, Pressable, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { useAttendance } from "../hooks/useAttendance";
 import { useClasses } from "@/modules/classes/hooks/useClasses";
-import { DateField } from "@/common/components/DateField";
+import { DatePicker } from '@/common/components/datepicker';
 import { ClassItem } from "@/modules/classes/types";
 import { holidayService } from "@/modules/holidays/services/holidayService";
 import { Holiday } from "@/modules/holidays/types";
@@ -133,7 +133,7 @@ export default function AdminAttendanceScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Date Picker */}
-        <DateField
+        <DatePicker
           label={t("admin.dateLabel")}
           value={selectedDate}
           onChange={handleDateChange}
