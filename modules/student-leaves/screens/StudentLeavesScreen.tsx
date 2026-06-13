@@ -7,6 +7,7 @@ import { useTheme } from '@/common/theme';
 import { Text } from '@/common/components/Text';
 import { AppIcon } from '@/common/components/AppIcon';
 import { EmptyState } from '@/common/components/EmptyState';
+import { FilterChips } from '@/common/components/FilterChips';
 import { useMyStudentLeaves } from '../hooks/useStudentLeaves';
 import { StudentLeaveRow } from '../components/StudentLeaveRow';
 import type { LeaveStatus, StudentLeave } from '../types';
@@ -39,32 +40,15 @@ export default function StudentLeavesScreen() {
         {t('list.title', { defaultValue: 'My leaves' })}
       </Text>
 
-      <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md, flexWrap: 'wrap' }}>
-        {FILTERS.map((f) => {
-          const active = filter === f.value;
-          return (
-            <Pressable
-              key={f.value}
-              onPress={() => setFilter(f.value)}
-              style={({ pressed }) => ({
-                paddingHorizontal: spacing.md,
-                paddingVertical: spacing.sm,
-                borderRadius: radius.full,
-                backgroundColor: active ? palette.tertiaryContainer : palette.surfaceContainerLowest,
-                borderWidth: active ? 0 : 1,
-                borderColor: palette.outlineVariant,
-                opacity: pressed ? 0.85 : 1,
-                minHeight: 44,
-                alignItems: 'center',
-                justifyContent: 'center',
-              })}
-            >
-              <Text variant="labelMd" color={active ? 'onTertiaryContainer' : 'onSurface'}>
-                {f.label}
-              </Text>
-            </Pressable>
-          );
-        })}
+      <View style={{ marginTop: spacing.md }}>
+        <FilterChips
+          options={FILTERS.map((f) => ({
+            value: f.value,
+            label: t(`filter.${f.value}`, { defaultValue: f.label }),
+          }))}
+          value={filter}
+          onChange={setFilter}
+        />
       </View>
 
       <FlatList

@@ -1,12 +1,13 @@
 // client/modules/announcements/screens/AnnouncementInboxScreen.tsx
 import React, { useMemo, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, View } from 'react-native';
+import { FlatList, RefreshControl, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
 import { Text } from '@/common/components/Text';
 import { AppIcon } from '@/common/components/AppIcon';
 import { EmptyState } from '@/common/components/EmptyState';
+import { FilterChips } from '@/common/components/FilterChips';
 import { useInbox } from '../hooks/useAnnouncements';
 import { AnnouncementRow } from '../components/AnnouncementRow';
 import type { Announcement } from '../types';
@@ -21,7 +22,7 @@ const FILTERS: { value: Filter; label: string }[] = [
 
 export default function AnnouncementInboxScreen() {
   const { t } = useTranslation('announcements');
-  const { palette, spacing, radius } = useTheme();
+  const { spacing } = useTheme();
   const [filter, setFilter] = useState<Filter>('all');
   const { data: announcements = [], isLoading, isRefetching, refetch } = useInbox();
 
@@ -41,32 +42,15 @@ export default function AnnouncementInboxScreen() {
         {t('inbox.title', { defaultValue: 'Announcements' })}
       </Text>
 
-      <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md, flexWrap: 'wrap' }}>
-        {FILTERS.map((f) => {
-          const active = filter === f.value;
-          return (
-            <Pressable
-              key={f.value}
-              onPress={() => setFilter(f.value)}
-              style={({ pressed }) => ({
-                paddingHorizontal: spacing.md,
-                paddingVertical: spacing.sm,
-                borderRadius: radius.full,
-                backgroundColor: active ? palette.tertiaryContainer : palette.surfaceContainerLowest,
-                borderWidth: active ? 0 : 1,
-                borderColor: palette.outlineVariant,
-                opacity: pressed ? 0.85 : 1,
-                minHeight: 44,
-                alignItems: 'center',
-                justifyContent: 'center',
-              })}
-            >
-              <Text variant="labelMd" color={active ? 'onTertiaryContainer' : 'onSurface'}>
-                {f.label}
-              </Text>
-            </Pressable>
-          );
-        })}
+      <View style={{ marginTop: spacing.md }}>
+        <FilterChips
+          options={FILTERS.map((f) => ({
+            value: f.value,
+            label: t(`inbox.filter.${f.value}`, { defaultValue: f.label }),
+          }))}
+          value={filter}
+          onChange={setFilter}
+        />
       </View>
 
       <FlatList

@@ -19,6 +19,7 @@ import * as PERMS from "@/modules/permissions/constants/permissions";
 import { useTheme, Spacing } from "@/common/theme";
 import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
+import { FilterChips } from "@/common/components/FilterChips";
 import { Student } from "../types";
 
 // Debounce hook
@@ -86,21 +87,7 @@ export default function StudentsScreen() {
     router.push(`/students/${student.id}` as any);
   };
 
-  const cycleStatusFilter = () => {
-    setStatusFilter((prev) =>
-      prev === "all" ? "active" : prev === "active" ? "inactive" : "all"
-    );
-  };
-
-  const statusLabel =
-    statusFilter === "active"
-      ? t("list.filterStatusActive")
-      : statusFilter === "inactive"
-      ? t("list.filterStatusInactive")
-      : t("list.filterStatusAll");
-
   const renderFilters = () => {
-    const isActive = statusFilter !== "all";
     return (
       <View style={styles.toolbar}>
         <View
@@ -132,36 +119,17 @@ export default function StudentsScreen() {
           )}
         </View>
 
-        <View style={styles.chipRow}>
-          <Pressable
-            onPress={cycleStatusFilter}
-            accessibilityRole="button"
-            accessibilityLabel={statusLabel}
-            style={({ pressed }) => [
-              styles.chip,
-              {
-                borderRadius: radius.full,
-                backgroundColor: isActive
-                  ? palette.surfaceContainerLow
-                  : palette.surfaceContainerLowest,
-                borderColor: isActive ? palette.primary : palette.outlineVariant,
-                opacity: pressed ? 0.85 : 1,
-              },
-            ]}
-          >
-            <Text
-              variant="labelMd"
-              color={isActive ? "primary" : "onSurfaceVariant"}
-            >
-              {statusLabel}
-            </Text>
-            <AppIcon
-              name={isActive ? "close" : "chevron-down"}
-              size="sm"
-              color={isActive ? "primary" : "onSurfaceVariant"}
-            />
-          </Pressable>
-        </View>
+        {/* All options visible — replaces the old tap-to-cycle button where the
+            available states were invisible until you cycled through them. */}
+        <FilterChips
+          options={[
+            { value: "all", label: t("list.filterStatusAll") },
+            { value: "active", label: t("list.filterStatusActive") },
+            { value: "inactive", label: t("list.filterStatusInactive") },
+          ]}
+          value={statusFilter}
+          onChange={setStatusFilter}
+        />
       </View>
     );
   };

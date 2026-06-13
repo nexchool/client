@@ -13,6 +13,7 @@ import { useTheme, Typography } from "@/common/theme";
 import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
 import { PressScale } from "@/common/components/PressScale";
+import { FilterChips } from "@/common/components/FilterChips";
 import { DashboardKpiCard } from "@/modules/home/components/DashboardKpiCard";
 import { useTeacherLeaves } from "../hooks/useTeacherLeaves";
 import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
@@ -268,26 +269,6 @@ export default function TeacherLeavesScreen() {
       paddingHorizontal: spacing.marginMobile,
       marginTop: spacing.md,
     },
-    filterBarContent: {
-      paddingHorizontal: spacing.marginMobile,
-      alignItems: "center",
-      gap: spacing.sm,
-      paddingVertical: spacing.md,
-    },
-    filterChip: {
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      borderRadius: radius.full,
-      borderWidth: 1,
-      borderColor: palette.outlineVariant,
-      backgroundColor: palette.surfaceContainerLowest,
-      minHeight: 44,
-      justifyContent: "center",
-    },
-    filterChipActive: {
-      borderColor: palette.primary,
-      backgroundColor: palette.primaryContainer,
-    },
     listCard: {
       flex: 1,
       marginHorizontal: spacing.marginMobile,
@@ -369,27 +350,9 @@ export default function TeacherLeavesScreen() {
       </View>
 
       {/* Status filter chips */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={{ flexGrow: 0 }}
-        contentContainerStyle={styles.filterBarContent}
-      >
-        {STATUS_FILTERS.map((f) => {
-          const active = statusFilter === f.value;
-          return (
-            <PressScale
-              key={f.value}
-              style={[styles.filterChip, active && styles.filterChipActive]}
-              onPress={() => setStatusFilter(f.value)}
-            >
-              <Text variant="labelMd" color={active ? "onPrimaryContainer" : "onSurfaceVariant"}>
-                {f.label}
-              </Text>
-            </PressScale>
-          );
-        })}
-      </ScrollView>
+      <View style={{ paddingHorizontal: spacing.marginMobile, paddingVertical: spacing.sm }}>
+        <FilterChips options={STATUS_FILTERS} value={statusFilter} onChange={setStatusFilter} />
+      </View>
 
       {/* Content */}
       {error ? (

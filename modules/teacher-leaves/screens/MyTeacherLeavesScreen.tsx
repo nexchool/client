@@ -16,6 +16,7 @@ import { useTheme, type Palette } from "@/common/theme";
 import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
 import { PressScale } from "@/common/components/PressScale";
+import { FilterChips } from "@/common/components/FilterChips";
 import { DetailTabs } from "@/common/components/DetailTabs";
 import { useTeacherLeaves } from "@/modules/teacher-leaves/hooks/useTeacherLeaves";
 import { TeacherLeave, LeaveBalance, LEAVE_TYPES } from "@/modules/teachers/types";
@@ -521,8 +522,12 @@ function ApplyModal({ visible, balances, onClose, onSubmit }: ApplyModalProps) {
     body: { padding: spacing.marginMobile, paddingBottom: spacing.xl },
     typeChip: {
       alignItems: "center",
+      justifyContent: "center",
+      // 44px touch target (UX audit) — these stay bespoke because they carry a
+      // second line (live leave balance + low-balance state) FilterChips doesn't.
+      minHeight: 44,
       paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
+      paddingVertical: spacing.xs,
       borderRadius: radius.md,
       borderWidth: 1,
       borderColor: palette.outlineVariant,
@@ -914,23 +919,6 @@ export default function MyTeacherLeavesScreen() {
       backgroundColor: palette.surfaceContainerLow,
       gap: spacing.xs,
     },
-    filterBarPad: {
-      paddingHorizontal: spacing.marginMobile,
-      paddingVertical: spacing.sm,
-      alignItems: "center",
-      gap: spacing.sm,
-    },
-    chip: {
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      borderRadius: radius.full,
-      borderWidth: 1,
-      borderColor: palette.outlineVariant,
-      backgroundColor: palette.surfaceContainerLowest,
-      minHeight: 44,
-      justifyContent: "center",
-    },
-    chipActive: { backgroundColor: palette.primaryContainer, borderColor: palette.primary },
     holIntro: {
       paddingHorizontal: spacing.marginMobile,
       paddingTop: spacing.sm,
@@ -1228,27 +1216,16 @@ export default function MyTeacherLeavesScreen() {
           {dataTab === "requests" && (
             <View style={{ flex: 1 }}>
               {/* Filter chips */}
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={{ flexGrow: 0 }}
-                contentContainerStyle={s.filterBarPad}
-              >
-                {STATUS_FILTER_VALUES.map((fv) => {
-                  const active = statusFilter === fv;
-                  return (
-                    <PressScale
-                      key={fv || "all"}
-                      style={[s.chip, active && s.chipActive]}
-                      onPress={() => setStatusFilter(fv)}
-                    >
-                      <Text variant="labelMd" color={active ? "onPrimaryContainer" : "onSurfaceVariant"}>
-                        {t(`filters.${fv || "all"}`)}
-                      </Text>
-                    </PressScale>
-                  );
-                })}
-              </ScrollView>
+              <View style={{ paddingHorizontal: spacing.marginMobile, paddingVertical: spacing.xs }}>
+                <FilterChips
+                  options={STATUS_FILTER_VALUES.map((fv) => ({
+                    value: fv,
+                    label: t(`filters.${fv || "all"}`),
+                  }))}
+                  value={statusFilter}
+                  onChange={setStatusFilter}
+                />
+              </View>
 
               {error ? (
                 <View style={s.center}>

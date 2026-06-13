@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { View, FlatList, RefreshControl, Pressable } from "react-native";
+import { View, FlatList, RefreshControl } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useInvoices } from "@/modules/fees/hooks/useFees";
@@ -12,6 +12,7 @@ import { AppIcon } from "@/common/components/AppIcon";
 import { PressScale } from "@/common/components/PressScale";
 import { Skeleton } from "@/common/components/Skeleton";
 import { EmptyState } from "@/common/components/EmptyState";
+import { FilterChips } from "@/common/components/FilterChips";
 import { DashboardKpiCard } from "@/modules/home/components/DashboardKpiCard";
 import { formatCurrency } from "@/common/utils/formatCurrency";
 import { Protected } from "@/modules/permissions/components/Protected";
@@ -255,36 +256,12 @@ export default function InvoicesListPage() {
               </View>
             </View>
 
-            <View
-              style={{
-                flexDirection: "row",
-                flexWrap: "wrap",
-                gap: spacing.sm,
-                marginBottom: spacing.md,
-              }}
-            >
-              {filterOptions.map((opt) => {
-                const active = filter === opt.key;
-                return (
-                  <Pressable
-                    key={opt.key}
-                    onPress={() => setFilter(opt.key)}
-                    style={({ pressed }) => ({
-                      paddingHorizontal: spacing.md,
-                      paddingVertical: spacing.xs,
-                      borderRadius: radius.full,
-                      backgroundColor: active ? palette.primary : palette.surfaceContainerLow,
-                      borderWidth: 1,
-                      borderColor: active ? palette.primary : palette.outlineVariant,
-                      opacity: pressed ? 0.85 : 1,
-                    })}
-                  >
-                    <Text variant="labelSm" color={active ? "onPrimary" : "onSurface"}>
-                      {opt.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+            <View style={{ marginBottom: spacing.md }}>
+              <FilterChips
+                options={filterOptions.map((opt) => ({ value: opt.key, label: opt.label }))}
+                value={filter}
+                onChange={setFilter}
+              />
             </View>
           </View>
         }

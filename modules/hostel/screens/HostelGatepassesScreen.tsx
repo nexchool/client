@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { View, FlatList, ScrollView, RefreshControl } from "react-native";
+import { View, FlatList, RefreshControl } from "react-native";
 import { useRouter } from "expo-router";
 import { useTheme } from "@/common/theme";
 import { Text } from "@/common/components/Text";
@@ -9,6 +9,7 @@ import { PressScale } from "@/common/components/PressScale";
 import { Skeleton } from "@/common/components/Skeleton";
 import { EmptyState } from "@/common/components/EmptyState";
 import { BackHeader } from "@/common/components/BackHeader";
+import { FilterChips } from "@/common/components/FilterChips";
 import { formatDateTime } from "@/common/utils/datetime";
 import { useHostelGatepasses } from "../hooks/useHostelAdmin";
 import { gatepassStatusMeta, gatepassTypeMeta } from "../utils/gatepass";
@@ -83,34 +84,15 @@ export function HostelGatepassesScreen() {
     <View style={{ flex: 1, backgroundColor: palette.surface }}>
       <BackHeader title={t("gatepass.title", { defaultValue: "Gate passes" })} onBack={() => router.back()} />
 
-      <View style={{ paddingBottom: spacing.sm }}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: spacing.marginMobile, gap: spacing.sm }}
-        >
-          {FILTERS.map((f) => {
-            const active = f.key === status;
-            return (
-              <PressScale
-                key={f.labelKey}
-                onPress={() => setStatus(f.key)}
-                style={{
-                  paddingHorizontal: spacing.md,
-                  paddingVertical: spacing.sm,
-                  borderRadius: radius.full,
-                  backgroundColor: active ? palette.primary : palette.surfaceContainerLowest,
-                  borderWidth: active ? 0 : 1,
-                  borderColor: palette.outlineVariant,
-                }}
-              >
-                <Text variant="labelMd" color={active ? "onPrimary" : "onSurfaceVariant"}>
-                  {t(f.labelKey, { defaultValue: f.fallback })}
-                </Text>
-              </PressScale>
-            );
-          })}
-        </ScrollView>
+      <View style={{ paddingHorizontal: spacing.marginMobile, paddingBottom: spacing.sm }}>
+        <FilterChips
+          options={FILTERS.map((f) => ({
+            value: f.key ?? "all",
+            label: t(f.labelKey, { defaultValue: f.fallback }),
+          }))}
+          value={status ?? "all"}
+          onChange={(v) => setStatus(v === "all" ? undefined : (v as GatepassStatus))}
+        />
       </View>
 
       {error ? (
