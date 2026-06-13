@@ -14,7 +14,13 @@ import type { StudentLeave } from '../types';
 
 type Tab = 'new' | 'cancel';
 
-export default function ApproveStudentLeavesScreen() {
+export default function ApproveStudentLeavesScreen({
+  embedded = false,
+}: {
+  /** When rendered inside the Leave approvals hub, the hub owns the back
+   *  control + title, so this screen drops its own. */
+  embedded?: boolean;
+} = {}) {
   const { t } = useTranslation('studentLeaves');
   const { palette, spacing, radius } = useTheme();
   const { isTeacher, isAdmin } = useUiRole();
@@ -36,18 +42,27 @@ export default function ApproveStudentLeavesScreen() {
   };
 
   return (
-    <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg }}>
-      <AppIcon
-        name="arrow-back"
-        size="lg"
-        color="onSurface"
-        onPress={() => router.back()}
-        accessibilityLabel={t('back', { defaultValue: 'Back' })}
-      />
-
-      <Text variant="display" color="onSurface" style={{ marginTop: spacing.xs }}>
-        {t('queue.title', { defaultValue: 'Student leaves' })}
-      </Text>
+    <View
+      style={{
+        flex: 1,
+        paddingHorizontal: spacing.marginMobile,
+        paddingTop: embedded ? spacing.sm : spacing.lg,
+      }}
+    >
+      {embedded ? null : (
+        <>
+          <AppIcon
+            name="arrow-back"
+            size="lg"
+            color="onSurface"
+            onPress={() => router.back()}
+            accessibilityLabel={t('back', { defaultValue: 'Back' })}
+          />
+          <Text variant="display" color="onSurface" style={{ marginTop: spacing.xs }}>
+            {t('queue.title', { defaultValue: 'Student leaves' })}
+          </Text>
+        </>
+      )}
 
       {showAdminBanner ? (
         <View

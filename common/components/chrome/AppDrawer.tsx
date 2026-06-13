@@ -74,7 +74,7 @@ const ITEMS: readonly DrawerItem[] = [
   { key: 'my-transport', label: 'My transport', icon: 'bus-outline', iconActive: 'bus', route: '/(protected)/my-transport', roles: ['student'], flag: 'transport', section: 'operations' },
   { key: 'hostel', label: 'Hostel', icon: 'bed-outline', iconActive: 'bed', route: '/(protected)/hostel', roles: ['admin'], flag: 'hostel', section: 'operations' },
   { key: 'leaves', label: 'My leaves', icon: 'briefcase-outline', iconActive: 'briefcase', route: '/(protected)/my-leaves', roles: ['admin', 'teacher', 'student'], section: 'operations' },
-  { key: 'student-leaves', label: 'Student leaves', icon: 'calendar-outline', iconActive: 'calendar', route: '/(protected)/approve-student-leaves', roles: ['admin', 'teacher'], section: 'operations' },
+  { key: 'leave-approvals', label: 'Leave approvals', icon: 'clipboard-outline', iconActive: 'clipboard', route: '/(protected)/leave-approvals', roles: ['admin', 'teacher'], section: 'operations' },
 
   // Communication
   { key: 'announcements', label: 'Announcements', icon: 'megaphone-outline', iconActive: 'megaphone', route: '/(protected)/announcements', roles: ['admin', 'teacher', 'student', 'parent'], section: 'communication' },

@@ -23,7 +23,13 @@ import { LeaveRequestRow } from "../components/LeaveRequestRow";
 import { LeaveBalanceModal } from "../components/LeaveBalanceModal";
 import { LeavePolicyModal } from "../components/LeavePolicyModal";
 
-export default function TeacherLeavesScreen() {
+export default function TeacherLeavesScreen({
+  embedded = false,
+}: {
+  /** Inside the Leave approvals hub the hub owns the title; this screen drops
+   *  its own display title but keeps the policy + refresh actions. */
+  embedded?: boolean;
+} = {}) {
   const { t } = useTranslation("teacherLeaves");
   const { palette, spacing, radius, elevation } = useTheme();
   const { hasPermission } = usePermissions();
@@ -286,12 +292,16 @@ export default function TeacherLeavesScreen() {
   });
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, embedded ? { paddingTop: spacing.sm } : null]}>
       {/* Header */}
       <View style={styles.header}>
-        <Text variant="display" color="onSurface" style={{ flex: 1 }}>
-          {t("screen.title")}
-        </Text>
+        {embedded ? (
+          <View style={{ flex: 1 }} />
+        ) : (
+          <Text variant="display" color="onSurface" style={{ flex: 1 }}>
+            {t("screen.title")}
+          </Text>
+        )}
         {canManage ? (
           <PressScale style={styles.policyBtn} onPress={openPolicyModal}>
             <AppIcon name="settings-outline" size="sm" color="primary" />
