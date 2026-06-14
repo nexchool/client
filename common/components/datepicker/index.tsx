@@ -109,6 +109,7 @@ export function DatePicker({
           onSelectDay={setDraftDay}
           minimumDate={minimumDate}
           maximumDate={maximumDate}
+          resetKey={open}
         />
         {mode === 'datetime' ? (
           <TimeRow
@@ -216,6 +217,7 @@ export function DateRangePicker({
           onSelectDay={selectDay}
           minimumDate={minimumDate}
           maximumDate={maximumDate}
+          resetKey={open}
         />
         <View style={{ flexDirection: 'row', gap: spacing.sm }}>
           <View style={{ flex: 1 }}>

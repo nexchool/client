@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Pressable, ScrollView, View } from 'react-native';
 import { useTheme } from '@/common/theme';
 import { Text } from '@/common/components/Text';
 import { AppIcon } from '@/common/components/AppIcon';
@@ -18,6 +18,9 @@ export type MonthGridProps = {
   onSelectDay: (iso: string) => void;
   minimumDate?: Date;
   maximumDate?: Date;
+  /** Changing this resets the internal view back to the day grid (e.g. when the
+   *  sheet re-opens — the Modal keeps this component mounted). */
+  resetKey?: unknown;
 };
 
 const CELL = 44; // TouchTarget.min — audit lens 1/6
@@ -65,10 +68,17 @@ export function MonthGrid({
   onSelectDay,
   minimumDate,
   maximumDate,
+  resetKey,
 }: MonthGridProps) {
   const { palette, spacing, radius } = useTheme();
   // 'days' -> the grid; 'months'/'years' -> quick-jump pickers from the title.
   const [view, setView] = useState<'days' | 'months' | 'years'>('days');
+
+  // The picker sheet keeps this mounted across open/close, so a stale year/month
+  // quick-jump view would persist into the next open — reset on each open.
+  useEffect(() => {
+    setView('days');
+  }, [resetKey]);
 
   const weeks = useMemo(() => buildWeeks(month), [month]);
   const todayIso = toIso(new Date());
@@ -130,7 +140,15 @@ export function MonthGrid({
       </View>
 
       {view === 'years' ? (
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', maxHeight: CELL * 5 }}>
+        <ScrollView
+          style={{ maxHeight: CELL * 5 }}
+          contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap' }}
+          // Open near the active year so DOB/recent years aren't a long scroll away.
+          contentOffset={{
+            x: 0,
+            y: Math.max(0, (Math.floor(years.indexOf(month.getFullYear()) / 4) - 2) * CELL),
+          }}
+        >
           {years.map((y) => {
             const active = y === month.getFullYear();
             return (
@@ -162,7 +180,7 @@ export function MonthGrid({
               </Pressable>
             );
           })}
-        </View>
+        </ScrollView>
       ) : view === 'months' ? (
         <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
           {Array.from({ length: 12 }, (_, i) => i).map((mIdx) => {

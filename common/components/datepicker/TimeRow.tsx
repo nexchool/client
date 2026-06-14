@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { ScrollView, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { useTheme } from '@/common/theme';
 import { Text } from '@/common/components/Text';
@@ -18,6 +18,13 @@ function Wheel({ values, selected, onSelect, format = (v) => `${v}`.padStart(2, 
   const { palette } = useTheme();
   const ref = useRef<ScrollView>(null);
   const index = Math.max(0, values.indexOf(selected));
+
+  // contentOffset only seeds the initial scroll; when the value changes after
+  // mount (the sheet stays mounted across opens) re-sync so the centered row
+  // matches the selected value and settle() can't commit a stale number.
+  useEffect(() => {
+    ref.current?.scrollTo({ y: index * ITEM_H, animated: false });
+  }, [index]);
 
   const settle = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const i = Math.min(
