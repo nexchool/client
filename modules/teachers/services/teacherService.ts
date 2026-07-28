@@ -12,14 +12,14 @@ export const teacherService = {
   getTeachers: async (params?: {
     search?: string;
     status?: string;
-    department?: string;
+    department_id?: string;
   }): Promise<TeacherListResponse> => {
     let url = '/api/teachers/';
     if (params) {
       const query = new URLSearchParams();
       if (params.search) query.append('search', params.search);
       if (params.status) query.append('status', params.status);
-      if (params.department) query.append('department', params.department);
+      if (params.department_id) query.append('department_id', params.department_id);
       const qs = query.toString();
       if (qs) url += `?${qs}`;
     }
