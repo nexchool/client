@@ -17,7 +17,7 @@ import * as PERMS from "@/modules/permissions/constants/permissions";
 import { useTheme, Spacing } from "@/common/theme";
 import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
-import { Teacher } from "../types";
+import { Teacher, TeacherDepartmentOption } from "../types";
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -36,7 +36,12 @@ export default function TeachersScreen() {
 
   const [searchQuery, setSearchQuery] = useState("");
   // Real filter: department. Options come from the list-endpoint envelope.
-  const [department, setDepartment] = useState<string | null>(null);
+  // Holding the object (not just the id) means the chip keeps showing the
+  // right name even if a later facet refresh drops this department (e.g. it
+  // was deactivated) — see cycleDepartment for how that case resets.
+  const [department, setDepartment] = useState<TeacherDepartmentOption | null>(
+    null
+  );
   const debouncedSearch = useDebounce(searchQuery, 500);
 
   useEffect(() => {
@@ -47,7 +52,7 @@ export default function TeachersScreen() {
   const loadData = () => {
     fetchTeachers({
       search: debouncedSearch || undefined,
-      department: department || undefined,
+      department_id: department?.id || undefined,
     });
   };
 
@@ -59,7 +64,12 @@ export default function TeachersScreen() {
     if (departments.length === 0) return;
     setDepartment((prev) => {
       if (prev === null) return departments[0];
-      const idx = departments.indexOf(prev);
+      const idx = departments.findIndex((d) => d.id === prev.id);
+      // -1 covers the stale-selection case: the previously selected
+      // department is no longer in the (possibly refreshed) facet, e.g. it
+      // was deactivated. Rather than get stuck cycling from an id that no
+      // longer resolves to anything, treat it the same as "at the end of
+      // the list" and reset to "All" on the next tap.
       return idx === -1 || idx === departments.length - 1
         ? null
         : departments[idx + 1];
@@ -67,7 +77,7 @@ export default function TeachersScreen() {
   };
 
   const departmentActive = department !== null;
-  const departmentLabel = department ?? t("list.filterDepartmentAll");
+  const departmentLabel = department?.name ?? t("list.filterDepartmentAll");
 
   const renderToolbar = () => (
     <View style={styles.toolbar}>

@@ -1,17 +1,23 @@
 import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { teacherService } from '../services/teacherService';
-import { Teacher, CreateTeacherDTO, UpdateTeacherDTO, CreateTeacherResponse } from '../types';
+import {
+  Teacher,
+  CreateTeacherDTO,
+  UpdateTeacherDTO,
+  CreateTeacherResponse,
+  TeacherDepartmentOption,
+} from '../types';
 
 export const useTeachers = () => {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [departments, setDepartments] = useState<string[]>([]);
+  const [departments, setDepartments] = useState<TeacherDepartmentOption[]>([]);
   const [currentTeacher, setCurrentTeacher] = useState<Teacher | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchTeachers = useCallback(
-    async (params?: { search?: string; status?: string; department?: string }) => {
+    async (params?: { search?: string; status?: string; department_id?: string }) => {
       setLoading(true);
       setError(null);
       try {

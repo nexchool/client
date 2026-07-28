@@ -24,6 +24,12 @@ export interface Teacher {
   subjects?: TeacherSubjectItem[];
 }
 
+/** One department option in the teachers-list filter facet. */
+export interface TeacherDepartmentOption {
+  id: string;
+  name: string;
+}
+
 /** Envelope returned by GET /api/teachers/ (list). */
 export interface TeacherListResponse {
   items: Teacher[];
@@ -31,8 +37,8 @@ export interface TeacherListResponse {
   page: number;
   per_page: number;
   total_pages: number;
-  /** Distinct department values across all tenant teachers (for filter options). */
-  departments: string[];
+  /** Active department catalogue for this tenant, ordered by display_order then name (for filter options). Includes departments with zero teachers assigned. */
+  departments: TeacherDepartmentOption[];
   /** Distinct designation values across all tenant teachers. */
   designations: string[];
 }
