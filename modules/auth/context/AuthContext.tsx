@@ -32,6 +32,10 @@ import {
   TenantChoice,
 } from "@/modules/auth/services/authService";
 import { apiGet } from "@/common/services/api";
+import {
+  registerFeatureChangeHandler,
+  resetFeatureStamp,
+} from "@/common/services/featureStamp";
 import { API_ENDPOINTS } from "@/common/constants/api";
 import {
   registerDeviceForPushNotifications,
@@ -109,9 +113,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   useEffect(() => {
     if (!user) return;
 
-    const refreshAuthSnapshotIfNeeded = async () => {
+    // `force` skips the throttle. The throttle exists because opening the app
+    // is a guess that something might have changed; a stamp change is the
+    // server telling us it did, and making the user wait out a minute for news
+    // we already have would be perverse.
+    const refreshAuthSnapshotIfNeeded = async ({ force = false } = {}) => {
       const now = Date.now();
       if (
+        !force &&
         lastAuthSnapshotRefreshRef.current > 0 &&
         now - lastAuthSnapshotRefreshRef.current < AUTH_SNAPSHOT_REFRESH_THROTTLE_MS
       ) {
@@ -154,7 +163,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       refreshAuthSnapshotIfNeeded();
     }
 
-    return () => subscription.remove();
+    // Coming back to the foreground only helps a user who left. Someone with
+    // the app open keeps a module the school no longer has until they do —
+    // so the API's per-response stamp covers that case directly.
+    const unregisterFeatureChange = registerFeatureChangeHandler(() => {
+      void refreshAuthSnapshotIfNeeded({ force: true });
+    });
+
+    return () => {
+      subscription.remove();
+      unregisterFeatureChange();
+    };
   }, [user]);
 
   useEffect(() => {
@@ -264,6 +283,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     await unregisterDevicePushNotifications().catch(() => {});
     await clearAuth();
     queryClient.clear();
+    // The next school has its own module set; carrying this one's stamp over
+    // would read as a change and refresh a profile that was already fresh.
+    resetFeatureStamp();
     setUser(null);
     setTenantNameState(null);
     setPermissionsState([]);

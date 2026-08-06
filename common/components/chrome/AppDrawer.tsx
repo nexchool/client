@@ -48,7 +48,24 @@ type DrawerItem = {
   roles: Role[];
   /** Section grouping; omitted = top-level anchor (Dashboard). */
   section?: SectionKey;
-  flag?: 'fees_management' | 'hostel' | 'transport' | 'notifications' | 'attendance' | 'timetable' | 'schedule_management' | 'holiday_management' | 'search' | 'academics_advanced' | 'student_management' | 'teacher_management' | 'class_management';
+  /**
+   * The module this entry belongs to, when the school can be without it.
+   *
+   * Only the seven a school genuinely varies on — everything else is the
+   * product and is always there. Narrowing the type rather than accepting any
+   * string means a gate on something that can never be switched off is a
+   * compile error, not a rule the next reader has to go and verify.
+   *
+   * Mirrors OPTIONAL_FEATURES in server/core/feature_flags.py.
+   */
+  flag?:
+    | 'attendance'
+    | 'fees_management'
+    | 'timetable'
+    | 'transport'
+    | 'hostel'
+    | 'notifications'
+    | 'academic_calendar';
 };
 
 const ITEMS: readonly DrawerItem[] = [
@@ -60,13 +77,13 @@ const ITEMS: readonly DrawerItem[] = [
   { key: 'students', label: 'Students', icon: 'people-outline', iconActive: 'people', route: '/(protected)/students', roles: ['admin', 'teacher'], section: 'people' },
   { key: 'teachers', label: 'Teachers', icon: 'person-outline', iconActive: 'person', route: '/(protected)/teachers', roles: ['admin'], section: 'people' },
   { key: 'classes', label: 'Classes', icon: 'school-outline', iconActive: 'school', route: '/(protected)/classes', roles: ['admin', 'teacher'], section: 'people' },
-  { key: 'subjects', label: 'Subjects', icon: 'book-outline', iconActive: 'book', route: '/(protected)/subjects', roles: ['admin', 'teacher', 'student'], flag: 'class_management', section: 'people' },
+  { key: 'subjects', label: 'Subjects', icon: 'book-outline', iconActive: 'book', route: '/(protected)/subjects', roles: ['admin', 'teacher', 'student'], section: 'people' },
 
   // Academics
   { key: 'academics', label: 'Academics', icon: 'library-outline', iconActive: 'library', route: '/(protected)/academics', roles: ['admin'], section: 'academics' },
-  { key: 'attendance', label: 'Attendance', icon: 'checkmark-done-outline', iconActive: 'checkmark-done', route: '/(protected)/attendance/overview', roles: ['admin', 'teacher'], section: 'academics' },
+  { key: 'attendance', label: 'Attendance', icon: 'checkmark-done-outline', iconActive: 'checkmark-done', route: '/(protected)/attendance/overview', roles: ['admin', 'teacher'], flag: 'attendance', section: 'academics' },
   { key: 'timetable', label: 'Timetable', icon: 'calendar-number-outline', iconActive: 'calendar-number', route: '/(protected)/timetable', roles: ['admin', 'teacher'], flag: 'timetable', section: 'academics' },
-  { key: 'holidays', label: 'Holidays', icon: 'flag-outline', iconActive: 'flag', route: '/(protected)/holidays', roles: ['admin', 'teacher', 'student', 'parent'], section: 'academics' },
+  { key: 'holidays', label: 'Holidays', icon: 'flag-outline', iconActive: 'flag', route: '/(protected)/holidays', roles: ['admin', 'teacher', 'student', 'parent'], flag: 'academic_calendar', section: 'academics' },
 
   // Operations
   { key: 'finance', label: 'Finance', icon: 'wallet-outline', iconActive: 'wallet', route: '/(protected)/finance', roles: ['admin', 'student'], flag: 'fees_management', section: 'operations' },

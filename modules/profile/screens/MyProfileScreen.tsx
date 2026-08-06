@@ -174,7 +174,7 @@ export default function MyProfileScreen() {
   const { t } = useTranslation(["profile", "navigation"]);
   const router = useRouter();
   const { palette, spacing, radius } = useTheme();
-  const { user, tenantName, enabledFeatures, updateLocalUser, logout } = useAuth();
+  const { user, tenantName, updateLocalUser, logout } = useAuth();
   const { role: userRole } = useUiRole();
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -189,38 +189,31 @@ export default function MyProfileScreen() {
 
     const load = async () => {
       setLoading(true);
-      const allowStudent =
-        enabledFeatures.length === 0 ||
-        enabledFeatures.includes("student_management");
-      const allowTeacher =
-        enabledFeatures.length === 0 ||
-        enabledFeatures.includes("teacher_management");
+      // Which of the two this account is, if either. Both are core — a school
+      // always has students and teachers — so there is nothing to check first;
+      // the lookups themselves answer it.
       try {
-        if (allowStudent) {
-          try {
-            const s = await studentService.getMyProfile();
-            if (!cancelled) {
-              setStudent(s);
-              setTeacher(null);
-              setKind("student");
-              return;
-            }
-          } catch {
-            /* not linked as student */
+        try {
+          const s = await studentService.getMyProfile();
+          if (!cancelled) {
+            setStudent(s);
+            setTeacher(null);
+            setKind("student");
+            return;
           }
+        } catch {
+          /* not linked as student */
         }
-        if (allowTeacher) {
-          try {
-            const tch = await teacherService.getMyProfile();
-            if (!cancelled) {
-              setTeacher(tch);
-              setStudent(null);
-              setKind("teacher");
-              return;
-            }
-          } catch {
-            /* not linked as teacher */
+        try {
+          const tch = await teacherService.getMyProfile();
+          if (!cancelled) {
+            setTeacher(tch);
+            setStudent(null);
+            setKind("teacher");
+            return;
           }
+        } catch {
+          /* not linked as teacher */
         }
         if (!cancelled) {
           setStudent(null);
@@ -236,7 +229,7 @@ export default function MyProfileScreen() {
     return () => {
       cancelled = true;
     };
-  }, [enabledFeatures]);
+  }, []);
 
   const displayName = useMemo(() => {
     if (student?.name) return student.name;

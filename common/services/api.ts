@@ -1,4 +1,5 @@
 import { getApiUrl } from "@/common/constants/api";
+import { noteFeatureStamp } from "@/common/services/featureStamp";
 import {
   getAccessToken,
   getRefreshToken,
@@ -57,6 +58,12 @@ const apiRequest = async (
       console.log("Token refreshed transparently");
       await setAccessToken(newAccessToken);
     }
+
+    // Every /api/* response says which module set it was answered under. A
+    // change means the super-admin switched something, and the auth layer
+    // re-reads the profile — so the drawer drops a module the school no longer
+    // has without waiting for the app to be backgrounded and reopened.
+    noteFeatureStamp(response.headers.get("X-Feature-Stamp"));
 
     return response;
   } catch (error: any) {
