@@ -1,6 +1,6 @@
 import React, { type ReactNode } from 'react';
 import { Text, View } from 'react-native';
-import { useTheme } from '@/common/theme';
+import { FontScaleCap, useTheme } from '@/common/theme';
 
 type Props = {
   title?: string;
@@ -22,7 +22,7 @@ export function FormSection({ title, children }: Props) {
       ]}
     >
       {title ? (
-        <Text style={[typography.headlineMd, { color: palette.onSurface, marginBottom: spacing.xs }]}>
+        <Text maxFontSizeMultiplier={FontScaleCap.headlineMd} style={[typography.headlineMd, { color: palette.onSurface, marginBottom: spacing.xs }]}>
           {title}
         </Text>
       ) : null}

@@ -8,7 +8,7 @@ import {
   type KeyboardTypeOptions,
   type TextInputProps,
 } from 'react-native';
-import { useTheme } from '@/common/theme';
+import { FontScaleCap, useTheme } from '@/common/theme';
 
 type Props = {
   label: string;
@@ -56,7 +56,7 @@ export function Input({
 
   return (
     <View style={styles.root}>
-      <Text
+      <Text maxFontSizeMultiplier={FontScaleCap.labelMd}
         style={[
           typography.labelMd,
           { color: palette.onSurfaceVariant, marginBottom: 8, includeFontPadding: false },
@@ -79,6 +79,7 @@ export function Input({
         ]}
       >
         <TextInput
+          maxFontSizeMultiplier={FontScaleCap.bodyMd}
           testID={testID}
           value={value}
           onChangeText={onChangeText}
@@ -102,7 +103,7 @@ export function Input({
         />
         {rightSlot ? <View style={styles.right}>{rightSlot}</View> : null}
       </View>
-      <Text
+      <Text maxFontSizeMultiplier={FontScaleCap.labelSm}
         style={[
           typography.labelSm,
           { color: helperColor, marginTop: 4, minHeight: 14, includeFontPadding: false },

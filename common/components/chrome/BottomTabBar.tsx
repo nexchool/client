@@ -3,7 +3,7 @@ import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, usePathname, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { ContentMaxWidth, useTheme } from '@/common/theme';
+import { FontScaleCap, ContentMaxWidth, useTheme } from '@/common/theme';
 import { useUnreadNotificationsBadge } from '@/modules/notifications/hooks/useNotifications';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 
@@ -146,7 +146,7 @@ export function BottomTabBar() {
                 />
               ) : null}
             </View>
-            <Text
+            <Text maxFontSizeMultiplier={FontScaleCap.labelSm}
               style={[
                 typography.labelSm,
                 {
