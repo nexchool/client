@@ -9,6 +9,11 @@ const PROD_URL = getProductionApiBaseUrl();
 
 /** Development backend URL - from env or built from IP+port */
 const getDevUrl = (): string => {
+  // An explicit dev URL wins over everything below, which is usually what you
+  // want — but it means the convenience branches never run while it is set.
+  // If the simulator cannot reach the API, check this variable first; it is
+  // baked in at bundle time, so editing .env needs Metro restarted, not just
+  // a reload.
   const devUrl = process.env.EXPO_PUBLIC_BACKEND_URL_DEV;
   if (devUrl) return devUrl;
 
@@ -16,7 +21,8 @@ const getDevUrl = (): string => {
   const devPort = process.env.EXPO_PUBLIC_DEV_PORT ?? '5001';
   const isPhysicalDevice = Constants.isDevice;
 
-  // iOS Simulator can use localhost
+  // The iOS simulator shares the Mac's network, so localhost reaches a server
+  // running on the host. A physical iPhone does not, and needs the LAN IP.
   if (Platform.OS === 'ios' && !isPhysicalDevice) {
     return `http://localhost:${devPort}`;
   }
