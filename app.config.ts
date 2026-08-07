@@ -47,6 +47,24 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   ios: {
     supportsTablet: true,
+    infoPlist: {
+      /**
+       * `orientation: "portrait"` above locks the whole app, and the app ships
+       * for iPad — so a teacher with the tablet in a keyboard case got a
+       * sideways-locked screen. A tablet is held either way; a phone, for this
+       * app, is not.
+       *
+       * These two keys are per-device, so the global lock keeps holding on
+       * iPhone and only iPad is allowed to turn. Upside-down is left out on
+       * purpose: it puts the home indicator at the top.
+       */
+      "UISupportedInterfaceOrientations~ipad": [
+        "UIInterfaceOrientationPortrait",
+        "UIInterfaceOrientationLandscapeLeft",
+        "UIInterfaceOrientationLandscapeRight",
+      ],
+      UISupportedInterfaceOrientations: ["UIInterfaceOrientationPortrait"],
+    },
   },
   android: {
     package: "in.nexchool.app",

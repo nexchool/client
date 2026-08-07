@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { useTheme } from '@/common/theme';
+import { ContentMaxWidth, useTheme } from '@/common/theme';
 import { Text } from '@/common/components/Text';
 import { AppIcon } from '@/common/components/AppIcon';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
@@ -170,8 +170,17 @@ export function AppHeader({ onMenuPress }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: {},
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  // The bar's surface spans the device; its controls line up with the content
+  // column. Left unbounded, space-between puts the menu button and the avatar
+  // at opposite ends of a 1366pt iPad with a field of empty bar between them.
+  container: { alignItems: 'center' },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    maxWidth: ContentMaxWidth,
+  },
   left: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   right: { flexDirection: 'row', alignItems: 'center' },
   iconBtn: { padding: 8 },
