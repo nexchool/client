@@ -6,6 +6,7 @@ import { Button } from '@/common/components/Button';
 import { Text } from '@/common/components/Text';
 import { AppIcon } from '@/common/components/AppIcon';
 import { useAcademicYearContext } from '@/modules/academics/context/AcademicYearContext';
+import { useModalBodyHeight } from '@/common/hooks/useModalBodyHeight';
 
 type Props = {
   visible: boolean;
@@ -15,6 +16,7 @@ type Props = {
 export function AcademicYearSheet({ visible, onClose }: Props) {
   const { t } = useTranslation('common');
   const { palette, spacing, radius } = useTheme();
+  const modalBodyHeight = useModalBodyHeight(320);
   const { selectedAcademicYearId, setSelectedAcademicYearId, academicYears } =
     useAcademicYearContext();
 
@@ -58,7 +60,7 @@ export function AcademicYearSheet({ visible, onClose }: Props) {
         </Text>
 
         <ScrollView
-          style={{ marginTop: spacing.lg, maxHeight: 320 }}
+          style={{ marginTop: spacing.lg, maxHeight: modalBodyHeight }}
           contentContainerStyle={{ gap: spacing.sm }}
         >
           {academicYears.map((ay) => {

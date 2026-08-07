@@ -261,7 +261,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
                 flexDirection: 'row',
                 backgroundColor: palette.surfaceContainerLow,
                 borderRadius: radius.md,
-                padding: 3,
+                padding: 4,
                 marginBottom: spacing.lg,
               }}
             >
@@ -317,7 +317,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
               placeholderTextColor={palette.outline}
             />
             {fieldErrors.name && (
-              <Text variant="labelSm" color="error" style={{ marginTop: 3, marginBottom: 4 }}>
+              <Text variant="labelSm" color="error" style={{ marginTop: 4, marginBottom: 4 }}>
                 {fieldErrors.name}
               </Text>
             )}
@@ -394,7 +394,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
                   })}
                 </View>
                 {fieldErrors.recurring_day_of_week && (
-                  <Text variant="labelSm" color="error" style={{ marginTop: 3, marginBottom: 4 }}>
+                  <Text variant="labelSm" color="error" style={{ marginTop: 4, marginBottom: 4 }}>
                     {fieldErrors.recurring_day_of_week}
                   </Text>
                 )}
@@ -462,7 +462,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
               })}
             </ScrollView>
             {fieldErrors.holiday_type && (
-              <Text variant="labelSm" color="error" style={{ marginTop: 3, marginBottom: 4 }}>
+              <Text variant="labelSm" color="error" style={{ marginTop: 4, marginBottom: 4 }}>
                 {fieldErrors.holiday_type}
               </Text>
             )}
@@ -554,7 +554,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
               textAlignVertical="top"
             />
             {fieldErrors.description && (
-              <Text variant="labelSm" color="error" style={{ marginTop: 3, marginBottom: 4 }}>
+              <Text variant="labelSm" color="error" style={{ marginTop: 4, marginBottom: 4 }}>
                 {fieldErrors.description}
               </Text>
             )}

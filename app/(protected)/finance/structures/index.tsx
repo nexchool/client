@@ -32,6 +32,7 @@ import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
 import { PressScale } from "@/common/components/PressScale";
 import { EmptyState } from "@/common/components/EmptyState";
+import { useModalBodyHeight } from '@/common/hooks/useModalBodyHeight';
 
 function formatDate(s: string, locale: string) {
   try {
@@ -346,6 +347,7 @@ function StructureModal({
   isCreating,
   isUpdating,
 }: StructureModalProps) {
+  const modalBodyHeight = useModalBodyHeight(400);
   const { t } = useTranslation("finance");
   const { palette, spacing, radius } = useTheme();
   const editing = editingId ? structures.find((s) => s.id === editingId) : null;
@@ -536,7 +538,7 @@ function StructureModal({
           </View>
 
           <ScrollView
-            style={{ padding: spacing.lg, maxHeight: 400 }}
+            style={{ padding: spacing.lg, maxHeight: modalBodyHeight }}
             showsVerticalScrollIndicator={false}
           >
             <Text

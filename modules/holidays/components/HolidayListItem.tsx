@@ -167,10 +167,10 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 6,
+    gap: 4,
   },
   recurIcon: {
-    marginTop: 3,
+    marginTop: 4,
   },
   name: {
     flex: 1,
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
   },
   badge: {
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 4,
     borderWidth: StyleSheet.hairlineWidth,
   },
   warningRow: {

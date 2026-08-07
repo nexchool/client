@@ -20,10 +20,20 @@ export const Spacing = {
   /**
    * Bottom inset for scrollable list content — one value so the last row clears
    * the bottom tab bar and breathes, replacing the per-screen xl*2 / xl*3 mix.
-   * Footer-overlap screens (absolute action bars) keep their own larger
-   * clearance; this is for plain scroll/list screens.
+   * For plain scroll/list screens.
    */
   scrollBottom: 96,
+  /**
+   * Bottom inset for screens with an action bar pinned over the content — a
+   * Save button, a Mark-all row. The last item has to clear the tab bar *and*
+   * that bar.
+   *
+   * "Footer-overlap screens keep their own larger clearance" was the rule and
+   * it had no token, so each screen picked its own: 100 here, 120 there, 200 in
+   * the composer. That is the same measurement written three ways, and the odd
+   * ones out are simply where somebody guessed.
+   */
+  scrollBottomWithFooter: 120,
 } as const;
 
 export const Radius = {

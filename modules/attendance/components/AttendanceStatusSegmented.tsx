@@ -41,8 +41,8 @@ export function AttendanceStatusSegmented({ value, onChange }: Props) {
             style={{
               backgroundColor: active ? palette[opt.activeBg] : 'transparent',
               borderRadius: radius.full,
-              paddingVertical: 6,
-              paddingHorizontal: 14,
+              paddingVertical: 8,
+              paddingHorizontal: 16,
             }}
             hitSlop={4}
           >

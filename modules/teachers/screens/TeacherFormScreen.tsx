@@ -253,7 +253,7 @@ export default function TeacherFormScreen() {
           : t('form.newTitle', { defaultValue: 'New teacher' })}
       </Text>
 
-      <View style={{ gap: spacing.lg, paddingTop: spacing.lg, paddingBottom: 120 }}>
+      <View style={{ gap: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.scrollBottomWithFooter }}>
         <FormSection title={t('section.personal', { defaultValue: 'Personal info' })}>
           <FormField
             control={control}

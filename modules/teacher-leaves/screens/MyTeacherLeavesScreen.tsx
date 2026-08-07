@@ -314,7 +314,7 @@ function HolidayRow({ h }: { h: Holiday }) {
             alignSelf: "flex-start",
             marginTop: spacing.xs,
             paddingHorizontal: spacing.sm,
-            paddingVertical: 3,
+            paddingVertical: 4,
             borderRadius: radius.DEFAULT,
             backgroundColor: palette.surfaceContainerLow,
           }}
@@ -534,7 +534,7 @@ function ApplyModal({ visible, balances, onClose, onSubmit }: ApplyModalProps) {
       backgroundColor: palette.surfaceContainerLow,
       marginRight: spacing.sm,
       minWidth: 72,
-      gap: 3,
+      gap: 4,
     },
     typeChipActive: { borderColor: palette.primary, backgroundColor: palette.primaryContainer },
     typeChipLow: { borderColor: palette.error },
@@ -557,7 +557,7 @@ function ApplyModal({ visible, balances, onClose, onSubmit }: ApplyModalProps) {
       backgroundColor: palette.surfaceContainerLow,
     },
     dateRow: { flexDirection: "row", alignItems: "flex-end", gap: spacing.xs },
-    arrow: { paddingBottom: 11 },
+    arrow: { paddingBottom: 12 },
     infoRow: { flexDirection: "row", alignItems: "center", gap: spacing.xs, marginTop: spacing.sm },
     warnBox: {
       flexDirection: "row",

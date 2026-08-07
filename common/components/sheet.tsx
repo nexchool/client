@@ -84,7 +84,7 @@ export function FieldTrigger({
   return (
     <View style={{ width: '100%' }}>
       {label ? (
-        <Text variant="labelMd" color="onSurfaceVariant" style={{ marginBottom: 6 }}>
+        <Text variant="labelMd" color="onSurfaceVariant" style={{ marginBottom: 8 }}>
           {label}
         </Text>
       ) : null}

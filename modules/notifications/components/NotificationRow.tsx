@@ -54,7 +54,7 @@ export function NotificationRow({ item, isLast, onPress, onMarkRead }: Props) {
           borderBottomColor: palette.surfaceContainerHigh,
         }}
       >
-        <View style={{ width: 8, paddingTop: 6 }}>
+        <View style={{ width: 8, paddingTop: 4 }}>
           {isUnread ? (
             <View style={{ width: 8, height: 8, borderRadius: radius.full, backgroundColor: palette.primary }} />
           ) : null}

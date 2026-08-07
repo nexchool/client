@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'baseline',
-    gap: 6,
+    gap: 4,
     borderWidth: StyleSheet.hairlineWidth,
   },
   sectionHeader: {

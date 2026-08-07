@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 4,
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 4,
     alignSelf: "flex-start",
   },
   timelineDot: {
@@ -454,6 +454,6 @@ const styles = StyleSheet.create({
   },
   chip: {
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 4,
   },
 });

@@ -133,7 +133,7 @@ export function ClassActiveTimetablePanel({ classId }: Props) {
                   {lp.label || `P${lp.period_number}`}
                 </Text>
                 {(lp.starts_at || lp.ends_at) ? (
-                  <Text variant="labelSm" color="onSurfaceVariant" style={{ textAlign: "center", marginTop: 1 }}>
+                  <Text variant="labelSm" color="onSurfaceVariant" style={{ textAlign: "center", marginTop: 2 }}>
                     {fmtTime(lp.starts_at)}
                     {lp.starts_at && lp.ends_at ? "–" : ""}
                     {fmtTime(lp.ends_at)}
@@ -168,12 +168,12 @@ export function ClassActiveTimetablePanel({ classId }: Props) {
                           {entry.subject_name ?? "—"}
                         </Text>
                         {entry.teacher_name ? (
-                          <Text variant="labelSm" color="onSurfaceVariant" numberOfLines={1} style={{ marginTop: 3 }}>
+                          <Text variant="labelSm" color="onSurfaceVariant" numberOfLines={1} style={{ marginTop: 4 }}>
                             {entry.teacher_name}
                           </Text>
                         ) : null}
                         {entry.room ? (
-                          <Text variant="labelSm" color="onSurfaceVariant" numberOfLines={1} style={{ marginTop: 1 }}>
+                          <Text variant="labelSm" color="onSurfaceVariant" numberOfLines={1} style={{ marginTop: 2 }}>
                             {entry.room}
                           </Text>
                         ) : null}
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
     width: CELL_WIDTH,
     minHeight: 72,
     borderLeftWidth: 1,
-    padding: 5,
+    padding: 4,
     justifyContent: "center",
   },
 });

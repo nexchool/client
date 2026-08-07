@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
-  Dimensions,
   Modal,
   Pressable,
   ScrollView,
   StyleSheet,
   View,
 } from 'react-native';
+import { useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, usePathname } from 'expo-router';
 import Constants from 'expo-constants';
@@ -125,8 +125,12 @@ type Props = {
 };
 
 const DRAWER_WIDTH_RATIO = 0.84;
-const SCREEN_W = Dimensions.get('window').width;
-const DRAWER_W = Math.round(SCREEN_W * DRAWER_WIDTH_RATIO);
+/**
+ * Past this, the drawer stops being a panel over the page and becomes a page.
+ * On a tablet or an unfolded foldable, 84% of the width is most of a very wide
+ * screen — a menu the user has to sweep their eyes across.
+ */
+const DRAWER_MAX_W = 360;
 
 export function AppDrawer({ visible, onClose }: Props) {
   const { t } = useTranslation('common');
@@ -144,7 +148,13 @@ export function AppDrawer({ visible, onClose }: Props) {
 
   // Keep the Modal mounted through the close animation so the slide-out is seen.
   const [mounted, setMounted] = useState(visible);
-  const translateX = useSharedValue(-DRAWER_W);
+  // Read per render, not once at import. A module-scope Dimensions.get() is
+  // the width the app happened to launch at: rotate the phone, unfold a
+  // foldable, or open a split view and the drawer keeps the old one — either
+  // short of the edge or hanging off it.
+  const { width: screenWidth } = useWindowDimensions();
+  const drawerWidth = Math.min(Math.round(screenWidth * DRAWER_WIDTH_RATIO), DRAWER_MAX_W);
+  const translateX = useSharedValue(-drawerWidth);
   const backdropOpacity = useSharedValue(0);
 
   useEffect(() => {
@@ -154,11 +164,17 @@ export function AppDrawer({ visible, onClose }: Props) {
       backdropOpacity.value = withTiming(1, { duration: 240 });
     } else {
       backdropOpacity.value = withTiming(0, { duration: 220 });
-      translateX.value = withTiming(-DRAWER_W, { duration: 220 }, (finished) => {
+      translateX.value = withTiming(-drawerWidth, { duration: 220 }, (finished) => {
         if (finished) runOnJS(setMounted)(false);
       });
     }
-  }, [visible, translateX, backdropOpacity]);
+  }, [visible, translateX, backdropOpacity, drawerWidth]);
+
+  // A rotation while the drawer is closed must move its resting position too,
+  // or the next open slides in from the wrong place.
+  useEffect(() => {
+    if (!visible) translateX.value = -drawerWidth;
+  }, [drawerWidth, visible, translateX]);
 
   const drawerStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
@@ -276,7 +292,7 @@ export function AppDrawer({ visible, onClose }: Props) {
         style={[
           styles.drawer,
           {
-            width: DRAWER_W,
+            width: drawerWidth,
             backgroundColor: palette.surface,
             borderTopRightRadius: radius.xl,
             borderBottomRightRadius: radius.xl,

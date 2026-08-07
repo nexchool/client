@@ -29,6 +29,7 @@ import { AppIcon } from "@/common/components/AppIcon";
 import { Skeleton } from "@/common/components/Skeleton";
 import { EmptyState } from "@/common/components/EmptyState";
 import { formatCurrency } from "@/common/utils/formatCurrency";
+import { useModalBodyHeight } from '@/common/hooks/useModalBodyHeight';
 
 function formatDate(s: string, locale: string) {
   try {
@@ -56,6 +57,7 @@ export default function StudentFeeDetailPage() {
   const { id, action } = useLocalSearchParams<{ id: string; action?: string }>();
   const router = useRouter();
   const { palette, spacing, radius, elevation } = useTheme();
+  const modalBodyHeight = useModalBodyHeight(420);
 
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const consumedActionRef = React.useRef(false);
@@ -827,7 +829,7 @@ export default function StudentFeeDetailPage() {
                 <AppIcon name="close" size="lg" color="onSurface" />
               </TouchableOpacity>
             </View>
-            <ScrollView style={{ padding: spacing.lg, maxHeight: 420 }}>
+            <ScrollView style={{ padding: spacing.lg, maxHeight: modalBodyHeight }}>
               <View
                 style={{
                   backgroundColor: palette.surfaceContainer,
@@ -1094,7 +1096,7 @@ export default function StudentFeeDetailPage() {
                       style={({ pressed }) => ({
                         flexDirection: "row",
                         alignItems: "center",
-                        gap: 6,
+                        gap: 4,
                         paddingHorizontal: spacing.md,
                         paddingVertical: spacing.sm,
                         borderRadius: radius.md,

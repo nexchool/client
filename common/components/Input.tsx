@@ -59,7 +59,7 @@ export function Input({
       <Text
         style={[
           typography.labelMd,
-          { color: palette.onSurfaceVariant, marginBottom: 6, includeFontPadding: false },
+          { color: palette.onSurfaceVariant, marginBottom: 8, includeFontPadding: false },
         ]}
       >
         {label}

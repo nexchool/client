@@ -85,7 +85,7 @@ export function StudentDetailSheet({
 
         {canEdit ? (
           <View style={{ marginTop: spacing.lg }}>
-            <Text variant="labelMd" color="onSurfaceVariant" style={{ marginBottom: 6 }}>
+            <Text variant="labelMd" color="onSurfaceVariant" style={{ marginBottom: 8 }}>
               {t('remarks', { defaultValue: 'Remarks' })}
             </Text>
             <TextInput
