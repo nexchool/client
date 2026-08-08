@@ -9,8 +9,12 @@ export interface ClassOption {
 export const financeClassService = {
   getClasses: async (): Promise<ClassOption[]> => {
     try {
-      const res = await apiGet<ClassOption[]>("/api/classes/");
-      return Array.isArray(res) ? res : [];
+      // The endpoint answers with an envelope; the `[]` fallback below meant
+      // this picker was silently empty rather than wrong.
+      const res = await apiGet<{ items: ClassOption[] } | ClassOption[]>(
+        "/api/classes/"
+      );
+      return Array.isArray(res) ? res : res?.items ?? [];
     } catch {
       return [];
     }
