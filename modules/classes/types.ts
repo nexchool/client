@@ -3,7 +3,11 @@ import { Teacher } from "@/modules/teachers/types";
 
 export interface ClassItem {
   id: string;
-  name: string;
+  /** Nullable on the server: a class created through the structured form is
+   *  named by its grade, not by this label. Read `display_name`. */
+  name: string | null;
+  /** What the school calls this class ("5 A"), composed server-side. */
+  display_name?: string | null;
   section: string;
   /** Standard / grade number when using standard-based naming (e.g. 10 → Grade 10) */
   grade_level?: number | null;

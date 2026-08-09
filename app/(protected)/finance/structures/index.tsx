@@ -312,7 +312,12 @@ interface StructureModalProps {
   editingId: string | null;
   structures: FeeStructure[];
   academicYears: { id: string; name: string }[];
-  allClasses: { id: string; name: string; section?: string }[];
+  allClasses: {
+    id: string;
+    name: string | null;
+    display_name?: string | null;
+    section?: string;
+  }[];
   defaultAcademicYearId?: string;
   onCreate: (data: {
     name: string;
@@ -482,7 +487,7 @@ function StructureModal({
   );
   const classOptions = availableClasses.map((c) => ({
     id: c.id,
-    label: c.section ? `${c.name}-${c.section}` : c.name,
+    label: c.display_name ?? (c.section ? `${c.name ?? ""}-${c.section}` : c.name ?? c.id),
     name: c.name,
     section: c.section,
   }));

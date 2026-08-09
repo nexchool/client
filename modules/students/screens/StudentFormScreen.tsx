@@ -72,7 +72,9 @@ export default function StudentFormScreen() {
   const classesQuery = useClasses();
   const classOptions: SelectOption[] = (classesQuery.data ?? []).map((c) => ({
     value: c.id,
-    label: c.section ? `${c.name} - ${c.section}` : c.name,
+    label:
+      c.display_name ??
+      (c.section ? `${c.name ?? ''} - ${c.section}` : c.name ?? c.id),
   }));
 
   const {

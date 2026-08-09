@@ -67,7 +67,14 @@ export const financeService = {
     if (excludeStructureId) {
       url += `&exclude_structure_id=${excludeStructureId}`;
     }
-    const res = await apiGet<{ classes: { id: string; name: string; section?: string }[] }>(url);
+    const res = await apiGet<{
+      classes: {
+        id: string;
+        name: string | null;
+        display_name?: string | null;
+        section?: string;
+      }[];
+    }>(url);
     return res.classes ?? [];
   },
 

@@ -2,7 +2,10 @@ import { apiGet } from "@/common/services/api";
 
 export interface ClassOption {
   id: string;
-  name: string;
+  /** Nullable server-side — read `display_name` for what to show. */
+  name: string | null;
+  /** What the school calls this class ("5 A"), composed server-side. */
+  display_name?: string | null;
   section?: string;
 }
 

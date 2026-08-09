@@ -23,6 +23,13 @@ import { ClassTeachersPanel } from "@/modules/academics/components/class/ClassTe
 import { SubjectTeachersPanel } from "@/modules/academics/components/class/SubjectTeachersPanel";
 import { ClassSubjectsReadOnlyPanel } from "@/modules/classes/components/ClassSubjectsReadOnlyPanel";
 
+/** What the school calls a class. `name` is nullable server-side, so
+ *  composing it here printed "null-A"; the server sends the label. */
+function classTitle(cls: { display_name?: string | null; name: string | null; section: string }) {
+  return cls.display_name ?? `${cls.name ?? ""}-${cls.section}`;
+}
+
+
 type HubTab = "students" | "teachers" | "subjects" | "timetable" | "attendance";
 
 export default function ClassDetailScreen() {
@@ -100,7 +107,7 @@ export default function ClassDetailScreen() {
       <View style={{ flex: 1 }}>
         {currentClass ? (
           <>
-            <Text variant="headlineMd" color="onSurface">{`${currentClass.name}-${currentClass.section}`}</Text>
+            <Text variant="headlineMd" color="onSurface">{classTitle(currentClass)}</Text>
             <Text variant="labelSm" color="onSurfaceVariant" style={{ marginTop: spacing[2] }}>
               {currentClass.academic_year}
             </Text>
@@ -147,7 +154,7 @@ export default function ClassDetailScreen() {
     );
   }
 
-  const classLabel = `${currentClass.name}-${currentClass.section}`;
+  const classLabel = classTitle(currentClass);
 
   return (
     <View style={[styles.container, { backgroundColor: palette.surface }]}>
