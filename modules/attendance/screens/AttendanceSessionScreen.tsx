@@ -246,7 +246,7 @@ function StatusPill({ status, marked }: { status: string | null; marked: boolean
         style={{
           borderWidth: 1,
           borderColor: palette.outlineVariant,
-          paddingHorizontal: 10,
+          paddingHorizontal: 12,
           paddingVertical: 4,
           borderRadius: 999,
         }}
@@ -265,7 +265,7 @@ function StatusPill({ status, marked }: { status: string | null; marked: boolean
     <View
       style={{
         backgroundColor: `${palette[colorKey]}22`,
-        paddingHorizontal: 10,
+        paddingHorizontal: 12,
         paddingVertical: 4,
         borderRadius: 999,
       }}

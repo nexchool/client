@@ -137,7 +137,7 @@ export function AudiencePicker({ value, onChange, error }: Props) {
 
       {value.scope === 'classes' ? (
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-          {classes.map((c: { id: string; name?: string }) => {
+          {classes.map((c: { id: string; name?: string | null; display_name?: string | null }) => {
             const active = (value.class_ids ?? []).includes(c.id);
             return (
               <Pressable

@@ -9,7 +9,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { useTheme } from '@/common/theme';
+import { FontScaleCap, useTheme } from '@/common/theme';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'destructive';
 type Size = 'sm' | 'md' | 'lg';
@@ -92,7 +92,7 @@ export function Button({
       ) : (
         <View style={styles.content}>
           {leftIcon ? <View style={{ marginRight: spacing.sm }}>{leftIcon}</View> : null}
-          <Text
+          <Text maxFontSizeMultiplier={FontScaleCap.labelMd}
             style={[
               typography.labelMd,
               {

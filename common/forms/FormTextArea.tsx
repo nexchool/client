@@ -1,7 +1,7 @@
 import React from 'react';
 import { TextInput, View, Text } from 'react-native';
 import { Controller, type Control, type FieldPath, type FieldValues } from 'react-hook-form';
-import { useTheme } from '@/common/theme';
+import { FontScaleCap, useTheme } from '@/common/theme';
 
 type Props<TForm extends FieldValues> = {
   control: Control<TForm>;
@@ -29,10 +29,10 @@ export function FormTextArea<TForm extends FieldValues>({
       name={name}
       render={({ field: { value, onChange }, fieldState: { error } }) => (
         <View style={{ width: '100%' }}>
-          <Text
+          <Text maxFontSizeMultiplier={FontScaleCap.labelMd}
             style={[
               typography.labelMd,
-              { color: palette.onSurfaceVariant, marginBottom: 6, includeFontPadding: false },
+              { color: palette.onSurfaceVariant, marginBottom: 8, includeFontPadding: false },
             ]}
           >
             {label}
@@ -56,7 +56,7 @@ export function FormTextArea<TForm extends FieldValues>({
               textAlignVertical: 'top',
             }}
           />
-          <Text
+          <Text maxFontSizeMultiplier={FontScaleCap.labelSm}
             style={[
               typography.labelSm,
               {

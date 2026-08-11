@@ -32,6 +32,7 @@ import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
 import { PressScale } from "@/common/components/PressScale";
 import { EmptyState } from "@/common/components/EmptyState";
+import { useModalBodyHeight } from '@/common/hooks/useModalBodyHeight';
 
 function formatDate(s: string, locale: string) {
   try {
@@ -311,7 +312,12 @@ interface StructureModalProps {
   editingId: string | null;
   structures: FeeStructure[];
   academicYears: { id: string; name: string }[];
-  allClasses: { id: string; name: string; section?: string }[];
+  allClasses: {
+    id: string;
+    name: string | null;
+    display_name?: string | null;
+    section?: string;
+  }[];
   defaultAcademicYearId?: string;
   onCreate: (data: {
     name: string;
@@ -346,6 +352,7 @@ function StructureModal({
   isCreating,
   isUpdating,
 }: StructureModalProps) {
+  const modalBodyHeight = useModalBodyHeight(400);
   const { t } = useTranslation("finance");
   const { palette, spacing, radius } = useTheme();
   const editing = editingId ? structures.find((s) => s.id === editingId) : null;
@@ -480,7 +487,7 @@ function StructureModal({
   );
   const classOptions = availableClasses.map((c) => ({
     id: c.id,
-    label: c.section ? `${c.name}-${c.section}` : c.name,
+    label: c.display_name ?? (c.section ? `${c.name ?? ""}-${c.section}` : c.name ?? c.id),
     name: c.name,
     section: c.section,
   }));
@@ -536,7 +543,7 @@ function StructureModal({
           </View>
 
           <ScrollView
-            style={{ padding: spacing.lg, maxHeight: 400 }}
+            style={{ padding: spacing.lg, maxHeight: modalBodyHeight }}
             showsVerticalScrollIndicator={false}
           >
             <Text

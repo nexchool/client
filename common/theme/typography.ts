@@ -75,5 +75,35 @@ const base: Record<TypeRole, TextStyle> = {
   },
 };
 
+/**
+ * How far each role may grow when the phone is set to Larger Text.
+ *
+ * Not a rejection of the setting — a parent who turned it on needs it, and
+ * `Text` honours it. But iOS scales to 3.1x and Android to 2x, and at either
+ * of those a label in a 32pt chip is gone. Each cap is roughly where that
+ * role's line stops fitting the chrome built around it.
+ *
+ * Prose that has room to reflow gets the most: `bodyLg`/`bodyMd` are read, not
+ * scanned, and a paragraph growing by half is a paragraph, not a broken row.
+ * The dense roles get least — `overline` and `labelSm` sit inside chips, table
+ * headers and tab bars whose height is set by the design, not by the text.
+ *
+ * `display` barely moves because it is already 32pt: at 1.15 it is 37pt, which
+ * is as much as a phone-width heading takes before it wraps to three lines.
+ */
+export const FontScaleCap: Record<TypeRole, number> = {
+  display: 1.15,
+  headlineLg: 1.2,
+  headlineMd: 1.25,
+  titleSm: 1.3,
+  bodyLg: 1.5,
+  bodyMd: 1.5,
+  bodySm: 1.4,
+  labelLg: 1.3,
+  labelMd: 1.3,
+  labelSm: 1.2,
+  overline: 1.15,
+};
+
 export const Typography = base;
 export type { TypeRole };

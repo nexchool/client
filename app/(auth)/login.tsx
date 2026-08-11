@@ -224,8 +224,13 @@ const styles = StyleSheet.create({
     marginTop: 24,
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
+    // baseline, not center: the question and the link are one sentence, and at
+    // a large text size they are different sizes — centring each vertically
+    // makes the link float. rowGap keeps the two lines apart once it wraps,
+    // which it does at the top accessibility sizes.
+    alignItems: 'baseline',
     flexWrap: 'wrap',
+    rowGap: 4,
     paddingBottom: 32,
   },
 });

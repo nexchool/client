@@ -1,6 +1,6 @@
 import React from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
-import { useTheme } from '@/common/theme';
+import { ContentMaxWidth, useTheme } from '@/common/theme';
 import { Text } from '@/common/components/Text';
 import { AppIcon } from '@/common/components/AppIcon';
 
@@ -28,12 +28,28 @@ export function BottomSheet({
         accessibilityRole="button"
         accessibilityLabel="Dismiss"
       />
+      {/*
+        Two views, because an absolutely-positioned card cannot centre itself:
+        with left and right both pinned, alignSelf has nothing to act on. The
+        outer one spans the bottom edge and centres; the card inside it takes
+        the content width.
+
+        Without this a picker on a 1366pt iPad is a 1366pt-wide card with its
+        options strung across it. On any phone the cap never binds.
+      */}
       <View
         style={{
           position: 'absolute',
           bottom: 0,
           left: 0,
           right: 0,
+          alignItems: 'center',
+        }}
+      >
+      <View
+        style={{
+          width: '100%',
+          maxWidth: ContentMaxWidth,
           backgroundColor: palette.surfaceContainerLowest,
           borderTopLeftRadius: radius.xl,
           borderTopRightRadius: radius.xl,
@@ -52,6 +68,7 @@ export function BottomSheet({
           }}
         />
         {children}
+      </View>
       </View>
     </Modal>
   );
@@ -84,7 +101,7 @@ export function FieldTrigger({
   return (
     <View style={{ width: '100%' }}>
       {label ? (
-        <Text variant="labelMd" color="onSurfaceVariant" style={{ marginBottom: 6 }}>
+        <Text variant="labelMd" color="onSurfaceVariant" style={{ marginBottom: 8 }}>
           {label}
         </Text>
       ) : null}

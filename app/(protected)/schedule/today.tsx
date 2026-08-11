@@ -315,7 +315,7 @@ function PeriodTimelineRow({
             width: ongoing ? 14 : 10,
             height: ongoing ? 14 : 10,
             borderRadius: 7,
-            marginTop: 6,
+            marginTop: 4,
             backgroundColor: ongoing
               ? palette.primary
               : past
@@ -336,7 +336,7 @@ function PeriodTimelineRow({
         <Text
           variant="labelSm"
           color={ongoing ? 'primary' : 'onSurfaceVariant'}
-          style={{ marginTop: 6 }}
+          style={{ marginTop: 4 }}
         >
           {shortTime(period.starts_at)}
         </Text>

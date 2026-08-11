@@ -3,7 +3,7 @@ import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, usePathname, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '@/common/theme';
+import { FontScaleCap, ContentMaxWidth, useTheme } from '@/common/theme';
 import { useUnreadNotificationsBadge } from '@/modules/notifications/hooks/useNotifications';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 
@@ -103,6 +103,10 @@ export function BottomTabBar() {
         },
       ]}
     >
+      {/* The bar spans the device; the tabs line up with the content column
+          above them. space-around across 1366pt puts a hand's width between
+          neighbouring tabs and leaves them nowhere near the thing they act on. */}
+      <View style={styles.row}>
       {TABS.map((tab) => {
         const active = isTabActive(pathname, tab.route);
         const fg = active ? palette.onTertiaryContainer : palette.onSurfaceVariant;
@@ -142,7 +146,7 @@ export function BottomTabBar() {
                 />
               ) : null}
             </View>
-            <Text
+            <Text maxFontSizeMultiplier={FontScaleCap.labelSm}
               style={[
                 typography.labelSm,
                 {
@@ -157,15 +161,19 @@ export function BottomTabBar() {
           </Pressable>
         );
       })}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  container: { alignItems: 'center' },
+  row: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
+    width: '100%',
+    maxWidth: ContentMaxWidth,
   },
   item: { alignItems: 'center', justifyContent: 'center', minWidth: 60 },
   dot: {

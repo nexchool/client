@@ -8,8 +8,12 @@ import { SelectSheet } from "@/common/components/SelectSheet";
 
 export interface ClassOption {
   id: string;
-  label: string;
-  name?: string;
+  /** A caller may pass its own label; otherwise one is composed below. */
+  label?: string | null;
+  /** Nullable server-side — a class is named by its grade, not by this. */
+  name?: string | null;
+  /** What the school calls this class ("5 A"), composed server-side. */
+  display_name?: string | null;
   section?: string;
 }
 
@@ -30,7 +34,12 @@ interface ClassSelectProps {
 function toSheetOptions(options: ClassOption[]) {
   return options.map((c) => ({
     value: c.id,
-    label: c.label ?? (c.section ? `${c.name}-${c.section}` : c.name ?? c.id),
+    // `name` is null for every class the structured form creates, so the
+    // old fallback rendered "null-A". Prefer the server's label.
+    label:
+      c.label ??
+      c.display_name ??
+      (c.section ? `${c.name ?? ""}-${c.section}` : c.name ?? c.id),
   }));
 }
 

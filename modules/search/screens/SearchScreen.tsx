@@ -73,7 +73,7 @@ export default function SearchScreen() {
           description={t('empty.body', { defaultValue: 'Nothing found for your search.' })}
         />
       ) : (
-        <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
+        <ScrollView contentContainerStyle={{ paddingBottom: spacing.scrollBottomWithFooter }}>
           <SearchGroupSection
             title={t('group.students', { defaultValue: 'Students' })}
             count={results?.students.length ?? 0}

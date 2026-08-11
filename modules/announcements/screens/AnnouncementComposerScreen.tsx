@@ -260,7 +260,7 @@ export default function AnnouncementComposerScreen() {
 
       <ScrollView
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ gap: spacing.lg, paddingTop: spacing.lg, paddingBottom: 200 }}
+        contentContainerStyle={{ gap: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.scrollBottomWithFooter }}
       >
         <FormSection title={t('section.content', { defaultValue: 'Content' })}>
           <FormField

@@ -1,6 +1,6 @@
 import React, { type ReactNode } from 'react';
 import { Pressable, Text, type TextStyle } from 'react-native';
-import { useTheme } from '@/common/theme';
+import { FontScaleCap, useTheme } from '@/common/theme';
 
 type Props = {
   children: ReactNode;
@@ -13,7 +13,7 @@ export function Link({ children, onPress, style }: Props) {
   return (
     <Pressable onPress={onPress} hitSlop={8}>
       {({ pressed }) => (
-        <Text
+        <Text maxFontSizeMultiplier={FontScaleCap.labelMd}
           style={[
             typography.labelMd,
             {

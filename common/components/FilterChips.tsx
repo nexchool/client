@@ -67,7 +67,7 @@ export function FilterChips<T extends string = string>({
                   minWidth: 20,
                   height: 20,
                   borderRadius: radius.full,
-                  paddingHorizontal: 5,
+                  paddingHorizontal: 4,
                   alignItems: 'center',
                   justifyContent: 'center',
                   backgroundColor: active ? palette.onPrimary : palette.primaryContainer,

@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
   head: { flexDirection: "row", justifyContent: "space-between" },
   addBtn: { flexDirection: "row", alignItems: "center", gap: 4 },
   row: { flexDirection: "row", borderBottomWidth: 1 },
-  badges: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 6 },
+  badges: { flexDirection: "row", flexWrap: "wrap", gap: 4, marginTop: 4 },
   actions: { flexDirection: "row", gap: 12, alignItems: "center" },
   modal: { flex: 1 },
   modalHeader: { flexDirection: "row", justifyContent: "space-between" },

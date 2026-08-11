@@ -28,6 +28,7 @@ import { AppIcon } from "@/common/components/AppIcon";
 import { DetailCard } from "@/common/components/DetailCard";
 import { DetailRow } from "@/common/components/DetailRow";
 import { EmptyState } from "@/common/components/EmptyState";
+import { useModalBodyHeight } from '@/common/hooks/useModalBodyHeight';
 
 function formatDate(s: string, locale: string) {
   try {
@@ -343,6 +344,7 @@ function StructureEditModal({
   onUpdate,
   isUpdating,
 }: StructureEditModalProps) {
+  const modalBodyHeight = useModalBodyHeight(400);
   const { t } = useTranslation("finance");
   const { palette, spacing, radius } = useTheme();
   const [name, setName] = useState(structure.name ?? "");
@@ -494,7 +496,7 @@ function StructureEditModal({
             />
           </View>
           <ScrollView
-            style={{ padding: spacing.lg, maxHeight: 400 }}
+            style={{ padding: spacing.lg, maxHeight: modalBodyHeight }}
             showsVerticalScrollIndicator={false}
           >
             <Text

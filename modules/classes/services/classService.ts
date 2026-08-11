@@ -9,7 +9,12 @@ export const classService = {
     if (params?.academic_year_id) {
       url += `?academic_year_id=${params.academic_year_id}`;
     }
-    return await apiGet<ClassItem[]>(url);
+    // The endpoint answers with { items, total, page, ... }. Typed as an array
+    // it type-checked and then handed the screen an object, which is not
+    // iterable — ClassesScreen crashed the moment the fetch resolved. Same
+    // handling as studentService.getStudents.
+    const res = await apiGet<{ items: ClassItem[] } | ClassItem[]>(url);
+    return Array.isArray(res) ? res : res?.items ?? [];
   },
 
   getClassDetail: async (id: string) => {

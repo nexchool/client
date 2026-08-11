@@ -103,7 +103,7 @@ export function LeavePolicyModal({
       borderColor: palette.outlineVariant,
       borderRadius: radius.md,
       paddingHorizontal: spacing.sm,
-      paddingVertical: 6,
+      paddingVertical: 8,
       ...bodyMdType,
       color: palette.onSurface,
       textAlign: "center",

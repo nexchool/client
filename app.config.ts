@@ -46,7 +46,31 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     enabled: true,
   },
   ios: {
+    // Without this there is no iOS build at all — nothing to sign, nothing to
+    // submit. Android has carried `package` from the start; this is its
+    // counterpart and deliberately the same string, so one identity covers the
+    // app on both stores.
+    bundleIdentifier: "in.nexchool.app",
     supportsTablet: true,
+    infoPlist: {
+      /**
+       * `orientation: "portrait"` above locks the whole app, and the app ships
+       * for iPad — so a teacher with the tablet in a keyboard case got a
+       * sideways-locked screen. A tablet is held either way; a phone, for this
+       * app, is not.
+       *
+       * These two keys are per-device, so the global lock keeps holding on
+       * iPhone and only iPad is allowed to turn. Expo adds upside-down back
+       * for iPad, which is right — an iPad has no wrong way up, and Apple
+       * expects all four there. The same is not true of a phone.
+       */
+      "UISupportedInterfaceOrientations~ipad": [
+        "UIInterfaceOrientationPortrait",
+        "UIInterfaceOrientationLandscapeLeft",
+        "UIInterfaceOrientationLandscapeRight",
+      ],
+      UISupportedInterfaceOrientations: ["UIInterfaceOrientationPortrait"],
+    },
   },
   android: {
     package: "in.nexchool.app",
@@ -62,6 +86,19 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   plugins: [
     "expo-router",
+    [
+      // MyProfileScreen calls requestMediaLibraryPermissionsAsync to let
+      // someone set their profile photo. On iOS an app that asks for a
+      // protected resource without a purpose string is killed by the system on
+      // the spot — not a permission denial, a crash — and App Review rejects
+      // it besides. Android needs no equivalent, which is why this went
+      // unnoticed.
+      "expo-image-picker",
+      {
+        photosPermission:
+          "Nexchool needs access to your photos so you can set your profile picture.",
+      },
+    ],
     "expo-localization",
     "@config-plugins/react-native-blob-util",
     "@config-plugins/react-native-pdf",

@@ -34,7 +34,11 @@ export const ClassListItem: React.FC<Props> = ({
   const { t } = useTranslation("classes");
   const { palette, spacing, radius, elevation } = useTheme();
 
-  const title = item.section ? `${item.name} - ${item.section}` : item.name;
+  // `name` is null for every class the structured form creates, so this
+  // read "null - A" on every row. The server composes the real label.
+  const title =
+    item.display_name ??
+    (item.section ? `${item.name ?? ""} - ${item.section}` : item.name ?? "");
   const hasCount = typeof item.student_count === "number";
   const teacherName = item.teacher_name?.trim();
 

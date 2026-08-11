@@ -14,8 +14,20 @@ export interface TabConfig {
   iconOutline: keyof typeof Ionicons.glyphMap;
   requiredPermissions?: string[];  // If any of these permissions exist, show tab
   hideForRoles?: string[];  // Explicitly hide for certain roles
-  /** Plan feature key (e.g. student_management). Tab hidden when this feature is disabled for the tenant's plan. */
-  requiredFeature?: string;
+  /**
+   * The module this tab belongs to, when the school can be without it.
+   * Only the seven a school genuinely varies on — mirrors OPTIONAL_FEATURES
+   * in server/core/feature_flags.py. Typing it this narrowly makes a gate on
+   * something that can never be switched off a compile error.
+   */
+  requiredFeature?:
+    | 'attendance'
+    | 'fees_management'
+    | 'timetable'
+    | 'transport'
+    | 'hostel'
+    | 'notifications'
+    | 'academic_calendar';
 }
 
 export const ALL_TABS: TabConfig[] = [
@@ -36,7 +48,6 @@ export const ALL_TABS: TabConfig[] = [
       PERMS.STUDENT_READ_CLASS,
       PERMS.STUDENT_MANAGE,
     ],
-    requiredFeature: 'student_management',
   },
   {
     name: 'teachers',
@@ -47,7 +58,6 @@ export const ALL_TABS: TabConfig[] = [
       PERMS.TEACHER_READ,
       PERMS.TEACHER_MANAGE,
     ],
-    requiredFeature: 'teacher_management',
   },
   {
     name: 'classes',
@@ -58,7 +68,6 @@ export const ALL_TABS: TabConfig[] = [
       PERMS.CLASS_READ,
       PERMS.CLASS_MANAGE,
     ],
-    requiredFeature: 'class_management',
   },
   // {
   //   name: 'academics',
@@ -88,7 +97,6 @@ export const ALL_TABS: TabConfig[] = [
     icon: 'calendar',
     iconOutline: 'calendar-outline',
     requiredPermissions: [PERMS.TEACHER_LEAVE_APPLY],
-    requiredFeature: 'teacher_management',
   },
   {
     // Admins manage all teacher leaves (requires teacher.leave.manage)
@@ -97,7 +105,6 @@ export const ALL_TABS: TabConfig[] = [
     icon: 'document-text',
     iconOutline: 'document-text-outline',
     requiredPermissions: [PERMS.TEACHER_LEAVE_MANAGE],
-    requiredFeature: 'teacher_management',
   },
   {
     name: 'profile',

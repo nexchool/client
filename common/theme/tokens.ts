@@ -20,11 +20,49 @@ export const Spacing = {
   /**
    * Bottom inset for scrollable list content — one value so the last row clears
    * the bottom tab bar and breathes, replacing the per-screen xl*2 / xl*3 mix.
-   * Footer-overlap screens (absolute action bars) keep their own larger
-   * clearance; this is for plain scroll/list screens.
+   * For plain scroll/list screens.
    */
   scrollBottom: 96,
+  /**
+   * Bottom inset for screens with an action bar pinned over the content — a
+   * Save button, a Mark-all row. The last item has to clear the tab bar *and*
+   * that bar.
+   *
+   * "Footer-overlap screens keep their own larger clearance" was the rule and
+   * it had no token, so each screen picked its own: 100 here, 120 there, 200 in
+   * the composer. That is the same measurement written three ways, and the odd
+   * ones out are simply where somebody guessed.
+   */
+  scrollBottomWithFooter: 120,
 } as const;
+
+/**
+ * Where the device stops being a phone.
+ *
+ * The file header has claimed to be the source of truth for breakpoints since
+ * it was written, and there were none — which is why nothing in the app ever
+ * asked how wide the screen was, and every screen rendered a phone layout
+ * stretched across an iPad.
+ *
+ * 600 is Android's own tablet threshold and roughly where a phone in landscape
+ * lands. 840 is a tablet held upright. 1200 is one held sideways.
+ */
+export const Breakpoint = { sm: 600, md: 840, lg: 1200 } as const;
+
+/**
+ * How wide a column of content is allowed to get.
+ *
+ * A phone layout does not become a tablet layout by being stretched. At 1024pt
+ * an email field is a thousand points long, its label is at one end and its
+ * "Show" button at the other, and a line of body text runs past any comfortable
+ * reading measure. Capping the column and centring it is what makes the same
+ * screens legible on both.
+ *
+ * 720 is the compromise: wide enough that a list row or a timetable still has
+ * room, narrow enough that a form reads as a form. Below this — every phone —
+ * nothing changes at all, because the cap never binds.
+ */
+export const ContentMaxWidth = 720;
 
 export const Radius = {
   sm: 4,

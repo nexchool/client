@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
-import { useTheme } from '@/common/theme';
+import { ContentMaxWidth, useTheme } from '@/common/theme';
 
 type Props = {
   children: ReactNode;
@@ -52,10 +52,21 @@ export function ScreenContainer({
     ? ['top', 'left', 'right', 'bottom']
     : ['left', 'right', 'bottom'];
 
+  // Sign-in and the other `(auth)` screens render outside AppShell, so the
+  // content cap it applies never reaches them — and those are the very screens
+  // a tablet user meets first. Capping here covers them, and inside the shell
+  // it is a no-op: the column is already this narrow or narrower.
+  const columnStyle = {
+    width: '100%' as const,
+    maxWidth: ContentMaxWidth,
+    alignSelf: 'center' as const,
+  };
+
   const inner = scrollable ? (
     <ScrollView
       contentContainerStyle={[
         styles.scrollContent,
+        columnStyle,
         {
           paddingHorizontal: horizontalPadding,
           ...(contentGap != null ? { gap: contentGap } : null),
@@ -73,6 +84,7 @@ export function ScreenContainer({
     <View
       style={[
         styles.staticContent,
+        columnStyle,
         {
           paddingHorizontal: horizontalPadding,
           ...(contentGap != null ? { gap: contentGap } : null),
@@ -95,6 +107,7 @@ export function ScreenContainer({
         {footer ? (
           <View
             style={{
+              ...columnStyle,
               paddingHorizontal: horizontalPadding,
               paddingVertical: spacing.md,
               borderTopWidth: 1,

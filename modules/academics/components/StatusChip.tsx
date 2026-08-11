@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
   wrap: {
     alignSelf: "flex-start",
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 4,
     maxWidth: "100%",
   },
   text: { textTransform: "capitalize" },

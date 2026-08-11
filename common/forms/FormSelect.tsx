@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Controller, type Control, type FieldPath, type FieldValues } from 'react-hook-form';
-import { useTheme } from '@/common/theme';
+import { FontScaleCap, useTheme } from '@/common/theme';
 
 export type SelectOption = { value: string; label: string };
 
@@ -42,10 +42,10 @@ export function FormSelect<TForm extends FieldValues>({
         };
         return (
           <View style={{ width: '100%' }}>
-            <Text
+            <Text maxFontSizeMultiplier={FontScaleCap.labelMd}
               style={[
                 typography.labelMd,
-                { color: palette.onSurfaceVariant, marginBottom: 6, includeFontPadding: false },
+                { color: palette.onSurfaceVariant, marginBottom: 8, includeFontPadding: false },
               ]}
             >
               {label}
@@ -72,7 +72,7 @@ export function FormSelect<TForm extends FieldValues>({
                       justifyContent: 'center',
                     })}
                   >
-                    <Text
+                    <Text maxFontSizeMultiplier={FontScaleCap.labelMd}
                       style={[
                         typography.labelMd,
                         {
@@ -87,7 +87,7 @@ export function FormSelect<TForm extends FieldValues>({
                 );
               })}
             </View>
-            <Text
+            <Text maxFontSizeMultiplier={FontScaleCap.labelSm}
               style={[
                 typography.labelSm,
                 {

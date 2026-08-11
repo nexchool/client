@@ -72,7 +72,9 @@ export default function StudentFormScreen() {
   const classesQuery = useClasses();
   const classOptions: SelectOption[] = (classesQuery.data ?? []).map((c) => ({
     value: c.id,
-    label: c.section ? `${c.name} - ${c.section}` : c.name,
+    label:
+      c.display_name ??
+      (c.section ? `${c.name ?? ''} - ${c.section}` : c.name ?? c.id),
   }));
 
   const {
@@ -312,7 +314,7 @@ export default function StudentFormScreen() {
           : t('form.newTitle', { defaultValue: 'New student' })}
       </Text>
 
-      <View style={{ gap: spacing.lg, paddingTop: spacing.lg, paddingBottom: 120 }}>
+      <View style={{ gap: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.scrollBottomWithFooter }}>
         <FormSection title={t('section.basic', { defaultValue: 'Basic info' })}>
           <FormField
             control={control}

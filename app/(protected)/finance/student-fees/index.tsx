@@ -129,7 +129,7 @@ export default function StudentFeesPage() {
     () =>
       classes.map((c) => ({
         id: c.id,
-        label: c.section ? `${c.name}-${c.section}` : c.name ?? c.id,
+        label: c.display_name ?? (c.section ? `${c.name ?? ""}-${c.section}` : c.name ?? c.id),
         name: c.name,
         section: c.section,
       })),

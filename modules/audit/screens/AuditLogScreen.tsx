@@ -123,7 +123,7 @@ export default function AuditLogScreen() {
             />
           }
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
-          contentContainerStyle={{ paddingBottom: 120, flexGrow: 1 }}
+          contentContainerStyle={{ paddingBottom: spacing.scrollBottomWithFooter, flexGrow: 1 }}
         />
       )}
 

@@ -1,6 +1,5 @@
 import { useEffect } from "react";
-import { useRouter } from "expo-router";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { useAuth } from "@/modules/auth/hooks/useAuth";
 import * as PERMS from "@/modules/permissions/constants/permissions";
 import { Colors } from "@/common/constants/colors";

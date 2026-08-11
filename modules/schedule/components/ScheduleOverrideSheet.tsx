@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
-import { Alert, Dimensions, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, Modal, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Text } from '@/common/components/Text';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -108,7 +108,11 @@ export function ScheduleOverrideSheet({ visible, onClose, defaultDate, defaultSl
     }
   };
 
-  const sheetMaxHeight = Dimensions.get('window').height * 0.85;
+  // useWindowDimensions re-renders on rotation; Dimensions.get() is a
+  // one-time read, so a sheet opened in portrait kept a portrait height
+  // after the phone turned and ran off the bottom of the screen.
+  const { height: windowHeight } = useWindowDimensions();
+  const sheetMaxHeight = windowHeight * 0.85;
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>

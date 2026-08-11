@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import {
-  Dimensions,
   FlatList,
   Modal,
   Pressable,
   StyleSheet,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
@@ -70,7 +70,11 @@ export function RecordPaymentPicker({ visible, onClose }: Props) {
     return Array.from(map.values());
   }, [unpaidFees, partialFees, overdueFees]);
 
-  const sheetMaxHeight = Dimensions.get('window').height * 0.85;
+  // useWindowDimensions re-renders on rotation; Dimensions.get() is a
+  // one-time read, so a sheet opened in portrait kept a portrait height
+  // after the phone turned and ran off the bottom of the screen.
+  const { height: windowHeight } = useWindowDimensions();
+  const sheetMaxHeight = windowHeight * 0.85;
 
   const handleSelect = (fee: StudentFee) => {
     onClose();

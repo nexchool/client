@@ -425,7 +425,7 @@ export default function MarkAttendanceScreen() {
           contentContainerStyle={{
             paddingHorizontal: spacing.sm,
             paddingVertical: spacing.sm,
-            gap: 6,
+            gap: 4,
           }}
           onLayout={() => dateScrollRef.current?.scrollToEnd({ animated: false })}
         >
@@ -575,7 +575,7 @@ export default function MarkAttendanceScreen() {
           renderItem={renderStudent}
           contentContainerStyle={{
             paddingHorizontal: spacing.marginMobile,
-            paddingBottom: 100,
+            paddingBottom: spacing.scrollBottomWithFooter,
           }}
           ListEmptyComponent={
             <View style={styles.center}>
@@ -636,7 +636,7 @@ const styles = StyleSheet.create({
   backBtn: { width: 44, height: 44, justifyContent: 'center' },
   // Vertically align the inline "Mark All Present" link with the Input field
   // (Input reserves a label row above the 52px field).
-  markAllWrap: { height: 52, marginTop: 26, justifyContent: 'center' },
+  markAllWrap: { height: 52, marginTop: 24, justifyContent: 'center' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 40 },
   dateCell: {
     width: 52,

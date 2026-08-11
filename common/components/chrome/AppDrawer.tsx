@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
-  Dimensions,
   Modal,
   Pressable,
   ScrollView,
   StyleSheet,
   View,
 } from 'react-native';
+import { useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, usePathname } from 'expo-router';
 import Constants from 'expo-constants';
@@ -48,7 +48,24 @@ type DrawerItem = {
   roles: Role[];
   /** Section grouping; omitted = top-level anchor (Dashboard). */
   section?: SectionKey;
-  flag?: 'fees_management' | 'hostel' | 'transport' | 'notifications' | 'attendance' | 'timetable' | 'schedule_management' | 'holiday_management' | 'search' | 'academics_advanced' | 'student_management' | 'teacher_management' | 'class_management';
+  /**
+   * The module this entry belongs to, when the school can be without it.
+   *
+   * Only the seven a school genuinely varies on — everything else is the
+   * product and is always there. Narrowing the type rather than accepting any
+   * string means a gate on something that can never be switched off is a
+   * compile error, not a rule the next reader has to go and verify.
+   *
+   * Mirrors OPTIONAL_FEATURES in server/core/feature_flags.py.
+   */
+  flag?:
+    | 'attendance'
+    | 'fees_management'
+    | 'timetable'
+    | 'transport'
+    | 'hostel'
+    | 'notifications'
+    | 'academic_calendar';
 };
 
 const ITEMS: readonly DrawerItem[] = [
@@ -60,13 +77,13 @@ const ITEMS: readonly DrawerItem[] = [
   { key: 'students', label: 'Students', icon: 'people-outline', iconActive: 'people', route: '/(protected)/students', roles: ['admin', 'teacher'], section: 'people' },
   { key: 'teachers', label: 'Teachers', icon: 'person-outline', iconActive: 'person', route: '/(protected)/teachers', roles: ['admin'], section: 'people' },
   { key: 'classes', label: 'Classes', icon: 'school-outline', iconActive: 'school', route: '/(protected)/classes', roles: ['admin', 'teacher'], section: 'people' },
-  { key: 'subjects', label: 'Subjects', icon: 'book-outline', iconActive: 'book', route: '/(protected)/subjects', roles: ['admin', 'teacher', 'student'], flag: 'class_management', section: 'people' },
+  { key: 'subjects', label: 'Subjects', icon: 'book-outline', iconActive: 'book', route: '/(protected)/subjects', roles: ['admin', 'teacher', 'student'], section: 'people' },
 
   // Academics
   { key: 'academics', label: 'Academics', icon: 'library-outline', iconActive: 'library', route: '/(protected)/academics', roles: ['admin'], section: 'academics' },
-  { key: 'attendance', label: 'Attendance', icon: 'checkmark-done-outline', iconActive: 'checkmark-done', route: '/(protected)/attendance/overview', roles: ['admin', 'teacher'], section: 'academics' },
+  { key: 'attendance', label: 'Attendance', icon: 'checkmark-done-outline', iconActive: 'checkmark-done', route: '/(protected)/attendance/overview', roles: ['admin', 'teacher'], flag: 'attendance', section: 'academics' },
   { key: 'timetable', label: 'Timetable', icon: 'calendar-number-outline', iconActive: 'calendar-number', route: '/(protected)/timetable', roles: ['admin', 'teacher'], flag: 'timetable', section: 'academics' },
-  { key: 'holidays', label: 'Holidays', icon: 'flag-outline', iconActive: 'flag', route: '/(protected)/holidays', roles: ['admin', 'teacher', 'student', 'parent'], section: 'academics' },
+  { key: 'holidays', label: 'Holidays', icon: 'flag-outline', iconActive: 'flag', route: '/(protected)/holidays', roles: ['admin', 'teacher', 'student', 'parent'], flag: 'academic_calendar', section: 'academics' },
 
   // Operations
   { key: 'finance', label: 'Finance', icon: 'wallet-outline', iconActive: 'wallet', route: '/(protected)/finance', roles: ['admin', 'student'], flag: 'fees_management', section: 'operations' },
@@ -108,8 +125,12 @@ type Props = {
 };
 
 const DRAWER_WIDTH_RATIO = 0.84;
-const SCREEN_W = Dimensions.get('window').width;
-const DRAWER_W = Math.round(SCREEN_W * DRAWER_WIDTH_RATIO);
+/**
+ * Past this, the drawer stops being a panel over the page and becomes a page.
+ * On a tablet or an unfolded foldable, 84% of the width is most of a very wide
+ * screen — a menu the user has to sweep their eyes across.
+ */
+const DRAWER_MAX_W = 360;
 
 export function AppDrawer({ visible, onClose }: Props) {
   const { t } = useTranslation('common');
@@ -127,7 +148,13 @@ export function AppDrawer({ visible, onClose }: Props) {
 
   // Keep the Modal mounted through the close animation so the slide-out is seen.
   const [mounted, setMounted] = useState(visible);
-  const translateX = useSharedValue(-DRAWER_W);
+  // Read per render, not once at import. A module-scope Dimensions.get() is
+  // the width the app happened to launch at: rotate the phone, unfold a
+  // foldable, or open a split view and the drawer keeps the old one — either
+  // short of the edge or hanging off it.
+  const { width: screenWidth } = useWindowDimensions();
+  const drawerWidth = Math.min(Math.round(screenWidth * DRAWER_WIDTH_RATIO), DRAWER_MAX_W);
+  const translateX = useSharedValue(-drawerWidth);
   const backdropOpacity = useSharedValue(0);
 
   useEffect(() => {
@@ -137,11 +164,17 @@ export function AppDrawer({ visible, onClose }: Props) {
       backdropOpacity.value = withTiming(1, { duration: 240 });
     } else {
       backdropOpacity.value = withTiming(0, { duration: 220 });
-      translateX.value = withTiming(-DRAWER_W, { duration: 220 }, (finished) => {
+      translateX.value = withTiming(-drawerWidth, { duration: 220 }, (finished) => {
         if (finished) runOnJS(setMounted)(false);
       });
     }
-  }, [visible, translateX, backdropOpacity]);
+  }, [visible, translateX, backdropOpacity, drawerWidth]);
+
+  // A rotation while the drawer is closed must move its resting position too,
+  // or the next open slides in from the wrong place.
+  useEffect(() => {
+    if (!visible) translateX.value = -drawerWidth;
+  }, [drawerWidth, visible, translateX]);
 
   const drawerStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
@@ -259,7 +292,7 @@ export function AppDrawer({ visible, onClose }: Props) {
         style={[
           styles.drawer,
           {
-            width: DRAWER_W,
+            width: drawerWidth,
             backgroundColor: palette.surface,
             borderTopRightRadius: radius.xl,
             borderBottomRightRadius: radius.xl,

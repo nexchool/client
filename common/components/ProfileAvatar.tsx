@@ -55,7 +55,7 @@ export function ProfileAvatar({
       ) : iconName ? (
         <Ionicons name={iconName} size={Math.round(size * 0.52)} color={iconColor} />
       ) : (
-        <Text style={[styles.initial, { fontSize: Math.max(12, size * 0.38), color: iconColor }]}>
+        <Text maxFontSizeMultiplier={1} style={[styles.initial, { fontSize: Math.max(12, size * 0.38), color: iconColor }]}>
           {initial}
         </Text>
       )}

@@ -228,7 +228,7 @@ export default function MyAttendanceScreen() {
               { label: t('myAttendance.legend.late', { defaultValue: 'Late' }), color: palette.warning },
               { label: t('myAttendance.legend.holiday', { defaultValue: 'Holiday' }), color: palette.tertiary },
             ].map((it) => (
-              <View key={it.label} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <View key={it.label} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                 <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: it.color }} />
                 <Text variant="labelSm" color="onSurfaceVariant">{it.label}</Text>
               </View>
