@@ -19,7 +19,12 @@ interface ActionCardProps {
   title: string;
   subtitle: string;
   primary?: boolean;
-  onPress?: () => void;
+  /**
+   * Required. This was optional, defaulting to a no-op, and four cards shipped
+   * without one — a card that looks exactly like a working one and swallows
+   * the tap. Making it required means the next such card is a build error.
+   */
+  onPress: () => void;
 }
 
 function ActionCard({ icon, title, subtitle, primary, onPress }: ActionCardProps) {
@@ -28,7 +33,7 @@ function ActionCard({ icon, title, subtitle, primary, onPress }: ActionCardProps
   const iconChipFg: keyof Palette = primary ? "onPrimaryContainer" : "primary";
 
   return (
-    <PressScale onPress={onPress ?? (() => {})}>
+    <PressScale onPress={onPress}>
       <View
         style={[
           styles.actionCard,
@@ -98,19 +103,13 @@ function StatCard({ icon, value, label, loading }: { icon: IconName; value: numb
 }
 
 export default function AcademicsScreen() {
-  const { isAdmin, isTeacher, isStudent, isParent } = useUiRole();
+  const { isAdmin, isTeacher, isStudent } = useUiRole();
   const { isFeatureEnabled } = useAuth();
   const router = useRouter();
   const { palette, spacing } = useTheme();
   const { data: overview, isLoading: overviewLoading } = useAcademicsOverview(isAdmin);
 
   const sectionTitleStyle = { marginBottom: spacing.md };
-
-  const roleSubtitle = (admin: string, teacher: string, learner: string) => {
-    if (isAdmin) return admin;
-    if (isTeacher) return teacher;
-    return learner;
-  };
 
   return (
     <ScrollView
@@ -124,7 +123,6 @@ export default function AcademicsScreen() {
           {isAdmin && "Manage academic operations"}
           {isTeacher && "My teaching & classes"}
           {isStudent && "My learning & progress"}
-          {isParent && "Child's academic progress"}
         </Text>
       </View>
 
@@ -154,7 +152,7 @@ export default function AcademicsScreen() {
           <Text variant="headlineMd" color="onSurface" style={sectionTitleStyle}>
             {isAdmin && "All Classes"}
             {isTeacher && "My Classes"}
-            {(isStudent || isParent) && "Classes"}
+            {isStudent && "Classes"}
           </Text>
 
           <ActionCard
@@ -215,66 +213,6 @@ export default function AcademicsScreen() {
             </View>
           </Protected>
         )}
-
-        {/* Grades Section */}
-        <Protected
-          anyPermissions={[
-            PERMS.GRADE_CREATE,
-            PERMS.GRADE_READ_SELF,
-            PERMS.GRADE_READ_CLASS,
-            PERMS.GRADE_MANAGE,
-          ]}
-        >
-          <View style={[styles.section, { paddingHorizontal: spacing.marginMobile }]}>
-            <Text variant="headlineMd" color="onSurface" style={sectionTitleStyle}>Grades & Marks</Text>
-
-            {/* Teacher: Enter Grades */}
-            <Protected anyPermissions={[PERMS.GRADE_CREATE, PERMS.GRADE_UPDATE]}>
-              <ActionCard
-                icon="create-outline"
-                title="Enter Grades"
-                subtitle="Add or update student grades"
-              />
-            </Protected>
-
-            {/* View Grades */}
-            <ActionCard
-              icon="ribbon-outline"
-              title="View Grades"
-              subtitle={roleSubtitle("All grades and reports", "My class grades", "Grades and report card")}
-            />
-          </View>
-        </Protected>
-
-        {/* Assignments Section */}
-        <Protected
-          anyPermissions={[
-            PERMS.ASSIGNMENT_CREATE,
-            PERMS.ASSIGNMENT_READ_SELF,
-            PERMS.ASSIGNMENT_SUBMIT,
-            PERMS.ASSIGNMENT_MANAGE,
-          ]}
-        >
-          <View style={[styles.section, { paddingHorizontal: spacing.marginMobile }]}>
-            <Text variant="headlineMd" color="onSurface" style={sectionTitleStyle}>Assignments</Text>
-
-            {/* Teacher: Create Assignment */}
-            <Protected anyPermissions={[PERMS.ASSIGNMENT_CREATE, PERMS.ASSIGNMENT_MANAGE]}>
-              <ActionCard
-                icon="add-circle-outline"
-                title="Create Assignment"
-                subtitle="Add new assignment for class"
-              />
-            </Protected>
-
-            {/* View/Submit Assignments */}
-            <ActionCard
-              icon="document-text-outline"
-              title={isStudent || isParent ? "View & Submit" : "View Assignments"}
-              subtitle={roleSubtitle("All assignments", "My class assignments", "Pending and completed")}
-            />
-          </View>
-        </Protected>
       </View>
     </ScrollView>
   );
