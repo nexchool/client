@@ -8,6 +8,7 @@ const KEYS = {
   ENABLED_FEATURES: 'enabled_features',
   TENANT_ID: 'tenant_id',
   TENANT_NAME: 'tenant_name',
+  FORCE_PASSWORD_RESET: 'force_password_reset',
   SELECTED_ACADEMIC_YEAR_ID: 'selected_academic_year_id',
   PUSH_DEVICE_TOKEN: 'push_device_token',
   /** User preference: receive push alerts (default on). Not cleared on logout. */
@@ -77,6 +78,25 @@ export const deleteTenantName = async () => {
   await SecureStore.deleteItemAsync(KEYS.TENANT_NAME);
 };
 
+/**
+ * Whether the school-issued password must be replaced before the app is usable.
+ *
+ * Persisted rather than held only in memory because a cold start restores the
+ * session from storage without asking the server first — without this the app
+ * would open on a home screen every request of which the server refuses.
+ */
+export const setForcePasswordReset = async (required: boolean) => {
+  await SecureStore.setItemAsync(
+    KEYS.FORCE_PASSWORD_RESET,
+    required ? 'true' : 'false'
+  );
+};
+
+export const getForcePasswordReset = async (): Promise<boolean> => {
+  const value = await SecureStore.getItemAsync(KEYS.FORCE_PASSWORD_RESET);
+  return value === 'true';
+};
+
 export const setSelectedAcademicYearId = async (id: string) => {
   await SecureStore.setItemAsync(KEYS.SELECTED_ACADEMIC_YEAR_ID, id);
 };
@@ -124,6 +144,7 @@ export const clearAuth = async () => {
     SecureStore.deleteItemAsync(KEYS.ENABLED_FEATURES),
     SecureStore.deleteItemAsync(KEYS.TENANT_ID),
     SecureStore.deleteItemAsync(KEYS.TENANT_NAME),
+    SecureStore.deleteItemAsync(KEYS.FORCE_PASSWORD_RESET),
     SecureStore.deleteItemAsync(KEYS.SELECTED_ACADEMIC_YEAR_ID),
     clearPushDeviceToken(),
   ]);

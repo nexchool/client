@@ -5,7 +5,7 @@ import { useAuth } from "@/modules/auth/hooks/useAuth";
 import { Colors } from "@/common/constants/colors";
 
 export default function Index() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, mustResetPassword } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
@@ -15,12 +15,23 @@ export default function Index() {
     const inAuthGroup = segments[0] === "(auth)";
     const inProtectedGroup = segments[0] === "(protected)";
 
-    if (!isAuthenticated && !inAuthGroup) {
-      router.replace("/(auth)/login");
-    } else if (isAuthenticated && !inProtectedGroup) {
+    if (!isAuthenticated) {
+      if (!inAuthGroup) router.replace("/(auth)/login");
+      return;
+    }
+
+    // Signed in, but holding a password the school issued: the only screen the
+    // server will serve is the one that replaces it. Sending them home instead
+    // would open an app in which nothing loads.
+    if (mustResetPassword) {
+      if (!inAuthGroup) router.replace("/(auth)/set-password");
+      return;
+    }
+
+    if (!inProtectedGroup) {
       router.replace("/(protected)/home");
     }
-  }, [isAuthenticated, isLoading, segments, router]);
+  }, [isAuthenticated, isLoading, mustResetPassword, segments, router]);
 
   if (isLoading) {
     return (

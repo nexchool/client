@@ -12,10 +12,18 @@ import { Link } from '@/common/components/Link';
 import { useLogin } from '@/modules/auth/hooks/useLogin';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 import { isLoginFieldError } from '@/modules/auth/errors/LoginFieldError';
+import { didSessionExpire } from '@/common/services/sessionExpiry';
 
 export default function LoginScreen() {
   const { t } = useTranslation('auth');
-  const { palette, spacing } = useTheme();
+  const { palette, spacing, radius } = useTheme();
+
+  // Arriving here mid-task because the session died, rather than because the
+  // user asked to sign out, needs saying — otherwise the app looks like it
+  // threw the work away for no reason. Read once on mount: the flag is set
+  // before this screen is navigated to, and only a successful sign-in clears
+  // it, so there is nothing to re-render for.
+  const [wasSessionExpired] = useState(didSessionExpire);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -27,16 +35,22 @@ export default function LoginScreen() {
   const { login, loading, error } = useLogin();
   const {
     isAuthenticated,
+    mustResetPassword,
     pendingTenantChoice,
     loginWithTenant,
     clearPendingTenantChoice,
   } = useAuth();
 
+  // Both sign-in paths land here — plain sign-in and the tenant picker below
+  // both end in the auth context accepting a login response — so the one place
+  // that reads the response's `force_password_reset` is the one place that
+  // decides where sign-in goes.
   useEffect(() => {
-    if (isAuthenticated) {
-      router.replace('/(protected)/home');
-    }
-  }, [isAuthenticated]);
+    if (!isAuthenticated) return;
+    router.replace(
+      mustResetPassword ? '/(auth)/set-password' : '/(protected)/home',
+    );
+  }, [isAuthenticated, mustResetPassword]);
 
   const handleLogin = async () => {
     setEmailError('');
@@ -58,8 +72,10 @@ export default function LoginScreen() {
   const handleChooseSchool = async (tenantId: string) => {
     setChoosingTenant(true);
     try {
+      // No navigation here: the effect above owns it. Routing from this closure
+      // would read the `mustResetPassword` captured before the login, and send
+      // a flagged teacher to a home screen the server refuses.
       await loginWithTenant(tenantId);
-      router.replace('/(protected)/home');
     } catch {
       // Error surfaced by auth context
     } finally {
@@ -155,6 +171,23 @@ export default function LoginScreen() {
         {t('signInSubtitle')}
       </Text>
 
+      {wasSessionExpired ? (
+        <View
+          style={{
+            marginTop: spacing.lg,
+            padding: spacing.md,
+            borderRadius: radius.lg,
+            backgroundColor: palette.errorContainer,
+          }}
+        >
+          <Text variant="bodyMd" color="onErrorContainer" style={{ textAlign: 'center' }}>
+            {t('sessionExpired', {
+              defaultValue: 'Your session has expired. Please sign in again.',
+            })}
+          </Text>
+        </View>
+      ) : null}
+
       <View style={{ marginTop: spacing.xl, gap: spacing.md }}>
         <Input
           label={t('emailLabel')}
@@ -202,17 +235,15 @@ export default function LoginScreen() {
         </Text>
       ) : null}
 
-      <View style={{ marginTop: spacing.lg }}>
+      {/*
+        No sign-up link: schools issue credentials, and the self-service
+        register endpoint this used to point at has been deleted from the
+        server.
+      */}
+      <View style={{ marginTop: spacing.lg, paddingBottom: 32 }}>
         <Button variant="primary" fullWidth loading={loading} onPress={handleLogin}>
           {t('signIn')}
         </Button>
-      </View>
-
-      <View style={styles.footer}>
-        <Text variant="bodyMd" color="onSurfaceVariant">
-          {t('noAccountPrefix')}{' '}
-        </Text>
-        <Link onPress={() => router.push('/(auth)/register')}>{t('signUp')}</Link>
       </View>
     </ScreenContainer>
   );
@@ -220,17 +251,4 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   header: { alignItems: 'center', paddingTop: 32 },
-  footer: {
-    marginTop: 24,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    // baseline, not center: the question and the link are one sentence, and at
-    // a large text size they are different sizes — centring each vertically
-    // makes the link float. rowGap keeps the two lines apart once it wraps,
-    // which it does at the top accessibility sizes.
-    alignItems: 'baseline',
-    flexWrap: 'wrap',
-    rowGap: 4,
-    paddingBottom: 32,
-  },
 });
