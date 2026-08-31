@@ -5,7 +5,7 @@ import type {
   AnnouncementRevision,
   CreateAnnouncementPayload,
   UpdateAnnouncementPayload,
-  RecipientReadStatus,
+  RecipientRoster,
   SystemTemplate,
 } from '../types';
 
@@ -21,8 +21,8 @@ export const announcementService = {
   inbox: () => apiGet<Announcement[]>('/api/announcements/inbox'),
   revisions: (id: string) =>
     apiGet<AnnouncementRevision[]>(`/api/announcements/${id}/revisions`),
-  recipients: (id: string) =>
-    apiGet<RecipientReadStatus[]>(`/api/announcements/${id}/recipients`),
+  recipients: (id: string, page = 1) =>
+    apiGet<RecipientRoster>(`/api/announcements/${id}/recipients?page=${page}`),
   templates: () => apiGet<SystemTemplate[]>('/api/announcements/templates'),
 
   create: (payload: CreateAnnouncementPayload) =>
