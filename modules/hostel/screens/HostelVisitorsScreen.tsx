@@ -22,8 +22,21 @@ export function HostelVisitorsScreen() {
   const { palette, spacing, radius, elevation } = useTheme();
   const { hasPermission } = usePermissions();
   const [insideOnly, setInsideOnly] = useState(true);
-  const { data: rows = [], isLoading, error, refetch, isRefetching } = useHostelVisitorLogs(
-    insideOnly ? { open: true } : {}
+  const {
+    data,
+    isLoading,
+    error,
+    refetch,
+    isRefetching,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useHostelVisitorLogs(insideOnly ? { open: true } : {});
+
+  // "Inside now" is bounded and arrives in one page; the history is not.
+  const rows = React.useMemo(
+    () => data?.pages.flatMap((page) => page.visitor_logs) ?? [],
+    [data]
   );
   const checkout = useVisitorCheckOut();
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -197,6 +210,10 @@ export function HostelVisitorsScreen() {
           }}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           showsVerticalScrollIndicator={false}
+          onEndReachedThreshold={0.4}
+          onEndReached={() => {
+            if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+          }}
           ListEmptyComponent={
             <EmptyState
               icon={<AppIcon name="walk-outline" size="xl" color="onSurfaceVariant" />}

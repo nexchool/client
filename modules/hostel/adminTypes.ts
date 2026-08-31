@@ -158,6 +158,9 @@ export interface AllocationFilters {
   student_id?: string;
   status?: AllocationStatus;
   academic_year_id?: string;
+  search?: string;
+  page?: number;
+  per_page?: number;
 }
 
 export interface GatepassFilters {
@@ -193,4 +196,30 @@ export interface VisitorLogFilters {
   open?: boolean;
   start_date?: string;
   end_date?: string;
+  search?: string;
+  page?: number;
+  per_page?: number;
+}
+
+/** One page of allocations; `total` counts the whole filtered set. */
+export interface AllocationPage {
+  allocations: HostelAllocation[];
+  total: number;
+  page: number;
+  per_page: number;
+  total_pages: number;
+}
+
+/**
+ * One page of visitor logs.
+ *
+ * The `open: true` view (who is in the building now) is bounded and comes back
+ * whole; the history grows for the life of the school and is paged.
+ */
+export interface VisitorLogPage {
+  visitor_logs: HostelVisitorLog[];
+  total: number;
+  page: number;
+  per_page: number;
+  total_pages: number;
 }

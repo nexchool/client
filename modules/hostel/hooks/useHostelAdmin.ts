@@ -7,9 +7,11 @@ import {
 import { hostelAdminService } from "../services/hostelAdminService";
 import type {
   AllocationFilters,
+  AllocationPage,
   GatepassFilters,
   GatepassPage,
   VisitorLogFilters,
+  VisitorLogPage,
 } from "../adminTypes";
 
 const STALE = 30_000;
@@ -82,10 +84,21 @@ export function useHostelRoom(roomId: string | undefined, enabled = true) {
   });
 }
 
+/**
+ * Boarders, a page at a time.
+ *
+ * A trust's hostels hold thousands of children across years, so this walks the
+ * server's pages rather than holding the whole list in memory on a phone.
+ * Search is a filter on the query, not something applied to the loaded rows.
+ */
 export function useHostelAllocations(filters?: AllocationFilters, enabled = true) {
-  return useQuery({
+  return useInfiniteQuery<AllocationPage>({
     queryKey: hostelAdminKeys.allocations(filters),
-    queryFn: () => hostelAdminService.listAllocations(filters),
+    queryFn: ({ pageParam }) =>
+      hostelAdminService.listAllocations({ ...filters, page: pageParam as number }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,
     enabled,
     staleTime: STALE,
   });
@@ -132,10 +145,20 @@ export function useOverdueGatepasses(enabled = true) {
   });
 }
 
+/**
+ * Visitor logs, a page at a time.
+ *
+ * The `open: true` view is bounded by who is in the building and comes back
+ * whole in one page; the history grows for the life of the school.
+ */
 export function useHostelVisitorLogs(filters?: VisitorLogFilters, enabled = true) {
-  return useQuery({
+  return useInfiniteQuery<VisitorLogPage>({
     queryKey: hostelAdminKeys.visitorLogs(filters),
-    queryFn: () => hostelAdminService.listVisitorLogs(filters),
+    queryFn: ({ pageParam }) =>
+      hostelAdminService.listVisitorLogs({ ...filters, page: pageParam as number }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,
     enabled,
     staleTime: STALE,
   });
