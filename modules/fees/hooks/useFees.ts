@@ -3,12 +3,17 @@
  */
 
 import {
+  useInfiniteQuery,
   useQuery,
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
 import { feesService } from "../services/feesService";
-import type { CreateInvoiceInput, RecordPaymentInput } from "../services/feesService";
+import type {
+  CreateInvoiceInput,
+  InvoicePage,
+  RecordPaymentInput,
+} from "../services/feesService";
 
 const KEYS = {
   invoices: ["fees", "invoices"] as const,
@@ -18,14 +23,26 @@ const KEYS = {
   payment: (id: string) => ["fees", "payment", id] as const,
 };
 
+/**
+ * Invoices, a page at a time.
+ *
+ * The header's outstanding total and next due date come from `summary` on any
+ * page rather than from the rows loaded — a trust billing three terms has tens
+ * of thousands of invoices, and summing a page would show the wrong amount
+ * owed.
+ */
 export function useInvoices(params?: {
   student_id?: string;
   status?: string;
   academic_year?: string;
 }) {
-  return useQuery({
+  return useInfiniteQuery<InvoicePage>({
     queryKey: KEYS.invoicesList(params),
-    queryFn: () => feesService.getInvoices(params),
+    queryFn: ({ pageParam }) =>
+      feesService.getInvoices({ ...params, page: pageParam as number }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,
   });
 }
 

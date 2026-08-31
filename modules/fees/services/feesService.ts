@@ -70,6 +70,25 @@ export interface FeeInvoice {
   payments?: FeePayment[];
 }
 
+/**
+ * What is owed across every invoice matching the current filter — not just
+ * the page in hand. Computed on the server: deriving it from a page would put
+ * a wrong amount of money on the screen.
+ */
+export interface InvoiceSummary {
+  total_outstanding: number;
+  next_due_date: string | null;
+}
+
+export interface InvoicePage {
+  invoices: FeeInvoice[];
+  total: number;
+  page: number;
+  per_page: number;
+  total_pages: number;
+  summary: InvoiceSummary;
+}
+
 export interface CreateInvoiceInput {
   student_id: string;
   academic_year: string;
@@ -98,8 +117,11 @@ export interface RecordPaymentInput {
 export const feesService = {
   getInvoices: async (params?: {
     student_id?: string;
+    /** paid | pending | overdue | a stored status. Resolved on the server. */
     status?: string;
     academic_year?: string;
+    page?: number;
+    per_page?: number;
   }) => {
     let url = "/api/fees/invoices";
     if (params) {
@@ -107,11 +129,12 @@ export const feesService = {
       if (params.student_id) q.append("student_id", params.student_id);
       if (params.status) q.append("status", params.status);
       if (params.academic_year) q.append("academic_year", params.academic_year);
+      if (params.page) q.append("page", String(params.page));
+      if (params.per_page) q.append("per_page", String(params.per_page));
       const qs = q.toString();
       if (qs) url += `?${qs}`;
     }
-    const res = await apiGet<{ invoices: FeeInvoice[] }>(url);
-    return res.invoices ?? [];
+    return await apiGet<InvoicePage>(url);
   },
 
   getInvoice: async (id: string) => {

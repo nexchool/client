@@ -83,45 +83,35 @@ export default function InvoicesListPage() {
   const { palette, spacing, radius, elevation } = useTheme();
   const [filter, setFilter] = useState<"all" | "paid" | "pending" | "overdue">("all");
 
-  // Server-side query: only `paid` maps cleanly; everything else fetched and filtered client-side.
-  const serverStatus = filter === "paid" ? "paid" : undefined;
+  // Every filter resolves on the server now. `overdue` is not a stored status
+  // (it is derived from due_date) and `pending` is three statuses at once —
+  // both used to be worked out per row in the browser, which only ever
+  // covered the rows that had been downloaded.
   const {
-    data: invoices = [],
+    data,
     isLoading,
     error,
     refetch,
     isRefetching,
-  } = useInvoices({ status: serverStatus });
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInvoices({ status: filter === "all" ? undefined : filter });
 
-  const filteredInvoices = useMemo(() => {
-    if (filter === "all") return invoices;
-    if (filter === "paid") return invoices.filter((i) => i.status === "paid");
-    if (filter === "overdue") return invoices.filter(isOverdue);
-    if (filter === "pending")
-      return invoices.filter(
-        (i) => i.status === "unpaid" || i.status === "partial" || i.status === "draft"
-      );
-    return invoices;
-  }, [invoices, filter]);
-
-  // Summary derived only from real fields.
-  const totalOutstanding = useMemo(
-    () =>
-      invoices
-        .filter((i) => i.status !== "paid" && i.status !== "cancelled")
-        .reduce((sum, i) => sum + (i.remaining_balance ?? 0), 0),
-    [invoices]
+  const filteredInvoices = useMemo(
+    () => data?.pages.flatMap((page) => page.invoices) ?? [],
+    [data]
   );
 
-  // Earliest still-owed due date (real field, derivable). No fabricated values.
-  const nextDueDate = useMemo(() => {
-    const owed = invoices
-      .filter((i) => i.status !== "paid" && i.status !== "cancelled" && i.due_date)
-      .map((i) => new Date(i.due_date).getTime())
-      .filter((t) => !Number.isNaN(t));
-    if (owed.length === 0) return null;
-    return new Date(Math.min(...owed));
-  }, [invoices]);
+  // From the server's summary, which covers every matching invoice. Summing
+  // the loaded page would show a wrong amount of money owed.
+  const summary = data?.pages[0]?.summary;
+  // The header's count, from the server rather than the rows in hand.
+  const invoiceCount = data?.pages[0]?.total ?? 0;
+  const totalOutstanding = summary?.total_outstanding ?? 0;
+  const nextDueDate = summary?.next_due_date
+    ? new Date(summary.next_due_date)
+    : null;
 
   const renderItem = ({ item }: { item: FeeInvoice }) => {
     const overdue = isOverdue(item);
@@ -214,6 +204,10 @@ export default function InvoicesListPage() {
         }}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
         showsVerticalScrollIndicator={false}
+        onEndReachedThreshold={0.4}
+        onEndReached={() => {
+          if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+        }}
         ListHeaderComponent={
           <View>
             <View style={{ marginBottom: spacing.lg }}>
@@ -223,7 +217,7 @@ export default function InvoicesListPage() {
               <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
                 {t("invoices.headerSubline", {
                   defaultValue: "{{n}} invoices · {{amount}} due",
-                  n: invoices.length,
+                  n: invoiceCount,
                   amount: formatCurrency(totalOutstanding),
                 })}
               </Text>
