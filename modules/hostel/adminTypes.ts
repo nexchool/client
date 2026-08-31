@@ -163,8 +163,28 @@ export interface AllocationFilters {
 export interface GatepassFilters {
   hostel_id?: string;
   student_id?: string;
-  status?: GatepassStatus;
+  /** Several at once is allowed; the API takes them comma-separated. */
+  status?: GatepassStatus | GatepassStatus[];
   type?: GatepassType;
+  search?: string;
+  page?: number;
+  per_page?: number;
+  /** Pending is worked oldest-first; every other view reads newest-first. */
+  oldest?: boolean;
+}
+
+/**
+ * One page of gatepasses.
+ *
+ * `total` counts the whole filtered set, not `gatepasses` — the closed list
+ * holds every gatepass the school has ever issued, so it is never all here.
+ */
+export interface GatepassPage {
+  gatepasses: HostelGatepass[];
+  total: number;
+  page: number;
+  per_page: number;
+  total_pages: number;
 }
 
 export interface VisitorLogFilters {

@@ -27,8 +27,21 @@ export function HostelGatepassesScreen() {
   const router = useRouter();
   const { palette, spacing, radius, elevation } = useTheme();
   const [status, setStatus] = useState<GatepassStatus | undefined>(undefined);
-  const { data: rows = [], isLoading, error, refetch, isRefetching } = useHostelGatepasses(
-    status ? { status } : undefined
+  const {
+    data,
+    isLoading,
+    error,
+    refetch,
+    isRefetching,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useHostelGatepasses(status ? { status } : undefined);
+
+  // The list is paged; "closed" alone holds every gatepass ever issued.
+  const rows = React.useMemo(
+    () => data?.pages.flatMap((page) => page.gatepasses) ?? [],
+    [data]
   );
 
   const renderItem = ({ item: gp }: { item: HostelGatepass }) => {
@@ -120,6 +133,17 @@ export function HostelGatepassesScreen() {
           }}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           showsVerticalScrollIndicator={false}
+          onEndReachedThreshold={0.4}
+          onEndReached={() => {
+            if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+          }}
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <View style={{ paddingVertical: spacing.md }}>
+                <Skeleton width="100%" height={84} radius={radius.xl} />
+              </View>
+            ) : null
+          }
           ListEmptyComponent={
             <EmptyState
               icon={<AppIcon name="exit-outline" size="xl" color="onSurfaceVariant" />}

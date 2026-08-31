@@ -11,6 +11,7 @@ import type {
   GatepassDetailResponse,
   AllocationFilters,
   GatepassFilters,
+  GatepassPage,
   VisitorLogFilters,
 } from "../adminTypes";
 
@@ -51,8 +52,13 @@ export const hostelAdminService = {
 
   // ---- Gatepasses (read + warden/gatekeeper actions) ----
   listGatepasses: (filters?: GatepassFilters) =>
-    apiGet<{ gatepasses: HostelGatepass[] }>(`/api/hostel/gatepasses${qs({ ...filters })}`).then(
-      (r) => r.gatepasses
+    apiGet<GatepassPage>(
+      `/api/hostel/gatepasses${qs({
+        ...filters,
+        status: Array.isArray(filters?.status)
+          ? filters.status.join(",")
+          : filters?.status,
+      })}`
     ),
   getGatepass: (id: string) => apiGet<GatepassDetailResponse>(`/api/hostel/gatepasses/${id}`),
   listOverdueGatepasses: (hostelId?: string) =>

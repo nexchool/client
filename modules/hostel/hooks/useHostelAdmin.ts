@@ -1,6 +1,16 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { hostelAdminService } from "../services/hostelAdminService";
-import type { AllocationFilters, GatepassFilters, VisitorLogFilters } from "../adminTypes";
+import type {
+  AllocationFilters,
+  GatepassFilters,
+  GatepassPage,
+  VisitorLogFilters,
+} from "../adminTypes";
 
 const STALE = 30_000;
 
@@ -81,10 +91,24 @@ export function useHostelAllocations(filters?: AllocationFilters, enabled = true
   });
 }
 
+/**
+ * Gatepasses, a page at a time.
+ *
+ * The list is unbounded on the server side of a busy hostel — "closed" holds
+ * every gatepass the school has ever issued — so this walks pages rather than
+ * holding the whole history in memory on a phone.
+ */
 export function useHostelGatepasses(filters?: GatepassFilters, enabled = true) {
-  return useQuery({
+  return useInfiniteQuery<GatepassPage>({
     queryKey: hostelAdminKeys.gatepasses(filters),
-    queryFn: () => hostelAdminService.listGatepasses(filters),
+    queryFn: ({ pageParam }) =>
+      hostelAdminService.listGatepasses({
+        ...filters,
+        page: pageParam as number,
+      }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,
     enabled,
     staleTime: STALE,
   });
