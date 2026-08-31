@@ -44,3 +44,18 @@ export interface CreateStudentLeavePayload {
   reason: string;
   attachment_document_id?: string | null;
 }
+
+/**
+ * One page of leaves.
+ *
+ * `total` counts every leave the caller may see. For a student that is their
+ * own handful; an admin holds `student.leave.read.all` and sees every leave
+ * the school has recorded, which is why the list is paged at all.
+ */
+export interface StudentLeavePage {
+  items: StudentLeave[];
+  total: number;
+  page: number;
+  per_page: number;
+  total_pages: number;
+}

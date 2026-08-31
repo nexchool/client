@@ -1,7 +1,12 @@
 // client/modules/student-leaves/hooks/useStudentLeaves.ts
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { studentLeaveService } from '../services/studentLeaveService';
-import type { CreateStudentLeavePayload } from '../types';
+import type { CreateStudentLeavePayload, StudentLeavePage } from '../types';
 
 export const studentLeavesKeys = {
   all: ['student-leaves'] as const,
@@ -11,10 +16,21 @@ export const studentLeavesKeys = {
   adminQueue: () => ['student-leaves', 'queue', 'admin'] as const,
 };
 
+/**
+ * Leaves the signed-in user may see, a page at a time.
+ *
+ * For a student that is their own handful; someone holding
+ * `student.leave.read.all` sees every leave the school has recorded, which is
+ * why this is paged rather than fetched whole.
+ */
 export function useMyStudentLeaves(status?: string) {
-  return useQuery({
+  return useInfiniteQuery<StudentLeavePage>({
     queryKey: studentLeavesKeys.list(status),
-    queryFn: () => studentLeaveService.list({ status }),
+    queryFn: ({ pageParam }) =>
+      studentLeaveService.list({ status, page: pageParam as number }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,
   });
 }
 

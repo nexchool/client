@@ -1,5 +1,5 @@
 // client/modules/student-leaves/screens/StudentLeavesScreen.tsx
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -26,8 +26,19 @@ export default function StudentLeavesScreen() {
   const { t } = useTranslation('studentLeaves');
   const { palette, spacing, radius, elevation } = useTheme();
   const [filter, setFilter] = useState<Filter>('all');
-  const { data: leaves = [], isLoading, refetch, isRefetching } = useMyStudentLeaves(
-    filter === 'all' ? undefined : filter,
+  const {
+    data,
+    isLoading,
+    refetch,
+    isRefetching,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useMyStudentLeaves(filter === 'all' ? undefined : filter);
+
+  const leaves = useMemo(
+    () => data?.pages.flatMap((page) => page.items) ?? [],
+    [data],
   );
 
   const handleRowPress = (leave: StudentLeave) => {
@@ -68,6 +79,10 @@ export default function StudentLeavesScreen() {
         }
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
         showsVerticalScrollIndicator={false}
+        onEndReachedThreshold={0.4}
+        onEndReached={() => {
+          if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+        }}
         contentContainerStyle={{ paddingBottom: spacing.scrollBottom }}
       />
 
