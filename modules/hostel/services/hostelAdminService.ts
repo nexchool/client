@@ -10,8 +10,11 @@ import type {
   RoomDetailResponse,
   GatepassDetailResponse,
   AllocationFilters,
+  AllocationPage,
   GatepassFilters,
+  GatepassPage,
   VisitorLogFilters,
+  VisitorLogPage,
 } from "../adminTypes";
 
 function qs(params: Record<string, string | number | boolean | undefined | null>): string {
@@ -41,9 +44,7 @@ export const hostelAdminService = {
 
   // ---- Residents / allocations (read) ----
   listAllocations: (filters?: AllocationFilters) =>
-    apiGet<{ allocations: HostelAllocation[] }>(`/api/hostel/allocations${qs({ ...filters })}`).then(
-      (r) => r.allocations
-    ),
+    apiGet<AllocationPage>(`/api/hostel/allocations${qs({ ...filters })}`),
   getStudentAllocation: (studentId: string) =>
     apiGet<{ allocation: HostelAllocation }>(`/api/hostel/students/${studentId}/allocation`).then(
       (r) => r.allocation
@@ -51,8 +52,13 @@ export const hostelAdminService = {
 
   // ---- Gatepasses (read + warden/gatekeeper actions) ----
   listGatepasses: (filters?: GatepassFilters) =>
-    apiGet<{ gatepasses: HostelGatepass[] }>(`/api/hostel/gatepasses${qs({ ...filters })}`).then(
-      (r) => r.gatepasses
+    apiGet<GatepassPage>(
+      `/api/hostel/gatepasses${qs({
+        ...filters,
+        status: Array.isArray(filters?.status)
+          ? filters.status.join(",")
+          : filters?.status,
+      })}`
     ),
   getGatepass: (id: string) => apiGet<GatepassDetailResponse>(`/api/hostel/gatepasses/${id}`),
   listOverdueGatepasses: (hostelId?: string) =>
@@ -78,9 +84,7 @@ export const hostelAdminService = {
 
   // ---- Visitors (read + gate-desk check in/out) ----
   listVisitorLogs: (filters?: VisitorLogFilters) =>
-    apiGet<{ visitor_logs: HostelVisitorLog[] }>(
-      `/api/hostel/visitor-logs${qs({ ...filters })}`
-    ).then((r) => r.visitor_logs),
+    apiGet<VisitorLogPage>(`/api/hostel/visitor-logs${qs({ ...filters })}`),
   searchVisitors: (phonePrefix: string) =>
     apiGet<{ visitors: HostelVisitor[] }>(
       `/api/hostel/visitors/search${qs({ phone_prefix: phonePrefix })}`

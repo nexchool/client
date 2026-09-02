@@ -82,7 +82,16 @@ const ITEMS: readonly DrawerItem[] = [
   // Academics
   { key: 'academics', label: 'Academics', icon: 'library-outline', iconActive: 'library', route: '/(protected)/academics', roles: ['admin'], section: 'academics' },
   { key: 'attendance', label: 'Attendance', icon: 'checkmark-done-outline', iconActive: 'checkmark-done', route: '/(protected)/attendance/overview', roles: ['admin', 'teacher'], flag: 'attendance', section: 'academics' },
-  { key: 'timetable', label: 'Timetable', icon: 'calendar-number-outline', iconActive: 'calendar-number', route: '/(protected)/timetable', roles: ['admin', 'teacher'], flag: 'timetable', section: 'academics' },
+  // Students and parents hold `attendance.read.self`, not the class/all reads
+  // the overview screen is built on — so they get their own month calendar
+  // rather than a screen that would answer them in 403s. Same split as
+  // transport / my-transport below.
+  { key: 'my-attendance', label: 'My attendance', icon: 'checkmark-done-outline', iconActive: 'checkmark-done', route: '/(protected)/attendance/my-attendance', roles: ['student', 'parent'], flag: 'attendance', section: 'academics' },
+  // One route for every audience here, deliberately: WeeklyTimetableScreen
+  // reads the viewer's role and asks for their own week — a teacher's, a
+  // student's, or a class the admin picked. A second entry would be the same
+  // destination under a second name.
+  { key: 'timetable', label: 'Timetable', icon: 'calendar-number-outline', iconActive: 'calendar-number', route: '/(protected)/timetable', roles: ['admin', 'teacher', 'student', 'parent'], flag: 'timetable', section: 'academics' },
   { key: 'holidays', label: 'Holidays', icon: 'flag-outline', iconActive: 'flag', route: '/(protected)/holidays', roles: ['admin', 'teacher', 'student', 'parent'], flag: 'academic_calendar', section: 'academics' },
 
   // Operations
@@ -138,12 +147,11 @@ export function AppDrawer({ visible, onClose }: Props) {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const { user, isFeatureEnabled, logout, tenantName } = useAuth();
-  const { isAdmin, isTeacher, isStudent, isParent } = useUiRole();
+  const { isAdmin, isTeacher, isStudent } = useUiRole();
   const currentRole: Role =
     isAdmin ? 'admin' :
     isTeacher ? 'teacher' :
     isStudent ? 'student' :
-    isParent ? 'parent' :
     'unknown';
 
   // Keep the Modal mounted through the close animation so the slide-out is seen.
@@ -192,7 +200,6 @@ export function AppDrawer({ visible, onClose }: Props) {
     isAdmin ? 'Admin' :
     isTeacher ? 'Teacher' :
     isStudent ? 'Student' :
-    isParent ? 'Parent' :
     '';
   const schoolName = (user as any)?.school?.name ?? (user as any)?.tenant?.name ?? tenantName ?? '';
   const roleLine = schoolName ? `${userRoleLabel} · ${schoolName}` : userRoleLabel;

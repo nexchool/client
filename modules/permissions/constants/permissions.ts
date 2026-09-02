@@ -102,14 +102,15 @@ export const FEES_INVOICE_SEND_REMINDER = 'fees.invoice.send_reminder';
 export const FEES_PAYMENT_RECORD = 'fees.payment.record';
 export const FEES_RECEIPT_DOWNLOAD = 'fees.receipt.download';
 
-// Finance Management (legacy fee permissions)
+// Finance Management (legacy fee permissions).
+// `fee.read.child` and `fee.pay` were removed: no such permission exists on the
+// server, and they were the only triggers for a Parent UI role that could
+// therefore never resolve. Households share the student credential (ADR-011).
 export const FEE_CREATE = 'fee.create';
 export const FEE_READ_SELF = 'fee.read.self';
-export const FEE_READ_CHILD = 'fee.read.child';
 export const FEE_READ_ALL = 'fee.read.all';
 export const FEE_UPDATE = 'fee.update';
 export const FEE_DELETE = 'fee.delete';
-export const FEE_PAY = 'fee.pay';
 export const FEE_MANAGE = 'fee.manage';
 
 // Teacher Management

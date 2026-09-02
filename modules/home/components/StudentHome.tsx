@@ -33,7 +33,7 @@ export function StudentHome() {
   const { t } = useTranslation('home');
   const { palette, spacing, radius, elevation } = useTheme();
   const { user, isFeatureEnabled } = useAuth() as any;
-  const { data, isLoading, isRefetching, refetch } = useStudentAcademicDashboard();
+  const { data, isLoading, isError, isRefetching, refetch } = useStudentAcademicDashboard();
   // Gate the notifications query on the feature flag so tenants with the
   // module disabled don't fire wasted 4xx/empty fetches.
   const notificationsEnabled = !!isFeatureEnabled?.('notifications');
@@ -55,20 +55,36 @@ export function StudentHome() {
       .sort((a, b) => (minutesOfDay(a.starts_at) ?? 0) - (minutesOfDay(b.starts_at) ?? 0))[0] ??
     null;
 
-  const attendancePct = data?.attendance_summary?.percentage ?? 0;
+  // One query feeds the "Up Next" card and the KPI row alike, so they share one
+  // state. The KPI row used to render regardless: with no data it read
+  // "Attendance 0%" and a green "Fees Clear — All paid", which are not facts
+  // the app had. On a failed request that was the resting state, not a flash,
+  // and a parent mid fee-dispute could screenshot it.
+  const isDashboardLoading = isLoading && !data;
+  const isDashboardError = isError && !data;
+
+  // Both summaries are null exactly when the school does not run that module
+  // (server: academics/services/dashboards.py), so an absent summary means
+  // "no such module here" and the card is left out — never rendered as a zero.
+  const attendance = data?.attendance_summary ?? null;
+  // The fees flag is checked here as well as server-side so a stale cached
+  // payload can't outlive the module being switched off.
+  const fees = isFeatureEnabled?.('fees_management') ? (data?.fees_summary ?? null) : null;
+
+  // School policy, hardcoded in the client: no tenant setting carries an
+  // attendance target today, so every school is shown the same 85%.
   const attendanceTarget = 85;
 
-  // Fees come from the student dashboard's self-scoped fees_summary, present
-  // only when the fees_management feature is on for the tenant. Show "Due in N
-  // days" only for a future due date; an overdue balance is conveyed by the
-  // error styling that pendingFeesAmount triggers.
-  const fees = isFeatureEnabled?.('fees_management') ? data?.fees_summary : null;
+  // Show "Due in N days" only for a future due date; an overdue balance is
+  // conveyed by the error styling that pendingFeesAmount triggers.
   const pendingFeesAmount: number | undefined =
     fees && fees.total_outstanding > 0 ? fees.total_outstanding : undefined;
   const pendingFeesDays: number | null =
     pendingFeesAmount && fees?.days_until_due != null && fees.days_until_due >= 0
       ? fees.days_until_due
       : null;
+
+  const showKpiRow = !isDashboardLoading && !isDashboardError && !!(attendance || fees);
 
   // Notification list shape may be `Notification[]` or `{ results: [] }` or paginated.
   // Flatten defensively.
@@ -99,8 +115,28 @@ export function StudentHome() {
         </Text>
       </View>
 
-      {isLoading && !data ? (
+      {isDashboardLoading ? (
         <Skeleton width="100%" height={200} radius={radius.xl} />
+      ) : isDashboardError ? (
+        <View
+          style={[
+            elevation.card,
+            { backgroundColor: palette.surfaceContainerLowest, borderRadius: radius.xl },
+          ]}
+        >
+          <EmptyState
+            icon={<AppIcon name="cloud-offline-outline" size="xl" color="error" />}
+            title={t('student.loadFailed', { defaultValue: "Couldn't load your dashboard" })}
+            description={t('student.loadFailedHelp', {
+              defaultValue:
+                'Your attendance and fees are not shown until the school can be reached.',
+            })}
+            action={{
+              label: t('student.tryAgain', { defaultValue: 'Try again' }),
+              onPress: () => refetch(),
+            }}
+          />
+        </View>
       ) : upNext ? (
         <View
           style={[
@@ -209,88 +245,103 @@ export function StudentHome() {
         </View>
       )}
 
-      <View style={{ flexDirection: 'row', gap: spacing.md }}>
-        <View
-          style={[
-            elevation.card,
-            {
-              flex: 1,
-              backgroundColor: palette.surfaceContainerLowest,
-              borderRadius: radius.xl,
-              padding: spacing.md,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            },
-          ]}
-        >
-          <View style={{ flex: 1 }}>
-            <Text variant="overline" color="onSurfaceVariant">
-              {t('student.attendance', { defaultValue: 'Attendance' })}
-            </Text>
-            <Text variant="headlineLg" color="primary" style={{ marginTop: 4 }}>
-              {attendancePct}%
-            </Text>
-            <Text variant="labelSm" color="outline" style={{ marginTop: 4 }}>
-              {t('student.target', { defaultValue: 'Target: {{n}}%', n: attendanceTarget })}
-            </Text>
-          </View>
-          <ProgressRing value={Number(attendancePct)} size={64} />
+      {isDashboardLoading ? (
+        <View style={{ flexDirection: 'row', gap: spacing.md }}>
+          {/* `flex: 1` rather than a percentage so the placeholders occupy the
+              exact width the two cards will, gap included. */}
+          <Skeleton width="48%" height={104} radius={radius.xl} style={{ flex: 1 }} />
+          <Skeleton width="48%" height={104} radius={radius.xl} style={{ flex: 1 }} />
         </View>
-        <View
-          style={[
-            elevation.card,
-            {
-              flex: 1,
-              backgroundColor: palette.surfaceContainerLowest,
-              borderRadius: radius.xl,
-              padding: spacing.md,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              borderLeftWidth: 4,
-              borderLeftColor: pendingFeesAmount ? palette.error : palette.success,
-            },
-          ]}
-        >
-          <View style={{ flex: 1 }}>
-            <Text variant="overline" color="onSurfaceVariant">
-              {pendingFeesAmount
-                ? t('student.pendingFees', { defaultValue: 'Pending Fees' })
-                : t('student.feesClear', { defaultValue: 'Fees Clear' })}
-            </Text>
-            <Text
-              variant="headlineLg"
-              color={pendingFeesAmount ? 'error' : 'success'}
-              style={{ marginTop: 4 }}
-              numberOfLines={1}
+      ) : null}
+
+      {showKpiRow ? (
+        <View style={{ flexDirection: 'row', gap: spacing.md }}>
+          {attendance ? (
+            <View
+              style={[
+                elevation.card,
+                {
+                  flex: 1,
+                  backgroundColor: palette.surfaceContainerLowest,
+                  borderRadius: radius.xl,
+                  padding: spacing.md,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                },
+              ]}
             >
-              {pendingFeesAmount ? `₹${pendingFeesAmount.toLocaleString('en-IN')}` : t('student.noFeesDue', { defaultValue: 'All paid' })}
-            </Text>
-            {pendingFeesDays != null ? (
-              <Text variant="labelSm" color="outline" style={{ marginTop: 4 }} numberOfLines={1}>
-                {t('student.dueIn', { defaultValue: 'Due in {{n}} days', n: pendingFeesDays })}
-              </Text>
-            ) : null}
-          </View>
-          <View
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: pendingFeesAmount ? palette.errorContainer : palette.surfaceContainerHigh,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <AppIcon
-              name="wallet-outline"
-              size="md"
-              color={pendingFeesAmount ? 'onErrorContainer' : 'success'}
-            />
-          </View>
+              <View style={{ flex: 1 }}>
+                <Text variant="overline" color="onSurfaceVariant">
+                  {t('student.attendance', { defaultValue: 'Attendance' })}
+                </Text>
+                <Text variant="headlineLg" color="primary" style={{ marginTop: 4 }}>
+                  {attendance.percentage}%
+                </Text>
+                <Text variant="labelSm" color="outline" style={{ marginTop: 4 }}>
+                  {t('student.target', { defaultValue: 'Target: {{n}}%', n: attendanceTarget })}
+                </Text>
+              </View>
+              <ProgressRing value={Number(attendance.percentage)} size={64} />
+            </View>
+          ) : null}
+          {fees ? (
+            <View
+              style={[
+                elevation.card,
+                {
+                  flex: 1,
+                  backgroundColor: palette.surfaceContainerLowest,
+                  borderRadius: radius.xl,
+                  padding: spacing.md,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  borderLeftWidth: 4,
+                  borderLeftColor: pendingFeesAmount ? palette.error : palette.success,
+                },
+              ]}
+            >
+              <View style={{ flex: 1 }}>
+                <Text variant="overline" color="onSurfaceVariant">
+                  {pendingFeesAmount
+                    ? t('student.pendingFees', { defaultValue: 'Pending Fees' })
+                    : t('student.feesClear', { defaultValue: 'Fees Clear' })}
+                </Text>
+                <Text
+                  variant="headlineLg"
+                  color={pendingFeesAmount ? 'error' : 'success'}
+                  style={{ marginTop: 4 }}
+                  numberOfLines={1}
+                >
+                  {pendingFeesAmount ? `₹${pendingFeesAmount.toLocaleString('en-IN')}` : t('student.noFeesDue', { defaultValue: 'All paid' })}
+                </Text>
+                {pendingFeesDays != null ? (
+                  <Text variant="labelSm" color="outline" style={{ marginTop: 4 }} numberOfLines={1}>
+                    {t('student.dueIn', { defaultValue: 'Due in {{n}} days', n: pendingFeesDays })}
+                  </Text>
+                ) : null}
+              </View>
+              <View
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: pendingFeesAmount ? palette.errorContainer : palette.surfaceContainerHigh,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <AppIcon
+                  name="wallet-outline"
+                  size="md"
+                  color={pendingFeesAmount ? 'onErrorContainer' : 'success'}
+                />
+              </View>
+            </View>
+          ) : null}
         </View>
-      </View>
+      ) : null}
 
       <View style={{ gap: spacing.md }}>
         <HomeSectionHeader

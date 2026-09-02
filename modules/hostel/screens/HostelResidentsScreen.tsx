@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { View, FlatList, RefreshControl, TextInput } from "react-native";
 import { useRouter } from "expo-router";
@@ -16,27 +16,43 @@ export function HostelResidentsScreen() {
   const { t } = useTranslation("hostel");
   const router = useRouter();
   const { palette, spacing, radius, elevation } = useTheme();
-  const { data: rows = [], isLoading, error, refetch, isRefetching } = useHostelAllocations({
+  const [query, setQuery] = useState("");
+  const [appliedQuery, setAppliedQuery] = useState("");
+
+  // The search is a server query now, so don't send one per keystroke.
+  useEffect(() => {
+    const timer = setTimeout(() => setAppliedQuery(query), 300);
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  const {
+    data,
+    isLoading,
+    error,
+    refetch,
+    isRefetching,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useHostelAllocations({
     status: "active",
+    search: appliedQuery.trim() || undefined,
   });
   const { data: hostels = [] } = useHostels();
-  const [query, setQuery] = useState("");
+
+  // Paged and searched on the server: a trust's hostels hold thousands of
+  // children, and filtering here would only search the rows already loaded.
+  const filtered = useMemo(
+    () => data?.pages.flatMap((page) => page.allocations) ?? [],
+    [data]
+  );
 
   const hostelName = useMemo(() => {
     const map = new Map(hostels.map((h) => [h.id, h.name]));
     return (id: string) => map.get(id) ?? "";
   }, [hostels]);
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((a) => {
-      const name = (a.student_name ?? "").toLowerCase();
-      const adm = (a.admission_number ?? "").toLowerCase();
-      const hostel = hostelName(a.hostel_id).toLowerCase();
-      return name.includes(q) || adm.includes(q) || hostel.includes(q);
-    });
-  }, [rows, query, hostelName]);
+
 
   const renderItem = ({ item: a }: { item: HostelAllocation }) => (
     <View
@@ -119,7 +135,7 @@ export function HostelResidentsScreen() {
           description={error instanceof Error ? error.message : undefined}
           action={{ label: t("common.tryAgain", { defaultValue: "Try again" }), onPress: () => refetch() }}
         />
-      ) : isLoading && rows.length === 0 ? (
+      ) : isLoading && filtered.length === 0 ? (
         <View style={{ paddingHorizontal: spacing.marginMobile, paddingTop: spacing.xs, gap: spacing.md }}>
           <Skeleton width="100%" height={72} radius={radius.xl} />
           <Skeleton width="100%" height={72} radius={radius.xl} />
@@ -138,6 +154,17 @@ export function HostelResidentsScreen() {
           keyboardShouldPersistTaps="handled"
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           showsVerticalScrollIndicator={false}
+          onEndReachedThreshold={0.4}
+          onEndReached={() => {
+            if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+          }}
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <View style={{ paddingVertical: spacing.md }}>
+                <Skeleton width="100%" height={72} radius={radius.xl} />
+              </View>
+            ) : null
+          }
           ListEmptyComponent={
             <EmptyState
               icon={<AppIcon name="people-outline" size="xl" color="onSurfaceVariant" />}

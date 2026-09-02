@@ -13,13 +13,20 @@ export default function AnnouncementRecipientsScreen() {
   const { t } = useTranslation('announcements');
   const { palette, spacing, radius, elevation } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { data: recipients = [], isLoading } = useAnnouncementRecipients(id);
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useAnnouncementRecipients(id);
 
-  const counts = useMemo(() => {
-    const total = recipients.length;
-    const read = recipients.filter((r) => !!r.read_at).length;
-    return { total, read };
-  }, [recipients]);
+  const recipients = useMemo(
+    () => data?.pages.flatMap((page) => page.items) ?? [],
+    [data],
+  );
+
+  // Off the envelope, not off `recipients` — the roster is paged, so measuring
+  // the rows in hand would report "20 / 20" for a notice sent to 4,000 parents.
+  const counts = {
+    total: data?.pages[0]?.total ?? 0,
+    read: data?.pages[0]?.read_count ?? 0,
+  };
 
   return (
     <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg }}>
@@ -95,6 +102,17 @@ export default function AnnouncementRecipientsScreen() {
           ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: spacing.scrollBottom }}
+          onEndReachedThreshold={0.4}
+          onEndReached={() => {
+            if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+          }}
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <View style={{ paddingVertical: spacing.md }}>
+                <Skeleton width="100%" height={64} radius={radius.lg} />
+              </View>
+            ) : null
+          }
         />
       )}
     </View>

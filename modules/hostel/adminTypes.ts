@@ -158,13 +158,36 @@ export interface AllocationFilters {
   student_id?: string;
   status?: AllocationStatus;
   academic_year_id?: string;
+  search?: string;
+  page?: number;
+  per_page?: number;
 }
 
 export interface GatepassFilters {
   hostel_id?: string;
   student_id?: string;
-  status?: GatepassStatus;
+  /** Several at once is allowed; the API takes them comma-separated. */
+  status?: GatepassStatus | GatepassStatus[];
   type?: GatepassType;
+  search?: string;
+  page?: number;
+  per_page?: number;
+  /** Pending is worked oldest-first; every other view reads newest-first. */
+  oldest?: boolean;
+}
+
+/**
+ * One page of gatepasses.
+ *
+ * `total` counts the whole filtered set, not `gatepasses` — the closed list
+ * holds every gatepass the school has ever issued, so it is never all here.
+ */
+export interface GatepassPage {
+  gatepasses: HostelGatepass[];
+  total: number;
+  page: number;
+  per_page: number;
+  total_pages: number;
 }
 
 export interface VisitorLogFilters {
@@ -173,4 +196,30 @@ export interface VisitorLogFilters {
   open?: boolean;
   start_date?: string;
   end_date?: string;
+  search?: string;
+  page?: number;
+  per_page?: number;
+}
+
+/** One page of allocations; `total` counts the whole filtered set. */
+export interface AllocationPage {
+  allocations: HostelAllocation[];
+  total: number;
+  page: number;
+  per_page: number;
+  total_pages: number;
+}
+
+/**
+ * One page of visitor logs.
+ *
+ * The `open: true` view (who is in the building now) is bounded and comes back
+ * whole; the history grows for the life of the school and is paged.
+ */
+export interface VisitorLogPage {
+  visitor_logs: HostelVisitorLog[];
+  total: number;
+  page: number;
+  per_page: number;
+  total_pages: number;
 }

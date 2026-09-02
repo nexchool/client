@@ -13,6 +13,7 @@ import { AuthProvider } from "@/modules/auth/context/AuthContext";
 import { checkAndFetchUpdateInBackground } from "@/common/utils/checkForAppUpdate";
 import { initI18n } from "@/i18n";
 import { ThemeProvider } from "@/common/theme";
+import { ErrorBoundary } from "@/common/components/ErrorBoundary";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const queryClient = new QueryClient();
@@ -53,15 +54,23 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider mode="light">
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="index" />
-              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-              <Stack.Screen name="(protected)" options={{ headerShown: false }} />
-            </Stack>
-          </AuthProvider>
-        </QueryClientProvider>
+        {/*
+          Inside ThemeProvider so the fallback is a Nexchool screen rather than
+          unstyled text, and outside everything else so a throw in any provider
+          or any screen is still caught. Fonts and i18n are already resolved by
+          the guard above, so the fallback can use both.
+        */}
+        <ErrorBoundary>
+          <QueryClientProvider client={queryClient}>
+            <AuthProvider>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="index" />
+                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                <Stack.Screen name="(protected)" options={{ headerShown: false }} />
+              </Stack>
+            </AuthProvider>
+          </QueryClientProvider>
+        </ErrorBoundary>
       </ThemeProvider>
     </GestureHandlerRootView>
   );

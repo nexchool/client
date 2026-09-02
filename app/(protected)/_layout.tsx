@@ -16,7 +16,7 @@ function NotificationResponseBridge() {
 }
 
 export default function ProtectedLayout() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, mustResetPassword } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -25,10 +25,19 @@ export default function ProtectedLayout() {
     // Redirect to login if not authenticated
     if (!isAuthenticated) {
       router.replace("/(auth)/login");
+      return;
     }
-  }, [isAuthenticated, isLoading, router]);
 
-  if (isLoading || !isAuthenticated) {
+    // A cold start restores a session from storage without asking the server,
+    // so a flagged account otherwise lands here and every screen 403s. The
+    // restored flag is checked before anything below mounts, and the profile
+    // refresh that follows corrects it either way.
+    if (mustResetPassword) {
+      router.replace("/(auth)/set-password");
+    }
+  }, [isAuthenticated, isLoading, mustResetPassword, router]);
+
+  if (isLoading || !isAuthenticated || mustResetPassword) {
     return null;
   }
 

@@ -40,12 +40,14 @@ export const API_BASE_URL = isDev ? getDevUrl() : PROD_URL;
 export const API_ENV = isDev ? 'development' : 'production';
 
 export const API_ENDPOINTS = {
-  REGISTER: '/api/auth/register',
   LOGIN: '/api/auth/login',
   LOGOUT: '/api/auth/logout',
   FORGOT_PASSWORD: '/api/auth/password/forgot',
   RESET_PASSWORD: '/api/auth/password/reset',
   EMAIL_VALIDATE: '/api/auth/email/validate',
+  CHANGE_PASSWORD: '/api/auth/password/change',
+  /** Mandatory first-login change for a school-issued password. Reachable while the account is otherwise locked out. */
+  FORCE_RESET_PASSWORD: '/api/auth/password/force-reset',
   PROTECTED: '/api/protected',
   /** Lightweight: returns only { enabled_features }. Use on app focus to reflect plan changes. */
   ENABLED_FEATURES: '/api/auth/enabled-features',

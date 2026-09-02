@@ -120,17 +120,6 @@ export default function StaffProfileScreen() {
         />
       </Protected>
 
-      {/* Academic — student/parent gated */}
-      <Protected
-        anyPermissions={[PERMS.GRADE_READ_SELF, PERMS.GRADE_READ_CHILD]}
-      >
-        <ProfileActionRow
-          icon="document-text-outline"
-          label={t("profile:main.cards.reportCard")}
-          hint={t("profile:main.cards.reportCardSubtitle")}
-        />
-      </Protected>
-
       {/* Settings & preferences */}
       <ProfileActionRow
         icon="settings-outline"

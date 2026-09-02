@@ -198,23 +198,21 @@ export default function VerifyEmailScreen() {
           {error ||
             t('verifyFailedHelp', {
               defaultValue:
-                'The verification link is invalid or has expired. Try registering again or request a new email.',
+                'The verification link is invalid or has expired. Ask your school to send a new one.',
             })}
         </Text>
-        <View style={{ marginTop: spacing.xl, width: '100%', gap: spacing.sm }}>
+        {/*
+          Sign-in is the only way on from here now. The "Register again" button
+          that stood next to it pointed at a self-service sign-up that no
+          longer exists in this product — schools issue credentials.
+        */}
+        <View style={{ marginTop: spacing.xl, width: '100%' }}>
           <Button
             variant="primary"
             fullWidth
             onPress={() => router.replace('/(auth)/login')}
           >
             {t('goToLogin', { defaultValue: 'Go to sign in' })}
-          </Button>
-          <Button
-            variant="secondary"
-            fullWidth
-            onPress={() => router.replace('/(auth)/register')}
-          >
-            {t('registerAgain', { defaultValue: 'Register again' })}
           </Button>
         </View>
       </View>

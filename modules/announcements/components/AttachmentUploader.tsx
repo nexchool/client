@@ -17,6 +17,23 @@ type Props = {
   onAttachmentRemoved: (id: string) => void;
 };
 
+/**
+ * What an announcement attachment may be, mirroring the server's allowlist in
+ * `modules/announcements/services.py`. Picking with a wildcard offered every
+ * file on the device, and the refusal only arrived after the upload had
+ * already gone up.
+ */
+const ATTACHMENT_TYPES = [
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+];
+
 export function AttachmentUploader({
   attachments,
   announcementId,
@@ -29,7 +46,7 @@ export function AttachmentUploader({
 
   const pickFile = async () => {
     try {
-      const res = await DocumentPicker.getDocumentAsync({ type: '*/*', multiple: false });
+      const res = await DocumentPicker.getDocumentAsync({ type: ATTACHMENT_TYPES, multiple: false });
       if (res.canceled || !res.assets[0]) return;
       const asset = res.assets[0];
       const att = (await uploadMutation.mutateAsync({

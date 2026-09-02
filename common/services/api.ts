@@ -1,11 +1,35 @@
-import { getApiUrl } from "@/common/constants/api";
+import { API_ENDPOINTS, getApiUrl } from "@/common/constants/api";
 import { noteFeatureStamp } from "@/common/services/featureStamp";
+import { notifySessionExpired } from "@/common/services/sessionExpiry";
+import {
+  PASSWORD_RESET_REQUIRED_ERROR,
+  notifyPasswordResetRequired,
+} from "@/common/services/passwordResetRequired";
 import {
   getAccessToken,
   getRefreshToken,
   getTenantId,
   setAccessToken,
 } from "@/common/utils/storage";
+
+/**
+ * Endpoints where a 401 is an answer, not an expired session.
+ *
+ * The pre-auth ones — sign in, the password-reset pair, email validation —
+ * answer 401 for a wrong password or a stale link, and the caller is not
+ * signed in to be signed out of. Changing a password answers 401 when the
+ * *current* password is wrong, so reading it as an expiry would sign someone
+ * out over a typo. Logout answers 401 when the session has already gone, and
+ * the app is on its way to the login screen either way.
+ */
+const ENDPOINTS_WHERE_401_IS_NOT_EXPIRY: readonly string[] = [
+  API_ENDPOINTS.LOGIN,
+  API_ENDPOINTS.FORGOT_PASSWORD,
+  API_ENDPOINTS.RESET_PASSWORD,
+  API_ENDPOINTS.EMAIL_VALIDATE,
+  API_ENDPOINTS.CHANGE_PASSWORD,
+  API_ENDPOINTS.LOGOUT,
+];
 
 export class ApiException extends Error {
   status?: number;
@@ -18,6 +42,29 @@ export class ApiException extends Error {
     this.data = data;
   }
 }
+
+/**
+ * Read a 403 body to see whether it is the server demanding a password change,
+ * without consuming the body the caller still has to read.
+ *
+ * Nearly every 403 is "you lack this permission" and stays the calling
+ * screen's problem — only the one error value the server reserves for a
+ * school-issued password counts, which is why this inspects the body instead
+ * of acting on the status alone.
+ */
+const noteIfPasswordResetRequired = async (response: Response): Promise<void> => {
+  if (!response.headers.get("content-type")?.includes("application/json")) return;
+  try {
+    const body: unknown = await response.clone().json();
+    const error = (body as { error?: unknown } | null)?.error;
+    if (error === PASSWORD_RESET_REQUIRED_ERROR) {
+      notifyPasswordResetRequired();
+    }
+  } catch {
+    // Not JSON after all, or the body could not be cloned. Nothing to read,
+    // and the caller's response is untouched either way.
+  }
+};
 
 const apiRequest = async (
   endpoint: string,
@@ -57,6 +104,27 @@ const apiRequest = async (
     if (newAccessToken) {
       console.log("Token refreshed transparently");
       await setAccessToken(newAccessToken);
+    }
+
+    // The refresh token rides along with every request, so the refresh attempt
+    // has already happened by the time a 401 comes back — there is no second
+    // try to make. One choke point for the whole app, because the alternative
+    // is every screen deciding for itself what a dead session looks like.
+    if (
+      response.status === 401 &&
+      !ENDPOINTS_WHERE_401_IS_NOT_EXPIRY.some((path) => endpoint.startsWith(path))
+    ) {
+      notifySessionExpired();
+    }
+
+    // The same split as the 401 above, one step further in: the session is
+    // valid but the server will serve nothing outside the password-reset
+    // allowlist until the school-issued password is replaced. That is a state
+    // of the session, not of this request, so the auth layer acts on it. The
+    // login and profile payloads carry the flag directly and normally get
+    // there first; this catches whatever they miss.
+    if (response.status === 403) {
+      await noteIfPasswordResetRequired(response);
     }
 
     // Every /api/* response says which module set it was answered under. A

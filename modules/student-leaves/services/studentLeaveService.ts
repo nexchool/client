@@ -1,11 +1,18 @@
 // client/modules/student-leaves/services/studentLeaveService.ts
 import { apiGet, apiPost } from '@/common/services/api';
-import type { StudentLeave, CreateStudentLeavePayload } from '../types';
+import type {
+  StudentLeave,
+  StudentLeavePage,
+  CreateStudentLeavePayload,
+} from '../types';
 
 export const studentLeaveService = {
-  list: async (params?: { status?: string }) => {
-    const qs = params?.status ? `?status=${encodeURIComponent(params.status)}` : '';
-    return await apiGet<StudentLeave[]>(`/api/student-leaves${qs}`);
+  list: async (params?: { status?: string; page?: number }) => {
+    const q = new URLSearchParams();
+    if (params?.status) q.append('status', params.status);
+    if (params?.page) q.append('page', String(params.page));
+    const qs = q.toString() ? `?${q}` : '';
+    return await apiGet<StudentLeavePage>(`/api/student-leaves${qs}`);
   },
 
   get: async (id: string) => {

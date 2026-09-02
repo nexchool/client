@@ -22,7 +22,6 @@ export function useUiRole() {
       isAdmin: role === UI_ROLE.ADMIN,
       isTeacher: role === UI_ROLE.TEACHER,
       isStudent: role === UI_ROLE.STUDENT,
-      isParent: role === UI_ROLE.PARENT,
     };
   }, [permissions]);
 }
