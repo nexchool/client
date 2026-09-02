@@ -180,9 +180,19 @@ export function AppDrawer({ visible, onClose }: Props) {
 
   // A rotation while the drawer is closed must move its resting position too,
   // or the next open slides in from the wrong place.
+  //
+  // Gated on `mounted` as well as `visible`, because a drawer that is *closing*
+  // is already `!visible`. Writing a raw value to a shared value cancels
+  // whatever animation is running on it — reanimated's `valueSetter` sets
+  // `cancelled` on the previous animation before it does anything else — so
+  // this effect, which runs in the same commit as the close above, used to kill
+  // the slide-out on its way out. The callback then fired with
+  // `finished: false`, `setMounted(false)` never ran, and the Modal was left
+  // mounted: fully transparent, off-screen, and swallowing every touch in the
+  // app until it was relaunched. Reposition only once the drawer has settled.
   useEffect(() => {
-    if (!visible) translateX.value = -drawerWidth;
-  }, [drawerWidth, visible, translateX]);
+    if (!visible && !mounted) translateX.value = -drawerWidth;
+  }, [drawerWidth, visible, mounted, translateX]);
 
   const drawerStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
