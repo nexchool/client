@@ -6,6 +6,7 @@ import { ContentMaxWidth, useTheme } from '@/common/theme';
 import { AppHeader } from './AppHeader';
 import { AppDrawer } from './AppDrawer';
 import { BottomTabBar } from './BottomTabBar';
+import { AcademicYearSheet } from './AcademicYearSheet';
 
 type Props = {
   children: ReactNode;
@@ -39,6 +40,11 @@ function isFullWidthRoute(pathname: string): boolean {
 export function AppShell({ children }: Props) {
   const { palette, mode } = useTheme();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // The year picker lives in the drawer but is rendered here, as the drawer's
+  // sibling rather than its child: both are Modals, and on Android a Modal
+  // inside a Modal is its own window on top of another window — a stack that
+  // has already cost this app one unresponsive-UI bug.
+  const [yearPickerOpen, setYearPickerOpen] = useState(false);
   const pathname = usePathname();
   const fullWidth = isFullWidthRoute(pathname);
 
@@ -67,7 +73,15 @@ export function AppShell({ children }: Props) {
         </View>
       </View>
       <BottomTabBar />
-      <AppDrawer visible={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      <AppDrawer
+        visible={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        onOpenYearPicker={() => setYearPickerOpen(true)}
+      />
+      <AcademicYearSheet
+        visible={yearPickerOpen}
+        onClose={() => setYearPickerOpen(false)}
+      />
     </SafeAreaView>
   );
 }

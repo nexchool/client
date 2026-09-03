@@ -22,6 +22,7 @@ import Animated, {
 import { useTheme } from '@/common/theme';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 import { useUiRole } from '@/modules/permissions/hooks/useUiRole';
+import { useAcademicYearContext } from '@/modules/academics/context/AcademicYearContext';
 import { ProfileAvatar } from '@/common/components/ProfileAvatar';
 import { Text } from '@/common/components/Text';
 import { AppIcon } from '@/common/components/AppIcon';
@@ -131,6 +132,8 @@ function isItemActive(itemRoute: string, pathname: string): boolean {
 type Props = {
   visible: boolean;
   onClose: () => void;
+  /** Opens the academic-year picker, which AppShell renders as our sibling. */
+  onOpenYearPicker: () => void;
 };
 
 const DRAWER_WIDTH_RATIO = 0.84;
@@ -141,12 +144,13 @@ const DRAWER_WIDTH_RATIO = 0.84;
  */
 const DRAWER_MAX_W = 360;
 
-export function AppDrawer({ visible, onClose }: Props) {
+export function AppDrawer({ visible, onClose, onOpenYearPicker }: Props) {
   const { t } = useTranslation('common');
   const { palette, spacing, radius } = useTheme();
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const { user, isFeatureEnabled, logout, tenantName } = useAuth();
+  const { academicYears, selectedAcademicYearId } = useAcademicYearContext();
   const { isAdmin, isTeacher, isStudent } = useUiRole();
   const currentRole: Role =
     isAdmin ? 'admin' :
@@ -223,6 +227,15 @@ export function AppDrawer({ visible, onClose }: Props) {
   const handleNav = (route: string) => {
     onClose();
     setTimeout(() => router.push(route as never), 200);
+  };
+
+  const selectedYear = academicYears.find((ay) => ay.id === selectedAcademicYearId);
+  // A student has one year — their own — so the control would be a menu of one.
+  const showYearPicker = !isStudent && academicYears.length > 0;
+
+  const handleYearPress = () => {
+    onClose();
+    setTimeout(onOpenYearPicker, 200);
   };
 
   const handleLogout = () => {
@@ -357,6 +370,44 @@ export function AppDrawer({ visible, onClose }: Props) {
             </View>
           ) : (
             <>
+              {/*
+                The year every screen below is read through, so it sits above
+                them rather than in the header: it frames the whole menu, and a
+                chip in the top bar read as decoration next to the school name.
+              */}
+              {showYearPicker ? (
+                <Pressable
+                  onPress={handleYearPress}
+                  style={({ pressed }) => [
+                    styles.row,
+                    {
+                      backgroundColor: pressed
+                        ? palette.surfaceContainerHigh
+                        : palette.surfaceContainer,
+                      borderRadius: radius.lg,
+                      marginHorizontal: spacing.sm,
+                      marginBottom: spacing.sm,
+                      paddingHorizontal: spacing.md,
+                      paddingVertical: spacing.sm + spacing.xs,
+                      gap: spacing.md,
+                    },
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Academic year ${selectedYear?.name ?? 'not set'}. Change`}
+                >
+                  <AppIcon name="calendar-outline" size="lg" color="onSurfaceVariant" />
+                  <View style={{ flex: 1 }}>
+                    <Text variant="labelSm" color="onSurfaceVariant" style={{ opacity: 0.7 }}>
+                      {t('academicYearPicker.title', { defaultValue: 'Academic Year' })}
+                    </Text>
+                    <Text variant="labelLg" color="onSurface" numberOfLines={1}>
+                      {selectedYear?.name ?? '—'}
+                    </Text>
+                  </View>
+                  <AppIcon name="chevron-down" size="md" color="onSurfaceVariant" />
+                </Pressable>
+              ) : null}
+
               {/* Dashboard anchor (no section header) */}
               {visibleItems.filter((i) => !i.section).map(renderRow)}
               {/* Grouped sections — empty sections (after role/flag filter) are hidden */}

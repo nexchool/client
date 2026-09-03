@@ -27,15 +27,25 @@ export function AcademicYearProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  // If persisted ID no longer exists in academic years (e.g. deleted), clear it
+  // Settle on a year as soon as the list is known.
+  //
+  // Two cases land here and both used to leave the app with no year selected:
+  // a fresh sign-in has nothing persisted to hydrate from, and a persisted id
+  // can name a year that has since been deleted. Either way the whole app sat
+  // on "" — every screen filtering by academic year asked for all years at
+  // once, and the header showed a bare em dash. There is always a right answer
+  // available, so pick it: the school's active year, or the first one the
+  // server returned if none is flagged active.
   useEffect(() => {
-    if (hydrationDone && !isLoading && academicYears.length > 0 && selectedAcademicYearId) {
-      const exists = academicYears.some((ay) => ay.id === selectedAcademicYearId);
-      if (!exists) {
-        setSelectedAcademicYearId("");
-        persistSelectedAcademicYearId("");
-      }
-    }
+    if (!hydrationDone || isLoading || academicYears.length === 0) return;
+    const stillExists =
+      !!selectedAcademicYearId &&
+      academicYears.some((ay) => ay.id === selectedAcademicYearId);
+    if (stillExists) return;
+    const fallback = academicYears.find((ay) => ay.is_active) ?? academicYears[0];
+    if (!fallback) return;
+    setSelectedAcademicYearId(fallback.id);
+    persistSelectedAcademicYearId(fallback.id);
   }, [hydrationDone, isLoading, academicYears, selectedAcademicYearId]);
 
   // Persist when selection changes
