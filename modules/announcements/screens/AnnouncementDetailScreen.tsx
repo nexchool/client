@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, Linking, Modal, Pressable, ScrollView, View } from 'react-native';
+import { Linking, Modal, Pressable, ScrollView, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
@@ -19,9 +19,11 @@ import {
 } from '../hooks/useAnnouncements';
 import { MarkdownView } from '../components/MarkdownView';
 import { STATUS_LABEL, statusAccent } from '../constants';
+import { useToast } from '@/common/feedback';
 
 export default function AnnouncementDetailScreen() {
   const { t } = useTranslation('announcements');
+  const toast = useToast();
   const { palette, spacing, radius, elevation } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { isAdmin } = useUiRole();
@@ -55,7 +57,7 @@ export default function AnnouncementDetailScreen() {
       await Linking.openURL(url);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Try again';
-      Alert.alert(t('attachment.error', { defaultValue: 'Could not open file' }), message);
+      toast.error(message);
     }
   };
 
@@ -66,7 +68,7 @@ export default function AnnouncementDetailScreen() {
       setRecallReason('');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Try again';
-      Alert.alert(t('recall.error', { defaultValue: 'Could not recall' }), message);
+      toast.error(message);
     }
   };
 

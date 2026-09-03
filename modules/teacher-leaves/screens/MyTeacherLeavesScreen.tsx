@@ -8,7 +8,6 @@ import {
   FlatList,
   Modal,
   TextInput,
-  Alert,
   ActivityIndicator,
   RefreshControl,
 } from "react-native";
@@ -28,6 +27,7 @@ import * as PERMS from "@/modules/permissions/constants/permissions";
 import { DatePicker } from '@/common/components/datepicker';
 import { calendarLocaleForLanguage } from "@/i18n";
 import { statusAccentToken } from "../utils/leaveColors";
+import { useDialog, useToast } from "@/common/feedback";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -86,6 +86,8 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 // ---------------------------------------------------------------------------
 function BalanceCard({ balance, onPress }: { balance: LeaveBalance; onPress: () => void }) {
   const { t } = useTranslation("teacherLeaves");
+  const { confirm } = useDialog();
+  const toast = useToast();
   const { palette, spacing, radius } = useTheme();
   const avail = balance.is_unlimited ? "∞" : balance.available_days.toFixed(1);
   const availColor = availColorToken(balance);
@@ -344,6 +346,7 @@ interface ApplyModalProps {
 }
 
 function ApplyModal({ visible, balances, onClose, onSubmit }: ApplyModalProps) {
+  const toast = useToast();
   const { t } = useTranslation("teacherLeaves");
   const { palette, spacing, radius, typography } = useTheme();
   const { bodyMd: bodyMdType } = typography;
@@ -482,15 +485,15 @@ function ApplyModal({ visible, balances, onClose, onSubmit }: ApplyModalProps) {
 
   const handleSubmit = async () => {
     if (!leaveStart || !leaveEnd) {
-      Alert.alert(t("tracker.applyModal.alertRequiredTitle"), t("tracker.applyModal.alertRequiredBody"));
+      toast.error(t("tracker.applyModal.alertRequiredBody"));
       return;
     }
     if (!DATE_RE.test(leaveStart) || !DATE_RE.test(leaveEnd)) {
-      Alert.alert(t("tracker.applyModal.alertFormatTitle"), t("tracker.applyModal.alertFormatBody"));
+      toast.info(t("tracker.applyModal.alertFormatBody"));
       return;
     }
     if (leaveEnd < leaveStart) {
-      Alert.alert(t("tracker.applyModal.alertInvalidTitle"), t("tracker.applyModal.alertInvalidBody"));
+      toast.error(t("tracker.applyModal.alertInvalidBody"));
       return;
     }
     setSubmitting(true);
@@ -499,10 +502,7 @@ function ApplyModal({ visible, balances, onClose, onSubmit }: ApplyModalProps) {
       reset();
       onClose();
     } catch (e: unknown) {
-      Alert.alert(
-        t("tracker.applyModal.alertErrorTitle"),
-        e instanceof Error ? e.message : t("tracker.applyModal.alertErrorSubmit")
-      );
+      toast.error(e instanceof Error ? e.message : t("tracker.applyModal.alertErrorSubmit"));
     } finally {
       setSubmitting(false);
     }
@@ -749,6 +749,8 @@ function ApplyModal({ visible, balances, onClose, onSubmit }: ApplyModalProps) {
 // Main Screen
 // ---------------------------------------------------------------------------
 export default function MyTeacherLeavesScreen() {
+  const toast = useToast();
+  const { confirm } = useDialog();
   const { t } = useTranslation("teacherLeaves");
   const { palette, spacing, radius, elevation } = useTheme();
   const { permissions: rawPerms } = usePermissions();
@@ -829,22 +831,21 @@ export default function MyTeacherLeavesScreen() {
     if (topTab === "holidays") loadHolidays(holYear);
   }, [topTab, holYear, loadHolidays]);
 
-  const handleCancel = (leave: TeacherLeave) => {
-    Alert.alert(t("tracker.alerts.cancelLeaveTitle"), t("tracker.alerts.cancelLeaveBody"), [
-      { text: t("tracker.alerts.no"), style: "cancel" },
-      {
-        text: t("tracker.alerts.yesCancel"),
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await cancelLeave(leave.id);
-            await fetchMyBalances();
-          } catch (e: unknown) {
-            Alert.alert(t("tracker.alerts.error"), e instanceof Error ? e.message : t("tracker.alerts.cancelFailed"));
-          }
-        },
-      },
-    ]);
+  const handleCancel = async (leave: TeacherLeave) => {
+    const ok = await confirm({
+      title: t("tracker.alerts.cancelLeaveTitle"),
+      description: t("tracker.alerts.cancelLeaveBody"),
+      tone: "danger",
+      confirmLabel: t("tracker.alerts.yesCancel"),
+      cancelLabel: t("tracker.alerts.no"),
+    });
+    if (!ok) return;
+    try {
+      await cancelLeave(leave.id);
+      await fetchMyBalances();
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : t("tracker.alerts.cancelFailed"));
+    }
   };
 
   const handleSubmit = async (dto: {
@@ -856,7 +857,7 @@ export default function MyTeacherLeavesScreen() {
     const result = await createLeave(dto);
     await fetchMyBalances();
     const warn = (result as { warning?: string })?.warning;
-    if (warn) setTimeout(() => Alert.alert(t("tracker.alerts.applied"), warn), 350);
+    if (warn) setTimeout(() => toast.info(warn), 350);
   };
 
   const filtered = statusFilter ? leaves.filter((l) => l.status === statusFilter) : leaves;

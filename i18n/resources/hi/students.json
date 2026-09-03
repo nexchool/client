@@ -6,9 +6,6 @@
     "emptySearch": "आपकी खोज से मेल खाते कोई छात्र नहीं।",
     "noPermission": "छात्र देखने की अनुमति नहीं है।",
     "myProfileTitle": "मेरा छात्र प्रोफ़ाइल",
-    "filterStatusActive": "स्थिति: सक्रिय",
-    "filterStatusInactive": "स्थिति: निष्क्रिय",
-    "filterStatusAll": "सभी स्थितियाँ",
     "badgeInactive": "निष्क्रिय",
     "labelName": "नाम",
     "labelAdmissionNo": "प्रवेश संख्या",
@@ -51,7 +48,6 @@
     "residenceInfo": "पता/निवास जानकारी",
     "emergencyInfo": "आपातकालीन जानकारी",
     "academicInfo": "शैक्षणिक जानकारी",
-
     "fatherName": "पिता का नाम",
     "fatherPhone": "पिता का फ़ोन",
     "fatherEmail": "पिता का ईमेल",
@@ -62,7 +58,6 @@
     "motherEmail": "माता का ईमेल",
     "motherOccupation": "माता का पेशा",
     "motherAnnualIncome": "माता की वार्षिक आय",
-
     "bloodGroup": "ब्लड ग्रुप",
     "heightCm": "ऊंचाई (सेमी)",
     "weightKg": "वजन (किलो)",
@@ -70,7 +65,6 @@
     "medicalConditions": "चिकित्सीय स्थिति",
     "disabilityDetails": "विकलांगता विवरण",
     "identificationMarks": "पहचान चिह्न",
-
     "aadharNumber": "आधार नंबर",
     "apaarId": "APAAR ID",
     "emisNumber": "EMIS नंबर",
@@ -81,7 +75,6 @@
     "nationality": "राष्ट्रीयता",
     "motherTongue": "मातृभाषा",
     "placeOfBirth": "जन्म स्थान",
-
     "sameAsPermanent": "वर्तमान पता स्थायी पते जैसा",
     "currentAddress": "वर्तमान पता",
     "currentCity": "वर्तमान शहर",
@@ -94,12 +87,10 @@
     "outstationCommute": "बाहर से आने-जाने वाला",
     "commuteLocation": "आवागमन स्थान",
     "commuteNotes": "आवागमन नोट्स",
-
     "emergencyName": "आपातकालीन संपर्क नाम",
     "emergencyRelationship": "आपातकालीन संबंध",
     "emergencyPhone": "आपातकालीन फ़ोन",
     "emergencyAltPhone": "आपातकालीन वैकल्पिक फ़ोन",
-
     "admissionDate": "प्रवेश तिथि",
     "previousSchoolName": "पिछला स्कूल नाम",
     "previousSchoolClass": "पिछली कक्षा",
@@ -107,7 +98,6 @@
     "tcNumber": "TC नंबर",
     "houseName": "हाउस नाम",
     "studentStatus": "छात्र स्थिति",
-
     "personalDetails": "व्यक्तिगत विवरण",
     "transportInfo": "परिवहन",
     "transportBus": "बस",
@@ -368,5 +358,21 @@
     "errorTitle": "सहेजा नहीं जा सका",
     "update": "विद्यार्थी अपडेट करें",
     "create": "विद्यार्थी बनाएँ"
+  },
+  "status": {
+    "active": "सक्रिय",
+    "inactive": "निष्क्रिय",
+    "leaving": "जा रहे हैं",
+    "suspended": "निलंबित",
+    "dropped_out": "पढ़ाई छोड़ दी",
+    "withdrawn": "नाम वापस लिया",
+    "graduated": "उत्तीर्ण",
+    "transferred": "स्थानांतरित"
+  },
+  "filters": {
+    "title": "फ़िल्टर",
+    "statusLabel": "स्थिति",
+    "statusAny": "कोई भी स्थिति",
+    "clearAll": "सभी हटाएँ"
   }
 }

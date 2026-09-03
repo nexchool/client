@@ -4,7 +4,6 @@ import {
   View,
   ScrollView,
   RefreshControl,
-  Alert,
   Modal,
   Pressable,
   TextInput,
@@ -23,6 +22,7 @@ import { BackHeader } from "@/common/components/BackHeader";
 import { callPhone } from "@/common/utils/phone";
 import { formatDateTime } from "@/common/utils/datetime";
 import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
+import { useDialog, useToast } from "@/common/feedback";
 import {
   useHostelGatepass,
   useApproveGatepass,
@@ -80,6 +80,8 @@ function ActionButton({
 
 export function HostelGatepassDetailScreen() {
   const { t } = useTranslation("hostel");
+  const { confirm } = useDialog();
+  const toast = useToast();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { palette, spacing, radius, elevation } = useTheme();
@@ -121,31 +123,27 @@ export function HostelGatepassDetailScreen() {
   const gp = data?.gatepass;
   const audit = data?.audit_trail ?? [];
 
-  const run = (fn: () => Promise<unknown>, confirmMsg: string, destructive = false) => {
-    Alert.alert(
-      t("gatepass.confirmTitle", { defaultValue: "Confirm" }),
-      confirmMsg,
-      [
-        { text: t("common.cancel", { defaultValue: "Cancel" }), style: "cancel" },
-        {
-          text: t("common.confirm", { defaultValue: "Confirm" }),
-          style: destructive ? "destructive" : "default",
-          onPress: async () => {
-            try {
-              setBusy(true);
-              await fn();
-            } catch (e) {
-              Alert.alert(
-                t("common.actionFailed", { defaultValue: "Action failed" }),
-                e instanceof Error ? e.message : t("common.tryAgain", { defaultValue: "Try again" })
-              );
-            } finally {
-              setBusy(false);
-            }
-          },
-        },
-      ]
-    );
+  const run = async (
+    fn: () => Promise<unknown>,
+    confirmMsg: string,
+    destructive = false
+  ) => {
+    const ok = await confirm({
+      title: t("gatepass.confirmTitle", { defaultValue: "Confirm" }),
+      description: confirmMsg,
+      tone: destructive ? "danger" : "default",
+      confirmLabel: t("common.confirm", { defaultValue: "Confirm" }),
+      cancelLabel: t("common.cancel", { defaultValue: "Cancel" }),
+    });
+    if (!ok) return;
+    try {
+      setBusy(true);
+      await fn();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : t("common.tryAgain", { defaultValue: "Try again" }));
+    } finally {
+      setBusy(false);
+    }
   };
 
   const submitReject = async () => {
@@ -159,10 +157,7 @@ export function HostelGatepassDetailScreen() {
       setRejectOpen(false);
       setRejectReason("");
     } catch (e) {
-      Alert.alert(
-        t("common.actionFailed", { defaultValue: "Action failed" }),
-        e instanceof Error ? e.message : t("common.tryAgain", { defaultValue: "Try again" })
-      );
+      toast.error(e instanceof Error ? e.message : t("common.tryAgain", { defaultValue: "Try again" }));
     } finally {
       setBusy(false);
     }

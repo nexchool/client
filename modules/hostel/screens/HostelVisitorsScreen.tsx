@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { View, FlatList, RefreshControl, Alert } from "react-native";
+import { View, FlatList, RefreshControl } from "react-native";
 import { useRouter } from "expo-router";
 import { useTheme } from "@/common/theme";
 import { Text } from "@/common/components/Text";
@@ -15,9 +15,12 @@ import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
 import { useHostelVisitorLogs, useVisitorCheckOut } from "../hooks/useHostelAdmin";
 import { PERM_VISITOR_MANAGE } from "../utils/gatepass";
 import type { HostelVisitorLog } from "../adminTypes";
+import { useDialog, useToast } from "@/common/feedback";
 
 export function HostelVisitorsScreen() {
   const { t } = useTranslation("hostel");
+  const { confirm } = useDialog();
+  const toast = useToast();
   const router = useRouter();
   const { palette, spacing, radius, elevation } = useTheme();
   const { hasPermission } = usePermissions();
@@ -43,33 +46,25 @@ export function HostelVisitorsScreen() {
 
   const canManage = hasPermission(PERM_VISITOR_MANAGE);
 
-  const doCheckout = (log: HostelVisitorLog) => {
-    Alert.alert(
-      t("visitors.confirmTitle", { defaultValue: "Check out visitor" }),
-      t("visitors.confirmCheckout", {
+  const doCheckout = async (log: HostelVisitorLog) => {
+    const ok = await confirm({
+      title: t("visitors.confirmTitle", { defaultValue: "Check out visitor" }),
+      description: t("visitors.confirmCheckout", {
         defaultValue: "Mark {{name}} as left?",
         name: log.visitor_name || t("visitors.theVisitor", { defaultValue: "this visitor" }),
       }),
-      [
-        { text: t("common.cancel", { defaultValue: "Cancel" }), style: "cancel" },
-        {
-          text: t("common.confirm", { defaultValue: "Confirm" }),
-          onPress: async () => {
-            try {
-              setBusyId(log.id);
-              await checkout.mutateAsync(log.id);
-            } catch (e) {
-              Alert.alert(
-                t("common.actionFailed", { defaultValue: "Action failed" }),
-                e instanceof Error ? e.message : t("common.tryAgain", { defaultValue: "Try again" })
-              );
-            } finally {
-              setBusyId(null);
-            }
-          },
-        },
-      ]
-    );
+      confirmLabel: t("common.confirm", { defaultValue: "Confirm" }),
+      cancelLabel: t("common.cancel", { defaultValue: "Cancel" }),
+    });
+    if (!ok) return;
+    try {
+      setBusyId(log.id);
+      await checkout.mutateAsync(log.id);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : t("common.tryAgain", { defaultValue: "Try again" }));
+    } finally {
+      setBusyId(null);
+    }
   };
 
   const renderItem = ({ item: log }: { item: HostelVisitorLog }) => {

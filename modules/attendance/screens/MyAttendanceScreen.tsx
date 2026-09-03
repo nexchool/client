@@ -10,6 +10,7 @@ import { HomeKpiCard } from '@/modules/home/components/HomeKpiCard';
 import { ProgressRing } from '@/modules/home/components/ProgressRing';
 import { Skeleton } from '@/common/components/Skeleton';
 import { EmptyState } from '@/common/components/EmptyState';
+import { PageHeader } from '@/common/components/PageHeader';
 
 type AttendanceRecord = { date: string; status: string; remarks: string | null; session_id: string };
 
@@ -98,18 +99,15 @@ export default function MyAttendanceScreen() {
         contentContainerStyle={{ padding: spacing.marginMobile, gap: spacing.lg, paddingBottom: spacing.scrollBottom }}
         refreshControl={<RefreshControl refreshing={!!isRefetching} onRefresh={() => refetch()} />}
       >
-        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
-          <AppIcon name="chevron-back" size="lg" color="onSurface" />
-        </Pressable>
-
-        <View>
-          <Text variant="display" color="onSurface">
-            {t('myAttendance.title', { defaultValue: 'My Attendance' })}
-          </Text>
-          <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
-            {t('myAttendance.subtitle', { defaultValue: 'Track your attendance and trends' })}
-          </Text>
-        </View>
+        <PageHeader
+          title={t('myAttendance.title', { defaultValue: 'My Attendance' })}
+          subtitle={t('myAttendance.subtitle', {
+            defaultValue: 'Track your attendance and trends',
+          })}
+          onBack={() => router.back()}
+          noHorizontalPadding
+          divider={false}
+        />
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm }}>
           {months.map((m) => {

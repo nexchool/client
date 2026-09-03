@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Text } from '@/common/components/Text';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -7,9 +7,12 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
 import { Button } from '@/common/components/Button';
 import { FormField, FormSelect, FormDatePicker, type SelectOption } from '@/common/forms';
+import { FormSelectSheet } from '@/common/forms/FormSelectSheet';
+import type { SelectOption as SheetOption } from '@/common/components/SelectSheet';
 import { useTeachers } from '@/modules/teachers/hooks/useTeachers';
 import { scheduleOverrideSchema, type ScheduleOverrideInput } from '../validation/schemas';
 import { useCreateScheduleOverride } from '../hooks/useScheduleOverride';
+import { useToast } from '@/common/feedback';
 
 type Props = {
   visible: boolean;
@@ -24,6 +27,7 @@ function todayIso(): string {
 
 export function ScheduleOverrideSheet({ visible, onClose, defaultDate, defaultSlotId }: Props) {
   const { t } = useTranslation('schedule');
+  const toast = useToast();
   const { palette, spacing, radius } = useTheme();
   const { teachers, fetchTeachers } = useTeachers();
   const createMutation = useCreateScheduleOverride();
@@ -74,11 +78,13 @@ export function ScheduleOverrideSheet({ visible, onClose, defaultDate, defaultSl
     },
   ];
 
-  const teacherOptions: SelectOption[] = useMemo(
+  // Every teacher on the staff — a sheet with search rather than a chip wall.
+  const teacherOptions: SheetOption[] = useMemo(
     () =>
       teachers.map((tch) => ({
         value: tch.id,
         label: tch.name || tch.email || tch.id,
+        sublabel: tch.name && tch.email ? tch.email : undefined,
       })),
     [teachers]
   );
@@ -86,10 +92,7 @@ export function ScheduleOverrideSheet({ visible, onClose, defaultDate, defaultSl
   const onSubmit = async (values: ScheduleOverrideInput) => {
     try {
       await createMutation.mutateAsync(values);
-      Alert.alert(
-        t('override.savedTitle', { defaultValue: 'Override saved' }),
-        t('override.savedMessage', { defaultValue: 'The schedule override has been saved.' })
-      );
+      toast.success(t('override.savedMessage', { defaultValue: 'The schedule override has been saved.' }));
       onClose();
     } catch (err: any) {
       const details = err?.data?.error?.details;
@@ -100,10 +103,7 @@ export function ScheduleOverrideSheet({ visible, onClose, defaultDate, defaultSl
           }
         }
       } else {
-        Alert.alert(
-          t('override.errorTitle', { defaultValue: 'Could not save override' }),
-          err?.message ?? 'Unknown error'
-        );
+        toast.error(err?.message ?? 'Unknown error');
       }
     }
   };
@@ -176,11 +176,14 @@ export function ScheduleOverrideSheet({ visible, onClose, defaultDate, defaultSl
           />
 
           {overrideType === 'substitute' ? (
-            <FormSelect
+            <FormSelectSheet
               control={control}
               name={'substitute_teacher_id' as any}
               label={t('override.fields.substituteTeacher', { defaultValue: 'Substitute teacher' })}
               options={teacherOptions}
+              placeholder={t('override.fields.substituteTeacherPlaceholder', {
+                defaultValue: 'Choose a teacher',
+              })}
             />
           ) : null}
 

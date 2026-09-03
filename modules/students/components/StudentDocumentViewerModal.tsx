@@ -15,7 +15,6 @@ import {
   ActivityIndicator,
   Platform,
   useWindowDimensions,
-  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
@@ -34,6 +33,7 @@ import { useTheme } from "@/common/theme";
 import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
 import type { StudentDocument } from "../types";
+import { useToast } from "@/common/feedback";
 
 // --- constants ----------------------------------------------------------------
 
@@ -171,6 +171,7 @@ async function webObjectUrlFromBlob(blob: Blob, filename: string, kind: Document
 
 export function StudentDocumentViewerModal({ visible, onClose, document }: Props) {
   const { t } = useTranslation("profile");
+  const toast = useToast();
   const { palette, spacing } = useTheme();
   const { width: winW, height: winH } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -300,10 +301,7 @@ export function StudentDocumentViewerModal({ visible, onClose, document }: Props
     async (uri: string) => {
       try {
         if (!(await Sharing.isAvailableAsync())) {
-          Alert.alert(
-            t("documents.unavailableTitle"),
-            t("viewer.sharingUnavailable"),
-          );
+          toast.info(t("viewer.sharingUnavailable"));
           return;
         }
         await Sharing.shareAsync(uri, {
@@ -312,13 +310,10 @@ export function StudentDocumentViewerModal({ visible, onClose, document }: Props
             document?.original_filename ?? t("viewer.fallbackTitle"),
         });
       } catch (e: unknown) {
-        Alert.alert(
-          t("uploadModal.error"),
-          e instanceof Error ? e.message : t("viewer.couldNotOpen"),
-        );
+        toast.error(e instanceof Error ? e.message : t("viewer.couldNotOpen"));
       }
     },
-    [document?.original_filename, t],
+    [document?.original_filename, t, toast],
   );
 
   const showPdfWeb =

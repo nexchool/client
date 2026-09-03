@@ -9,7 +9,7 @@ import {
   TextInput,
   Pressable,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTeachers } from "../hooks/useTeachers";
 import { TeacherListItem } from "../components/TeacherListItem";
 import { Protected } from "@/modules/permissions/components/Protected";
@@ -17,6 +17,7 @@ import * as PERMS from "@/modules/permissions/constants/permissions";
 import { useTheme, Spacing } from "@/common/theme";
 import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
+import { PageHeader } from "@/common/components/PageHeader";
 import { Teacher, TeacherDepartmentOption } from "../types";
 
 function useDebounce<T>(value: T, delay: number): T {
@@ -34,7 +35,10 @@ export default function TeachersScreen() {
   const { teachers, departments, loading, fetchTeachers } = useTeachers();
   const { palette, spacing, radius, elevation } = useTheme();
 
-  const [searchQuery, setSearchQuery] = useState("");
+  // Seeded from the global search screen's "See all", so the term the
+  // person typed there is already applied when this list opens.
+  const { q } = useLocalSearchParams<{ q?: string }>();
+  const [searchQuery, setSearchQuery] = useState(q ?? "");
   // Real filter: department. Options come from the list-endpoint envelope.
   // Holding the object (not just the id) means the chip keeps showing the
   // right name even if a later facet refresh drops this department (e.g. it
@@ -155,23 +159,7 @@ export default function TeachersScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: palette.surface }]}>
-      <View
-        style={[
-          styles.header,
-          {
-            paddingHorizontal: spacing.marginMobile,
-            paddingVertical: spacing.md,
-            borderBottomColor: palette.outlineVariant,
-          },
-        ]}
-      >
-        <Text variant="headlineLg" color="onSurface">
-          {t("list.title")}
-        </Text>
-        <Text variant="bodyMd" color="onSurfaceVariant" style={styles.subtitle}>
-          {t("list.subtitle")}
-        </Text>
-      </View>
+      <PageHeader title={t("list.title")} subtitle={t("list.subtitle")} />
 
       {loading && teachers.length === 0 ? (
         <View style={styles.center}>
@@ -249,12 +237,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: Spacing.xl,
-  },
-  header: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  subtitle: {
-    marginTop: 2,
   },
   toolbar: {
     marginBottom: Spacing.md,

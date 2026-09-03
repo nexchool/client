@@ -14,6 +14,8 @@ import { checkAndFetchUpdateInBackground } from "@/common/utils/checkForAppUpdat
 import { initI18n } from "@/i18n";
 import { ThemeProvider } from "@/common/theme";
 import { ErrorBoundary } from "@/common/components/ErrorBoundary";
+import { FeedbackProvider } from "@/common/feedback";
+import { useTenantTheme } from "@/modules/branding/useTenantTheme";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const queryClient = new QueryClient();
@@ -23,6 +25,10 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [i18nReady, setI18nReady] = useState(false);
+  // Read from cache before the first paint, then corrected from the server.
+  // The tenant is read from storage inside the hook, because this sits above
+  // AuthProvider on purpose — see the ErrorBoundary note below.
+  const { palette: tenantPalette } = useTenantTheme(null);
 
   const [fontsLoaded, fontError] = useFonts({
     Inter_400Regular,
@@ -53,7 +59,7 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider mode="light">
+      <ThemeProvider mode="light" paletteOverride={tenantPalette}>
         {/*
           Inside ThemeProvider so the fallback is a Nexchool screen rather than
           unstyled text, and outside everything else so a throw in any provider
@@ -63,11 +69,18 @@ export default function RootLayout() {
         <ErrorBoundary>
           <QueryClientProvider client={queryClient}>
             <AuthProvider>
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="index" />
-                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                <Stack.Screen name="(protected)" options={{ headerShown: false }} />
-              </Stack>
+              {/*
+                Inside AuthProvider so a dialog can be raised from anywhere a
+                session exists, and above the Stack so its toast host sits over
+                every screen rather than scrolling away with one.
+              */}
+              <FeedbackProvider>
+                <Stack screenOptions={{ headerShown: false }}>
+                  <Stack.Screen name="index" />
+                  <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                  <Stack.Screen name="(protected)" options={{ headerShown: false }} />
+                </Stack>
+              </FeedbackProvider>
             </AuthProvider>
           </QueryClientProvider>
         </ErrorBoundary>

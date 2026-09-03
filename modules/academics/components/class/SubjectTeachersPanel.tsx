@@ -6,7 +6,6 @@ import {
   ActivityIndicator,
   Modal,
   ScrollView,
-  Alert,
 } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTheme } from "@/common/theme";
@@ -19,11 +18,14 @@ import type { ClassSubjectOffering, SubjectTeacherAssignment } from "../../types
 import { StatusChip } from "../StatusChip";
 import { teacherService } from "@/modules/teachers/services/teacherService";
 import type { Teacher } from "@/modules/teachers/types";
+import { useDialog, useToast } from "@/common/feedback";
 
 type Props = { classId: string; canManage: boolean };
 
 export function SubjectTeachersPanel({ classId, canManage }: Props) {
   const { t } = useTranslation("classes");
+  const { confirm } = useDialog();
+  const toast = useToast();
   const { palette, spacing, radius } = useTheme();
   const qc = useQueryClient();
   const [offerings, setOfferings] = useState<ClassSubjectOffering[]>([]);
@@ -101,7 +103,7 @@ export function SubjectTeachersPanel({ classId, canManage }: Props) {
 
   const save = async () => {
     if (!csId || !tid) {
-      Alert.alert(t("detail.errorTitle"), t("panels.subjectTeachers.validation"));
+      toast.error(t("panels.subjectTeachers.validation"));
       return;
     }
     setSaving(true);
@@ -124,29 +126,28 @@ export function SubjectTeachersPanel({ classId, canManage }: Props) {
       setModalOpen(false);
       load();
     } catch (e) {
-      Alert.alert(t("panels.subjectTeachers.errorTitle"), e instanceof Error ? e.message : String(e));
+      toast.error(e instanceof Error ? e.message : String(e));
     } finally {
       setSaving(false);
     }
   };
 
-  const remove = (row: SubjectTeacherAssignment) => {
-    Alert.alert(t("panels.subjectTeachers.removeTitle"), t("panels.subjectTeachers.removeBody"), [
-      { text: t("panels.subjectTeachers.cancel"), style: "cancel" },
-      {
-        text: t("panels.subjectTeachers.remove"),
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await classAcademicApi.deleteSubjectTeacher(classId, row.id);
-            await qc.invalidateQueries({ queryKey: qk.subjectTeachers(classId) });
-            load();
-          } catch (e) {
-            Alert.alert(t("panels.subjectTeachers.errorTitle"), e instanceof Error ? e.message : String(e));
-          }
-        },
-      },
-    ]);
+  const remove = async (row: SubjectTeacherAssignment) => {
+    const ok = await confirm({
+      title: t("panels.subjectTeachers.removeTitle"),
+      description: t("panels.subjectTeachers.removeBody"),
+      tone: "danger",
+      confirmLabel: t("panels.subjectTeachers.remove"),
+      cancelLabel: t("panels.subjectTeachers.cancel"),
+    });
+    if (!ok) return;
+    try {
+      await classAcademicApi.deleteSubjectTeacher(classId, row.id);
+      await qc.invalidateQueries({ queryKey: qk.subjectTeachers(classId) });
+      load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : String(e));
+    }
   };
 
   if (loading && assignments.length === 0 && offerings.length === 0) {

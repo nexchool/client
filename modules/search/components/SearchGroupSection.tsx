@@ -1,6 +1,7 @@
 // client/modules/search/components/SearchGroupSection.tsx
 import React, { type ReactNode } from 'react';
 import { View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
 import { Text } from '@/common/components/Text';
 import { PressScale } from '@/common/components/PressScale';
@@ -14,6 +15,7 @@ type Props = {
 };
 
 export function SearchGroupSection({ title, count, showSeeAll, onSeeAll, children }: Props) {
+  const { t } = useTranslation('search');
   const { spacing } = useTheme();
   if (count === 0) return null;
   return (
@@ -25,7 +27,7 @@ export function SearchGroupSection({ title, count, showSeeAll, onSeeAll, childre
         {showSeeAll && onSeeAll ? (
           <PressScale onPress={onSeeAll} hitSlop={8}>
             <Text variant="labelSm" color="primary">
-              See all
+              {t('seeAll', { defaultValue: 'See all' })}
             </Text>
           </PressScale>
         ) : null}

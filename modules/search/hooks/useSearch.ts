@@ -1,6 +1,6 @@
 // client/modules/search/hooks/useSearch.ts
 import { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { searchService } from '../services/searchService';
 
 const MIN_LEN = 2;
@@ -20,6 +20,11 @@ export function useSearch() {
     queryKey: ['search', debounced],
     queryFn: () => searchService.search(debounced),
     enabled,
+    // Every extra character is a new query key with nothing cached, so without
+    // this the results vanish into skeletons between each keystroke and the
+    // list flickers all the way through a name. Hold the previous answer until
+    // the new one lands.
+    placeholderData: keepPreviousData,
   });
 
   return {
@@ -29,5 +34,7 @@ export function useSearch() {
     enabled,
     results: q.data,
     isFetching: q.isFetching,
+    /** True only when there is nothing to show yet — skeletons, not a flicker. */
+    isInitialLoad: q.isFetching && q.data === undefined,
   };
 }

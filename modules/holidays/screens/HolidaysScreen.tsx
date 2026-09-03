@@ -7,6 +7,7 @@ import {
 import { useTheme, Spacing } from '@/common/theme';
 import { Text } from '@/common/components/Text';
 import { AppIcon } from '@/common/components/AppIcon';
+import { PageHeader } from '@/common/components/PageHeader';
 import { Protected } from '@/modules/permissions/components/Protected';
 import * as PERMS from '@/modules/permissions/constants/permissions';
 import { useAcademicYearContext } from '@/modules/academics/context/AcademicYearContext';
@@ -251,25 +252,7 @@ export default function HolidaysScreen() {
 
 function ScreenHeader() {
   const { t } = useTranslation('holidays');
-  const { palette, spacing } = useTheme();
-  return (
-    <View
-      style={[
-        styles.header,
-        {
-          paddingHorizontal: spacing.marginMobile,
-          paddingTop: spacing.sm,
-          paddingBottom: spacing.md,
-          backgroundColor: palette.surface,
-        },
-      ]}
-    >
-      <Text variant="headlineLg" color="onSurface">{t('screen.title')}</Text>
-      <Text variant="bodySm" color="onSurfaceVariant" style={{ marginTop: 4 }}>
-        {t('screen.subtitle')}
-      </Text>
-    </View>
-  );
+  return <PageHeader title={t('screen.title')} subtitle={t('screen.subtitle')} />;
 }
 
 function SummaryChip({ count, label }: { count: number; label: string }) {
@@ -298,7 +281,6 @@ function SummaryChip({ count, label }: { count: number; label: string }) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: Spacing.xl },
-  header: {},
   flex: { flex: 1 },
   searchContainer: {
     flexDirection: 'row',

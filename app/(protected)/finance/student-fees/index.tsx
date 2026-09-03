@@ -23,6 +23,7 @@ import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
 import { Skeleton } from "@/common/components/Skeleton";
 import { EmptyState } from "@/common/components/EmptyState";
+import { PageHeader } from "@/common/components/PageHeader";
 import { formatCurrency } from "@/common/utils/formatCurrency";
 import { useDebounce } from "@/common/hooks/useDebounce";
 
@@ -251,27 +252,10 @@ export default function StudentFeesPage() {
 
   return (
     <View style={{ flex: 1, backgroundColor: palette.surface }}>
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          paddingHorizontal: spacing.marginMobile,
-          paddingTop: spacing.md,
-          paddingBottom: spacing.sm,
-          gap: spacing.sm,
-        }}
-      >
-        <AppIcon
-          name="arrow-back"
-          size="lg"
-          color="onSurface"
-          onPress={() => router.back()}
-          accessibilityLabel="Back"
-        />
-        <Text variant="headlineLg" color="onSurface" style={{ flex: 1 }}>
-          {t("studentFeesList.title", { defaultValue: "Fee structure" })}
-        </Text>
-      </View>
+      <PageHeader
+        title={t("studentFeesList.title", { defaultValue: "Fee structure" })}
+        onBack={() => router.back()}
+      />
 
       {/* KPI summary */}
       {!error ? (

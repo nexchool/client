@@ -1,6 +1,24 @@
 {
   "placeholder": "Search students, teachers, classes, fees",
-  "prompt": "Type to search",
-  "empty": { "title": "No matches", "body": "Nothing found for your search." },
-  "group": { "students": "Students", "teachers": "Teachers", "classes": "Classes", "fees": "Fees" }
+  "prompt": "Search students, teachers, classes and fees",
+  "back": "Back",
+  "clear": "Clear search",
+  "resultCount_one": "{{count}} result for “{{query}}”",
+  "resultCount_other": "{{count}} results for “{{query}}”",
+  "empty": {
+    "title": "No matches",
+    "body": "Nothing found for “{{query}}”."
+  },
+  "group": {
+    "students": "Students",
+    "teachers": "Teachers",
+    "classes": "Classes",
+    "fees": "Fees"
+  },
+  "seeAll": "See all",
+  "recent": {
+    "title": "Recent",
+    "clearAll": "Clear all",
+    "remove": "Remove {{term}} from recent searches"
+  }
 }

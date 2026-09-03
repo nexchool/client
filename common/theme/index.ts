@@ -4,7 +4,7 @@ export { useTheme } from './useTheme';
 export type { UseThemeResult } from './useTheme';
 export { Spacing, Radius } from './tokens';
 export type { SpacingKey, RadiusKey } from './tokens';
-export { Typography, FontScaleCap } from './typography';
+export { Typography, FontScaleCap, EmphasisTextStyle } from './typography';
 export type { TypeRole } from './typography';
 export { lightPalette, darkPalette } from './palettes';
 export type { Palette } from './palettes';

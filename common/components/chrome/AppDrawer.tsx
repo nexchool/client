@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
   Modal,
   Pressable,
   ScrollView,
@@ -22,6 +21,8 @@ import Animated, {
 import { useTheme } from '@/common/theme';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 import { useUiRole } from '@/modules/permissions/hooks/useUiRole';
+import { useAcademicYearContext } from '@/modules/academics/context/AcademicYearContext';
+import { useDialog } from '@/common/feedback';
 import { ProfileAvatar } from '@/common/components/ProfileAvatar';
 import { Text } from '@/common/components/Text';
 import { AppIcon } from '@/common/components/AppIcon';
@@ -131,6 +132,8 @@ function isItemActive(itemRoute: string, pathname: string): boolean {
 type Props = {
   visible: boolean;
   onClose: () => void;
+  /** Opens the academic-year picker, which AppShell renders as our sibling. */
+  onOpenYearPicker: () => void;
 };
 
 const DRAWER_WIDTH_RATIO = 0.84;
@@ -141,12 +144,14 @@ const DRAWER_WIDTH_RATIO = 0.84;
  */
 const DRAWER_MAX_W = 360;
 
-export function AppDrawer({ visible, onClose }: Props) {
+export function AppDrawer({ visible, onClose, onOpenYearPicker }: Props) {
   const { t } = useTranslation('common');
   const { palette, spacing, radius } = useTheme();
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const { user, isFeatureEnabled, logout, tenantName } = useAuth();
+  const { academicYears, selectedAcademicYearId } = useAcademicYearContext();
+  const { confirm } = useDialog();
   const { isAdmin, isTeacher, isStudent } = useUiRole();
   const currentRole: Role =
     isAdmin ? 'admin' :
@@ -180,9 +185,19 @@ export function AppDrawer({ visible, onClose }: Props) {
 
   // A rotation while the drawer is closed must move its resting position too,
   // or the next open slides in from the wrong place.
+  //
+  // Gated on `mounted` as well as `visible`, because a drawer that is *closing*
+  // is already `!visible`. Writing a raw value to a shared value cancels
+  // whatever animation is running on it — reanimated's `valueSetter` sets
+  // `cancelled` on the previous animation before it does anything else — so
+  // this effect, which runs in the same commit as the close above, used to kill
+  // the slide-out on its way out. The callback then fired with
+  // `finished: false`, `setMounted(false)` never ran, and the Modal was left
+  // mounted: fully transparent, off-screen, and swallowing every touch in the
+  // app until it was relaunched. Reposition only once the drawer has settled.
   useEffect(() => {
-    if (!visible) translateX.value = -drawerWidth;
-  }, [drawerWidth, visible, translateX]);
+    if (!visible && !mounted) translateX.value = -drawerWidth;
+  }, [drawerWidth, visible, mounted, translateX]);
 
   const drawerStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
@@ -215,22 +230,28 @@ export function AppDrawer({ visible, onClose }: Props) {
     setTimeout(() => router.push(route as never), 200);
   };
 
-  const handleLogout = () => {
-    Alert.alert(
-      t('signOutConfirmTitle', { defaultValue: 'Sign out?' }),
-      t('signOutConfirmMessage', { defaultValue: 'You will need to sign in again to access your account.' }),
-      [
-        { text: t('cancel', { defaultValue: 'Cancel' }), style: 'cancel' },
-        {
-          text: t('signOut', { defaultValue: 'Sign out' }),
-          style: 'destructive',
-          onPress: async () => {
-            onClose();
-            await logout();
-          },
-        },
-      ]
-    );
+  const selectedYear = academicYears.find((ay) => ay.id === selectedAcademicYearId);
+  // A student has one year — their own — so the control would be a menu of one.
+  const showYearPicker = !isStudent && academicYears.length > 0;
+
+  const handleYearPress = () => {
+    onClose();
+    setTimeout(onOpenYearPicker, 200);
+  };
+
+  const handleLogout = async () => {
+    const signOut = await confirm({
+      title: t('signOutConfirmTitle', { defaultValue: 'Sign out?' }),
+      description: t('signOutConfirmMessage', {
+        defaultValue: 'You will need to sign in again to access your account.',
+      }),
+      tone: 'danger',
+      confirmLabel: t('signOut', { defaultValue: 'Sign out' }),
+      cancelLabel: t('cancel', { defaultValue: 'Cancel' }),
+    });
+    if (!signOut) return;
+    onClose();
+    await logout();
   };
 
   const renderRow = (item: DrawerItem) => {
@@ -347,6 +368,44 @@ export function AppDrawer({ visible, onClose }: Props) {
             </View>
           ) : (
             <>
+              {/*
+                The year every screen below is read through, so it sits above
+                them rather than in the header: it frames the whole menu, and a
+                chip in the top bar read as decoration next to the school name.
+              */}
+              {showYearPicker ? (
+                <Pressable
+                  onPress={handleYearPress}
+                  style={({ pressed }) => [
+                    styles.row,
+                    {
+                      backgroundColor: pressed
+                        ? palette.surfaceContainerHigh
+                        : palette.surfaceContainer,
+                      borderRadius: radius.lg,
+                      marginHorizontal: spacing.sm,
+                      marginBottom: spacing.sm,
+                      paddingHorizontal: spacing.md,
+                      paddingVertical: spacing.sm + spacing.xs,
+                      gap: spacing.md,
+                    },
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Academic year ${selectedYear?.name ?? 'not set'}. Change`}
+                >
+                  <AppIcon name="calendar-outline" size="lg" color="onSurfaceVariant" />
+                  <View style={{ flex: 1 }}>
+                    <Text variant="labelSm" color="onSurfaceVariant" style={{ opacity: 0.7 }}>
+                      {t('academicYearPicker.title', { defaultValue: 'Academic Year' })}
+                    </Text>
+                    <Text variant="labelLg" color="onSurface" numberOfLines={1}>
+                      {selectedYear?.name ?? '—'}
+                    </Text>
+                  </View>
+                  <AppIcon name="chevron-down" size="md" color="onSurfaceVariant" />
+                </Pressable>
+              ) : null}
+
               {/* Dashboard anchor (no section header) */}
               {visibleItems.filter((i) => !i.section).map(renderRow)}
               {/* Grouped sections — empty sections (after role/flag filter) are hidden */}

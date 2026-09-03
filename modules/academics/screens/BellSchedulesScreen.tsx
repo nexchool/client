@@ -250,7 +250,7 @@ function BellDetailScreen({
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.sm }}>
         <AppIcon
-          name="arrow-back"
+          name="chevron-back"
           size="lg"
           color="onSurface"
           onPress={onBack}

@@ -6,9 +6,6 @@
     "emptySearch": "No students found matching your search.",
     "noPermission": "You do not have permission to view students.",
     "myProfileTitle": "My student profile",
-    "filterStatusActive": "Status: Active",
-    "filterStatusInactive": "Status: Inactive",
-    "filterStatusAll": "All statuses",
     "badgeInactive": "Inactive",
     "labelName": "Name",
     "labelAdmissionNo": "Admission No",
@@ -51,7 +48,6 @@
     "residenceInfo": "Residence information",
     "emergencyInfo": "Emergency information",
     "academicInfo": "Academic information",
-
     "fatherName": "Father name",
     "fatherPhone": "Father phone",
     "fatherEmail": "Father email",
@@ -62,7 +58,6 @@
     "motherEmail": "Mother email",
     "motherOccupation": "Mother occupation",
     "motherAnnualIncome": "Mother annual income",
-
     "bloodGroup": "Blood group",
     "heightCm": "Height (cm)",
     "weightKg": "Weight (kg)",
@@ -70,7 +65,6 @@
     "medicalConditions": "Medical conditions",
     "disabilityDetails": "Disability details",
     "identificationMarks": "Identification marks",
-
     "aadharNumber": "Aadhar number",
     "apaarId": "APAAR ID",
     "emisNumber": "EMIS number",
@@ -81,7 +75,6 @@
     "nationality": "Nationality",
     "motherTongue": "Mother tongue",
     "placeOfBirth": "Place of birth",
-
     "sameAsPermanent": "Current address same as permanent",
     "currentAddress": "Current address",
     "currentCity": "Current city",
@@ -94,12 +87,10 @@
     "outstationCommute": "Commuting from outstation",
     "commuteLocation": "Commute location",
     "commuteNotes": "Commute notes",
-
     "emergencyName": "Emergency contact name",
     "emergencyRelationship": "Emergency contact relationship",
     "emergencyPhone": "Emergency contact phone",
     "emergencyAltPhone": "Emergency contact alt phone",
-
     "admissionDate": "Admission date",
     "previousSchoolName": "Previous school name",
     "previousSchoolClass": "Previous school class",
@@ -107,7 +98,6 @@
     "tcNumber": "TC number",
     "houseName": "House name",
     "studentStatus": "Student status",
-
     "personalDetails": "Personal Details",
     "transportInfo": "Transport",
     "transportBus": "Bus",
@@ -368,5 +358,21 @@
     "errorTitle": "Could not save",
     "update": "Update student",
     "create": "Create student"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "leaving": "Leaving",
+    "suspended": "Suspended",
+    "dropped_out": "Dropped out",
+    "withdrawn": "Withdrawn",
+    "graduated": "Graduated",
+    "transferred": "Transferred"
+  },
+  "filters": {
+    "title": "Filters",
+    "statusLabel": "Status",
+    "statusAny": "Any status",
+    "clearAll": "Clear all"
   }
 }

@@ -12,19 +12,32 @@ const queryKeys = {
   studentWeekly: (weekStart: string) => ['timetable', 'student-weekly', weekStart] as const,
 };
 
-export function useTeacherWeeklyTimetable(weekStartDate: string) {
+/**
+ * `enabled` is the caller's role, not an optimisation.
+ *
+ * These two endpoints answer 403 for anyone without a Teacher / Student row in
+ * the tenant — that is the server working as documented, not a permission
+ * misconfiguration. The screen picks one of the three results to display but
+ * used to fire all three regardless, so every admin asked for a timetable as a
+ * teacher AND as a student and collected two 403s per week viewed, and every
+ * teacher collected the student one. Ask only for the timetable the viewer
+ * actually has.
+ */
+export function useTeacherWeeklyTimetable(weekStartDate: string, enabled = true) {
   return useQuery({
     queryKey: queryKeys.teacherWeekly(weekStartDate),
     queryFn: () => timetableService.getTeacherWeekly({ weekStartDate }),
     staleTime: 60_000,
+    enabled,
   });
 }
 
-export function useStudentWeeklyTimetable(weekStartDate: string) {
+export function useStudentWeeklyTimetable(weekStartDate: string, enabled = true) {
   return useQuery({
     queryKey: queryKeys.studentWeekly(weekStartDate),
     queryFn: () => timetableService.getStudentWeekly({ weekStartDate }),
     staleTime: 60_000,
+    enabled,
   });
 }
 

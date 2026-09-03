@@ -10,7 +10,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
 } from "react-native";
 import type { Ionicons } from "@expo/vector-icons";
 import {
@@ -30,6 +29,7 @@ import {
 } from "../types";
 import { UploadDocumentModal } from "./UploadDocumentModal";
 import { StudentDocumentViewerModal } from "./StudentDocumentViewerModal";
+import { useDialog, useToast } from "@/common/feedback";
 
 interface StudentDocumentsSectionProps {
   studentId: string;
@@ -75,6 +75,8 @@ function FileTypeIcon({
 
 export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionProps) {
   const { t } = useTranslation("profile");
+  const { confirm } = useDialog();
+  const toast = useToast();
   const { palette, spacing, radius, elevation } = useTheme();
   const {
     data: documents,
@@ -90,35 +92,27 @@ export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionPr
 
   const canManage = hasPermission(PERMS.STUDENT_MANAGE);
 
-  const handleDeleteDocument = (doc: StudentDocument) => {
-    Alert.alert(
-      t("documents.deleteTitle"),
-      t("documents.deleteMessage", { filename: doc.original_filename }),
-      [
-        { text: t("documents.cancel"), style: "cancel" },
-        {
-          text: t("documents.delete"),
-          style: "destructive",
-          onPress: () => {
-            deleteMutation.mutate(doc.id, {
-              onError: (err) => {
-                Alert.alert(t("documents.error"), err.message);
-              },
-            });
-          },
-        },
-      ]
-    );
+  const handleDeleteDocument = async (doc: StudentDocument) => {
+    const ok = await confirm({
+      title: t("documents.deleteTitle"),
+      description: t("documents.deleteMessage", { filename: doc.original_filename }),
+      tone: "danger",
+      confirmLabel: t("documents.delete"),
+      cancelLabel: t("documents.cancel"),
+    });
+    if (!ok) return;
+    deleteMutation.mutate(doc.id, {
+      onError: (err) => {
+        toast.error(err.message);
+      },
+    });
   };
 
   const handleOpenDocument = (doc: StudentDocument) => {
     if (doc.id && doc.student_id) {
       setViewerDoc(doc);
     } else {
-      Alert.alert(
-        t("documents.unavailableTitle"),
-        t("documents.unavailableMessage"),
-      );
+      toast.info(t("documents.unavailableMessage"));
     }
   };
 

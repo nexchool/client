@@ -1,6 +1,6 @@
 // client/modules/student-leaves/screens/StudentLeaveFormScreen.tsx
 import React from 'react';
-import { Alert, BackHandler, KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { BackHandler, KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
@@ -13,15 +13,19 @@ import { AppIcon } from '@/common/components/AppIcon';
 import { Button } from '@/common/components/Button';
 import { Link } from '@/common/components/Link';
 import { Skeleton } from '@/common/components/Skeleton';
+import { PageHeader } from '@/common/components/PageHeader';
 import { FormField, FormSelect, FormDatePicker, FormSection } from '@/common/forms';
 import { studentService } from '@/modules/students/services/studentService';
 import { useCreateStudentLeave } from '../hooks/useStudentLeaves';
 import { createStudentLeaveSchema, type CreateStudentLeaveInput } from '../validation/schemas';
 import { LEAVE_TYPE_OPTIONS, HALF_DAY_OPTIONS } from '../constants';
 import type { CreateStudentLeavePayload } from '../types';
+import { useDialog, useToast } from '@/common/feedback';
 
 export default function StudentLeaveFormScreen() {
   const { t } = useTranslation('studentLeaves');
+  const { confirm } = useDialog();
+  const toast = useToast();
   const { spacing, palette, radius } = useTheme();
   const createMutation = useCreateStudentLeave();
 
@@ -53,16 +57,16 @@ export default function StudentLeaveFormScreen() {
   const endDate = watch('end_date');
   const isSingleDay = startDate === endDate;
 
-  const handleBack = React.useCallback(() => {
+  const handleBack = React.useCallback(async () => {
     if (formState.isDirty) {
-      Alert.alert(
-        t('discard.title', { defaultValue: 'Discard request?' }),
-        t('discard.body', { defaultValue: 'Your unsaved request will be lost.' }),
-        [
-          { text: t('discard.cancel', { defaultValue: 'Keep editing' }), style: 'cancel' },
-          { text: t('discard.confirm', { defaultValue: 'Discard' }), style: 'destructive', onPress: () => router.back() },
-        ],
-      );
+      const discard = await confirm({
+        title: t('discard.title', { defaultValue: 'Discard request?' }),
+        description: t('discard.body', { defaultValue: 'Your unsaved request will be lost.' }),
+        tone: 'danger',
+        confirmLabel: t('discard.confirm', { defaultValue: 'Discard' }),
+        cancelLabel: t('discard.cancel', { defaultValue: 'Keep editing' }),
+      });
+      if (discard) router.back();
     } else {
       router.back();
     }
@@ -83,10 +87,7 @@ export default function StudentLeaveFormScreen() {
   const onSubmit = async (data: CreateStudentLeaveInput) => {
     const studentId = myStudentQuery.data?.id;
     if (!studentId) {
-      Alert.alert(
-        t('error.noStudent.title', { defaultValue: 'Cannot apply' }),
-        t('error.noStudent.body', { defaultValue: 'No student profile found on this account.' }),
-      );
+      toast.error(t('error.noStudent.body', { defaultValue: 'No student profile found on this account.' }));
       return;
     }
     const payload = {
@@ -106,13 +107,13 @@ export default function StudentLeaveFormScreen() {
       const e = err as { data?: { error?: { message?: string; details?: { detail?: string } } }; message?: string };
       const detail = e?.data?.error?.details?.detail || e?.data?.error?.message;
       const message = typeof detail === 'string' ? detail : (e?.message ?? t('error.submit.generic', { defaultValue: 'Please try again.' }));
-      Alert.alert(t('error.submit.title', { defaultValue: 'Could not submit' }), message);
+      toast.error(message);
     }
   };
 
   if (myStudentQuery.isLoading) {
     return (
-      <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg }}>
+      <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile }}>
         <Skeleton width="100%" height={400} radius={radius.lg} />
       </View>
     );
@@ -124,21 +125,15 @@ export default function StudentLeaveFormScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={20}
     >
-      <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <AppIcon
-            name="arrow-back"
-            size="lg"
-            color="onSurface"
-            onPress={handleBack}
-            accessibilityLabel={t('back', { defaultValue: 'Back' })}
-          />
-          <Link onPress={handleBack}>{t('cancel', { defaultValue: 'Cancel' })}</Link>
-        </View>
-
-        <Text variant="display" color="onSurface" style={{ marginTop: spacing.xs }}>
-          {t('form.title', { defaultValue: 'Apply for leave' })}
-        </Text>
+      <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile }}>
+        <PageHeader
+          title={t('form.title', { defaultValue: 'Apply for leave' })}
+          onBack={handleBack}
+          backLabel={t('back', { defaultValue: 'Back' })}
+          right={<Link onPress={handleBack}>{t('cancel', { defaultValue: 'Cancel' })}</Link>}
+          noHorizontalPadding
+          divider={false}
+        />
 
         <ScrollView
           contentContainerStyle={{ gap: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.scrollBottom }}

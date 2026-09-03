@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, RefreshControl, ScrollView, View } from 'react-native';
+import { RefreshControl, ScrollView, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
 import { useTheme } from '@/common/theme';
@@ -13,10 +13,7 @@ import { HomeSectionHeader } from './HomeSectionHeader';
 import { DashboardActionRow } from './DashboardActionRow';
 import { EmptyState } from '@/common/components/EmptyState';
 import { Button } from '@/common/components/Button';
-
-function showComingSoon(label: string) {
-  Alert.alert(label, 'Coming soon');
-}
+import { useToast } from '@/common/feedback';
 
 type PeriodStatus = 'ongoing' | 'next' | 'later';
 
@@ -49,6 +46,11 @@ function hhmm(value: string | null | undefined): string {
 
 export function TeacherHome() {
   const { t } = useTranslation('home');
+  const toast = useToast();
+  // The label says which action is not built yet; an alert reading only
+  // "Coming soon" left the person to guess which button they had pressed.
+  const showComingSoon = (label: string) =>
+    toast.info(t('comingSoon', { label, defaultValue: `${label} is coming soon` }));
   const { palette, spacing, radius, elevation } = useTheme();
   const { user } = useAuth() as any;
   const { data, isRefetching, refetch } = useTeacherTodaySchedule();

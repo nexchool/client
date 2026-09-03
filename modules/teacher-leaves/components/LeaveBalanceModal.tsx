@@ -5,7 +5,6 @@ import {
   StyleSheet,
   SafeAreaView,
   ScrollView,
-  Alert,
   ActivityIndicator,
   TextInput,
   Modal,
@@ -16,6 +15,7 @@ import { AppIcon } from "@/common/components/AppIcon";
 import { PressScale } from "@/common/components/PressScale";
 import { LeaveBalance } from "@/modules/teachers/types";
 import { leaveTypeAccentToken, LEAVE_TYPE_ICONS } from "../utils/leaveColors";
+import { useToast } from "@/common/feedback";
 
 export interface LeaveBalanceModalProps {
   visible: boolean;
@@ -35,6 +35,7 @@ export function LeaveBalanceModal({
   onClose,
 }: LeaveBalanceModalProps) {
   const { t } = useTranslation("teacherLeaves");
+  const toast = useToast();
   const { palette, spacing, radius, typography: { bodyMd: bodyMdType } } = useTheme();
   const [editingType, setEditingType] = useState<string | null>(null);
   const [editDays, setEditDays] = useState("");
@@ -45,7 +46,7 @@ export function LeaveBalanceModal({
     if (!editingType) return;
     const days = parseInt(editDays, 10);
     if (isNaN(days) || days < 0) {
-      Alert.alert(t("balanceModal.validationTitle"), t("balanceModal.validationDays"));
+      toast.info(t("balanceModal.validationDays"));
       return;
     }
     setSaving(true);
@@ -56,7 +57,7 @@ export function LeaveBalanceModal({
       setEditNotes("");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : t("balanceModal.updateFailed");
-      Alert.alert(t("balanceModal.errorTitle"), msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }

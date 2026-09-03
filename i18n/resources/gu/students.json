@@ -6,9 +6,6 @@
     "emptySearch": "તમારી શોધ સાથે કોઈ વિદ્યાર્થી મળ્યો નહીં.",
     "noPermission": "વિદ્યાર્થીઓ જોવાની પરવાનગી નથી.",
     "myProfileTitle": "મારી વિદ્યાર્થી પ્રોફાઇલ",
-    "filterStatusActive": "સ્થિતિ: સક્રિય",
-    "filterStatusInactive": "સ્થિતિ: નિષ્ક્રિય",
-    "filterStatusAll": "બધી સ્થિતિઓ",
     "badgeInactive": "નિષ્ક્રિય",
     "labelName": "નામ",
     "labelAdmissionNo": "પ્રવેશ નં",
@@ -51,7 +48,6 @@
     "residenceInfo": "રહેઠાણ માહિતી",
     "emergencyInfo": "ઇમરજન્સી માહિતી",
     "academicInfo": "શૈક્ષણિક માહિતી",
-
     "fatherName": "પિતાનું નામ",
     "fatherPhone": "પિતાનો ફોન",
     "fatherEmail": "પિતાનો ઈમેલ",
@@ -62,7 +58,6 @@
     "motherEmail": "માતાનો ઈમેલ",
     "motherOccupation": "માતાનો વ્યવસાય",
     "motherAnnualIncome": "માતાની વાર્ષિક આવક",
-
     "bloodGroup": "બ્લડ ગ્રુપ",
     "heightCm": "ઊંચાઈ (સે.મી.)",
     "weightKg": "વજન (કિ.ગ્રા.)",
@@ -70,7 +65,6 @@
     "medicalConditions": "બીમી/પરિસ્થિતિ",
     "disabilityDetails": "અપંગતા વિગતો",
     "identificationMarks": "ઓળખચિહ્ન",
-
     "aadharNumber": "આધાર નંબર",
     "apaarId": "APAAR ID",
     "emisNumber": "EMIS નંબર",
@@ -81,7 +75,6 @@
     "nationality": "રાષ્ટ્રીયતા",
     "motherTongue": "માતૃભાષા",
     "placeOfBirth": "જન્મ સ્થાન",
-
     "sameAsPermanent": "હાલનું સરનામું કાયમી સરનામા સમાન",
     "currentAddress": "હાલનું સરનામું",
     "currentCity": "હાલનું શહેર",
@@ -94,12 +87,10 @@
     "outstationCommute": "બહારથી આવાગમન",
     "commuteLocation": "આવાગમન સ્થળ",
     "commuteNotes": "આવાગમન નોંધ",
-
     "emergencyName": "ઇમરજન્સી સંપર્ક નામ",
     "emergencyRelationship": "ઇમરજન્સી સંબંધ",
     "emergencyPhone": "ઇમરજન્સી ફોન",
     "emergencyAltPhone": "ઇમરજન્સી વિકલ્પ ફોન",
-
     "admissionDate": "પ્રવેશ તારીખ",
     "previousSchoolName": "પાછલી શાળાનું નામ",
     "previousSchoolClass": "પાછલો વર્ગ",
@@ -107,7 +98,6 @@
     "tcNumber": "TC નંબર",
     "houseName": "હાઉસ નામ",
     "studentStatus": "વિદ્યાર્થી સ્થિતિ",
-
     "personalDetails": "વ્યક્તિગત વિગતો",
     "transportInfo": "પરિવહન",
     "transportBus": "બસ",
@@ -368,5 +358,21 @@
     "errorTitle": "સાચવી શકાયું નહીં",
     "update": "વિદ્યાર્થી અપડેટ કરો",
     "create": "વિદ્યાર્થી બનાવો"
+  },
+  "status": {
+    "active": "સક્રિય",
+    "inactive": "નિષ્ક્રિય",
+    "leaving": "જઈ રહ્યા છે",
+    "suspended": "નિલંબિત",
+    "dropped_out": "અભ્યાસ છોડ્યો",
+    "withdrawn": "નામ પાછું ખેંચ્યું",
+    "graduated": "ઉત્તીર્ણ",
+    "transferred": "સ્થળાંતરિત"
+  },
+  "filters": {
+    "title": "ફિલ્ટર",
+    "statusLabel": "સ્થિતિ",
+    "statusAny": "કોઈપણ સ્થિતિ",
+    "clearAll": "બધા હટાવો"
   }
 }

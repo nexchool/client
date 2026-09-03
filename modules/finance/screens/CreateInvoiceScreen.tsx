@@ -19,6 +19,7 @@ import { Button } from '@/common/components/Button';
 import { Link } from '@/common/components/Link';
 import { Text } from '@/common/components/Text';
 import { AppIcon } from '@/common/components/AppIcon';
+import { PageHeader } from '@/common/components/PageHeader';
 import {
   FormField,
   FormSelect,
@@ -26,6 +27,8 @@ import {
   FormSection,
   type SelectOption,
 } from '@/common/forms';
+import { FormSelectSheet } from '@/common/forms/FormSelectSheet';
+import type { SelectOption as SheetOption } from '@/common/components/SelectSheet';
 import { useStudents } from '@/modules/students/hooks/useStudents';
 import { useAcademicYearContext } from '@/modules/academics/context/AcademicYearContext';
 import { useCreateInvoice } from '../hooks/useFinance';
@@ -34,6 +37,7 @@ import {
   type CreateInvoiceInput,
 } from '../validation/invoiceSchemas';
 import type { CreateInvoicePayload } from '../services/financeService';
+import { useDialog, useToast } from '@/common/feedback';
 
 const todayIso = () => new Date().toISOString().slice(0, 10);
 const isoPlusDays = (days: number) => {
@@ -44,6 +48,8 @@ const isoPlusDays = (days: number) => {
 
 export default function CreateInvoiceScreen() {
   const { t } = useTranslation('finance');
+  const { confirm } = useDialog();
+  const toast = useToast();
   const { palette, spacing, radius } = useTheme();
 
   const createMutation = useCreateInvoice();
@@ -54,13 +60,15 @@ export default function CreateInvoiceScreen() {
     fetchStudents();
   }, [fetchStudents]);
 
-  const studentOptions: SelectOption[] = React.useMemo(
+  // A sheet, not a chip row: this is every student in the school. The demo
+  // tenant alone has 2,015, and the admission number moves to its own line so
+  // search can match either without the label running off the row.
+  const studentOptions: SheetOption[] = React.useMemo(
     () =>
       students.map((s) => ({
         value: s.id,
-        label: s.admission_number
-          ? `${s.name} (${s.admission_number})`
-          : s.name,
+        label: s.name,
+        sublabel: s.admission_number ?? undefined,
       })),
     [students]
   );
@@ -112,29 +120,22 @@ export default function CreateInvoiceScreen() {
 
   const issueDate = watch('issue_date');
 
-  const handleBack = React.useCallback(() => {
-    if (formState.isDirty) {
-      Alert.alert(
-        t('discard.title', { defaultValue: 'Discard changes?' }),
-        t('discard.body', {
-          defaultValue: 'Your unsaved changes will be lost.',
-        }),
-        [
-          {
-            text: t('discard.cancel', { defaultValue: 'Keep editing' }),
-            style: 'cancel',
-          },
-          {
-            text: t('discard.confirm', { defaultValue: 'Discard' }),
-            style: 'destructive',
-            onPress: () => router.back(),
-          },
-        ]
-      );
-    } else {
+  const handleBack = React.useCallback(async () => {
+    if (!formState.isDirty) {
       router.back();
+      return;
     }
-  }, [formState.isDirty, t]);
+    const discard = await confirm({
+      title: t('discard.title', { defaultValue: 'Discard changes?' }),
+      description: t('discard.body', {
+        defaultValue: 'Your unsaved changes will be lost.',
+      }),
+      tone: 'danger',
+      confirmLabel: t('discard.confirm', { defaultValue: 'Discard' }),
+      cancelLabel: t('discard.cancel', { defaultValue: 'Keep editing' }),
+    });
+    if (discard) router.back();
+  }, [formState.isDirty, t, confirm]);
 
   React.useEffect(() => {
     const onBackPress = () => {
@@ -179,30 +180,21 @@ export default function CreateInvoiceScreen() {
     try {
       const result = await createMutation.mutateAsync(payload);
       const invoiceId = result?.invoice?.id;
-      Alert.alert(
-        t('invoiceCreate.successTitle', { defaultValue: 'Invoice created' }),
-        t('invoiceCreate.successBody', {
-          defaultValue: 'The invoice has been issued.',
-        }),
-        [
-          {
-            text: t('invoiceCreate.ok', { defaultValue: 'OK' }),
-            onPress: () => {
-              if (invoiceId) {
-                router.replace(
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- expo-router typed routes don't yet include this dynamic route shape
-                  {
-                    pathname: '/(protected)/finance/invoices/[id]',
-                    params: { id: invoiceId },
-                  } as any
-                );
-              } else {
-                router.back();
-              }
-            },
-          },
-        ]
+      // Nothing to decide, and the next screen shows the invoice anyway.
+      toast.success(
+        t('invoiceCreate.successBody', { defaultValue: 'The invoice has been issued.' })
       );
+      if (invoiceId) {
+        router.replace(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- expo-router typed routes don't yet include this dynamic route shape
+          {
+            pathname: '/(protected)/finance/invoices/[id]',
+            params: { id: invoiceId },
+          } as any
+        );
+      } else {
+        router.back();
+      }
     } catch (err) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- service throws untyped errors
       const anyErr = err as any;
@@ -217,40 +209,20 @@ export default function CreateInvoiceScreen() {
           }
         }
       } else {
-        Alert.alert(
-          t('invoiceCreate.errorTitle', {
-            defaultValue: 'Could not create invoice',
-          }),
-          anyErr?.message ?? 'Please try again.'
-        );
+        toast.error(anyErr?.message ?? 'Please try again.');
       }
     }
   };
 
   return (
     <ScreenContainer keyboardOffset={20} topInset={false}>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <AppIcon
-          name="arrow-back"
-          size="lg"
-          color="onSurface"
-          onPress={handleBack}
-          accessibilityLabel="Back"
-        />
-        <Link onPress={handleBack}>
-          {t('cancel', { defaultValue: 'Cancel' })}
-        </Link>
-      </View>
-
-      <Text variant="display" color="onSurface" style={{ marginTop: spacing.xs }}>
-        {t('invoiceCreate.title', { defaultValue: 'New invoice' })}
-      </Text>
+      <PageHeader
+        title={t('invoiceCreate.title', { defaultValue: 'New invoice' })}
+        onBack={handleBack}
+        right={<Link onPress={handleBack}>{t('cancel', { defaultValue: 'Cancel' })}</Link>}
+        noHorizontalPadding
+        divider={false}
+      />
 
       <View
         style={{
@@ -265,13 +237,16 @@ export default function CreateInvoiceScreen() {
             defaultValue: 'Student & period',
           })}
         >
-          <FormSelect
+          <FormSelectSheet
             control={control}
             name="student_id"
             label={t('invoiceCreate.fieldStudent', {
               defaultValue: 'Student',
             })}
             options={studentOptions}
+            placeholder={t('invoiceCreate.fieldStudentPlaceholder', {
+              defaultValue: 'Choose a student',
+            })}
           />
           <FormSelect
             control={control}

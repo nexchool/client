@@ -5,7 +5,6 @@ import {
   ScrollView,
   Modal,
   Pressable,
-  Alert,
   ActivityIndicator,
   Switch,
 } from "react-native";
@@ -15,9 +14,11 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "@/common/theme";
 import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
+import { PageHeader } from "@/common/components/PageHeader";
 import { ProfileActionRow } from "@/modules/profile/components/ProfileActionRow";
 import { useAuth } from "@/modules/auth/hooks/useAuth";
 import { setAppLanguage, getAppLanguage, type SupportedLanguage } from "@/i18n";
+import { useDialog } from "@/common/feedback";
 import {
   getPushNotificationsPreference,
   setPushNotificationsPreference,
@@ -40,6 +41,7 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { palette, spacing } = useTheme();
   const { t } = useTranslation(["navigation", "settings", "common", "profile"]);
+  const { confirm } = useDialog();
   const { logout } = useAuth();
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -99,52 +101,26 @@ export default function SettingsScreen() {
     [pushBusy],
   );
 
-  const handleLogout = useCallback(() => {
-    Alert.alert(
-      t("profile:logoutConfirm.title", { defaultValue: "Sign out" }),
-      t("profile:logoutConfirm.message", {
+  const handleLogout = useCallback(async () => {
+    const signOut = await confirm({
+      title: t("profile:logoutConfirm.title", { defaultValue: "Sign out" }),
+      description: t("profile:logoutConfirm.message", {
         defaultValue: "Are you sure you want to sign out?",
       }),
-      [
-        {
-          text: t("profile:logoutConfirm.cancel", { defaultValue: "Cancel" }),
-          style: "cancel",
-        },
-        {
-          text: t("profile:logoutConfirm.confirm", { defaultValue: "Sign out" }),
-          style: "destructive",
-          onPress: () => {
-            void logout();
-          },
-        },
-      ],
-    );
+      tone: "danger",
+      confirmLabel: t("profile:logoutConfirm.confirm", { defaultValue: "Sign out" }),
+      cancelLabel: t("profile:logoutConfirm.cancel", { defaultValue: "Cancel" }),
+    });
+    if (signOut) void logout();
   }, [logout, t]);
 
   return (
     <View style={[styles.container, { backgroundColor: palette.surface }]}>
-      <View
-        style={[
-          styles.header,
-          {
-            paddingHorizontal: spacing.lg,
-            paddingVertical: spacing.md,
-            borderBottomColor: palette.outlineVariant,
-          },
-        ]}
-      >
-        <AppIcon
-          name="arrow-back"
-          size="lg"
-          color="onSurface"
-          onPress={handleBack}
-          accessibilityLabel={t("common:back")}
-          style={{ marginRight: spacing.sm }}
-        />
-        <Text variant="headlineLg" color="onSurface" style={{ flex: 1 }}>
-          {t("navigation:tabs.settings")}
-        </Text>
-      </View>
+      <PageHeader
+        title={t("navigation:tabs.settings")}
+        onBack={handleBack}
+        backLabel={t("common:back")}
+      />
 
       <ScrollView
         style={styles.scroll}
@@ -345,11 +321,6 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderBottomWidth: 1,
-  },
   scroll: { flex: 1 },
   modalOverlay: {
     flex: 1,

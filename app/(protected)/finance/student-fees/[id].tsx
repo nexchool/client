@@ -10,7 +10,6 @@ import {
   RefreshControl,
   TextInput,
   Modal,
-  Alert,
   Platform,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -28,8 +27,10 @@ import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
 import { Skeleton } from "@/common/components/Skeleton";
 import { EmptyState } from "@/common/components/EmptyState";
+import { BackHeader } from "@/common/components/BackHeader";
 import { formatCurrency } from "@/common/utils/formatCurrency";
 import { useModalBodyHeight } from '@/common/hooks/useModalBodyHeight';
+import { useDialog, useToast } from "@/common/feedback";
 
 function formatDate(s: string, locale: string) {
   try {
@@ -52,6 +53,8 @@ function daysUntil(dateStr: string): number | null {
 type AllocationState = Record<string, string>;
 
 export default function StudentFeeDetailPage() {
+  const toast = useToast();
+  const { confirm } = useDialog();
   const { t, i18n } = useTranslation("finance");
   const locale = calendarLocaleForLanguage(i18n.language ?? "en");
   const { id, action } = useLocalSearchParams<{ id: string; action?: string }>();
@@ -165,15 +168,12 @@ export default function StudentFeeDetailPage() {
   const handleRecordPayment = async () => {
     const amt = parseFloat(amount);
     if (!id || isNaN(amt) || amt <= 0) {
-      Alert.alert(t("common.error"), t("studentFeeDetail.alerts.validAmount"));
+      toast.error(t("studentFeeDetail.alerts.validAmount"));
       return;
     }
     if (amt > remaining) return;
     if (useAllocations && allocationMismatch) {
-      Alert.alert(
-        t("common.error"),
-        t("studentFeeDetail.alerts.allocationSum")
-      );
+      toast.error(t("studentFeeDetail.alerts.allocationSum"));
       return;
     }
     try {
@@ -203,10 +203,7 @@ export default function StudentFeeDetailPage() {
       setNotes("");
       setAllocations({});
     } catch (e: any) {
-      Alert.alert(
-        t("common.error"),
-        e?.message ?? t("studentFeeDetail.alerts.recordFailed")
-      );
+      toast.error(e?.message ?? t("studentFeeDetail.alerts.recordFailed"));
     }
   };
 
@@ -227,10 +224,7 @@ export default function StudentFeeDetailPage() {
       setRefundPaymentId(null);
       setRefundReason("");
     } catch (e: any) {
-      Alert.alert(
-        t("common.error"),
-        e?.message ?? t("studentFeeDetail.alerts.refundFailed")
-      );
+      toast.error(e?.message ?? t("studentFeeDetail.alerts.refundFailed"));
     }
   };
 
@@ -255,12 +249,9 @@ export default function StudentFeeDetailPage() {
         );
       }
     } catch (e) {
-      Alert.alert(
-        t("common.error"),
-        e instanceof Error
+      toast.error(e instanceof Error
           ? e.message
-          : t("studentFeeDetail.alerts.downloadInvoiceFailed")
-      );
+          : t("studentFeeDetail.alerts.downloadInvoiceFailed"));
     } finally {
       setDownloading(null);
     }
@@ -286,12 +277,9 @@ export default function StudentFeeDetailPage() {
         );
       }
     } catch (e) {
-      Alert.alert(
-        t("common.error"),
-        e instanceof Error
+      toast.error(e instanceof Error
           ? e.message
-          : t("studentFeeDetail.alerts.downloadReceiptFailed")
-      );
+          : t("studentFeeDetail.alerts.downloadReceiptFailed"));
     } finally {
       setDownloading(null);
     }
@@ -299,41 +287,21 @@ export default function StudentFeeDetailPage() {
 
   const handleRemoveFromStructure = async () => {
     if (!id) return;
-    Alert.alert(
-      t("studentFeeDetail.alerts.removeTitle"),
-      t("studentFeeDetail.alerts.removeMessage"),
-      [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("common.remove"),
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteFeeMut.mutateAsync(id);
-              Alert.alert(
-                t("studentFeeDetail.alerts.removeSuccessTitle"),
-                t("studentFeeDetail.alerts.removeSuccessMessage"),
-                [
-                  {
-                    text: t("common.ok"),
-                    onPress: () =>
-                      router.replace(
-                        "/(protected)/finance/student-fees" as any
-                      ),
-                  },
-                ],
-                { cancelable: false }
-              );
-            } catch (e: any) {
-              Alert.alert(
-                t("common.error"),
-                e?.message ?? t("studentFeeDetail.alerts.removeFailed")
-              );
-            }
-          },
-        },
-      ]
-    );
+    const ok = await confirm({
+      title: t("studentFeeDetail.alerts.removeTitle"),
+      description: t("studentFeeDetail.alerts.removeMessage"),
+      tone: "danger",
+      confirmLabel: t("common.remove"),
+      cancelLabel: t("common.cancel"),
+    });
+    if (!ok) return;
+    try {
+      await deleteFeeMut.mutateAsync(id);
+      toast.success(t("studentFeeDetail.alerts.removeSuccessMessage"));
+      router.replace("/(protected)/finance/student-fees" as any);
+    } catch (e: any) {
+      toast.error(e?.message ?? t("studentFeeDetail.alerts.removeFailed"));
+    }
   };
 
   if (error) {
@@ -773,12 +741,7 @@ export default function StudentFeeDetailPage() {
         {/* Statement CTA */}
         <Pressable
           onPress={() =>
-            Alert.alert(
-              t("studentFeeDetail.viewStatement", {
-                defaultValue: "View statement",
-              }),
-              "Coming soon"
-            )
+            toast.info("Coming soon")
           }
           style={({ pressed }) => ({
             flexDirection: "row",
@@ -1364,34 +1327,6 @@ export default function StudentFeeDetailPage() {
   );
 }
 
-function BackHeader({ title }: { title: string }) {
-  const { spacing } = useTheme();
-  const router = useRouter();
-  return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        paddingHorizontal: spacing.marginMobile,
-        paddingTop: spacing.md,
-        paddingBottom: spacing.sm,
-        gap: spacing.sm,
-      }}
-    >
-      <AppIcon
-        name="arrow-back"
-        size="lg"
-        color="onSurface"
-        onPress={() => router.back()}
-        accessibilityLabel="Back"
-      />
-      <Text variant="headlineLg" color="onSurface" numberOfLines={1} style={{ flex: 1 }}>
-        {title}
-      </Text>
-    </View>
-  );
-}
-
 function DetailRow({
   label,
   value,
@@ -1437,6 +1372,7 @@ function StatusPill({
   kind?: "fee" | "payment";
 }) {
   const { t } = useTranslation("finance");
+  const toast = useToast();
   const { palette, spacing, radius } = useTheme();
   const color = palette[STATUS_PILL_ACCENT[status] ?? "onSurfaceVariant"];
   const labelKey =

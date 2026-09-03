@@ -23,6 +23,7 @@ import { AppIcon } from '@/common/components/AppIcon';
 import { Button } from '@/common/components/Button';
 import { Link } from '@/common/components/Link';
 import { Skeleton } from '@/common/components/Skeleton';
+import { PageHeader } from '@/common/components/PageHeader';
 import { FormField, FormDatePicker, FormSection } from '@/common/forms';
 import {
   useTeacher,
@@ -31,11 +32,14 @@ import {
 } from '../hooks/useTeachers';
 import { teacherFormSchema, type TeacherFormInput } from '../validation/schemas';
 import type { CreateTeacherDTO, UpdateTeacherDTO } from '../types';
+import { useDialog, useToast } from '@/common/feedback';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
 export default function TeacherFormScreen() {
   const { t } = useTranslation('teachers');
+  const { confirm } = useDialog();
+  const toast = useToast();
   const { palette, spacing } = useTheme();
   const params = useLocalSearchParams<{ id?: string }>();
   const isEdit = !!params.id;
@@ -78,29 +82,22 @@ export default function TeacherFormScreen() {
     });
   }, [isEdit, detailQuery.data, reset]);
 
-  const handleBack = React.useCallback(() => {
-    if (formState.isDirty) {
-      Alert.alert(
-        t('discard.title', { defaultValue: 'Discard changes?' }),
-        t('discard.body', {
-          defaultValue: 'Your unsaved changes will be lost.',
-        }),
-        [
-          {
-            text: t('discard.cancel', { defaultValue: 'Keep editing' }),
-            style: 'cancel',
-          },
-          {
-            text: t('discard.confirm', { defaultValue: 'Discard' }),
-            style: 'destructive',
-            onPress: () => router.back(),
-          },
-        ]
-      );
-    } else {
+  const handleBack = React.useCallback(async () => {
+    if (!formState.isDirty) {
       router.back();
+      return;
     }
-  }, [formState.isDirty, t]);
+    const discard = await confirm({
+      title: t('discard.title', { defaultValue: 'Discard changes?' }),
+      description: t('discard.body', {
+        defaultValue: 'Your unsaved changes will be lost.',
+      }),
+      tone: 'danger',
+      confirmLabel: t('discard.confirm', { defaultValue: 'Discard' }),
+      cancelLabel: t('discard.cancel', { defaultValue: 'Keep editing' }),
+    });
+    if (discard) router.back();
+  }, [formState.isDirty, t, confirm]);
 
   React.useEffect(() => {
     const onBackPress = () => {
@@ -160,28 +157,22 @@ export default function TeacherFormScreen() {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any -- expo-router typed routes don't yet include this dynamic route shape
               { pathname: '/(protected)/teachers/[id]', params: { id: created.id } } as any
             );
-          Alert.alert(
-            t('credentials.title', { defaultValue: 'Teacher account created' }),
-            credBody,
-            [
-              {
-                text: t('credentials.copy', { defaultValue: 'Copy credentials' }),
-                onPress: async () => {
-                  await Clipboard.setStringAsync(
-                    `Email: ${result.credentials!.email}\n` +
-                      `Employee ID: ${result.credentials!.employee_id}\n` +
-                      `Password: ${result.credentials!.password}`
-                  );
-                  navigateToDetail();
-                },
-              },
-              {
-                text: t('credentials.done', { defaultValue: 'Done' }),
-                onPress: navigateToDetail,
-              },
-            ],
-            { cancelable: false }
-          );
+          // The password is shown once and nowhere else, so this stays a
+          // dialog: it has to be read, and copying it is the point.
+          const copyToClipboard = await confirm({
+            title: t('credentials.title', { defaultValue: 'Teacher account created' }),
+            description: credBody,
+            confirmLabel: t('credentials.copy', { defaultValue: 'Copy credentials' }),
+            cancelLabel: t('credentials.done', { defaultValue: 'Done' }),
+          });
+          if (copyToClipboard) {
+            await Clipboard.setStringAsync(
+              `Email: ${result.credentials!.email}\n` +
+                `Employee ID: ${result.credentials!.employee_id}\n` +
+                `Password: ${result.credentials!.password}`
+            );
+          }
+          navigateToDetail();
         } else {
           router.replace({
             pathname: '/(protected)/teachers/[id]',
@@ -206,10 +197,7 @@ export default function TeacherFormScreen() {
           }
         }
       } else {
-        Alert.alert(
-          t('save.errorTitle', { defaultValue: 'Could not save' }),
-          anyErr?.message ?? 'Please try again.'
-        );
+        toast.error(anyErr?.message ?? 'Please try again.');
       }
     }
   };
@@ -226,32 +214,21 @@ export default function TeacherFormScreen() {
 
   return (
     <ScreenContainer keyboardOffset={20} topInset={false}>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <Pressable
-          onPress={handleBack}
-          hitSlop={12}
-          style={{ width: 44, height: 44, justifyContent: 'center' }}
-        >
-          <AppIcon name="chevron-back" size="lg" color="onSurface" />
-        </Pressable>
-        {!isEdit ? (
-          <Link onPress={handleBack}>
-            {t('cancel', { defaultValue: 'Cancel' })}
-          </Link>
-        ) : null}
-      </View>
-
-      <Text variant="display" color="onSurface" style={{ marginTop: spacing.xs }}>
-        {isEdit
-          ? t('form.editTitle', { defaultValue: 'Edit teacher' })
-          : t('form.newTitle', { defaultValue: 'New teacher' })}
-      </Text>
+      <PageHeader
+        title={
+          isEdit
+            ? t('form.editTitle', { defaultValue: 'Edit teacher' })
+            : t('form.newTitle', { defaultValue: 'New teacher' })
+        }
+        onBack={handleBack}
+        right={
+          !isEdit ? (
+            <Link onPress={handleBack}>{t('cancel', { defaultValue: 'Cancel' })}</Link>
+          ) : null
+        }
+        noHorizontalPadding
+        divider={false}
+      />
 
       <View style={{ gap: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.scrollBottomWithFooter }}>
         <FormSection title={t('section.personal', { defaultValue: 'Personal info' })}>

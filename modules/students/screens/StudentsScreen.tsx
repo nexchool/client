@@ -9,7 +9,7 @@ import {
   TextInput,
   Pressable,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { useStudents } from "../hooks/useStudents";
 import { StudentListItem } from "../components/StudentListItem";
 import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
@@ -19,7 +19,15 @@ import * as PERMS from "@/modules/permissions/constants/permissions";
 import { useTheme, Spacing } from "@/common/theme";
 import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
-import { FilterChips } from "@/common/components/FilterChips";
+import { FilterPill } from "@/common/components/FilterPill";
+import { PageHeader } from "@/common/components/PageHeader";
+import {
+  StudentFiltersSheet,
+  EMPTY_STUDENT_FILTERS,
+  countActiveStudentFilters,
+  type StudentFilters,
+} from "../components/StudentFiltersSheet";
+import { studentStatusKey } from "../constants/studentStatus";
 import { Student } from "../types";
 
 // Debounce hook
@@ -39,8 +47,6 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-type StatusFilter = "all" | "active" | "inactive";
-
 export default function StudentsScreen() {
   const { t } = useTranslation("students");
   const router = useRouter();
@@ -55,9 +61,14 @@ export default function StudentsScreen() {
   const { selectedAcademicYearId } = useAcademicYearContext();
   const { palette, spacing, radius, elevation } = useTheme();
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  // Seeded from the global search screen's "See all", so the term the
+  // person typed there is already applied when this list opens.
+  const { q } = useLocalSearchParams<{ q?: string }>();
+  const [searchQuery, setSearchQuery] = useState(q ?? "");
+  const [filters, setFilters] = useState<StudentFilters>(EMPTY_STUDENT_FILTERS);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const debouncedSearch = useDebounce(searchQuery, 500);
+  const activeFilterCount = countActiveStudentFilters(filters);
 
   // Check permissions
   const canViewAll = hasAnyPermission([
@@ -69,14 +80,14 @@ export default function StudentsScreen() {
   useEffect(() => {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canViewAll, canViewSelf, debouncedSearch, statusFilter, selectedAcademicYearId]);
+  }, [canViewAll, canViewSelf, debouncedSearch, filters, selectedAcademicYearId]);
 
   const loadData = () => {
     if (canViewAll) {
       fetchStudents({
         search: debouncedSearch || undefined,
         academic_year_id: selectedAcademicYearId || undefined,
-        student_status: statusFilter === "all" ? undefined : statusFilter,
+        student_status: filters.status ?? undefined,
       });
     } else if (canViewSelf) {
       fetchMyProfile();
@@ -90,46 +101,90 @@ export default function StudentsScreen() {
   const renderFilters = () => {
     return (
       <View style={styles.toolbar}>
-        <View
-          style={[
-            styles.searchContainer,
-            {
-              borderRadius: radius.DEFAULT,
-              borderColor: palette.outlineVariant,
-              backgroundColor: palette.surfaceContainerLowest,
-            },
-          ]}
-        >
-          <AppIcon name="search" size="md" color="outline" />
-          <TextInput
-            style={[styles.searchInput, { color: palette.onSurface }]}
-            placeholder={t("list.searchPlaceholder")}
-            placeholderTextColor={palette.onSurfaceVariant}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery.length > 0 && (
-            <AppIcon
-              name="close-circle"
-              size="md"
-              color="onSurfaceVariant"
-              onPress={() => setSearchQuery("")}
-              accessibilityLabel="Clear search"
+        <View style={styles.searchRow}>
+          <View
+            style={[
+              styles.searchContainer,
+              {
+                borderRadius: radius.DEFAULT,
+                borderColor: palette.outlineVariant,
+                backgroundColor: palette.surfaceContainerLowest,
+              },
+            ]}
+          >
+            <AppIcon name="search" size="md" color="outline" />
+            <TextInput
+              style={[styles.searchInput, { color: palette.onSurface }]}
+              placeholder={t("list.searchPlaceholder")}
+              placeholderTextColor={palette.onSurfaceVariant}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
             />
-          )}
+            {searchQuery.length > 0 && (
+              <AppIcon
+                name="close-circle"
+                size="md"
+                color="onSurfaceVariant"
+                onPress={() => setSearchQuery("")}
+                accessibilityLabel="Clear search"
+              />
+            )}
+          </View>
+
+          <Pressable
+            onPress={() => setFiltersOpen(true)}
+            accessibilityRole="button"
+            accessibilityLabel={
+              activeFilterCount > 0
+                ? `Filters, ${activeFilterCount} applied`
+                : "Filters"
+            }
+            style={({ pressed }) => [
+              styles.filterButton,
+              {
+                borderRadius: radius.DEFAULT,
+                borderColor: activeFilterCount > 0 ? palette.primary : palette.outlineVariant,
+                backgroundColor: activeFilterCount > 0
+                  ? palette.primaryContainer
+                  : pressed
+                    ? palette.surfaceContainerHigh
+                    : palette.surfaceContainerLowest,
+              },
+            ]}
+          >
+            <AppIcon
+              name="options-outline"
+              size="md"
+              color={activeFilterCount > 0 ? "onPrimaryContainer" : "onSurfaceVariant"}
+            />
+          </Pressable>
         </View>
 
-        {/* All options visible — replaces the old tap-to-cycle button where the
-            available states were invisible until you cycled through them. */}
-        <FilterChips
-          options={[
-            { value: "all", label: t("list.filterStatusAll") },
-            { value: "active", label: t("list.filterStatusActive") },
-            { value: "inactive", label: t("list.filterStatusInactive") },
-          ]}
-          value={statusFilter}
-          onChange={setStatusFilter}
-        />
+        {/* What is applied, and how to drop it. Nothing is rendered when no
+            filter is on, so the list does not carry an empty row. */}
+        {activeFilterCount > 0 ? (
+          <View style={styles.activeFilters}>
+            {filters.status ? (
+              <FilterPill
+                label={`${t("filters.statusLabel", { defaultValue: "Status" })}: ${t(
+                  studentStatusKey(filters.status),
+                  { defaultValue: filters.status }
+                )}`}
+                onRemove={() => setFilters({ ...filters, status: null })}
+              />
+            ) : null}
+            <Pressable
+              onPress={() => setFilters(EMPTY_STUDENT_FILTERS)}
+              hitSlop={8}
+              accessibilityRole="button"
+              style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+            >
+              <Text variant="labelMd" color="primary">
+                {t("filters.clearAll", { defaultValue: "Clear all" })}
+              </Text>
+            </Pressable>
+          </View>
+        ) : null}
       </View>
     );
   };
@@ -239,20 +294,7 @@ export default function StudentsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: palette.surface }]}>
-      <View
-        style={[
-          styles.header,
-          {
-            paddingHorizontal: spacing.marginMobile,
-            paddingVertical: spacing.md,
-            borderBottomColor: palette.outlineVariant,
-          },
-        ]}
-      >
-        <Text variant="headlineLg" color="onSurface">
-          {t("list.title")}
-        </Text>
-      </View>
+      <PageHeader title={t("list.title")} />
 
       {renderContent()}
 
@@ -278,6 +320,13 @@ export default function StudentsScreen() {
           <AppIcon name="add" size="xl" color="onPrimary" />
         </Pressable>
       </Protected>
+
+      <StudentFiltersSheet
+        visible={filtersOpen}
+        onClose={() => setFiltersOpen(false)}
+        filters={filters}
+        onChange={setFilters}
+      />
     </View>
   );
 }
@@ -292,22 +341,34 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: Spacing.xl,
   },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
   toolbar: {
     marginBottom: Spacing.md,
     gap: Spacing[12],
   },
+  searchRow: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: Spacing.sm,
+  },
   searchContainer: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: Spacing[12],
     paddingVertical: Spacing.sm,
     borderWidth: 1,
+    gap: Spacing.sm,
+  },
+  filterButton: {
+    width: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+  },
+  activeFilters: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
     gap: Spacing.sm,
   },
   searchInput: {
