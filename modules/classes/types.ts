@@ -13,6 +13,28 @@ export interface ClassItem {
   grade_level?: number | null;
   /** Grade 11–12 stream: Science / Commerce / Arts / Vocational. Null for grades 1–10. */
   stream?: string | null;
+  /**
+   * How this class is scoped. The server has always sent these; the client
+   * ignored them, so a picker showed "1 A" three times over — one per
+   * programme, campus or medium — with nothing to tell them apart.
+   *
+   * A trust runs many campuses, several boards and parallel mediums, so grade
+   * plus section is not an identity. See the scale contract in CLAUDE.md.
+   */
+  school_unit_id?: string | null;
+  /** The campus / branch this class belongs to. */
+  school_unit_name?: string | null;
+  programme_id?: string | null;
+  /** The board or programme, e.g. "CBSE", "Gujarat Board". */
+  programme_name?: string | null;
+  medium_id?: string | null;
+  /** Language of instruction, e.g. "English", "Gujarati". */
+  medium_name?: string | null;
+  grade_id?: string | null;
+  grade_name?: string | null;
+  grade_sequence?: number | null;
+  department_id?: string | null;
+  department_name?: string | null;
   academic_year: string;
   academic_year_id?: string;
   start_date?: string;

@@ -7,6 +7,8 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
 import { Button } from '@/common/components/Button';
 import { FormField, FormSelect, FormDatePicker, type SelectOption } from '@/common/forms';
+import { FormSelectSheet } from '@/common/forms/FormSelectSheet';
+import type { SelectOption as SheetOption } from '@/common/components/SelectSheet';
 import { useTeachers } from '@/modules/teachers/hooks/useTeachers';
 import { scheduleOverrideSchema, type ScheduleOverrideInput } from '../validation/schemas';
 import { useCreateScheduleOverride } from '../hooks/useScheduleOverride';
@@ -74,11 +76,13 @@ export function ScheduleOverrideSheet({ visible, onClose, defaultDate, defaultSl
     },
   ];
 
-  const teacherOptions: SelectOption[] = useMemo(
+  // Every teacher on the staff — a sheet with search rather than a chip wall.
+  const teacherOptions: SheetOption[] = useMemo(
     () =>
       teachers.map((tch) => ({
         value: tch.id,
         label: tch.name || tch.email || tch.id,
+        sublabel: tch.name && tch.email ? tch.email : undefined,
       })),
     [teachers]
   );
@@ -176,11 +180,14 @@ export function ScheduleOverrideSheet({ visible, onClose, defaultDate, defaultSl
           />
 
           {overrideType === 'substitute' ? (
-            <FormSelect
+            <FormSelectSheet
               control={control}
               name={'substitute_teacher_id' as any}
               label={t('override.fields.substituteTeacher', { defaultValue: 'Substitute teacher' })}
               options={teacherOptions}
+              placeholder={t('override.fields.substituteTeacherPlaceholder', {
+                defaultValue: 'Choose a teacher',
+              })}
             />
           ) : null}
 

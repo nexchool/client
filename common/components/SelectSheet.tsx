@@ -171,6 +171,8 @@ export type SelectSheetProps = {
   emptyLabel?: string;
   sheetTitle?: string;
   error?: string;
+  /** Guidance under the field, shown when there is no error. */
+  helper?: string;
   disabled?: boolean;
 };
 
@@ -184,6 +186,7 @@ export function SelectSheet({
   emptyLabel,
   sheetTitle,
   error,
+  helper,
   disabled,
 }: SelectSheetProps) {
   const { t } = useTranslation();
@@ -206,6 +209,7 @@ export function SelectSheet({
         display={display}
         placeholder={placeholder ?? t('select.placeholder', { defaultValue: 'Select…' })}
         error={error}
+        helper={helper}
         disabled={disabled}
         onPress={() => setOpen(true)}
       />

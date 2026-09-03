@@ -7,6 +7,16 @@ export interface ClassOption {
   /** What the school calls this class ("5 A"), composed server-side. */
   display_name?: string | null;
   section?: string;
+  /**
+   * How the class is scoped. The endpoint has always returned these; this
+   * type stopped short of them, so every picker built on it could only offer
+   * "1 A" — three times over in a trust with three programmes, with no way to
+   * tell which was which. See `classScopeLabel`.
+   */
+  school_unit_name?: string | null;
+  programme_name?: string | null;
+  medium_name?: string | null;
+  stream?: string | null;
 }
 
 export const financeClassService = {

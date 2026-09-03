@@ -19,6 +19,7 @@ import { Button } from '@/common/components/Button';
 import { Link } from '@/common/components/Link';
 import { Text } from '@/common/components/Text';
 import { AppIcon } from '@/common/components/AppIcon';
+import { PageHeader } from '@/common/components/PageHeader';
 import {
   FormField,
   FormSelect,
@@ -26,6 +27,8 @@ import {
   FormSection,
   type SelectOption,
 } from '@/common/forms';
+import { FormSelectSheet } from '@/common/forms/FormSelectSheet';
+import type { SelectOption as SheetOption } from '@/common/components/SelectSheet';
 import { useStudents } from '@/modules/students/hooks/useStudents';
 import { useAcademicYearContext } from '@/modules/academics/context/AcademicYearContext';
 import { useCreateInvoice } from '../hooks/useFinance';
@@ -54,13 +57,15 @@ export default function CreateInvoiceScreen() {
     fetchStudents();
   }, [fetchStudents]);
 
-  const studentOptions: SelectOption[] = React.useMemo(
+  // A sheet, not a chip row: this is every student in the school. The demo
+  // tenant alone has 2,015, and the admission number moves to its own line so
+  // search can match either without the label running off the row.
+  const studentOptions: SheetOption[] = React.useMemo(
     () =>
       students.map((s) => ({
         value: s.id,
-        label: s.admission_number
-          ? `${s.name} (${s.admission_number})`
-          : s.name,
+        label: s.name,
+        sublabel: s.admission_number ?? undefined,
       })),
     [students]
   );
@@ -229,28 +234,13 @@ export default function CreateInvoiceScreen() {
 
   return (
     <ScreenContainer keyboardOffset={20} topInset={false}>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <AppIcon
-          name="arrow-back"
-          size="lg"
-          color="onSurface"
-          onPress={handleBack}
-          accessibilityLabel="Back"
-        />
-        <Link onPress={handleBack}>
-          {t('cancel', { defaultValue: 'Cancel' })}
-        </Link>
-      </View>
-
-      <Text variant="display" color="onSurface" style={{ marginTop: spacing.xs }}>
-        {t('invoiceCreate.title', { defaultValue: 'New invoice' })}
-      </Text>
+      <PageHeader
+        title={t('invoiceCreate.title', { defaultValue: 'New invoice' })}
+        onBack={handleBack}
+        right={<Link onPress={handleBack}>{t('cancel', { defaultValue: 'Cancel' })}</Link>}
+        noHorizontalPadding
+        divider={false}
+      />
 
       <View
         style={{
@@ -265,13 +255,16 @@ export default function CreateInvoiceScreen() {
             defaultValue: 'Student & period',
           })}
         >
-          <FormSelect
+          <FormSelectSheet
             control={control}
             name="student_id"
             label={t('invoiceCreate.fieldStudent', {
               defaultValue: 'Student',
             })}
             options={studentOptions}
+            placeholder={t('invoiceCreate.fieldStudentPlaceholder', {
+              defaultValue: 'Choose a student',
+            })}
           />
           <FormSelect
             control={control}

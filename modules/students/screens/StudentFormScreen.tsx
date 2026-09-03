@@ -24,13 +24,17 @@ import { AppIcon } from '@/common/components/AppIcon';
 import { Button } from '@/common/components/Button';
 import { Link } from '@/common/components/Link';
 import { Skeleton } from '@/common/components/Skeleton';
+import { PageHeader } from '@/common/components/PageHeader';
 import {
   FormField,
   FormSelect,
+  FormSelectSheet,
   FormDatePicker,
   FormSection,
   type SelectOption,
 } from '@/common/forms';
+import type { SelectOption as SheetOption } from '@/common/components/SelectSheet';
+import { classScopeLabel, classDisplayName } from '@/modules/classes/utils/classLabel';
 import {
   useStudent,
   useCreateStudent,
@@ -70,11 +74,12 @@ export default function StudentFormScreen() {
   const updateMutation = useUpdateStudent(params.id ?? '');
 
   const classesQuery = useClasses();
-  const classOptions: SelectOption[] = (classesQuery.data ?? []).map((c) => ({
+  // A sheet option, not a chip: the school decides how many classes there are.
+  const classOptions: SheetOption[] = (classesQuery.data ?? []).map((c) => ({
     value: c.id,
-    label:
-      c.display_name ??
-      (c.section ? `${c.name ?? ''} - ${c.section}` : c.name ?? c.id),
+    label: classDisplayName(c),
+    // Which "1 A" this is — programme, campus, medium, stream.
+    sublabel: classScopeLabel(c),
   }));
 
   const {
@@ -287,32 +292,21 @@ export default function StudentFormScreen() {
 
   return (
     <ScreenContainer keyboardOffset={20} topInset={false}>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <Pressable
-          onPress={handleBack}
-          hitSlop={12}
-          style={{ width: 44, height: 44, justifyContent: 'center' }}
-        >
-          <AppIcon name="chevron-back" size="lg" color="onSurface" />
-        </Pressable>
-        {!isEdit ? (
-          <Link onPress={handleBack}>
-            {t('cancel', { defaultValue: 'Cancel' })}
-          </Link>
-        ) : null}
-      </View>
-
-      <Text variant="display" color="onSurface" style={{ marginTop: spacing.xs }}>
-        {isEdit
-          ? t('form.editTitle', { defaultValue: 'Edit student' })
-          : t('form.newTitle', { defaultValue: 'New student' })}
-      </Text>
+      <PageHeader
+        title={
+          isEdit
+            ? t('form.editTitle', { defaultValue: 'Edit student' })
+            : t('form.newTitle', { defaultValue: 'New student' })
+        }
+        onBack={handleBack}
+        right={
+          !isEdit ? (
+            <Link onPress={handleBack}>{t('cancel', { defaultValue: 'Cancel' })}</Link>
+          ) : null
+        }
+        noHorizontalPadding
+        divider={false}
+      />
 
       <View style={{ gap: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.scrollBottomWithFooter }}>
         <FormSection title={t('section.basic', { defaultValue: 'Basic info' })}>
@@ -337,11 +331,12 @@ export default function StudentFormScreen() {
         </FormSection>
 
         <FormSection title={t('section.classInfo', { defaultValue: 'Class' })}>
-          <FormSelect
+          <FormSelectSheet
             control={control}
             name="class_id"
             label={t('field.class', { defaultValue: 'Class' })}
             options={classOptions}
+            placeholder={t('field.classPlaceholder', { defaultValue: 'Choose a class' })}
           />
           <FormDatePicker
             control={control}
