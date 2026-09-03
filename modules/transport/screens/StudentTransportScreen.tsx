@@ -11,6 +11,7 @@ import { ProfileAvatar } from '@/common/components/ProfileAvatar';
 import { Text } from '@/common/components/Text';
 import { AppIcon } from '@/common/components/AppIcon';
 import { PressScale } from '@/common/components/PressScale';
+import { PageHeader } from '@/common/components/PageHeader';
 import { callPhone, messagePhone } from '@/common/utils/phone';
 
 export default function StudentTransportScreen() {
@@ -31,11 +32,12 @@ export default function StudentTransportScreen() {
         contentContainerStyle={{ padding: spacing.marginMobile, gap: spacing.lg, paddingBottom: spacing.scrollBottom }}
         refreshControl={<RefreshControl refreshing={!!isRefetching} onRefresh={() => refetch()} />}
       >
-        <AppIcon name="chevron-back" size="lg" color="onSurface" onPress={() => router.back()} />
-
-        <Text variant="display" color="onSurface">
-          {t('title', { defaultValue: 'My Transport' })}
-        </Text>
+        <PageHeader
+          title={t('title', { defaultValue: 'My Transport' })}
+          onBack={() => router.back()}
+          noHorizontalPadding
+          divider={false}
+        />
 
         {isLoading && !data ? (
           <Skeleton width="100%" height={200} radius={radius.xl} />

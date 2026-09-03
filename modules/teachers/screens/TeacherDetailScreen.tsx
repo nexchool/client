@@ -22,6 +22,7 @@ import { TeacherLeave, TeacherAvailability } from '../types';
 import { TeacherDetailHero } from '../components/TeacherDetailHero';
 import { TeacherSubjectsCard } from '../components/TeacherSubjectsCard';
 import { DetailTabs, type TabItem } from '@/common/components/DetailTabs';
+import { PageHeader } from '@/common/components/PageHeader';
 
 type TabKey = 'info' | 'subjects' | 'availability' | 'leaves' | 'workload';
 
@@ -291,31 +292,16 @@ export default function TeacherDetailScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: palette.surface }}>
       {/* Header */}
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          paddingHorizontal: spacing.marginMobile,
-          paddingVertical: spacing.md,
-          borderBottomWidth: 1,
-          borderBottomColor: palette.surfaceContainerHighest,
-        }}
-      >
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}>
-          <AppIcon
-            name="arrow-back"
-            size="lg"
-            color="onSurface"
-            onPress={() => router.back()}
-            accessibilityLabel={t('detail.goBack')}
-          />
-          <Text variant="headlineMd" color="onSurface" numberOfLines={1}>
-            {t('detail.title')}
-          </Text>
-        </View>
-        {canDelete ? <AppIcon name="trash-outline" size="lg" color="error" onPress={handleDelete} /> : null}
-      </View>
+      <PageHeader
+        title={t('detail.title')}
+        onBack={() => router.back()}
+        backLabel={t('detail.goBack')}
+        right={
+          canDelete ? (
+            <AppIcon name="trash-outline" size="lg" color="error" onPress={handleDelete} />
+          ) : null
+        }
+      />
 
       <ScrollView
         contentContainerStyle={{

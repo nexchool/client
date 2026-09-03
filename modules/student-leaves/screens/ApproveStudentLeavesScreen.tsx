@@ -7,6 +7,7 @@ import { Text } from '@/common/components/Text';
 import { AppIcon } from '@/common/components/AppIcon';
 import { EmptyState } from '@/common/components/EmptyState';
 import { DetailTabs } from '@/common/components/DetailTabs';
+import { PageHeader } from '@/common/components/PageHeader';
 import { useUiRole } from '@/modules/permissions/hooks/useUiRole';
 import { useTeacherQueue, useAdminFallbackQueue } from '../hooks/useStudentLeaves';
 import { StudentLeaveRow } from '../components/StudentLeaveRow';
@@ -46,21 +47,18 @@ export default function ApproveStudentLeavesScreen({
       style={{
         flex: 1,
         paddingHorizontal: spacing.marginMobile,
-        paddingTop: embedded ? spacing.sm : spacing.lg,
+        paddingTop: embedded ? spacing.sm : 0,
       }}
     >
       {embedded ? null : (
         <>
-          <AppIcon
-            name="arrow-back"
-            size="lg"
-            color="onSurface"
-            onPress={() => router.back()}
-            accessibilityLabel={t('back', { defaultValue: 'Back' })}
+          <PageHeader
+            title={t('queue.title', { defaultValue: 'Student leaves' })}
+            onBack={() => router.back()}
+            backLabel={t('back', { defaultValue: 'Back' })}
+            noHorizontalPadding
+            divider={false}
           />
-          <Text variant="display" color="onSurface" style={{ marginTop: spacing.xs }}>
-            {t('queue.title', { defaultValue: 'Student leaves' })}
-          </Text>
         </>
       )}
 

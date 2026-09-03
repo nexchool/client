@@ -357,7 +357,6 @@ export default function MarkAttendanceScreen() {
       <View
         style={{
           paddingHorizontal: spacing.marginMobile,
-          paddingTop: spacing.md,
           flexDirection: 'row',
           alignItems: 'center',
         }}

@@ -36,7 +36,7 @@ export default function StudentLeaveDetailScreen() {
 
   if (detail.isLoading || !detail.data) {
     return (
-      <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg }}>
+      <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile }}>
         <Skeleton width="100%" height={400} radius={radius.lg} />
       </View>
     );
@@ -66,9 +66,9 @@ export default function StudentLeaveDetailScreen() {
   };
 
   return (
-    <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg }}>
+    <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile }}>
       <AppIcon
-        name="arrow-back"
+        name="chevron-back"
         size="lg"
         color="onSurface"
         onPress={() => router.back()}

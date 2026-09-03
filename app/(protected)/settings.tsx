@@ -15,6 +15,7 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "@/common/theme";
 import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
+import { PageHeader } from "@/common/components/PageHeader";
 import { ProfileActionRow } from "@/modules/profile/components/ProfileActionRow";
 import { useAuth } from "@/modules/auth/hooks/useAuth";
 import { setAppLanguage, getAppLanguage, type SupportedLanguage } from "@/i18n";
@@ -123,28 +124,11 @@ export default function SettingsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: palette.surface }]}>
-      <View
-        style={[
-          styles.header,
-          {
-            paddingHorizontal: spacing.lg,
-            paddingVertical: spacing.md,
-            borderBottomColor: palette.outlineVariant,
-          },
-        ]}
-      >
-        <AppIcon
-          name="arrow-back"
-          size="lg"
-          color="onSurface"
-          onPress={handleBack}
-          accessibilityLabel={t("common:back")}
-          style={{ marginRight: spacing.sm }}
-        />
-        <Text variant="headlineLg" color="onSurface" style={{ flex: 1 }}>
-          {t("navigation:tabs.settings")}
-        </Text>
-      </View>
+      <PageHeader
+        title={t("navigation:tabs.settings")}
+        onBack={handleBack}
+        backLabel={t("common:back")}
+      />
 
       <ScrollView
         style={styles.scroll}
@@ -345,11 +329,6 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderBottomWidth: 1,
-  },
   scroll: { flex: 1 },
   modalOverlay: {
     flex: 1,

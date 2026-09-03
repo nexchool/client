@@ -12,6 +12,7 @@ import { usePermissions } from '@/modules/permissions/hooks/usePermissions';
 import * as PERMS from '@/modules/permissions/constants/permissions';
 import { StudentDetailHero } from '../components/StudentDetailHero';
 import { DetailTabs, type TabItem } from '@/common/components/DetailTabs';
+import { PageHeader } from '@/common/components/PageHeader';
 import { StudentInfoTab } from '../components/StudentInfoTab';
 import { StudentParentsTab } from '../components/StudentParentsTab';
 import { StudentFeesTab } from '../components/StudentFeesTab';
@@ -76,27 +77,16 @@ export default function StudentDetailScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: palette.surface }}>
       {/* Header */}
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          paddingHorizontal: spacing.marginMobile,
-          paddingVertical: spacing.md,
-          borderBottomWidth: 1,
-          borderBottomColor: palette.surfaceContainerHighest,
-        }}
-      >
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}>
-          <AppIcon name="arrow-back" size="lg" color="onSurface" onPress={handleBack} accessibilityLabel={t('detail.goBack')} />
-          <Text variant="headlineMd" color="onSurface">
-            {t('detail.title')}
-          </Text>
-        </View>
-        {canDelete ? (
-          <AppIcon name="trash-outline" size="lg" color="error" onPress={confirmDelete} />
-        ) : null}
-      </View>
+      <PageHeader
+        title={t('detail.title')}
+        onBack={handleBack}
+        backLabel={t('detail.goBack')}
+        right={
+          canDelete ? (
+            <AppIcon name="trash-outline" size="lg" color="error" onPress={confirmDelete} />
+          ) : null
+        }
+      />
 
       {loading && !currentStudent ? (
         <View style={{ padding: spacing.marginMobile, gap: spacing.lg }}>

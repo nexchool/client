@@ -12,6 +12,7 @@ import { Button } from '@/common/components/Button';
 import { Link } from '@/common/components/Link';
 import { Skeleton } from '@/common/components/Skeleton';
 import { DatePicker } from '@/common/components/datepicker';
+import { PageHeader } from '@/common/components/PageHeader';
 import { FormField, FormSection, FormTextArea } from '@/common/forms';
 
 import { AudiencePicker } from '../components/AudiencePicker';
@@ -207,7 +208,7 @@ export default function AnnouncementComposerScreen() {
 
   if (isEdit && detail.isLoading && !detail.data) {
     return (
-      <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg }}>
+      <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile }}>
         <Skeleton width="100%" height={400} radius={radius.lg} />
       </View>
     );
@@ -215,7 +216,7 @@ export default function AnnouncementComposerScreen() {
 
   if (isRecalled) {
     return (
-      <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg }}>
+      <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile }}>
         <Text variant="bodyMd" color="error" style={{ marginTop: spacing.xl }}>
           {t('readonly.recalled', { defaultValue: 'This announcement has been recalled and cannot be edited.' })}
         </Text>
@@ -235,28 +236,26 @@ export default function AnnouncementComposerScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1, paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg }}
+      style={{ flex: 1, paddingHorizontal: spacing.marginMobile }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={20}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <AppIcon
-          name="chevron-back"
-          size="lg"
-          color="onSurface"
-          onPress={handleBack}
-          accessibilityLabel={t('back', { defaultValue: 'Back' })}
-        />
-        <Link onPress={() => setTemplateSheetVisible(true)}>
-          {t('templates.link', { defaultValue: 'Templates' })}
-        </Link>
-      </View>
-
-      <Text variant="display" color="onSurface" style={{ marginTop: spacing.xs }}>
-        {isEdit
-          ? t('compose.editTitle', { defaultValue: 'Edit announcement' })
-          : t('compose.newTitle', { defaultValue: 'New announcement' })}
-      </Text>
+      <PageHeader
+        title={
+          isEdit
+            ? t('compose.editTitle', { defaultValue: 'Edit announcement' })
+            : t('compose.newTitle', { defaultValue: 'New announcement' })
+        }
+        onBack={handleBack}
+        backLabel={t('back', { defaultValue: 'Back' })}
+        right={
+          <Link onPress={() => setTemplateSheetVisible(true)}>
+            {t('templates.link', { defaultValue: 'Templates' })}
+          </Link>
+        }
+        noHorizontalPadding
+        divider={false}
+      />
 
       <ScrollView
         keyboardShouldPersistTaps="handled"

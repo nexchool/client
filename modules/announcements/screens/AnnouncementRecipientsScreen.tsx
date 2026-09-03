@@ -6,6 +6,7 @@ import { useTheme } from '@/common/theme';
 import { Text } from '@/common/components/Text';
 import { AppIcon } from '@/common/components/AppIcon';
 import { Skeleton } from '@/common/components/Skeleton';
+import { PageHeader } from '@/common/components/PageHeader';
 import { useAnnouncementRecipients } from '../hooks/useAnnouncements';
 import { ReadReceiptCounter } from '../components/ReadReceiptCounter';
 
@@ -29,18 +30,14 @@ export default function AnnouncementRecipientsScreen() {
   };
 
   return (
-    <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg }}>
-      <AppIcon
-        name="chevron-back"
-        size="lg"
-        color="onSurface"
-        onPress={() => router.back()}
-        accessibilityLabel={t('back', { defaultValue: 'Back' })}
+    <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile }}>
+      <PageHeader
+        title={t('recipients.title', { defaultValue: 'Recipients' })}
+        onBack={() => router.back()}
+        backLabel={t('back', { defaultValue: 'Back' })}
+        noHorizontalPadding
+        divider={false}
       />
-
-      <Text variant="display" color="onSurface" style={{ marginTop: spacing.xs }}>
-        {t('recipients.title', { defaultValue: 'Recipients' })}
-      </Text>
 
       <View style={{ marginTop: spacing.md, marginBottom: spacing.md }}>
         <ReadReceiptCounter readCount={counts.read} totalCount={counts.total} />

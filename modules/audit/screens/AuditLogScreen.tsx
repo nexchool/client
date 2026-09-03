@@ -8,6 +8,7 @@ import { Text } from '@/common/components/Text';
 import { AppIcon } from '@/common/components/AppIcon';
 import { EmptyState } from '@/common/components/EmptyState';
 import { Skeleton } from '@/common/components/Skeleton';
+import { PageHeader } from '@/common/components/PageHeader';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 import { AUDIT_LOG_VIEW } from '@/modules/permissions/constants/permissions';
 import { useAuditLogs } from '../hooks/useAuditLogs';
@@ -20,25 +21,12 @@ function Header() {
   const { spacing } = useTheme();
   const { t } = useTranslation('audit');
   return (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.sm,
-        marginBottom: spacing.md,
-      }}
-    >
-      <AppIcon
-        name="chevron-back"
-        size="lg"
-        color="onSurface"
-        onPress={() => router.back()}
-        accessibilityLabel={t('title')}
-      />
-      <Text variant="display" color="onSurface">
-        {t('title')}
-      </Text>
-    </View>
+    <PageHeader
+      title={t('title')}
+      onBack={() => router.back()}
+      noHorizontalPadding
+      divider={false}
+    />
   );
 }
 

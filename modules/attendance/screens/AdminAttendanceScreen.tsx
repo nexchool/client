@@ -15,6 +15,7 @@ import { PressScale } from "@/common/components/PressScale";
 import { HomeKpiCard } from "@/modules/home/components/HomeKpiCard";
 import { Skeleton } from "@/common/components/Skeleton";
 import { EmptyState } from "@/common/components/EmptyState";
+import { PageHeader } from "@/common/components/PageHeader";
 
 export default function AdminAttendanceScreen() {
   const { t } = useTranslation("attendance");
@@ -87,42 +88,15 @@ export default function AdminAttendanceScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: palette.surface }}>
       {/* Header */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          paddingHorizontal: spacing.marginMobile,
-          paddingVertical: spacing.md,
-          gap: spacing.sm,
-        }}
-      >
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={8}
-          style={({ pressed }) => ({
-            width: 40,
-            height: 40,
-            borderRadius: radius.full,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: pressed ? palette.surfaceContainer : "transparent",
-          })}
-        >
-          <AppIcon name="arrow-back" size="lg" color="onSurface" />
-        </Pressable>
-        <View style={{ flex: 1 }}>
-          <Text variant="headlineMd" color="onSurface">
-            {t("admin.title")}
-          </Text>
-          <Text variant="labelSm" color="onSurfaceVariant" style={{ marginTop: 2 }}>
-            {new Date(selectedDate).toLocaleDateString(undefined, {
-              weekday: "long",
-              month: "long",
-              day: "numeric",
-            })}
-          </Text>
-        </View>
-      </View>
+      <PageHeader
+        title={t("admin.title")}
+        subtitle={new Date(selectedDate).toLocaleDateString(undefined, {
+          weekday: "long",
+          month: "long",
+          day: "numeric",
+        })}
+        onBack={() => router.back()}
+      />
 
       <ScrollView
         contentContainerStyle={{

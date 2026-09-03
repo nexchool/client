@@ -28,6 +28,7 @@ import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
 import { Skeleton } from "@/common/components/Skeleton";
 import { EmptyState } from "@/common/components/EmptyState";
+import { BackHeader } from "@/common/components/BackHeader";
 import { formatCurrency } from "@/common/utils/formatCurrency";
 import { useModalBodyHeight } from '@/common/hooks/useModalBodyHeight';
 
@@ -1360,34 +1361,6 @@ export default function StudentFeeDetailPage() {
           </View>
         </View>
       </Modal>
-    </View>
-  );
-}
-
-function BackHeader({ title }: { title: string }) {
-  const { spacing } = useTheme();
-  const router = useRouter();
-  return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        paddingHorizontal: spacing.marginMobile,
-        paddingTop: spacing.md,
-        paddingBottom: spacing.sm,
-        gap: spacing.sm,
-      }}
-    >
-      <AppIcon
-        name="arrow-back"
-        size="lg"
-        color="onSurface"
-        onPress={() => router.back()}
-        accessibilityLabel="Back"
-      />
-      <Text variant="headlineLg" color="onSurface" numberOfLines={1} style={{ flex: 1 }}>
-        {title}
-      </Text>
     </View>
   );
 }

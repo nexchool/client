@@ -1,27 +1,12 @@
 import React from "react";
-import { View } from "react-native";
-import { useTheme } from "@/common/theme";
-import { Text } from "@/common/components/Text";
-import { AppIcon } from "@/common/components/AppIcon";
+import { PageHeader } from "@/common/components/PageHeader";
 
-/** Back + title header for nested transport-admin screens (matches the section pattern). */
+/**
+ * Back + title header for the transport section.
+ *
+ * Delegates to PageHeader so transport sits at the same height as every other
+ * screen; it kept its own name because several transport screens call it.
+ */
 export function TransportHeader({ title, onBack }: { title: string; onBack: () => void }) {
-  const { spacing } = useTheme();
-  return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        paddingHorizontal: spacing.marginMobile,
-        paddingTop: spacing.md,
-        paddingBottom: spacing.sm,
-        gap: spacing.sm,
-      }}
-    >
-      <AppIcon name="arrow-back" size="lg" color="onSurface" onPress={onBack} accessibilityLabel="Back" />
-      <Text variant="headlineLg" color="onSurface" style={{ flex: 1 }} numberOfLines={1}>
-        {title}
-      </Text>
-    </View>
-  );
+  return <PageHeader title={title} onBack={onBack} />;
 }

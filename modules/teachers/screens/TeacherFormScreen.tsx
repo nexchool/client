@@ -23,6 +23,7 @@ import { AppIcon } from '@/common/components/AppIcon';
 import { Button } from '@/common/components/Button';
 import { Link } from '@/common/components/Link';
 import { Skeleton } from '@/common/components/Skeleton';
+import { PageHeader } from '@/common/components/PageHeader';
 import { FormField, FormDatePicker, FormSection } from '@/common/forms';
 import {
   useTeacher,
@@ -226,32 +227,21 @@ export default function TeacherFormScreen() {
 
   return (
     <ScreenContainer keyboardOffset={20} topInset={false}>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <Pressable
-          onPress={handleBack}
-          hitSlop={12}
-          style={{ width: 44, height: 44, justifyContent: 'center' }}
-        >
-          <AppIcon name="chevron-back" size="lg" color="onSurface" />
-        </Pressable>
-        {!isEdit ? (
-          <Link onPress={handleBack}>
-            {t('cancel', { defaultValue: 'Cancel' })}
-          </Link>
-        ) : null}
-      </View>
-
-      <Text variant="display" color="onSurface" style={{ marginTop: spacing.xs }}>
-        {isEdit
-          ? t('form.editTitle', { defaultValue: 'Edit teacher' })
-          : t('form.newTitle', { defaultValue: 'New teacher' })}
-      </Text>
+      <PageHeader
+        title={
+          isEdit
+            ? t('form.editTitle', { defaultValue: 'Edit teacher' })
+            : t('form.newTitle', { defaultValue: 'New teacher' })
+        }
+        onBack={handleBack}
+        right={
+          !isEdit ? (
+            <Link onPress={handleBack}>{t('cancel', { defaultValue: 'Cancel' })}</Link>
+          ) : null
+        }
+        noHorizontalPadding
+        divider={false}
+      />
 
       <View style={{ gap: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.scrollBottomWithFooter }}>
         <FormSection title={t('section.personal', { defaultValue: 'Personal info' })}>

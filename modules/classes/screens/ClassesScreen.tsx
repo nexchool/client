@@ -19,6 +19,7 @@ import { useTheme, Spacing } from "@/common/theme";
 import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
 import { PressScale } from "@/common/components/PressScale";
+import { PageHeader } from "@/common/components/PageHeader";
 import { ClassItem, CreateClassDTO } from "../types";
 
 interface ClassSection {
@@ -106,23 +107,7 @@ export default function ClassesScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: palette.surface }]}>
-      <View
-        style={[
-          styles.header,
-          {
-            paddingHorizontal: spacing.marginMobile,
-            paddingVertical: spacing.md,
-            borderBottomColor: palette.outlineVariant,
-          },
-        ]}
-      >
-        <Text variant="headlineLg" color="onSurface">
-          {t("list.title")}
-        </Text>
-        <Text variant="bodyMd" color="onSurfaceVariant" style={styles.subtitle}>
-          {t("list.subtitle")}
-        </Text>
-      </View>
+      <PageHeader title={t("list.title")} subtitle={t("list.subtitle")} />
 
       {loading && classes.length === 0 ? (
         <View style={styles.center}>
@@ -215,12 +200,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: Spacing.xl,
-  },
-  header: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  subtitle: {
-    marginTop: 2,
   },
   sectionHeader: {
     paddingBottom: Spacing.sm,

@@ -28,6 +28,8 @@ import { AppIcon } from "@/common/components/AppIcon";
 import { DetailCard } from "@/common/components/DetailCard";
 import { DetailRow } from "@/common/components/DetailRow";
 import { EmptyState } from "@/common/components/EmptyState";
+import { BackHeader } from "@/common/components/BackHeader";
+import { PageHeader } from "@/common/components/PageHeader";
 import { useModalBodyHeight } from '@/common/hooks/useModalBodyHeight';
 
 function formatDate(s: string, locale: string) {
@@ -131,41 +133,28 @@ export default function FeeStructureInfoPage() {
 
   return (
     <View style={{ flex: 1, backgroundColor: palette.surface }}>
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          paddingHorizontal: spacing.marginMobile,
-          paddingTop: spacing.md,
-          paddingBottom: spacing.sm,
-          gap: spacing.sm,
-        }}
-      >
-        <AppIcon
-          name="arrow-back"
-          size="lg"
-          color="onSurface"
-          onPress={() => router.back()}
-          accessibilityLabel="Back"
-        />
-        <Text variant="headlineLg" color="onSurface" style={{ flex: 1 }}>
-          {t("structureDetail.title")}
-        </Text>
-        <AppIcon
-          name="trash-outline"
-          size="lg"
-          color="error"
-          onPress={handleDelete}
-          accessibilityLabel={t("common.delete")}
-        />
-        <AppIcon
-          name="create-outline"
-          size="lg"
-          color="primary"
-          onPress={handleEdit}
-          accessibilityLabel={t("structures.modal.editTitle")}
-        />
-      </View>
+      <PageHeader
+        title={t("structureDetail.title")}
+        onBack={() => router.back()}
+        right={
+          <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.sm }}>
+            <AppIcon
+              name="trash-outline"
+              size="lg"
+              color="error"
+              onPress={handleDelete}
+              accessibilityLabel={t("common.delete")}
+            />
+            <AppIcon
+              name="create-outline"
+              size="lg"
+              color="primary"
+              onPress={handleEdit}
+              accessibilityLabel={t("structures.modal.editTitle")}
+            />
+          </View>
+        }
+      />
 
       <ScrollView
         contentContainerStyle={{
@@ -292,34 +281,6 @@ export default function FeeStructureInfoPage() {
           isUpdating={updateMut.isPending}
         />
       )}
-    </View>
-  );
-}
-
-function BackHeader({ title }: { title: string }) {
-  const { spacing } = useTheme();
-  const router = useRouter();
-  return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        paddingHorizontal: spacing.marginMobile,
-        paddingTop: spacing.md,
-        paddingBottom: spacing.sm,
-        gap: spacing.sm,
-      }}
-    >
-      <AppIcon
-        name="arrow-back"
-        size="lg"
-        color="onSurface"
-        onPress={() => router.back()}
-        accessibilityLabel="Back"
-      />
-      <Text variant="headlineLg" color="onSurface" numberOfLines={1} style={{ flex: 1 }}>
-        {title}
-      </Text>
     </View>
   );
 }

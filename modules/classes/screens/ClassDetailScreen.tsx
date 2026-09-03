@@ -10,9 +10,9 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTheme } from "@/common/theme";
 import { Text } from "@/common/components/Text";
-import { AppIcon } from "@/common/components/AppIcon";
 import { PressScale } from "@/common/components/PressScale";
 import { DetailTabs, type TabItem } from "@/common/components/DetailTabs";
+import { PageHeader } from "@/common/components/PageHeader";
 import { useClasses } from "../hooks/useClasses";
 import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
 import { useAuth } from "@/modules/auth/hooks/useAuth";
@@ -97,26 +97,12 @@ export default function ClassDetailScreen() {
   };
 
   const renderHeader = () => (
-    <View
-      style={[
-        styles.header,
-        { paddingHorizontal: spacing.marginMobile, paddingVertical: spacing.md, borderBottomColor: palette.surfaceContainerHighest },
-      ]}
-    >
-      <AppIcon name="arrow-back" size="lg" color="onSurface" onPress={() => router.back()} accessibilityLabel={t("detail.goBack")} />
-      <View style={{ flex: 1 }}>
-        {currentClass ? (
-          <>
-            <Text variant="headlineMd" color="onSurface">{classTitle(currentClass)}</Text>
-            <Text variant="labelSm" color="onSurfaceVariant" style={{ marginTop: spacing[2] }}>
-              {currentClass.academic_year}
-            </Text>
-          </>
-        ) : (
-          <Text variant="headlineMd" color="onSurface">{t("detail.title", { defaultValue: "" })}</Text>
-        )}
-      </View>
-    </View>
+    <PageHeader
+      title={currentClass ? classTitle(currentClass) : t("detail.title", { defaultValue: "" })}
+      subtitle={currentClass?.academic_year}
+      onBack={() => router.back()}
+      backLabel={t("detail.goBack")}
+    />
   );
 
   if (loading && !currentClass) {

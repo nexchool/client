@@ -13,6 +13,7 @@ import { AppIcon } from '@/common/components/AppIcon';
 import { Button } from '@/common/components/Button';
 import { Link } from '@/common/components/Link';
 import { Skeleton } from '@/common/components/Skeleton';
+import { PageHeader } from '@/common/components/PageHeader';
 import { FormField, FormSelect, FormDatePicker, FormSection } from '@/common/forms';
 import { studentService } from '@/modules/students/services/studentService';
 import { useCreateStudentLeave } from '../hooks/useStudentLeaves';
@@ -112,7 +113,7 @@ export default function StudentLeaveFormScreen() {
 
   if (myStudentQuery.isLoading) {
     return (
-      <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg }}>
+      <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile }}>
         <Skeleton width="100%" height={400} radius={radius.lg} />
       </View>
     );
@@ -124,21 +125,15 @@ export default function StudentLeaveFormScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={20}
     >
-      <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <AppIcon
-            name="arrow-back"
-            size="lg"
-            color="onSurface"
-            onPress={handleBack}
-            accessibilityLabel={t('back', { defaultValue: 'Back' })}
-          />
-          <Link onPress={handleBack}>{t('cancel', { defaultValue: 'Cancel' })}</Link>
-        </View>
-
-        <Text variant="display" color="onSurface" style={{ marginTop: spacing.xs }}>
-          {t('form.title', { defaultValue: 'Apply for leave' })}
-        </Text>
+      <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile }}>
+        <PageHeader
+          title={t('form.title', { defaultValue: 'Apply for leave' })}
+          onBack={handleBack}
+          backLabel={t('back', { defaultValue: 'Back' })}
+          right={<Link onPress={handleBack}>{t('cancel', { defaultValue: 'Cancel' })}</Link>}
+          noHorizontalPadding
+          divider={false}
+        />
 
         <ScrollView
           contentContainerStyle={{ gap: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.scrollBottom }}

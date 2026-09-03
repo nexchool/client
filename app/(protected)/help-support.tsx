@@ -6,6 +6,7 @@ import { useTheme } from "@/common/theme";
 import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
 import { PressScale } from "@/common/components/PressScale";
+import { PageHeader } from "@/common/components/PageHeader";
 
 const SUPPORT_EMAIL = "hello@nexchool.in";
 
@@ -23,27 +24,10 @@ export default function HelpSupportScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: palette.surface }}>
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          paddingHorizontal: spacing.lg,
-          paddingVertical: spacing.sm,
-          borderBottomWidth: 1,
-          borderBottomColor: palette.outlineVariant,
-        }}
-      >
-        <AppIcon
-          name="arrow-back"
-          size="lg"
-          color="onSurface"
-          onPress={() => router.back()}
-          style={{ marginRight: spacing.sm }}
-        />
-        <Text variant="headlineMd" color="onSurface">
-          {t("helpSupport.screenTitle")}
-        </Text>
-      </View>
+      <PageHeader
+        title={t("helpSupport.screenTitle")}
+        onBack={() => router.back()}
+      />
 
       <ScrollView
         style={{ flex: 1 }}
