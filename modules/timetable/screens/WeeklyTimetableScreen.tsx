@@ -46,14 +46,18 @@ export default function WeeklyTimetableScreen() {
 
   const [weekStart, setWeekStart] = useState<string>(() => isoMondayOf(new Date()));
 
-  const teacherQuery = useTeacherWeeklyTimetable(weekStart);
-  const studentQuery = useStudentWeeklyTimetable(weekStart);
-  const classQuery = useClassWeeklyTimetable(classId ?? '', weekStart);
-
   const isTeacher = !!role.isTeacher && !classId;
   const isStudent = !!role.isStudent && !classId;
   const isAdminClass = !!role.isAdmin && !!classId;
   const isAdminNoClass = !!role.isAdmin && !classId;
+
+  // Resolved above the queries so each one can be gated on it: asking for a
+  // timetable the viewer has no row for is a guaranteed 403, and the result is
+  // discarded by the selection below anyway. `useClassWeeklyTimetable` gates
+  // itself on a class id.
+  const teacherQuery = useTeacherWeeklyTimetable(weekStart, isTeacher);
+  const studentQuery = useStudentWeeklyTimetable(weekStart, isStudent);
+  const classQuery = useClassWeeklyTimetable(classId ?? '', weekStart);
 
   // Server returns 409 with { success: false, error: 'NotEnrolled' } for students
   // whose account has no class enrollment for the active academic year.
