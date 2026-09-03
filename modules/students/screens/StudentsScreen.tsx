@@ -9,7 +9,7 @@ import {
   TextInput,
   Pressable,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { useStudents } from "../hooks/useStudents";
 import { StudentListItem } from "../components/StudentListItem";
 import { usePermissions } from "@/modules/permissions/hooks/usePermissions";
@@ -20,6 +20,7 @@ import { useTheme, Spacing } from "@/common/theme";
 import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
 import { FilterPill } from "@/common/components/FilterPill";
+import { PageHeader } from "@/common/components/PageHeader";
 import {
   StudentFiltersSheet,
   EMPTY_STUDENT_FILTERS,
@@ -60,7 +61,10 @@ export default function StudentsScreen() {
   const { selectedAcademicYearId } = useAcademicYearContext();
   const { palette, spacing, radius, elevation } = useTheme();
 
-  const [searchQuery, setSearchQuery] = useState("");
+  // Seeded from the global search screen's "See all", so the term the
+  // person typed there is already applied when this list opens.
+  const { q } = useLocalSearchParams<{ q?: string }>();
+  const [searchQuery, setSearchQuery] = useState(q ?? "");
   const [filters, setFilters] = useState<StudentFilters>(EMPTY_STUDENT_FILTERS);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const debouncedSearch = useDebounce(searchQuery, 500);
@@ -290,20 +294,7 @@ export default function StudentsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: palette.surface }]}>
-      <View
-        style={[
-          styles.header,
-          {
-            paddingHorizontal: spacing.marginMobile,
-            paddingVertical: spacing.md,
-            borderBottomColor: palette.outlineVariant,
-          },
-        ]}
-      >
-        <Text variant="headlineLg" color="onSurface">
-          {t("list.title")}
-        </Text>
-      </View>
+      <PageHeader title={t("list.title")} />
 
       {renderContent()}
 
@@ -349,12 +340,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: Spacing.xl,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   toolbar: {
     marginBottom: Spacing.md,

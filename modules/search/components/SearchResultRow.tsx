@@ -3,18 +3,20 @@ import React from 'react';
 import { View } from 'react-native';
 import type { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/common/theme';
-import { Text } from '@/common/components/Text';
 import { AppIcon } from '@/common/components/AppIcon';
 import { PressScale } from '@/common/components/PressScale';
+import { HighlightedText } from './HighlightedText';
 
 type Props = {
   icon: keyof typeof Ionicons.glyphMap;
   primary: string;
   secondary?: string | null;
+  /** The search term, emphasised wherever it appears in either line. */
+  highlight?: string;
   onPress: () => void;
 };
 
-export function SearchResultRow({ icon, primary, secondary, onPress }: Props) {
+export function SearchResultRow({ icon, primary, secondary, highlight, onPress }: Props) {
   const { palette, spacing, radius } = useTheme();
   return (
     <PressScale
@@ -40,13 +42,21 @@ export function SearchResultRow({ icon, primary, secondary, onPress }: Props) {
         <AppIcon name={icon} size="md" color="onSurfaceVariant" />
       </View>
       <View style={{ flex: 1 }}>
-        <Text variant="bodyMd" color="onSurface" numberOfLines={1}>
-          {primary}
-        </Text>
+        <HighlightedText
+          text={primary}
+          highlight={highlight}
+          variant="bodyMd"
+          color="onSurface"
+          numberOfLines={1}
+        />
         {secondary ? (
-          <Text variant="labelSm" color="onSurfaceVariant" numberOfLines={1}>
-            {secondary}
-          </Text>
+          <HighlightedText
+            text={secondary}
+            highlight={highlight}
+            variant="labelSm"
+            color="onSurfaceVariant"
+            numberOfLines={1}
+          />
         ) : null}
       </View>
       <AppIcon name="chevron-forward" size="sm" color="onSurfaceVariant" />

@@ -76,6 +76,23 @@ const base: Record<TypeRole, TextStyle> = {
 };
 
 /**
+ * Emphasis for a run of text *inside* a line — a search match, say.
+ *
+ * Two reasons this is a style object handed out by the scale rather than
+ * something a component writes for itself:
+ *
+ * It must switch the font family, not the weight. Every role above names a
+ * concrete Inter face, and React Native cannot synthesise a heavier one from
+ * it — `fontWeight: '700'` layered over `fontFamily: 'Inter_400Regular'` is
+ * ignored outright, which on screen is indistinguishable from no emphasis.
+ *
+ * And `modules/**` and `app/**` are linted against setting `fontFamily`
+ * directly, precisely so font choices stay in this file. Spreading this keeps
+ * the call site honest instead of reaching for an eslint-disable.
+ */
+export const EmphasisTextStyle = { fontFamily: 'Inter_700Bold' } as const;
+
+/**
  * How far each role may grow when the phone is set to Larger Text.
  *
  * Not a rejection of the setting — a parent who turned it on needs it, and
