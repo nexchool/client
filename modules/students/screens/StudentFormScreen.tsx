@@ -44,6 +44,7 @@ import { studentFormSchema, type StudentFormInput } from '../validation/schemas'
 // Note: useClasses lives in finance/hooks/useFinance.ts per pre-flight audit.
 import { useClasses } from '@/modules/finance/hooks/useFinance';
 import type { CreateStudentDTO, UpdateStudentDTO } from '../types';
+import { useDialog, useToast } from '@/common/feedback';
 
 const GENDER_OPTIONS: SelectOption[] = [
   { value: 'male', label: 'Male' },
@@ -65,6 +66,8 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 export default function StudentFormScreen() {
   const { t } = useTranslation('students');
+  const { confirm } = useDialog();
+  const toast = useToast();
   const { palette, spacing } = useTheme();
   const params = useLocalSearchParams<{ id?: string }>();
   const isEdit = !!params.id;
@@ -144,29 +147,22 @@ export default function StudentFormScreen() {
     });
   }, [isEdit, detailQuery.data, reset]);
 
-  const handleBack = React.useCallback(() => {
-    if (formState.isDirty) {
-      Alert.alert(
-        t('discard.title', { defaultValue: 'Discard changes?' }),
-        t('discard.body', {
-          defaultValue: 'Your unsaved changes will be lost.',
-        }),
-        [
-          {
-            text: t('discard.cancel', { defaultValue: 'Keep editing' }),
-            style: 'cancel',
-          },
-          {
-            text: t('discard.confirm', { defaultValue: 'Discard' }),
-            style: 'destructive',
-            onPress: () => router.back(),
-          },
-        ]
-      );
-    } else {
+  const handleBack = React.useCallback(async () => {
+    if (!formState.isDirty) {
       router.back();
+      return;
     }
-  }, [formState.isDirty, t]);
+    const discard = await confirm({
+      title: t('discard.title', { defaultValue: 'Discard changes?' }),
+      description: t('discard.body', {
+        defaultValue: 'Your unsaved changes will be lost.',
+      }),
+      tone: 'danger',
+      confirmLabel: t('discard.confirm', { defaultValue: 'Discard' }),
+      cancelLabel: t('discard.cancel', { defaultValue: 'Keep editing' }),
+    });
+    if (discard) router.back();
+  }, [formState.isDirty, t, confirm]);
 
   React.useEffect(() => {
     const onBackPress = () => {
@@ -228,26 +224,20 @@ export default function StudentFormScreen() {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any -- expo-router typed routes don't yet include this dynamic route shape
               { pathname: '/(protected)/students/[id]', params: { id: created.id } } as any
             );
-          Alert.alert(
-            t('credentials.title', { defaultValue: 'Student account created' }),
-            credBody,
-            [
-              {
-                text: t('credentials.copy', { defaultValue: 'Copy credentials' }),
-                onPress: async () => {
-                  await Clipboard.setStringAsync(
-                    `Username: ${result.credentials!.username}\nPassword: ${result.credentials!.password}`
-                  );
-                  navigateToDetail();
-                },
-              },
-              {
-                text: t('credentials.done', { defaultValue: 'Done' }),
-                onPress: navigateToDetail,
-              },
-            ],
-            { cancelable: false }
-          );
+          // The password is shown once and nowhere else, so this stays a
+          // dialog: it has to be read, and copying it is the point.
+          const copyToClipboard = await confirm({
+            title: t('credentials.title', { defaultValue: 'Student account created' }),
+            description: credBody,
+            confirmLabel: t('credentials.copy', { defaultValue: 'Copy credentials' }),
+            cancelLabel: t('credentials.done', { defaultValue: 'Done' }),
+          });
+          if (copyToClipboard) {
+            await Clipboard.setStringAsync(
+              `Username: ${result.credentials!.username}\nPassword: ${result.credentials!.password}`
+            );
+          }
+          navigateToDetail();
         } else {
           router.replace({
             pathname: '/(protected)/students/[id]',
@@ -272,10 +262,7 @@ export default function StudentFormScreen() {
           }
         }
       } else {
-        Alert.alert(
-          t('save.errorTitle', { defaultValue: 'Could not save' }),
-          anyErr?.message ?? 'Please try again.'
-        );
+        toast.error(anyErr?.message ?? 'Please try again.');
       }
     }
   };

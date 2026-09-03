@@ -22,6 +22,7 @@ import {
 } from '../components/AttendanceStatusSegmented';
 import { AttendanceStatsBanner } from '../components/AttendanceStatsBanner';
 import { StudentDetailSheet } from '../components/StudentDetailSheet';
+import { useDialog, useToast } from '@/common/feedback';
 
 type LocalRecord = {
   status: string;
@@ -35,6 +36,8 @@ function normalizeStatus(s: string | null | undefined): AttendanceStatus {
 
 export default function MarkAttendanceScreen() {
   const { t } = useTranslation('attendance');
+  const toast = useToast();
+  const { notify } = useDialog();
   const { palette, spacing, radius } = useTheme();
   const router = useRouter();
   const { classId, className } = useLocalSearchParams<{
@@ -237,7 +240,7 @@ export default function MarkAttendanceScreen() {
       const label = selectedHoliday.is_recurring
         ? selectedHoliday.recurring_day_name ?? t('mark.offDay')
         : selectedHoliday.name;
-      Alert.alert(t('mark.holidayAlertTitle'), t('mark.holidayAlertBody', { label }));
+      toast.info(t('mark.holidayAlertBody', { label }));
       return;
     }
 
@@ -248,7 +251,7 @@ export default function MarkAttendanceScreen() {
     }));
 
     if (records.length === 0) {
-      Alert.alert(t('mark.errorTitle'), t('mark.markOneError'));
+      toast.error(t('mark.markOneError'));
       return;
     }
 
@@ -283,20 +286,23 @@ export default function MarkAttendanceScreen() {
         const lines = skipped
           .map((s) => `• ${nameOf(s.student_id)} — ${s.reason}`)
           .join('\n');
-        Alert.alert(
-          t('mark.partialTitle', { defaultValue: 'Saved with warnings' }),
-          `${t('mark.partialBody', { defaultValue: 'Some records were not saved:' })}\n${lines}`,
-          [{ text: t('mark.ok'), onPress: () => fetchClassAttendance(classId, selectedDate) }]
-        );
+        // Which pupils were refused, and why, is a list to read rather than
+        // glance at — the one notice here that earns a dialog.
+        await notify({
+          title: t('mark.partialTitle', { defaultValue: 'Saved with warnings' }),
+          description: `${t('mark.partialBody', { defaultValue: 'Some records were not saved:' })}\n${lines}`,
+          tone: 'warning',
+          confirmLabel: t('mark.ok'),
+        });
+        fetchClassAttendance(classId, selectedDate);
       } else {
-        Alert.alert(t('mark.successTitle'), t('mark.successBody'), [
-          { text: t('mark.ok'), onPress: () => fetchClassAttendance(classId, selectedDate) },
-        ]);
+        toast.success(t('mark.successBody'));
+        fetchClassAttendance(classId, selectedDate);
       }
       // ===== END PRESERVED MUTATION =====
     } catch (err: any) {
       if (!isMountedRef.current) return;
-      Alert.alert(t('mark.errorTitle'), err?.message || t('mark.saveError'));
+      toast.error(err?.message || t('mark.saveError'));
     } finally {
       if (isMountedRef.current) setSubmitting(false);
     }

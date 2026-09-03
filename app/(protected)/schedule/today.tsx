@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, RefreshControl, ScrollView, View } from 'react-native';
+import { RefreshControl, ScrollView, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/common/theme';
@@ -16,6 +16,7 @@ import { EmptyState } from '@/common/components/EmptyState';
 import { Skeleton } from '@/common/components/Skeleton';
 import { Protected } from '@/modules/permissions/components/Protected';
 import { ScheduleOverrideSheet } from '@/modules/schedule/components/ScheduleOverrideSheet';
+import { useToast } from '@/common/feedback';
 
 const DAYS_BACK = 3;
 const DAYS_FORWARD = 3;
@@ -95,6 +96,7 @@ export default function ScheduleTodayPage() {
 
 function ScheduleTodayScreen() {
   const { t } = useTranslation('schedule');
+  const toast = useToast();
   const { palette, spacing, radius } = useTheme();
   const role = useUiRole();
   const today = new Date();
@@ -113,7 +115,7 @@ function ScheduleTodayScreen() {
       setSelectedDayLabel(label);
       return;
     }
-    Alert.alert(label, t('comingSoon', { defaultValue: 'Coming soon' }));
+    toast.info(t('comingSoon', { defaultValue: 'Coming soon' }));
   };
 
   // Teacher endpoint → { date, lectures, next_lecture }; student dashboard → { today_schedule }.

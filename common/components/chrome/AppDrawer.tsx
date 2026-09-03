@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
   Modal,
   Pressable,
   ScrollView,
@@ -23,6 +22,7 @@ import { useTheme } from '@/common/theme';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 import { useUiRole } from '@/modules/permissions/hooks/useUiRole';
 import { useAcademicYearContext } from '@/modules/academics/context/AcademicYearContext';
+import { useDialog } from '@/common/feedback';
 import { ProfileAvatar } from '@/common/components/ProfileAvatar';
 import { Text } from '@/common/components/Text';
 import { AppIcon } from '@/common/components/AppIcon';
@@ -151,6 +151,7 @@ export function AppDrawer({ visible, onClose, onOpenYearPicker }: Props) {
   const insets = useSafeAreaInsets();
   const { user, isFeatureEnabled, logout, tenantName } = useAuth();
   const { academicYears, selectedAcademicYearId } = useAcademicYearContext();
+  const { confirm } = useDialog();
   const { isAdmin, isTeacher, isStudent } = useUiRole();
   const currentRole: Role =
     isAdmin ? 'admin' :
@@ -238,22 +239,19 @@ export function AppDrawer({ visible, onClose, onOpenYearPicker }: Props) {
     setTimeout(onOpenYearPicker, 200);
   };
 
-  const handleLogout = () => {
-    Alert.alert(
-      t('signOutConfirmTitle', { defaultValue: 'Sign out?' }),
-      t('signOutConfirmMessage', { defaultValue: 'You will need to sign in again to access your account.' }),
-      [
-        { text: t('cancel', { defaultValue: 'Cancel' }), style: 'cancel' },
-        {
-          text: t('signOut', { defaultValue: 'Sign out' }),
-          style: 'destructive',
-          onPress: async () => {
-            onClose();
-            await logout();
-          },
-        },
-      ]
-    );
+  const handleLogout = async () => {
+    const signOut = await confirm({
+      title: t('signOutConfirmTitle', { defaultValue: 'Sign out?' }),
+      description: t('signOutConfirmMessage', {
+        defaultValue: 'You will need to sign in again to access your account.',
+      }),
+      tone: 'danger',
+      confirmLabel: t('signOut', { defaultValue: 'Sign out' }),
+      cancelLabel: t('cancel', { defaultValue: 'Cancel' }),
+    });
+    if (!signOut) return;
+    onClose();
+    await logout();
   };
 
   const renderRow = (item: DrawerItem) => {

@@ -6,7 +6,6 @@ import {
   SectionList,
   ActivityIndicator,
   RefreshControl,
-  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useClasses } from "../hooks/useClasses";
@@ -21,6 +20,7 @@ import { AppIcon } from "@/common/components/AppIcon";
 import { PressScale } from "@/common/components/PressScale";
 import { PageHeader } from "@/common/components/PageHeader";
 import { ClassItem, CreateClassDTO } from "../types";
+import { useToast } from "@/common/feedback";
 
 interface ClassSection {
   title: string;
@@ -64,6 +64,7 @@ function groupByGrade(
 
 export default function ClassesScreen() {
   const { t } = useTranslation("classes");
+  const toast = useToast();
   const router = useRouter();
   const { classes, loading, fetchClasses, createClass } = useClasses();
   const { hasPermission } = usePermissions();
@@ -98,7 +99,7 @@ export default function ClassesScreen() {
   const handleCreateClass = async (data: CreateClassDTO) => {
     await createClass(data);
     setModalVisible(false);
-    Alert.alert(t("list.success"), t("list.created"));
+    toast.success(t("list.created"));
     fetchClasses({ academic_year_id: selectedAcademicYearId || undefined });
   };
 

@@ -5,7 +5,6 @@ import {
   ScrollView,
   Modal,
   Pressable,
-  Alert,
   ActivityIndicator,
   Switch,
 } from "react-native";
@@ -19,6 +18,7 @@ import { PageHeader } from "@/common/components/PageHeader";
 import { ProfileActionRow } from "@/modules/profile/components/ProfileActionRow";
 import { useAuth } from "@/modules/auth/hooks/useAuth";
 import { setAppLanguage, getAppLanguage, type SupportedLanguage } from "@/i18n";
+import { useDialog } from "@/common/feedback";
 import {
   getPushNotificationsPreference,
   setPushNotificationsPreference,
@@ -41,6 +41,7 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { palette, spacing } = useTheme();
   const { t } = useTranslation(["navigation", "settings", "common", "profile"]);
+  const { confirm } = useDialog();
   const { logout } = useAuth();
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -100,26 +101,17 @@ export default function SettingsScreen() {
     [pushBusy],
   );
 
-  const handleLogout = useCallback(() => {
-    Alert.alert(
-      t("profile:logoutConfirm.title", { defaultValue: "Sign out" }),
-      t("profile:logoutConfirm.message", {
+  const handleLogout = useCallback(async () => {
+    const signOut = await confirm({
+      title: t("profile:logoutConfirm.title", { defaultValue: "Sign out" }),
+      description: t("profile:logoutConfirm.message", {
         defaultValue: "Are you sure you want to sign out?",
       }),
-      [
-        {
-          text: t("profile:logoutConfirm.cancel", { defaultValue: "Cancel" }),
-          style: "cancel",
-        },
-        {
-          text: t("profile:logoutConfirm.confirm", { defaultValue: "Sign out" }),
-          style: "destructive",
-          onPress: () => {
-            void logout();
-          },
-        },
-      ],
-    );
+      tone: "danger",
+      confirmLabel: t("profile:logoutConfirm.confirm", { defaultValue: "Sign out" }),
+      cancelLabel: t("profile:logoutConfirm.cancel", { defaultValue: "Cancel" }),
+    });
+    if (signOut) void logout();
   }, [logout, t]);
 
   return (

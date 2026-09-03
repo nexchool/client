@@ -5,7 +5,6 @@ import {
   ScrollView,
   Pressable,
   ActivityIndicator,
-  Alert,
   Platform,
   Modal,
   Linking,
@@ -34,6 +33,7 @@ import { setAppLanguage, getAppLanguage } from "@/i18n/language";
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from "@/i18n/config";
 import { ProfileHeroCard } from "@/modules/profile/components/ProfileHeroCard";
 import { ProfileActionRow } from "@/modules/profile/components/ProfileActionRow";
+import { useDialog, useToast } from "@/common/feedback";
 
 type ProfileKind = "student" | "teacher" | "account";
 
@@ -86,6 +86,8 @@ function LanguageSheet({
 }) {
   const { palette, spacing, radius } = useTheme();
   const { t } = useTranslation("profile");
+  const { confirm } = useDialog();
+  const toast = useToast();
   return (
     <Modal
       visible={visible}
@@ -171,6 +173,8 @@ function LanguageSheet({
 }
 
 export default function MyProfileScreen() {
+  const toast = useToast();
+  const { confirm } = useDialog();
   const { t } = useTranslation(["profile", "navigation"]);
   const router = useRouter();
   const { palette, spacing, radius } = useTheme();
@@ -256,10 +260,7 @@ export default function MyProfileScreen() {
   const pickAndUpload = useCallback(async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert(
-        t("profile:myProfile.alerts.permissionTitle"),
-        t("profile:myProfile.alerts.permissionMessage"),
-      );
+      toast.info(t("profile:myProfile.alerts.permissionMessage"));
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -277,10 +278,7 @@ export default function MyProfileScreen() {
       try {
         prepared = await prepareImageForUploadUri(asset);
       } catch {
-        Alert.alert(
-          t("profile:myProfile.alerts.readPhotoTitle"),
-          t("profile:myProfile.alerts.readPhotoMessage"),
-        );
+        toast.info(t("profile:myProfile.alerts.readPhotoMessage"));
         return;
       }
       const data = await uploadProfilePicture(prepared);
@@ -298,49 +296,37 @@ export default function MyProfileScreen() {
         e instanceof ApiException
           ? e.message
           : t("profile:myProfile.alerts.uploadFailedFallback");
-      Alert.alert(t("profile:myProfile.alerts.uploadFailedTitle"), msg);
+      toast.error(msg);
     } finally {
       setUploading(false);
     }
-  }, [updateLocalUser, student, teacher, t]);
+  }, [updateLocalUser, student, teacher, t, toast]);
 
-  const handleLogout = useCallback(() => {
-    Alert.alert(
-      t("profile:logoutConfirm.title", { defaultValue: "Sign out" }),
-      t("profile:logoutConfirm.message", {
+  const handleLogout = useCallback(async () => {
+    const signOut = await confirm({
+      title: t("profile:logoutConfirm.title", { defaultValue: "Sign out" }),
+      description: t("profile:logoutConfirm.message", {
         defaultValue: "Are you sure you want to sign out?",
       }),
-      [
-        { text: t("profile:logoutConfirm.cancel", { defaultValue: "Cancel" }), style: "cancel" },
-        {
-          text: t("profile:logoutConfirm.confirm", { defaultValue: "Sign out" }),
-          style: "destructive",
-          onPress: () => {
-            void logout();
-          },
-        },
-      ],
-    );
+      tone: "danger",
+      confirmLabel: t("profile:logoutConfirm.confirm", { defaultValue: "Sign out" }),
+      cancelLabel: t("profile:logoutConfirm.cancel", { defaultValue: "Cancel" }),
+    });
+    if (signOut) void logout();
   }, [logout, t]);
 
-  const handleSignOutAllDevices = useCallback(() => {
-    Alert.alert(
-      t("profile:signOutAll.title", { defaultValue: "Sign out from all devices" }),
-      t("profile:signOutAll.message", {
+  const handleSignOutAllDevices = useCallback(async () => {
+    const signOut = await confirm({
+      title: t("profile:signOutAll.title", { defaultValue: "Sign out from all devices" }),
+      description: t("profile:signOutAll.message", {
         defaultValue:
           "This will sign you out everywhere. You'll need to log in again on each device.",
       }),
-      [
-        { text: t("profile:logoutConfirm.cancel", { defaultValue: "Cancel" }), style: "cancel" },
-        {
-          text: t("profile:signOutAll.confirm", { defaultValue: "Sign out" }),
-          style: "destructive",
-          onPress: () => {
-            void logout();
-          },
-        },
-      ],
-    );
+      tone: "danger",
+      confirmLabel: t("profile:signOutAll.confirm", { defaultValue: "Sign out" }),
+      cancelLabel: t("profile:logoutConfirm.cancel", { defaultValue: "Cancel" }),
+    });
+    if (signOut) void logout();
   }, [logout, t]);
 
   const handleSelectLanguage = useCallback(async (lng: SupportedLanguage) => {

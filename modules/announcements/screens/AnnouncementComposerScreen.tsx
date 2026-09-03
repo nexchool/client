@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, BackHandler, KeyboardAvoidingView, ScrollView, View, Platform } from 'react-native';
+import { BackHandler, KeyboardAvoidingView, ScrollView, View, Platform } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useForm, Controller } from 'react-hook-form';
@@ -29,9 +29,12 @@ import {
 } from '../hooks/useAnnouncements';
 import { composeAnnouncementSchema, type ComposeAnnouncementInput } from '../validation/schemas';
 import type { AnnouncementAttachment, AudienceJson, SystemTemplate } from '../types';
+import { useDialog, useToast } from '@/common/feedback';
 
 export default function AnnouncementComposerScreen() {
   const { t } = useTranslation('announcements');
+  const { confirm } = useDialog();
+  const toast = useToast();
   const { palette, spacing, radius } = useTheme();
   const params = useLocalSearchParams<{ id?: string }>();
   const isEdit = !!params.id;
@@ -88,20 +91,16 @@ export default function AnnouncementComposerScreen() {
   const isPublished = status === 'published';
   const isScheduled = status === 'scheduled';
 
-  const handleBack = React.useCallback(() => {
+  const handleBack = React.useCallback(async () => {
     if (formState.isDirty) {
-      Alert.alert(
-        t('discard.title', { defaultValue: 'Discard?' }),
-        t('discard.body', { defaultValue: 'Your unsaved changes will be lost.' }),
-        [
-          { text: t('discard.keep', { defaultValue: 'Keep editing' }), style: 'cancel' },
-          {
-            text: t('discard.confirm', { defaultValue: 'Discard' }),
-            style: 'destructive',
-            onPress: () => router.back(),
-          },
-        ],
-      );
+      const discard = await confirm({
+        title: t('discard.title', { defaultValue: 'Discard?' }),
+        description: t('discard.body', { defaultValue: 'Your unsaved changes will be lost.' }),
+        tone: 'danger',
+        confirmLabel: t('discard.confirm', { defaultValue: 'Discard' }),
+        cancelLabel: t('discard.keep', { defaultValue: 'Keep editing' }),
+      });
+      if (discard) router.back();
     } else {
       router.back();
     }
@@ -143,7 +142,7 @@ export default function AnnouncementComposerScreen() {
       router.back();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Try again';
-      Alert.alert(t('error.save', { defaultValue: 'Could not save' }), message);
+      toast.error(message);
     }
   };
 
@@ -154,16 +153,13 @@ export default function AnnouncementComposerScreen() {
       router.replace({ pathname: '/(protected)/announcements/[id]', params: { id } } as never);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Try again';
-      Alert.alert(t('error.send', { defaultValue: 'Could not send' }), message);
+      toast.error(message);
     }
   };
 
   const onSchedule = async (data: ComposeAnnouncementInput) => {
     if (scheduledDate.getTime() <= Date.now() + 60_000) {
-      Alert.alert(
-        t('error.schedule.title', { defaultValue: 'Pick a future time' }),
-        t('error.schedule.body', { defaultValue: 'Schedule must be at least 1 minute in the future.' }),
-      );
+      toast.error(t('error.schedule.body', { defaultValue: 'Schedule must be at least 1 minute in the future.' }));
       return;
     }
     try {
@@ -172,7 +168,7 @@ export default function AnnouncementComposerScreen() {
       router.back();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Try again';
-      Alert.alert(t('error.schedule.title', { defaultValue: 'Could not schedule' }), message);
+      toast.error(message);
     }
   };
 
@@ -183,24 +179,26 @@ export default function AnnouncementComposerScreen() {
       router.back();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Try again';
-      Alert.alert(t('error.unschedule', { defaultValue: 'Could not unschedule' }), message);
+      toast.error(message);
     }
   };
 
-  const handleTemplatePick = (template: SystemTemplate) => {
+  const handleTemplatePick = async (template: SystemTemplate) => {
     const doApply = () => {
       setValue('title', template.title, { shouldDirty: true });
       setValue('body_markdown', template.body_markdown, { shouldDirty: true });
     };
     if (formState.isDirty) {
-      Alert.alert(
-        t('template.confirm.title', { defaultValue: 'Replace draft?' }),
-        t('template.confirm.body', { defaultValue: 'This will overwrite your current title + body.' }),
-        [
-          { text: t('template.confirm.cancel', { defaultValue: 'Cancel' }), style: 'cancel' },
-          { text: t('template.confirm.replace', { defaultValue: 'Replace' }), onPress: doApply },
-        ],
-      );
+      const replace = await confirm({
+        title: t('template.confirm.title', { defaultValue: 'Replace draft?' }),
+        description: t('template.confirm.body', {
+          defaultValue: 'This will overwrite your current title + body.',
+        }),
+        tone: 'warning',
+        confirmLabel: t('template.confirm.replace', { defaultValue: 'Replace' }),
+        cancelLabel: t('template.confirm.cancel', { defaultValue: 'Cancel' }),
+      });
+      if (replace) doApply();
     } else {
       doApply();
     }

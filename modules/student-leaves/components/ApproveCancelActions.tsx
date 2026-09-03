@@ -1,15 +1,17 @@
 // client/modules/student-leaves/components/ApproveCancelActions.tsx
 import React from 'react';
-import { Alert, View } from 'react-native';
+import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/common/components/Button';
 import { useTheme } from '@/common/theme';
 import { useApproveCancelStudentLeave, useRejectCancelStudentLeave } from '../hooks/useStudentLeaves';
+import { useToast } from '@/common/feedback';
 
 type Props = { leaveId: string };
 
 export function ApproveCancelActions({ leaveId }: Props) {
   const { t } = useTranslation('studentLeaves');
+  const toast = useToast();
   const { spacing } = useTheme();
   const approveMutation = useApproveCancelStudentLeave();
   const rejectMutation = useRejectCancelStudentLeave();
@@ -19,7 +21,7 @@ export function ApproveCancelActions({ leaveId }: Props) {
       await approveMutation.mutateAsync(leaveId);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Try again';
-      Alert.alert(t('actions.error', { defaultValue: 'Action failed' }), message);
+      toast.error(message);
     }
   };
 
@@ -28,7 +30,7 @@ export function ApproveCancelActions({ leaveId }: Props) {
       await rejectMutation.mutateAsync(leaveId);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Try again';
-      Alert.alert(t('actions.error', { defaultValue: 'Action failed' }), message);
+      toast.error(message);
     }
   };
 

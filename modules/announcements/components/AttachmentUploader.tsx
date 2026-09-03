@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, Pressable, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import { useTheme } from '@/common/theme';
 import { Text } from '@/common/components/Text';
@@ -9,6 +9,7 @@ import {
   useDeleteAnnouncementAttachment,
 } from '../hooks/useAnnouncements';
 import type { AnnouncementAttachment } from '../types';
+import { useToast } from '@/common/feedback';
 
 type Props = {
   attachments: AnnouncementAttachment[];
@@ -41,6 +42,7 @@ export function AttachmentUploader({
   onAttachmentRemoved,
 }: Props) {
   const { palette, spacing, radius } = useTheme();
+  const toast = useToast();
   const uploadMutation = useUploadAnnouncementAttachment();
   const deleteMutation = useDeleteAnnouncementAttachment();
 
@@ -56,7 +58,7 @@ export function AttachmentUploader({
       onAttachmentAdded(att);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Try again';
-      Alert.alert('Upload failed', message);
+      toast.error(message);
     }
   };
 
@@ -66,7 +68,7 @@ export function AttachmentUploader({
       onAttachmentRemoved(id);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Try again';
-      Alert.alert('Delete failed', message);
+      toast.error(message);
     }
   };
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View, ScrollView, Alert } from 'react-native';
+import { View, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTheme } from '@/common/theme';
 import { Text } from '@/common/components/Text';
@@ -16,9 +16,12 @@ import { PageHeader } from '@/common/components/PageHeader';
 import { StudentInfoTab } from '../components/StudentInfoTab';
 import { StudentParentsTab } from '../components/StudentParentsTab';
 import { StudentFeesTab } from '../components/StudentFeesTab';
+import { useDialog, useToast } from '@/common/feedback';
 
 export default function StudentDetailScreen() {
   const { t } = useTranslation('students');
+  const { confirm } = useDialog();
+  const toast = useToast();
   const { palette, spacing, radius, elevation } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -48,25 +51,25 @@ export default function StudentDetailScreen() {
 
   const handleBack = () => router.back();
 
-  const confirmDelete = useCallback(() => {
+  const confirmDelete = useCallback(async () => {
     if (!currentStudent) return;
-    Alert.alert(t('detail.deleteConfirmTitle'), t('detail.deleteConfirmMessage'), [
-      { text: t('detail.cancel'), style: 'cancel' },
-      {
-        text: t('detail.delete'),
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await deleteStudent(currentStudent.id);
-            router.replace('/students' as never);
-          } catch (e: unknown) {
-            const msg = e instanceof Error ? e.message : t('detail.deleteFailed');
-            Alert.alert(t('detail.errorTitle'), msg);
-          }
-        },
-      },
-    ]);
-  }, [currentStudent, deleteStudent, router, t]);
+    const remove = await confirm({
+      title: t('detail.deleteConfirmTitle'),
+      description: t('detail.deleteConfirmMessage'),
+      tone: 'danger',
+      confirmLabel: t('detail.delete'),
+      cancelLabel: t('detail.cancel'),
+    });
+    if (!remove) return;
+    try {
+      await deleteStudent(currentStudent.id);
+      router.replace('/students' as never);
+    } catch (e: unknown) {
+      // A failed delete leaves the student on screen; there is nothing to
+      // decide about it, so it reports rather than interrupts.
+      toast.error(e instanceof Error ? e.message : t('detail.deleteFailed'));
+    }
+  }, [currentStudent, deleteStudent, router, t, confirm, toast]);
 
   const goEdit = () =>
     router.push({

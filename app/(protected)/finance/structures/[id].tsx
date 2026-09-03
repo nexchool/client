@@ -5,7 +5,6 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   Modal,
   TextInput,
   Switch,
@@ -31,6 +30,7 @@ import { EmptyState } from "@/common/components/EmptyState";
 import { BackHeader } from "@/common/components/BackHeader";
 import { PageHeader } from "@/common/components/PageHeader";
 import { useModalBodyHeight } from '@/common/hooks/useModalBodyHeight';
+import { useDialog, useToast } from "@/common/feedback";
 
 function formatDate(s: string, locale: string) {
   try {
@@ -45,6 +45,8 @@ function formatCurrency(n: number) {
 }
 
 export default function FeeStructureInfoPage() {
+  const toast = useToast();
+  const { confirm } = useDialog();
   const { t, i18n } = useTranslation("finance");
   const locale = calendarLocaleForLanguage(i18n.language ?? "en");
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -65,32 +67,22 @@ export default function FeeStructureInfoPage() {
 
   const handleEdit = () => setModalOpen(true);
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!structure) return;
-    Alert.alert(
-      t("structureDetail.deleteTitle"),
-      t("structureDetail.deleteMessage", { name: structure.name }),
-      [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("common.delete"),
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteMut.mutateAsync(structure.id);
-              router.back();
-            } catch (e: unknown) {
-              Alert.alert(
-                t("common.error"),
-                e instanceof Error
-                  ? e.message
-                  : t("structureDetail.deleteFailed")
-              );
-            }
-          },
-        },
-      ]
-    );
+    const ok = await confirm({
+      title: t("structureDetail.deleteTitle"),
+      description: t("structureDetail.deleteMessage", { name: structure.name }),
+      tone: "danger",
+      confirmLabel: t("common.delete"),
+      cancelLabel: t("common.cancel"),
+    });
+    if (!ok) return;
+    try {
+      await deleteMut.mutateAsync(structure.id);
+      router.back();
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : t("structureDetail.deleteFailed"));
+    }
   };
 
   if (error) {
@@ -307,6 +299,8 @@ function StructureEditModal({
 }: StructureEditModalProps) {
   const modalBodyHeight = useModalBodyHeight(400);
   const { t } = useTranslation("finance");
+  const { confirm } = useDialog();
+  const toast = useToast();
   const { palette, spacing, radius } = useTheme();
   const [name, setName] = useState(structure.name ?? "");
   const [classIds, setClassIds] = useState<string[]>(structure.class_ids ?? []);
@@ -373,11 +367,11 @@ function StructureEditModal({
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      Alert.alert(t("common.error"), t("structures.modal.alerts.nameRequired"));
+      toast.error(t("structures.modal.alerts.nameRequired"));
       return;
     }
     if (!dueDate.trim()) {
-      Alert.alert(t("common.error"), t("structures.modal.alerts.dueRequired"));
+      toast.error(t("structures.modal.alerts.dueRequired"));
       return;
     }
     const comps = components
@@ -388,10 +382,7 @@ function StructureEditModal({
         is_optional: c.is_optional,
       }));
     if (comps.length === 0) {
-      Alert.alert(
-        t("common.error"),
-        t("structures.modal.alerts.componentsEdit")
-      );
+      toast.error(t("structures.modal.alerts.componentsEdit"));
       return;
     }
     try {
@@ -402,10 +393,7 @@ function StructureEditModal({
         components: comps,
       });
     } catch (e: unknown) {
-      Alert.alert(
-        t("common.error"),
-        e instanceof Error ? e.message : t("structures.modal.alerts.saveFailed")
-      );
+      toast.error(e instanceof Error ? e.message : t("structures.modal.alerts.saveFailed"));
     }
   };
 

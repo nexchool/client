@@ -5,7 +5,6 @@ import {
   StyleSheet,
   SafeAreaView,
   ScrollView,
-  Alert,
   ActivityIndicator,
   TextInput,
   Modal,
@@ -17,6 +16,7 @@ import { AppIcon } from "@/common/components/AppIcon";
 import { PressScale } from "@/common/components/PressScale";
 import { LeavePolicy } from "@/modules/teachers/types";
 import { leaveTypeAccentToken, LEAVE_TYPE_ICONS } from "../utils/leaveColors";
+import { useToast } from "@/common/feedback";
 
 type PolicyFieldValue = boolean | number;
 
@@ -40,6 +40,7 @@ export function LeavePolicyModal({
   editingPolicies,
 }: LeavePolicyModalProps) {
   const { t } = useTranslation("teacherLeaves");
+  const toast = useToast();
   const { palette, spacing, radius, typography: { bodyMd: bodyMdType } } = useTheme();
   const [saving, setSaving] = useState<string | null>(null);
 
@@ -49,7 +50,7 @@ export function LeavePolicyModal({
       await onSave(leaveType);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : t("policyModal.saveFailed");
-      Alert.alert(t("policyModal.errorTitle"), msg);
+      toast.error(msg);
     } finally {
       setSaving(null);
     }

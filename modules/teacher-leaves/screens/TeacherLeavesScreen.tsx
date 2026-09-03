@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   FlatList,
-  Alert,
   RefreshControl,
   TextInput,
 } from "react-native";
@@ -22,6 +21,7 @@ import { TeacherLeave, LeavePolicy } from "@/modules/teachers/types";
 import { LeaveRequestRow } from "../components/LeaveRequestRow";
 import { LeaveBalanceModal } from "../components/LeaveBalanceModal";
 import { LeavePolicyModal } from "../components/LeavePolicyModal";
+import { useDialog, useToast } from "@/common/feedback";
 
 export default function TeacherLeavesScreen({
   embedded = false,
@@ -31,6 +31,8 @@ export default function TeacherLeavesScreen({
   embedded?: boolean;
 } = {}) {
   const { t } = useTranslation("teacherLeaves");
+  const { confirm } = useDialog();
+  const toast = useToast();
   const { palette, spacing, radius, elevation } = useTheme();
   const { hasPermission } = usePermissions();
   const canManage = hasPermission(PERMS.TEACHER_LEAVE_MANAGE);
@@ -111,55 +113,45 @@ export default function TeacherLeavesScreen({
   }, [leaves]);
 
   // ── Leave actions ──
-  const handleApprove = (leave: TeacherLeave) => {
+  const handleApprove = async (leave: TeacherLeave) => {
     const days =
       leave.working_days != null
         ? t("alerts.approveWorkingDays", { count: leave.working_days })
         : "";
-    Alert.alert(
-      t("alerts.approveTitle"),
-      t("alerts.approveMessage", {
+    const ok = await confirm({
+      title: t("alerts.approveTitle"),
+      description: t("alerts.approveMessage", {
         name: leave.teacher_name ?? t("alerts.fallbackTeacher"),
         leaveType: leaveTypeLabel(leave.leave_type),
         days,
       }),
-      [
-        { text: t("alerts.cancel"), style: "cancel" },
-        {
-          text: t("alerts.approve"),
-          onPress: async () => {
-            try {
-              await approveLeave(leave.id);
-            } catch (e: unknown) {
-              Alert.alert(t("alerts.errorTitle"), e instanceof Error ? e.message : t("alerts.approveFailed"));
-            }
-          },
-        },
-      ]
-    );
+      confirmLabel: t("alerts.approve"),
+      cancelLabel: t("alerts.cancel"),
+    });
+    if (!ok) return;
+    try {
+      await approveLeave(leave.id);
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : t("alerts.approveFailed"));
+    }
   };
 
-  const handleReject = (leave: TeacherLeave) => {
-    Alert.alert(
-      t("alerts.rejectTitle"),
-      t("alerts.rejectMessage", {
+  const handleReject = async (leave: TeacherLeave) => {
+    const ok = await confirm({
+      title: t("alerts.rejectTitle"),
+      description: t("alerts.rejectMessage", {
         name: leave.teacher_name ?? t("alerts.fallbackTeacher"),
       }),
-      [
-        { text: t("alerts.cancel"), style: "cancel" },
-        {
-          text: t("alerts.reject"),
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await rejectLeave(leave.id);
-            } catch (e: unknown) {
-              Alert.alert(t("alerts.errorTitle"), e instanceof Error ? e.message : t("alerts.rejectFailed"));
-            }
-          },
-        },
-      ]
-    );
+      tone: "danger",
+      confirmLabel: t("alerts.reject"),
+      cancelLabel: t("alerts.cancel"),
+    });
+    if (!ok) return;
+    try {
+      await rejectLeave(leave.id);
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : t("alerts.rejectFailed"));
+    }
   };
 
   // ── Balance modal ──
@@ -180,10 +172,7 @@ export default function TeacherLeavesScreen({
       allocated_days: days,
       notes,
     });
-    Alert.alert(
-      t("alerts.updatedTitle"),
-      t("alerts.balanceUpdated", { type: leaveTypeLabel(leaveType), days })
-    );
+    toast.success(t("alerts.balanceUpdated", { type: leaveTypeLabel(leaveType), days }));
   };
 
   // ── Policy modal ──
@@ -212,10 +201,7 @@ export default function TeacherLeavesScreen({
       delete next[leaveType];
       return next;
     });
-    Alert.alert(
-      t("alerts.savedTitle"),
-      t("alerts.policySaved", { type: leaveTypeLabel(leaveType) })
-    );
+    toast.success(t("alerts.policySaved", { type: leaveTypeLabel(leaveType) }));
   };
 
   const styles = StyleSheet.create({

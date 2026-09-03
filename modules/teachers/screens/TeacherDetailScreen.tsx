@@ -23,11 +23,14 @@ import { TeacherDetailHero } from '../components/TeacherDetailHero';
 import { TeacherSubjectsCard } from '../components/TeacherSubjectsCard';
 import { DetailTabs, type TabItem } from '@/common/components/DetailTabs';
 import { PageHeader } from '@/common/components/PageHeader';
+import { useDialog, useToast } from '@/common/feedback';
 
 type TabKey = 'info' | 'subjects' | 'availability' | 'leaves' | 'workload';
 
 export default function TeacherDetailScreen() {
   const { t } = useTranslation('teachers');
+  const { confirm } = useDialog();
+  const toast = useToast();
   const { palette, spacing, radius } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -117,24 +120,21 @@ export default function TeacherDetailScreen() {
       params: { id: id ?? '' },
     } as never);
 
-  const handleDelete = () => {
-    Alert.alert(t('detail.deleteConfirmTitle'), t('detail.deleteConfirmMessage'), [
-      { text: t('detail.cancel'), style: 'cancel' },
-      {
-        text: t('detail.delete'),
-        style: 'destructive',
-        onPress: async () => {
-          if (!id) return;
-          try {
-            await deleteTeacher(id);
-            router.back();
-          } catch (e: unknown) {
-            const msg = e instanceof Error ? e.message : t('detail.deleteFailed');
-            Alert.alert(t('detail.errorTitle'), msg);
-          }
-        },
-      },
-    ]);
+  const handleDelete = async () => {
+    const remove = await confirm({
+      title: t('detail.deleteConfirmTitle'),
+      description: t('detail.deleteConfirmMessage'),
+      tone: 'danger',
+      confirmLabel: t('detail.delete'),
+      cancelLabel: t('detail.cancel'),
+    });
+    if (!remove || !id) return;
+    try {
+      await deleteTeacher(id);
+      router.back();
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : t('detail.deleteFailed'));
+    }
   };
 
   // --- Availability helpers ---
@@ -150,29 +150,27 @@ export default function TeacherDetailScreen() {
       setAvailPeriod('1');
       setAvailIsAvailable(false);
     } catch (e: unknown) {
-      Alert.alert(t('detail.errorTitle'), e instanceof Error ? e.message : t('detail.saveAvailError'));
+      toast.error(e instanceof Error ? e.message : t('detail.saveAvailError'));
     }
   };
 
-  const handleDeleteAvail = (slot: TeacherAvailability) => {
-    Alert.alert(
-      t('detail.deleteSlotTitle'),
-      t('detail.deleteSlotMessage', { day: dayNames[slot.day_of_week] ?? '', period: slot.period_number }),
-      [
-        { text: t('detail.cancel'), style: 'cancel' },
-        {
-          text: t('detail.delete'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteSlot(slot.id);
-            } catch (e: unknown) {
-              Alert.alert(t('detail.errorTitle'), e instanceof Error ? e.message : t('detail.saveAvailError'));
-            }
-          },
-        },
-      ],
-    );
+  const handleDeleteAvail = async (slot: TeacherAvailability) => {
+    const remove = await confirm({
+      title: t('detail.deleteSlotTitle'),
+      description: t('detail.deleteSlotMessage', {
+        day: dayNames[slot.day_of_week] ?? '',
+        period: slot.period_number,
+      }),
+      tone: 'danger',
+      confirmLabel: t('detail.delete'),
+      cancelLabel: t('detail.cancel'),
+    });
+    if (!remove) return;
+    try {
+      await deleteSlot(slot.id);
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : t('detail.saveAvailError'));
+    }
   };
 
   // --- Leave helpers ---
@@ -180,7 +178,7 @@ export default function TeacherDetailScreen() {
     try {
       await approveLeave(leave.id);
     } catch (e: unknown) {
-      Alert.alert(t('detail.errorTitle'), e instanceof Error ? e.message : t('detail.errorTitle'));
+      toast.error(e instanceof Error ? e.message : t('detail.errorTitle'));
     }
   };
 
@@ -188,7 +186,7 @@ export default function TeacherDetailScreen() {
     try {
       await rejectLeave(leave.id);
     } catch (e: unknown) {
-      Alert.alert(t('detail.errorTitle'), e instanceof Error ? e.message : t('detail.errorTitle'));
+      toast.error(e instanceof Error ? e.message : t('detail.errorTitle'));
     }
   };
 
@@ -203,7 +201,7 @@ export default function TeacherDetailScreen() {
     const day = parseInt(maxPerDay, 10);
     const week = parseInt(maxPerWeek, 10);
     if (!day || !week || day < 1 || week < 1) {
-      Alert.alert(t('detail.validationTitle'), t('detail.workloadValidation'));
+      toast.info(t('detail.workloadValidation'));
       return;
     }
     try {
@@ -211,7 +209,7 @@ export default function TeacherDetailScreen() {
       await saveWorkload({ max_periods_per_day: day, max_periods_per_week: week });
       setShowWorkloadModal(false);
     } catch (e: unknown) {
-      Alert.alert(t('detail.errorTitle'), e instanceof Error ? e.message : t('detail.saveWorkloadError'));
+      toast.error(e instanceof Error ? e.message : t('detail.saveWorkloadError'));
     } finally {
       setWorkloadSaving(false);
     }

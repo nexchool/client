@@ -11,7 +11,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
-  Alert,
 } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import { useTheme } from "@/common/theme";
@@ -25,6 +24,7 @@ import {
 } from "../types";
 import type { UseMutationResult } from "@tanstack/react-query";
 import { prepareFileForUpload } from "@/common/utils/prepareUploadFile";
+import { useToast } from "@/common/feedback";
 
 interface UploadDocumentModalProps {
   visible: boolean;
@@ -46,6 +46,7 @@ export function UploadDocumentModal({
   uploadMutation,
 }: UploadDocumentModalProps) {
   const { t } = useTranslation("profile");
+  const toast = useToast();
   const { palette, spacing, radius } = useTheme();
   const [documentType, setDocumentType] = useState<DocumentTypeValue | "">("");
   const [selectedFile, setSelectedFile] = useState<{
@@ -89,19 +90,16 @@ export function UploadDocumentModal({
       }
     } catch (e) {
       console.error("Document picker error:", e);
-      Alert.alert(t("uploadModal.error"), t("uploadModal.pickFileError"));
+      toast.error(t("uploadModal.pickFileError"));
     }
   };
 
   const handleUpload = async () => {
     if (isPreparing || isPending) return;
     if (!documentType || !selectedFile) {
-      Alert.alert(
-        t("uploadModal.validationTitle"),
-        documentType
+      toast.info(documentType
           ? t("uploadModal.selectFileFirst")
-          : t("uploadModal.selectTypeFirst"),
-      );
+          : t("uploadModal.selectTypeFirst"));
       return;
     }
 
@@ -119,10 +117,7 @@ export function UploadDocumentModal({
         },
       );
     } catch (e: unknown) {
-      Alert.alert(
-        t("uploadModal.cannotUploadTitle"),
-        e instanceof Error ? e.message : t("uploadModal.prepareFailed"),
-      );
+      toast.error(e instanceof Error ? e.message : t("uploadModal.prepareFailed"));
     } finally {
       setIsPreparing(false);
     }

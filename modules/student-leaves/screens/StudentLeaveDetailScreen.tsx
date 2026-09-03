@@ -1,6 +1,6 @@
 // client/modules/student-leaves/screens/StudentLeaveDetailScreen.tsx
 import React, { useState } from 'react';
-import { Alert, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
@@ -16,6 +16,7 @@ import { CancelRequestSheet } from '../components/CancelRequestSheet';
 import { ApproveLeaveActions } from '../components/ApproveLeaveActions';
 import { ApproveCancelActions } from '../components/ApproveCancelActions';
 import { statusAccent } from '../constants';
+import { useToast } from '@/common/feedback';
 
 const STATUS_LABEL: Record<string, string> = {
   pending_class_teacher: 'Pending teacher',
@@ -27,6 +28,7 @@ const STATUS_LABEL: Record<string, string> = {
 
 export default function StudentLeaveDetailScreen() {
   const { t } = useTranslation('studentLeaves');
+  const toast = useToast();
   const { palette, spacing, radius } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { isStudent, isTeacher, isAdmin } = useUiRole();
@@ -61,7 +63,7 @@ export default function StudentLeaveDetailScreen() {
       setCancelSheetVisible(false);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Try again';
-      Alert.alert(t('cancel.error', { defaultValue: 'Could not submit' }), message);
+      toast.error(message);
     }
   };
 

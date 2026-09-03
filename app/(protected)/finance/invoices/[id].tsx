@@ -13,6 +13,7 @@ import { EmptyState } from "@/common/components/EmptyState";
 import { BackHeader } from "@/common/components/BackHeader";
 import { formatCurrency } from "@/common/utils/formatCurrency";
 import type { FeeInvoice } from "@/modules/fees/services/feesService";
+import { useToast } from "@/common/feedback";
 
 function formatDate(s: string, locale: string) {
   try {
@@ -36,6 +37,7 @@ const STATUS_ACCENT: Record<FeeInvoice["status"], keyof Palette> = {
 };
 
 export default function InvoiceDetailPage() {
+  const toast = useToast();
   const { t, i18n } = useTranslation("finance");
   const locale = calendarLocaleForLanguage(i18n.language ?? "en");
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -68,10 +70,7 @@ export default function InvoiceDetailPage() {
         );
       }
     } catch (e) {
-      Alert.alert(
-        t("common.error"),
-        e instanceof Error ? e.message : t("invoiceDetail.alerts.downloadFailed")
-      );
+      toast.error(e instanceof Error ? e.message : t("invoiceDetail.alerts.downloadFailed"));
     }
   };
 
@@ -94,25 +93,16 @@ export default function InvoiceDetailPage() {
         );
       }
     } catch (e) {
-      Alert.alert(
-        t("common.error"),
-        e instanceof Error ? e.message : t("invoiceDetail.alerts.downloadFailed")
-      );
+      toast.error(e instanceof Error ? e.message : t("invoiceDetail.alerts.downloadFailed"));
     }
   };
 
   const handleSendReminder = async () => {
     try {
       await sendReminderMut.mutateAsync(id!);
-      Alert.alert(
-        t("invoiceDetail.alerts.reminderSentTitle"),
-        t("invoiceDetail.alerts.reminderSentBody")
-      );
+      toast.success(t("invoiceDetail.alerts.reminderSentBody"));
     } catch (e) {
-      Alert.alert(
-        t("common.error"),
-        e instanceof Error ? e.message : t("invoiceDetail.alerts.reminderFailed")
-      );
+      toast.error(e instanceof Error ? e.message : t("invoiceDetail.alerts.reminderFailed"));
     }
   };
 
@@ -128,10 +118,7 @@ export default function InvoiceDetailPage() {
         t("invoiceDetail.share", { defaultValue: "Share invoice" })
       );
     } catch (e) {
-      Alert.alert(
-        t("common.error"),
-        e instanceof Error ? e.message : t("invoiceDetail.alerts.downloadFailed")
-      );
+      toast.error(e instanceof Error ? e.message : t("invoiceDetail.alerts.downloadFailed"));
     }
   };
 
@@ -496,6 +483,7 @@ function SummaryRow({
 
 function StatusBadge({ status }: { status: FeeInvoice["status"] }) {
   const { t } = useTranslation("finance");
+  const toast = useToast();
   const { palette, spacing, radius } = useTheme();
   const accentToken = STATUS_ACCENT[status] ?? "onSurfaceVariant";
   const color = palette[accentToken];

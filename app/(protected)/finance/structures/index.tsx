@@ -9,7 +9,6 @@ import {
   RefreshControl,
   TextInput,
   Modal,
-  Alert,
   Switch,
   FlatList,
 } from "react-native";
@@ -34,6 +33,7 @@ import { PressScale } from "@/common/components/PressScale";
 import { EmptyState } from "@/common/components/EmptyState";
 import { PageHeader } from "@/common/components/PageHeader";
 import { useModalBodyHeight } from '@/common/hooks/useModalBodyHeight';
+import { useToast } from "@/common/feedback";
 
 function formatDate(s: string, locale: string) {
   try {
@@ -340,6 +340,7 @@ function StructureModal({
 }: StructureModalProps) {
   const modalBodyHeight = useModalBodyHeight(400);
   const { t } = useTranslation("finance");
+  const toast = useToast();
   const { palette, spacing, radius } = useTheme();
   const editing = editingId ? structures.find((s) => s.id === editingId) : null;
 
@@ -406,15 +407,15 @@ function StructureModal({
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      Alert.alert(t("common.error"), t("structures.modal.alerts.nameRequired"));
+      toast.error(t("structures.modal.alerts.nameRequired"));
       return;
     }
     if (!editingId && !academicYearId) {
-      Alert.alert(t("common.error"), t("structures.modal.alerts.yearRequired"));
+      toast.error(t("structures.modal.alerts.yearRequired"));
       return;
     }
     if (!dueDate.trim()) {
-      Alert.alert(t("common.error"), t("structures.modal.alerts.dueRequired"));
+      toast.error(t("structures.modal.alerts.dueRequired"));
       return;
     }
     const comps = components
@@ -425,17 +426,11 @@ function StructureModal({
         is_optional: c.is_optional,
       }));
     if (!editingId && comps.length === 0) {
-      Alert.alert(
-        t("common.error"),
-        t("structures.modal.alerts.componentsCreate")
-      );
+      toast.error(t("structures.modal.alerts.componentsCreate"));
       return;
     }
     if (editingId && comps.length === 0) {
-      Alert.alert(
-        t("common.error"),
-        t("structures.modal.alerts.componentsEdit")
-      );
+      toast.error(t("structures.modal.alerts.componentsEdit"));
       return;
     }
 
@@ -457,10 +452,7 @@ function StructureModal({
         });
       }
     } catch (e: unknown) {
-      Alert.alert(
-        t("common.error"),
-        e instanceof Error ? e.message : t("structures.modal.alerts.saveFailed")
-      );
+      toast.error(e instanceof Error ? e.message : t("structures.modal.alerts.saveFailed"));
     }
   };
 
