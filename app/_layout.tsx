@@ -14,6 +14,7 @@ import { checkAndFetchUpdateInBackground } from "@/common/utils/checkForAppUpdat
 import { initI18n } from "@/i18n";
 import { ThemeProvider } from "@/common/theme";
 import { ErrorBoundary } from "@/common/components/ErrorBoundary";
+import { FeedbackProvider } from "@/common/feedback";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const queryClient = new QueryClient();
@@ -63,11 +64,18 @@ export default function RootLayout() {
         <ErrorBoundary>
           <QueryClientProvider client={queryClient}>
             <AuthProvider>
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="index" />
-                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                <Stack.Screen name="(protected)" options={{ headerShown: false }} />
-              </Stack>
+              {/*
+                Inside AuthProvider so a dialog can be raised from anywhere a
+                session exists, and above the Stack so its toast host sits over
+                every screen rather than scrolling away with one.
+              */}
+              <FeedbackProvider>
+                <Stack screenOptions={{ headerShown: false }}>
+                  <Stack.Screen name="index" />
+                  <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                  <Stack.Screen name="(protected)" options={{ headerShown: false }} />
+                </Stack>
+              </FeedbackProvider>
             </AuthProvider>
           </QueryClientProvider>
         </ErrorBoundary>
