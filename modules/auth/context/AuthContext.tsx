@@ -35,6 +35,7 @@ import {
   TenantChoice,
 } from "@/modules/auth/services/authService";
 import { apiGet } from "@/common/services/api";
+import { notifyThemeRefresh } from "@/modules/branding/themeRefresh";
 import {
   registerFeatureChangeHandler,
   resetFeatureStamp,
@@ -298,6 +299,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     // password-reset signal: this session may be a different account.
     resetSessionExpiry();
     resetPasswordResetRequired();
+    // This school may be branded differently from the last one signed in on
+    // this phone; re-read before the first screen paints.
+    notifyThemeRefresh();
     setUser(data.user);
     setMustResetPasswordState(mustReset);
     setTenantNameState(data.tenant_name ?? null);
@@ -362,6 +366,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     // would read as a change and refresh a profile that was already fresh.
     resetFeatureStamp();
     resetPasswordResetRequired();
+    // clearAuth() has dropped the cached palette; drop it from the running app
+    // too, so the sign-in screen is not still wearing the last school's colours.
+    notifyThemeRefresh();
     setUser(null);
     setTenantNameState(null);
     setPermissionsState([]);
