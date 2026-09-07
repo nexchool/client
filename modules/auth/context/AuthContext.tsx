@@ -21,6 +21,7 @@ import {
   setPermissions,
   setEnabledFeatures,
   setTenantId,
+  getTenantId,
   clearAuth,
   getTenantName,
   setTenantName,
@@ -31,6 +32,7 @@ import {
 } from "@/common/utils/storage";
 import {
   login as loginService,
+  loginWithMobilePin as loginWithMobilePinService,
   LoginResponse,
   TenantChoice,
 } from "@/modules/auth/services/authService";
@@ -88,6 +90,14 @@ interface AuthContextType {
   /** After login with email+password only; set when backend returns multiple schools for that email */
   pendingTenantChoice: { tenants: TenantChoice[]; email: string; password: string } | null;
   login: (email: string, password: string) => Promise<void>;
+  /**
+   * Sign in with a mobile number and a PIN. Offered only where the school's
+   * policy publishes `mobile_pin`.
+   *
+   * No tenant-choice branch, unlike email: a number is unique inside one
+   * school at best, so there is never a list of schools to pick from.
+   */
+  loginWithMobilePin: (mobile: string, pin: string) => Promise<void>;
   /** After user picks a school from pendingTenantChoice */
   loginWithTenant: (tenantId: string) => Promise<void>;
   clearPendingTenantChoice: () => void;
@@ -325,6 +335,26 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     await setAuthData(response);
   };
 
+  const loginWithMobilePin = async (mobile: string, pin: string) => {
+    setPendingTenantChoice(null);
+
+    // The school, named in the body rather than left to the header.
+    //
+    // The app scopes every other request with `X-Tenant-ID`, and the sign-in
+    // pipeline deliberately reads the *body* to decide whether a school was
+    // named — a Phase 0d decision that keeps email sign-in behaving as it
+    // always has. A mobile number means nothing without a school, so a
+    // header-only attempt is refused outright; sending it here is what makes
+    // this work from a phone at all.
+    const tenantId = await getTenantId();
+    const response = await loginWithMobilePinService({
+      mobile,
+      pin,
+      ...(tenantId ? { tenant_id: tenantId } : {}),
+    });
+    await setAuthData(response);
+  };
+
   const loginWithTenant = async (tenantId: string) => {
     if (!pendingTenantChoice) return;
     const { email, password } = pendingTenantChoice;
@@ -493,6 +523,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         mustResetPassword,
         pendingTenantChoice,
         login,
+        loginWithMobilePin,
         loginWithTenant,
         clearPendingTenantChoice,
         clearMustResetPassword,

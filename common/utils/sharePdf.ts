@@ -9,11 +9,7 @@
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import { getApiUrl } from "@/common/constants/api";
-import {
-  getAccessToken,
-  getRefreshToken,
-  getTenantId,
-} from "@/common/utils/storage";
+import { authHeaders, refreshSession } from "@/common/services/sessionRefresh";
 
 export async function downloadAndSharePdf(
   endpoint: string,
@@ -23,23 +19,20 @@ export async function downloadAndSharePdf(
   const cache = FileSystem.cacheDirectory;
   if (!cache) throw new Error("Storage is not available.");
 
-  const [accessToken, refreshToken, tenantId] = await Promise.all([
-    getAccessToken(),
-    getRefreshToken(),
-    getTenantId(),
-  ]);
-  const headers: Record<string, string> = {};
-  if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
-  if (refreshToken) headers["X-Refresh-Token"] = refreshToken;
-  if (tenantId) headers["X-Tenant-ID"] = tenantId;
-
   const base = filename.endsWith(".pdf") ? filename : `${filename}.pdf`;
   const safeName = base.replace(/[^\w.-]+/g, "_");
   const dest = `${cache}${safeName}`;
 
-  const result = await FileSystem.downloadAsync(getApiUrl(endpoint), dest, {
-    headers,
+  let result = await FileSystem.downloadAsync(getApiUrl(endpoint), dest, {
+    headers: await authHeaders(),
   });
+  // The same one renewal the API client does, for the same reason: an expired
+  // access token is ordinary. Once only — a second refusal is real.
+  if (result.status === 401 && (await refreshSession())) {
+    result = await FileSystem.downloadAsync(getApiUrl(endpoint), dest, {
+      headers: await authHeaders(),
+    });
+  }
   if (result.status < 200 || result.status >= 300) {
     throw new Error(`Download failed (${result.status})`);
   }

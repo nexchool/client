@@ -10,6 +10,11 @@ import { Input } from '@/common/components/Input';
 import { Button } from '@/common/components/Button';
 import { Link } from '@/common/components/Link';
 import { useLogin } from '@/modules/auth/hooks/useLogin';
+import {
+  PIN_LENGTH,
+  useMobilePinLogin,
+} from '@/modules/auth/hooks/useMobilePinLogin';
+import { usePublishedAuthMethods } from '@/modules/auth/hooks/usePublishedAuthMethods';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 import { isLoginFieldError } from '@/modules/auth/errors/LoginFieldError';
 import { didSessionExpire } from '@/common/services/sessionExpiry';
@@ -31,6 +36,22 @@ export default function LoginScreen() {
   const [passwordError, setPasswordError] = useState('');
   const [choosingTenant, setChoosingTenant] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Signing in with a mobile number and a PIN, where the school allows it.
+  // Read from the school's own policy, so a method it has not enabled is not
+  // offered — and because the server refuses it anyway, this hides an option
+  // rather than enforcing a rule.
+  const { allows } = usePublishedAuthMethods();
+  const [usingPin, setUsingPin] = useState(false);
+  const [mobile, setMobile] = useState('');
+  const [pin, setPin] = useState('');
+  const [mobileError, setMobileError] = useState('');
+  const [pinError, setPinError] = useState('');
+  const {
+    signIn: signInWithPin,
+    loading: pinLoading,
+    error: pinLoginError,
+  } = useMobilePinLogin();
 
   const { login, loading, error } = useLogin();
   const {
@@ -64,6 +85,23 @@ export default function LoginScreen() {
           setEmailError(err.message);
         } else {
           setPasswordError(err.message);
+        }
+      }
+    }
+  };
+
+  const handlePinLogin = async () => {
+    setMobileError('');
+    setPinError('');
+
+    try {
+      await signInWithPin(mobile, pin);
+    } catch (err: unknown) {
+      if (isLoginFieldError(err)) {
+        if (err.field === 'mobile') {
+          setMobileError(err.message);
+        } else {
+          setPinError(err.message);
         }
       }
     }
@@ -145,6 +183,99 @@ export default function LoginScreen() {
               ))}
             </View>
           )}
+        </View>
+      </ScreenContainer>
+    );
+  }
+
+  if (usingPin) {
+    return (
+      <ScreenContainer>
+        <View style={styles.header}>
+          <Logo size="lg" />
+        </View>
+
+        <Text
+          variant="display"
+          color="onSurface"
+          style={{ textAlign: 'center', marginTop: spacing.xl }}
+        >
+          {t('welcomeBack')}
+        </Text>
+        <Text
+          variant="bodyMd"
+          color="onSurfaceVariant"
+          style={{ textAlign: 'center', marginTop: spacing.xs }}
+        >
+          {t('pinSubtitle')}
+        </Text>
+
+        <View style={{ marginTop: spacing.xl, gap: spacing.md }}>
+          <Input
+            label={t('mobileLabel')}
+            placeholder={t('mobilePlaceholder')}
+            value={mobile}
+            onChangeText={setMobile}
+            keyboardType="phone-pad"
+            autoComplete="tel"
+            autoCapitalize="none"
+            error={mobileError}
+          />
+
+          <Input
+            label={t('pinLabel')}
+            placeholder={t('pinPlaceholder')}
+            value={pin}
+            // Digits only, capped at the length a PIN is — the component takes
+            // no maxLength, and doing it here also strips anything a keyboard
+            // with punctuation would otherwise let through.
+            onChangeText={(value) =>
+              setPin(value.replace(/[^0-9]/g, '').slice(0, PIN_LENGTH))
+            }
+            keyboardType="number-pad"
+            secureTextEntry={!showPassword}
+            autoComplete="off"
+            autoCapitalize="none"
+            error={pinError}
+            rightSlot={
+              <Link onPress={() => setShowPassword((s) => !s)}>
+                {showPassword
+                  ? t('hide', { defaultValue: 'Hide' })
+                  : t('show', { defaultValue: 'Show' })}
+              </Link>
+            }
+          />
+        </View>
+
+        {pinLoginError ? (
+          <Text
+            variant="bodyMd"
+            color="error"
+            style={{ textAlign: 'center', marginTop: spacing.md }}
+          >
+            {pinLoginError}
+          </Text>
+        ) : null}
+
+        <View style={{ marginTop: spacing.lg, paddingBottom: 32, gap: spacing.md }}>
+          <Button
+            variant="primary"
+            fullWidth
+            loading={pinLoading}
+            onPress={handlePinLogin}
+          >
+            {t('signIn')}
+          </Button>
+          <View style={{ alignItems: 'center' }}>
+            <Link
+              onPress={() => {
+                setUsingPin(false);
+                setPin('');
+              }}
+            >
+              {t('signInWithEmail')}
+            </Link>
+          </View>
         </View>
       </ScreenContainer>
     );
@@ -240,10 +371,16 @@ export default function LoginScreen() {
         register endpoint this used to point at has been deleted from the
         server.
       */}
-      <View style={{ marginTop: spacing.lg, paddingBottom: 32 }}>
+      <View style={{ marginTop: spacing.lg, paddingBottom: 32, gap: spacing.md }}>
         <Button variant="primary" fullWidth loading={loading} onPress={handleLogin}>
           {t('signIn')}
         </Button>
+
+        {allows('mobile_pin') ? (
+          <View style={{ alignItems: 'center' }}>
+            <Link onPress={() => setUsingPin(true)}>{t('signInWithPin')}</Link>
+          </View>
+        ) : null}
       </View>
     </ScreenContainer>
   );

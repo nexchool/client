@@ -40,6 +40,26 @@ export interface MessageResponse {
   message: string;
 }
 
+/**
+ * Sign in with a mobile number and a PIN.
+ *
+ * The same endpoint as an email sign-in, with the method named — so the server
+ * runs the gates it already has rather than a second copy of them. The PIN
+ * travels in the `password` field because that is the field the endpoint uses
+ * for a proof, whatever kind of proof it is.
+ */
+export const loginWithMobilePin = (data: {
+  mobile: string;
+  pin: string;
+  tenant_id?: string;
+}) =>
+  apiPost<LoginResponse>(API_ENDPOINTS.LOGIN, {
+    method: 'mobile_pin',
+    identifier: data.mobile,
+    password: data.pin,
+    ...(data.tenant_id ? { tenant_id: data.tenant_id } : {}),
+  });
+
 export const login = (data: {
   email: string;
   password: string;
