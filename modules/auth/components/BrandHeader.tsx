@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { FontAwesome5 } from '@expo/vector-icons';
 import Svg, { Circle as SvgCircle, Defs, Path as SvgPath, Pattern, Rect as SvgRect } from 'react-native-svg';
 import { shade, useTheme } from '@/common/theme';
 import { Text } from '@/common/components/Text';
-import { Logo } from '@/common/components/Logo';
 import type { PublishedBranding } from '@/modules/auth/hooks/usePublishedAuthMethods';
 
 type Props = {
@@ -22,17 +22,21 @@ type Props = {
  */
 const WAVE_HEIGHT = 70;
 
-/** Badge footprint — sized to fit `Logo`'s "sm" (32) with a 4pt chip margin. */
+/** Badge footprint — a 32pt image/icon area with a 4pt chip margin, for both the school-logo image and its graduation-cap fallback below. */
 const BADGE_SIZE = 40;
 
 /**
- * The school's logo, or the app's own mark — for a school with none, and for
- * one whose logo fails to load. Sits in a translucent chip so a light logo
- * (many schools export white-on-transparent marks) still reads against the
- * gradient behind it.
+ * The school's logo, or a graduation-cap glyph — for a school with none, and
+ * for one whose logo fails to load. Matches admin-web's `LogoMark` fallback
+ * (lucide `GraduationCap`) rather than this app's own mark: a school with no
+ * logo yet should read as "no logo on file", not as if it were branded
+ * Nexchool. `FontAwesome5`'s `graduation-cap` is the closest glyph
+ * `@expo/vector-icons` ships to that reference. Sits in a translucent chip so
+ * a light logo (many schools export white-on-transparent marks) still reads
+ * against the gradient behind it.
  */
 function LogoBadge({ logoUrl }: { logoUrl: string | null }) {
-  const { radius } = useTheme();
+  const { radius, iconSize } = useTheme();
   const [failed, setFailed] = useState(false);
   const badgeStyle = [
     styles.badge,
@@ -42,7 +46,7 @@ function LogoBadge({ logoUrl }: { logoUrl: string | null }) {
   if (!logoUrl || failed) {
     return (
       <View style={badgeStyle}>
-        <Logo size="sm" />
+        <FontAwesome5 name="graduation-cap" size={iconSize.md} color="white" />
       </View>
     );
   }

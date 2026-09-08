@@ -9,7 +9,7 @@ export type { TypeRole } from './typography';
 export { lightPalette, darkPalette } from './palettes';
 export type { Palette } from './palettes';
 export { cardShadow, modalShadow, focusRing } from './elevation';
-export { shade, tint } from './colorMix';
+export { shade, tint, withAlpha } from './colorMix';
 export { IconSize, AvatarSize, LogoSize, TouchTarget, Breakpoint, ContentMaxWidth } from './tokens';
 export type { IconSizeKey, AvatarSizeKey } from './tokens';
 export { Duration, Easings, Interaction } from './motion';

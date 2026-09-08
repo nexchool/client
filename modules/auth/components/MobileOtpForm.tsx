@@ -6,6 +6,7 @@ import { useTheme } from '@/common/theme';
 import { Text } from '@/common/components/Text';
 import { Input } from '@/common/components/Input';
 import { Link } from '@/common/components/Link';
+import { AuthErrorBanner } from '@/modules/auth/components/AuthErrorBanner';
 import { AuthPrimaryButton } from '@/modules/auth/components/AuthPrimaryButton';
 import { TermsAgreement } from '@/modules/auth/components/TermsAgreement';
 import { OTP_LENGTH, useMobileOtpLogin } from '@/modules/auth/hooks/useMobileOtpLogin';
@@ -114,15 +115,7 @@ export function MobileOtpForm({ onBack, onUsePin }: Props) {
           />
         </View>
 
-        {error ? (
-          <Text
-            variant="bodyMd"
-            color="error"
-            style={{ textAlign: 'center', marginTop: spacing.md }}
-          >
-            {error}
-          </Text>
-        ) : null}
+        {error ? <AuthErrorBanner message={error} style={{ marginTop: spacing.md }} /> : null}
 
         <View style={{ marginTop: spacing[10], gap: spacing.sm }}>
           <AuthPrimaryButton fullWidth loading={requestLoading} onPress={handleRequestCode}>
@@ -183,15 +176,7 @@ export function MobileOtpForm({ onBack, onUsePin }: Props) {
         />
       </View>
 
-      {error ? (
-        <Text
-          variant="bodyMd"
-          color="error"
-          style={{ textAlign: 'center', marginTop: spacing.md }}
-        >
-          {error}
-        </Text>
-      ) : null}
+      {error ? <AuthErrorBanner message={error} style={{ marginTop: spacing.md }} /> : null}
 
       <View style={{ marginTop: spacing[10], gap: spacing.sm }}>
         <AuthPrimaryButton fullWidth loading={verifyLoading} onPress={handleVerifyCode}>

@@ -7,6 +7,7 @@ import { useTheme } from '@/common/theme';
 import { Text } from '@/common/components/Text';
 import { Input } from '@/common/components/Input';
 import { Link } from '@/common/components/Link';
+import { AuthErrorBanner } from '@/modules/auth/components/AuthErrorBanner';
 import { AuthPrimaryButton } from '@/modules/auth/components/AuthPrimaryButton';
 import { PasswordVisibilityToggle } from '@/modules/auth/components/PasswordVisibilityToggle';
 import { TermsAgreement } from '@/modules/auth/components/TermsAgreement';
@@ -74,20 +75,12 @@ export function EmailPasswordForm({ wasSessionExpired, onUseOtp, onUsePin }: Pro
       </Text>
 
       {wasSessionExpired ? (
-        <View
-          style={{
-            marginTop: spacing.lg,
-            padding: spacing.md,
-            borderRadius: radius.lg,
-            backgroundColor: palette.errorContainer,
-          }}
-        >
-          <Text variant="bodyMd" color="onErrorContainer" style={{ textAlign: 'center' }}>
-            {t('sessionExpired', {
-              defaultValue: 'Your session has expired. Please sign in again.',
-            })}
-          </Text>
-        </View>
+        <AuthErrorBanner
+          message={t('sessionExpired', {
+            defaultValue: 'Your session has expired. Please sign in again.',
+          })}
+          style={{ marginTop: spacing.lg }}
+        />
       ) : null}
 
       <View style={{ marginTop: spacing.lg }}>
@@ -133,15 +126,7 @@ export function EmailPasswordForm({ wasSessionExpired, onUseOtp, onUsePin }: Pro
         />
       </View>
 
-      {error ? (
-        <Text
-          variant="bodyMd"
-          color="error"
-          style={{ textAlign: 'center', marginTop: spacing.md }}
-        >
-          {error}
-        </Text>
-      ) : null}
+      {error ? <AuthErrorBanner message={error} style={{ marginTop: spacing.md }} /> : null}
 
       {/*
         No sign-up link: schools issue credentials, and the self-service

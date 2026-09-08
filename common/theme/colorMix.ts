@@ -55,3 +55,19 @@ export function tint(hex: string, amount: number): string {
   const w = Math.max(0, Math.min(1, amount));
   return `#${toHexByte(c.r + (255 - c.r) * w)}${toHexByte(c.g + (255 - c.g) * w)}${toHexByte(c.b + (255 - c.b) * w)}`;
 }
+
+/**
+ * `hex` as an `rgba()` string at `alpha` opacity — a *tint* of the token
+ * itself (transparency over whatever sits behind it), not a mix toward white
+ * like `tint` above. `AuthErrorBanner` uses this to turn `palette.error` into
+ * a quiet ~10% wash instead of a saturated fill, in both palettes and for any
+ * tenant colour, the same reason `shade`/`tint` exist: the alternative is a
+ * hardcoded literal that ignores the active theme. Malformed input degrades
+ * to opaque `hex` rather than throwing, matching `shade`/`tint`.
+ */
+export function withAlpha(hex: string, alpha: number): string {
+  const c = parseHex(hex);
+  if (!c) return hex;
+  const a = Math.max(0, Math.min(1, alpha));
+  return `rgba(${c.r}, ${c.g}, ${c.b}, ${a})`;
+}
