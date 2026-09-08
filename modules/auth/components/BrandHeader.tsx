@@ -3,7 +3,7 @@ import { Image, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Svg, { Circle as SvgCircle, Defs, Path as SvgPath, Pattern, Rect as SvgRect } from 'react-native-svg';
-import { shade, useTheme } from '@/common/theme';
+import { shade, tint, useTheme } from '@/common/theme';
 import { Text } from '@/common/components/Text';
 import type { PublishedBranding } from '@/modules/auth/hooks/usePublishedAuthMethods';
 
@@ -66,18 +66,29 @@ function LogoBadge({ logoUrl }: { logoUrl: string | null }) {
 
 /**
  * School name with its last word set apart, echoing admin-web's
- * `DefaultLoginLayout` brand panel. Rendered in a fixed white rather than
- * `onPrimary` — the band gradient below is always mixed dark (see
- * `shade` usage in `BrandHeader`), specifically so a light, mode-independent
- * text colour stays legible across it; `onPrimary` is designed to pair with
- * the *exact* `primary` swatch, not a darkened derivative of it, and a school
- * whose own primary is already pale (a real possibility once tenant colours
- * are in play) would otherwise hand back low-contrast text.
+ * `DefaultLoginLayout` brand panel, where the accent word renders
+ * `text-blue-300` — a colour visibly lighter *and* more saturated than the
+ * plain-white head of the name, not merely faded. The head word is rendered
+ * in a fixed white rather than `onPrimary` — the band gradient below is
+ * always mixed dark (see `shade` usage in `BrandHeader`), specifically so a
+ * light, mode-independent text colour stays legible across it; `onPrimary`
+ * is designed to pair with the *exact* `primary` swatch, not a darkened
+ * derivative of it, and a school whose own primary is already pale (a real
+ * possibility once tenant colours are in play) would otherwise hand back
+ * low-contrast text.
+ *
+ * The accent word used to be plain white at 72% opacity. Against a band this
+ * dark, translucent white barely differs from opaque white — the two words
+ * read as one flat colour, which is exactly the bug the owner's device
+ * screenshot showed ("Default School" rendering fully white). `accentColor`
+ * — a real tint of `palette.primary` computed in `BrandHeader`, not an
+ * alpha trick — is what actually reproduces admin-web's distinct light-blue
+ * effect while staying in this school's own hue.
  *
  * A one-word name has no "rest of the name" to split off, so it renders
  * plain instead of reaching past the end of the array.
  */
-function BrandTitle({ name }: { name: string }) {
+function BrandTitle({ name, accentColor }: { name: string; accentColor: string }) {
   const parts = name.trim().split(/\s+/);
   if (parts.length < 2) return <>{name}</>;
   const last = parts[parts.length - 1];
@@ -85,7 +96,7 @@ function BrandTitle({ name }: { name: string }) {
   return (
     <>
       {head}{' '}
-      <Text variant="headlineLg" color="onPrimary" style={[styles.whiteText, styles.accentWord]}>
+      <Text variant="headlineLg" color="onPrimary" style={[styles.whiteText, { color: accentColor }]}>
         {last}
       </Text>
     </>
@@ -158,9 +169,26 @@ function BandWave({ pageBackground }: { pageBackground: string }) {
  * circles, the exact wave paths) but recoloured from this school's own
  * `palette.primary` — a tenant colour when the school has one
  * (`modules/branding/useTenantTheme.ts`), the app's default otherwise —
- * instead of admin-web's hardcoded blues. `shade` (`common/theme/colorMix`)
- * only ever darkens that one token, so the gradient is always in-hue with
- * whatever primary is active in either palette.
+ * instead of admin-web's hardcoded blues.
+ *
+ * The three stops used to be `shade(primary, 0.72/0.42/0.12)` — never once
+ * touching the raw `primary` swatch. `shade` scales every channel by the
+ * same factor, so it does not shift hue, but at a 0.72 darken factor the
+ * *value* (in HSV terms) drops so low that a violet like this app's default
+ * `#4648d4` reads to the eye as navy, not violet — the band ended up
+ * matching admin-web's hardcoded navy by accident, while the Sign in button
+ * a few inches below it (`AuthPrimaryButton`, `[primary, shade(primary,
+ * 0.18)]`) rendered the real, brighter primary. Two different-looking blues
+ * on one screen.
+ *
+ * The fix keeps the same three-stop shape but centres it on `primary`
+ * itself instead of shading away from it: `shade(primary, 0.45)` (dark,
+ * still >4.5:1 against white — see the contrast note below) → `primary`
+ * (mid) → `primaryContainer` (light — the design system's own lighter
+ * variant of `primary`, `#6063ee`, rather than an invented tint amount).
+ * Every stop is now either `primary` or a token/derivation of it, so the
+ * band and the button read as one family for any tenant colour, not just
+ * the default.
  *
  * Degrades honestly rather than guessing: the band and logo mark render
  * unconditionally (this is the shell, not borrowed identity), but the name
@@ -174,11 +202,19 @@ export function BrandHeader({ branding, loaded }: Props) {
   const hasIdentity = loaded && !!name;
 
   const primary = palette.primary;
-  // Three stops, darkest to least-dark — never all the way back to the raw
-  // `primary` swatch, so the logo/name row (which sits near the top of the
-  // gradient, the darkest end) always has enough contrast for the fixed
-  // white text above, in both palettes and for any tenant colour.
-  const gradientColors: [string, string, string] = [shade(primary, 0.72), shade(primary, 0.42), shade(primary, 0.12)];
+  // The logo/name row sits near the top of the band, which is the start of
+  // this diagonal gradient (`start={{x:0.25,y:0}}`) — i.e. gradientColors[0].
+  // That is the one stop white text depends on for contrast, so it is
+  // computed to clear WCAG AA (4.5:1) with real margin: shade(primary, 0.45)
+  // against white is ~12.75:1 for the app's default primary (#4648d4 →
+  // #272875), and shade only rescales channels uniformly so this stays
+  // exactly on-hue with `primary` rather than desaturating toward grey.
+  const gradientColors: [string, string, string] = [shade(primary, 0.45), primary, palette.primaryContainer];
+  // Light tint of `primary` for the school name's accented last word — see
+  // `BrandTitle`'s doc comment for why this replaced a plain-white-at-opacity
+  // trick. tint(primary, 0.5) keeps ~5.5:1 contrast against the band's dark
+  // stop above while reading as a distinct light lavender, not white.
+  const accentColor = tint(primary, 0.5);
 
   return (
     <View style={styles.clip}>
@@ -213,7 +249,7 @@ export function BrandHeader({ branding, loaded }: Props) {
               numberOfLines={2}
               ellipsizeMode="tail"
             >
-              <BrandTitle name={name as string} />
+              <BrandTitle name={name as string} accentColor={accentColor} />
             </Text>
           ) : null}
         </View>
@@ -239,5 +275,4 @@ const styles = StyleSheet.create({
   title: { flexShrink: 1 },
   // Overrides the Text component's palette-driven color — see BrandTitle's doc comment for why.
   whiteText: { color: 'white' },
-  accentWord: { opacity: 0.72 },
 });
