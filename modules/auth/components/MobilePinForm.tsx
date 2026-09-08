@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/common/theme';
 import { Text } from '@/common/components/Text';
 import { Input } from '@/common/components/Input';
-import { Button } from '@/common/components/Button';
 import { Link } from '@/common/components/Link';
+import { AuthPrimaryButton } from '@/modules/auth/components/AuthPrimaryButton';
+import { TermsAgreement } from '@/modules/auth/components/TermsAgreement';
 import { PIN_LENGTH, useMobilePinLogin } from '@/modules/auth/hooks/useMobilePinLogin';
 import { isLoginFieldError } from '@/modules/auth/errors/LoginFieldError';
 
@@ -32,7 +34,7 @@ type Props = {
  */
 export function MobilePinForm({ onBack, onUseOtp }: Props) {
   const { t } = useTranslation('auth');
-  const { spacing } = useTheme();
+  const { spacing, palette, iconSize } = useTheme();
 
   const [mobile, setMobile] = useState('');
   const [pin, setPin] = useState('');
@@ -86,6 +88,7 @@ export function MobilePinForm({ onBack, onUseOtp }: Props) {
           autoComplete="tel"
           autoCapitalize="none"
           error={mobileError}
+          leftIcon={<Ionicons name="call-outline" size={iconSize.md} color={palette.onSurfaceVariant} />}
         />
 
         <Input
@@ -103,6 +106,7 @@ export function MobilePinForm({ onBack, onUseOtp }: Props) {
           autoComplete="off"
           autoCapitalize="none"
           error={pinError}
+          leftIcon={<Ionicons name="lock-closed-outline" size={iconSize.md} color={palette.onSurfaceVariant} />}
           rightSlot={
             <Link onPress={() => setShowPin((s) => !s)}>
               {showPin
@@ -124,9 +128,9 @@ export function MobilePinForm({ onBack, onUseOtp }: Props) {
       ) : null}
 
       <View style={{ marginTop: spacing.lg, paddingBottom: 32, gap: spacing.md }}>
-        <Button variant="primary" fullWidth loading={loading} onPress={handleSubmit}>
+        <AuthPrimaryButton fullWidth loading={loading} onPress={handleSubmit}>
           {t('signIn')}
-        </Button>
+        </AuthPrimaryButton>
 
         {onBack ? (
           <View style={{ alignItems: 'center' }}>
@@ -139,6 +143,8 @@ export function MobilePinForm({ onBack, onUseOtp }: Props) {
             <Link onPress={onUseOtp}>{t('signInWithOtp')}</Link>
           </View>
         ) : null}
+
+        <TermsAgreement />
       </View>
     </View>
   );

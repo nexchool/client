@@ -7,6 +7,9 @@ import { ScreenContainer } from '@/common/components/ScreenContainer';
 import { Text } from '@/common/components/Text';
 import { Link } from '@/common/components/Link';
 import { BrandHeader } from '@/modules/auth/components/BrandHeader';
+import { AuthCard } from '@/modules/auth/components/AuthCard';
+import { AuthTrustFooter } from '@/modules/auth/components/AuthTrustFooter';
+import { SupportFab } from '@/modules/auth/components/SupportFab';
 import { EmailPasswordForm } from '@/modules/auth/components/EmailPasswordForm';
 import { MobilePinForm } from '@/modules/auth/components/MobilePinForm';
 import { MobileOtpForm } from '@/modules/auth/components/MobileOtpForm';
@@ -102,105 +105,118 @@ export default function LoginScreen() {
   // neither mobile method ever produces this choice.
   if (pendingTenantChoice?.tenants?.length) {
     return (
-      <ScreenContainer>
-        <View style={{ paddingTop: spacing.xl }}>
-          <Text variant="headlineLg" color="onSurface">
-            {t('whichSchool')}
-          </Text>
-          <Text
-            variant="bodyMd"
-            color="onSurfaceVariant"
-            style={{ marginTop: spacing.xs }}
-          >
-            {t('tenantSubtitle')}
-          </Text>
+      <View style={{ flex: 1 }}>
+        <ScreenContainer>
+          <View style={{ paddingTop: spacing.xl }}>
+            <Text variant="headlineLg" color="onSurface">
+              {t('whichSchool')}
+            </Text>
+            <Text
+              variant="bodyMd"
+              color="onSurfaceVariant"
+              style={{ marginTop: spacing.xs }}
+            >
+              {t('tenantSubtitle')}
+            </Text>
 
-          <View style={{ marginTop: spacing.lg, marginBottom: spacing.lg }}>
-            <Link onPress={clearPendingTenantChoice}>{t('backToLogin')}</Link>
-          </View>
-
-          {choosingTenant ? (
-            <ActivityIndicator
-              size="large"
-              color={palette.primary}
-              style={{ marginTop: spacing.xl }}
-            />
-          ) : (
-            <View style={{ gap: spacing.sm }}>
-              {pendingTenantChoice.tenants.map((tenant) => (
-                <Pressable
-                  key={tenant.id}
-                  onPress={() => handleChooseSchool(tenant.id)}
-                  accessibilityRole="button"
-                  accessibilityLabel={tenant.name}
-                  style={({ pressed }) => [
-                    {
-                      backgroundColor: palette.surfaceContainerLowest,
-                      borderRadius: 12,
-                      borderWidth: 1,
-                      borderColor: palette.outlineVariant,
-                      paddingVertical: spacing.md,
-                      paddingHorizontal: spacing.lg,
-                      opacity: pressed ? 0.85 : 1,
-                    },
-                  ]}
-                >
-                  <Text variant="bodyLg" color="onSurface">
-                    {tenant.name}
-                  </Text>
-                  {tenant.subdomain ? (
-                    <Text
-                      variant="labelSm"
-                      color="onSurfaceVariant"
-                      style={{ marginTop: spacing.xs }}
-                    >
-                      {tenant.subdomain}
-                    </Text>
-                  ) : null}
-                </Pressable>
-              ))}
+            <View style={{ marginTop: spacing.lg, marginBottom: spacing.lg }}>
+              <Link onPress={clearPendingTenantChoice}>{t('backToLogin')}</Link>
             </View>
-          )}
-        </View>
-      </ScreenContainer>
+
+            {choosingTenant ? (
+              <ActivityIndicator
+                size="large"
+                color={palette.primary}
+                style={{ marginTop: spacing.xl }}
+              />
+            ) : (
+              <View style={{ gap: spacing.sm }}>
+                {pendingTenantChoice.tenants.map((tenant) => (
+                  <Pressable
+                    key={tenant.id}
+                    onPress={() => handleChooseSchool(tenant.id)}
+                    accessibilityRole="button"
+                    accessibilityLabel={tenant.name}
+                    style={({ pressed }) => [
+                      {
+                        backgroundColor: palette.surfaceContainerLowest,
+                        borderRadius: 12,
+                        borderWidth: 1,
+                        borderColor: palette.outlineVariant,
+                        paddingVertical: spacing.md,
+                        paddingHorizontal: spacing.lg,
+                        opacity: pressed ? 0.85 : 1,
+                      },
+                    ]}
+                  >
+                    <Text variant="bodyLg" color="onSurface">
+                      {tenant.name}
+                    </Text>
+                    {tenant.subdomain ? (
+                      <Text
+                        variant="labelSm"
+                        color="onSurfaceVariant"
+                        style={{ marginTop: spacing.xs }}
+                      >
+                        {tenant.subdomain}
+                      </Text>
+                    ) : null}
+                  </Pressable>
+                ))}
+              </View>
+            )}
+          </View>
+        </ScreenContainer>
+        <SupportFab />
+      </View>
     );
   }
 
   return (
-    <ScreenContainer noHorizontalPadding>
-      <BrandHeader branding={branding} loaded={loaded} />
+    <View style={{ flex: 1 }}>
+      <ScreenContainer noHorizontalPadding>
+        <BrandHeader branding={branding} loaded={loaded} />
 
-      <View style={{ paddingHorizontal: spacing.marginMobile }}>
-        {!loaded ? (
-          // Rendering the email form here (the old behaviour) is what made an
-          // OTP-only school visibly swap forms once its policy landed —
-          // nothing method-specific is known yet, so nothing method-specific
-          // renders. `BrandHeader` above already shows its own loaded=false
-          // treatment (a plain mark, no borrowed identity); this is that same
-          // "still asking" moment for the form area, not a second design.
-          <ActivityIndicator
-            size="large"
-            color={palette.primary}
-            style={{ marginTop: spacing.xl }}
-          />
-        ) : activeMode === 'email' ? (
-          <EmailPasswordForm
-            wasSessionExpired={wasSessionExpired}
-            onUseOtp={otpOffered ? () => setMode('otp') : undefined}
-            onUsePin={pinOffered ? () => setMode('pin') : undefined}
-          />
-        ) : activeMode === 'otp' ? (
-          <MobileOtpForm
-            onBack={emailOffered ? () => setMode('email') : undefined}
-            onUsePin={pinOffered ? () => setMode('pin') : undefined}
-          />
-        ) : (
-          <MobilePinForm
-            onBack={emailOffered ? () => setMode('email') : undefined}
-            onUseOtp={otpOffered ? () => setMode('otp') : undefined}
-          />
-        )}
-      </View>
-    </ScreenContainer>
+        <View style={{ paddingHorizontal: spacing.marginMobile, marginTop: spacing.xs }}>
+          <AuthCard>
+            {!loaded ? (
+              // Rendering the email form here (the old behaviour) is what made
+              // an OTP-only school visibly swap forms once its policy landed —
+              // nothing method-specific is known yet, so nothing
+              // method-specific renders. `BrandHeader` above already shows its
+              // own loaded=false treatment (a plain mark, no borrowed
+              // identity); this is that same "still asking" moment for the
+              // form area, not a second design. The card itself still renders
+              // — it is chrome, not borrowed identity, so there is nothing
+              // dishonest about showing it before branding settles.
+              <ActivityIndicator
+                size="large"
+                color={palette.primary}
+                style={{ marginTop: spacing.xl }}
+              />
+            ) : activeMode === 'email' ? (
+              <EmailPasswordForm
+                wasSessionExpired={wasSessionExpired}
+                onUseOtp={otpOffered ? () => setMode('otp') : undefined}
+                onUsePin={pinOffered ? () => setMode('pin') : undefined}
+              />
+            ) : activeMode === 'otp' ? (
+              <MobileOtpForm
+                onBack={emailOffered ? () => setMode('email') : undefined}
+                onUsePin={pinOffered ? () => setMode('pin') : undefined}
+              />
+            ) : (
+              <MobilePinForm
+                onBack={emailOffered ? () => setMode('email') : undefined}
+                onUseOtp={otpOffered ? () => setMode('otp') : undefined}
+              />
+            )}
+          </AuthCard>
+
+          <AuthTrustFooter />
+        </View>
+      </ScreenContainer>
+      <SupportFab />
+    </View>
   );
 }

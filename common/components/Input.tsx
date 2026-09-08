@@ -19,6 +19,12 @@ type Props = {
   helper?: string;
   secureTextEntry?: boolean;
   rightSlot?: ReactNode;
+  /** Leading glyph inside the field, before the text input. Optional — most
+   * callers render no icon, so this changes nothing for them. */
+  leftIcon?: ReactNode;
+  /** Rendered at the far end of the label row, opposite `label` — e.g. an
+   * inline "Forgot password?" link beside the Password label. Optional. */
+  labelRight?: ReactNode;
   keyboardType?: KeyboardTypeOptions;
   autoComplete?: TextInputProps['autoComplete'];
   autoCapitalize?: TextInputProps['autoCapitalize'];
@@ -35,6 +41,8 @@ export function Input({
   helper,
   secureTextEntry,
   rightSlot,
+  leftIcon,
+  labelRight,
   keyboardType,
   autoComplete,
   autoCapitalize,
@@ -56,14 +64,17 @@ export function Input({
 
   return (
     <View style={styles.root}>
-      <Text maxFontSizeMultiplier={FontScaleCap.labelMd}
-        style={[
-          typography.labelMd,
-          { color: palette.onSurfaceVariant, marginBottom: 8, includeFontPadding: false },
-        ]}
-      >
-        {label}
-      </Text>
+      <View style={styles.labelRow}>
+        <Text maxFontSizeMultiplier={FontScaleCap.labelMd}
+          style={[
+            typography.labelMd,
+            { color: palette.onSurfaceVariant, marginBottom: 8, includeFontPadding: false },
+          ]}
+        >
+          {label}
+        </Text>
+        {labelRight}
+      </View>
       <View
         style={[
           styles.fieldWrap,
@@ -78,6 +89,7 @@ export function Input({
           focused && !error ? elevation.focusRing(palette.primary) : null,
         ]}
       >
+        {leftIcon ? <View style={styles.left}>{leftIcon}</View> : null}
         <TextInput
           maxFontSizeMultiplier={FontScaleCap.bodyMd}
           testID={testID}
@@ -118,6 +130,7 @@ export function Input({
 
 const styles = StyleSheet.create({
   root: { width: '100%' },
+  labelRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   fieldWrap: {
     height: 52,
     flexDirection: 'row',
@@ -127,5 +140,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 0,
   },
+  left: { marginRight: 8 },
   right: { marginLeft: 8 },
 });
