@@ -5,7 +5,6 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Modal,
   TextInput,
   Switch,
 } from "react-native";
@@ -32,6 +31,7 @@ import { PageHeader } from "@/common/components/PageHeader";
 import { useModalBodyHeight } from '@/common/hooks/useModalBodyHeight';
 import { useDialog, useToast } from "@/common/feedback";
 import { formatCurrency } from "@/common/utils/formatCurrency";
+import { BottomSheet } from "@/common/components/sheet";
 
 function formatDate(s: string, locale: string) {
   try {
@@ -296,9 +296,8 @@ function StructureEditModal({
 }: StructureEditModalProps) {
   const modalBodyHeight = useModalBodyHeight(400);
   const { t } = useTranslation("finance");
-  const { confirm } = useDialog();
   const toast = useToast();
-  const { palette, spacing, radius } = useTheme();
+  const { palette, spacing, radius, typography } = useTheme();
   const [name, setName] = useState(structure.name ?? "");
   const [classIds, setClassIds] = useState<string[]>(structure.class_ids ?? []);
   const [dueDate, setDueDate] = useState(structure.due_date ?? "");
@@ -395,6 +394,7 @@ function StructureEditModal({
   };
 
   const inputStyle = {
+    ...typography.bodyMd,
     borderWidth: 1,
     borderColor: palette.outlineVariant,
     borderRadius: radius.md,
@@ -404,32 +404,8 @@ function StructureEditModal({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent>
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: "rgba(0,0,0,0.5)",
-          justifyContent: "flex-end",
-        }}
-      >
-        <View
-          style={{
-            backgroundColor: palette.surface,
-            borderTopLeftRadius: radius.xl,
-            borderTopRightRadius: radius.xl,
-            maxHeight: "90%",
-          }}
-        >
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              padding: spacing.lg,
-              borderBottomWidth: 1,
-              borderBottomColor: palette.outlineVariant,
-            }}
-          >
+    <BottomSheet visible={visible} onClose={onClose} dismissOnBackdropPress={false}>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
             <Text variant="headlineMd" color="onSurface">
               {t("structures.modal.editTitle")}
             </Text>
@@ -442,7 +418,7 @@ function StructureEditModal({
             />
           </View>
           <ScrollView
-            style={{ padding: spacing.lg, maxHeight: modalBodyHeight }}
+            style={{ maxHeight: modalBodyHeight }}
             showsVerticalScrollIndicator={false}
           >
             <Text
@@ -562,7 +538,7 @@ function StructureEditModal({
             style={{
               flexDirection: "row",
               gap: spacing.md,
-              padding: spacing.lg,
+              paddingTop: spacing.md,
               borderTopWidth: 1,
               borderTopColor: palette.outlineVariant,
             }}
@@ -596,8 +572,6 @@ function StructureEditModal({
               )}
             </TouchableOpacity>
           </View>
-        </View>
-      </View>
-    </Modal>
+    </BottomSheet>
   );
 }

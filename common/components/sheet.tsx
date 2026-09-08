@@ -14,19 +14,31 @@ export function BottomSheet({
   visible,
   onClose,
   children,
+  dismissOnBackdropPress = true,
 }: {
   visible: boolean;
   onClose: () => void;
   children: React.ReactNode;
+  /**
+   * Whether a tap on the scrim closes the sheet. True suits a picker, where
+   * tapping away is how you say "never mind" and nothing is lost.
+   *
+   * Pass false for a sheet holding a form. The record-payment sheet takes an
+   * amount, a method and a reference; a stray tap on the dimmed strip above it
+   * discarding all three is not a dismissal, it is data loss. Those sheets
+   * close by their own cancel control, and by the Android back button, which
+   * `onRequestClose` still honours either way.
+   */
+  dismissOnBackdropPress?: boolean;
 }) {
   const { palette, spacing, radius } = useTheme();
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable
         style={[StyleSheet.absoluteFillObject, { backgroundColor: 'rgba(0,0,0,0.4)' }]}
-        onPress={onClose}
-        accessibilityRole="button"
-        accessibilityLabel="Dismiss"
+        onPress={dismissOnBackdropPress ? onClose : undefined}
+        accessibilityRole={dismissOnBackdropPress ? 'button' : 'none'}
+        accessibilityLabel={dismissOnBackdropPress ? 'Dismiss' : undefined}
       />
       {/*
         Two views, because an absolutely-positioned card cannot centre itself:

@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   RefreshControl,
   TextInput,
-  Modal,
   Switch,
   FlatList,
 } from "react-native";
@@ -32,6 +31,7 @@ import { PressScale } from "@/common/components/PressScale";
 import { EmptyState } from "@/common/components/EmptyState";
 import { FilterChips } from "@/common/components/FilterChips";
 import { PageHeader } from "@/common/components/PageHeader";
+import { BottomSheet } from "@/common/components/sheet";
 import { useModalBodyHeight } from '@/common/hooks/useModalBodyHeight';
 import { useToast } from "@/common/feedback";
 
@@ -271,7 +271,7 @@ function StructureModal({
   const modalBodyHeight = useModalBodyHeight(400);
   const { t } = useTranslation("finance");
   const toast = useToast();
-  const { palette, spacing, radius } = useTheme();
+  const { palette, spacing, radius, typography } = useTheme();
   const editing = editingId ? structures.find((s) => s.id === editingId) : null;
 
   const [name, setName] = useState(editing?.name ?? "");
@@ -401,6 +401,7 @@ function StructureModal({
   }));
 
   const inputStyle = {
+    ...typography.bodyMd,
     borderWidth: 1,
     borderColor: palette.outlineVariant,
     borderRadius: radius.md,
@@ -410,32 +411,8 @@ function StructureModal({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent>
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: "rgba(0,0,0,0.5)",
-          justifyContent: "flex-end",
-        }}
-      >
-        <View
-          style={{
-            backgroundColor: palette.surface,
-            borderTopLeftRadius: radius.xl,
-            borderTopRightRadius: radius.xl,
-            maxHeight: "90%",
-          }}
-        >
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              padding: spacing.lg,
-              borderBottomWidth: 1,
-              borderBottomColor: palette.outlineVariant,
-            }}
-          >
+    <BottomSheet visible={visible} onClose={onClose} dismissOnBackdropPress={false}>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
             <Text variant="headlineMd" color="onSurface">
               {editingId
                 ? t("structures.modal.editTitle")
@@ -451,8 +428,9 @@ function StructureModal({
           </View>
 
           <ScrollView
-            style={{ padding: spacing.lg, maxHeight: modalBodyHeight }}
+            style={{ maxHeight: modalBodyHeight }}
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
             <Text
               variant="labelMd"
@@ -611,7 +589,7 @@ function StructureModal({
             style={{
               flexDirection: "row",
               gap: spacing.md,
-              padding: spacing.lg,
+              paddingTop: spacing.md,
               borderTopWidth: 1,
               borderTopColor: palette.outlineVariant,
             }}
@@ -647,8 +625,6 @@ function StructureModal({
               )}
             </TouchableOpacity>
           </View>
-        </View>
-      </View>
-    </Modal>
+    </BottomSheet>
   );
 }

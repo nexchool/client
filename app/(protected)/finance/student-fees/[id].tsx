@@ -2,14 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   View,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
   Pressable,
   ActivityIndicator,
   RefreshControl,
   TextInput,
-  Modal,
   Platform,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -29,6 +27,7 @@ import { Skeleton } from "@/common/components/Skeleton";
 import { EmptyState } from "@/common/components/EmptyState";
 import { BackHeader } from "@/common/components/BackHeader";
 import { StatusPill as SharedStatusPill } from "@/common/components/StatusPill";
+import { BottomSheet } from "@/common/components/sheet";
 import { SummaryRow } from "@/common/components/SummaryRow";
 import { formatCurrency } from "@/common/utils/formatCurrency";
 import { useModalBodyHeight } from '@/common/hooks/useModalBodyHeight';
@@ -61,7 +60,7 @@ export default function StudentFeeDetailPage() {
   const locale = calendarLocaleForLanguage(i18n.language ?? "en");
   const { id, action } = useLocalSearchParams<{ id: string; action?: string }>();
   const router = useRouter();
-  const { palette, spacing, radius, elevation } = useTheme();
+  const { palette, spacing, radius, elevation, typography } = useTheme();
   const modalBodyHeight = useModalBodyHeight(420);
 
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
@@ -767,19 +766,24 @@ export default function StudentFeeDetailPage() {
       </ScrollView>
 
       {/* PRESERVED: Record Payment Modal verbatim */}
-      <Modal visible={paymentModalOpen} animationType="slide" transparent>
-        <View style={modalStyles.overlay}>
-          <View
-            style={[
-              modalStyles.content,
-              { backgroundColor: palette.surface },
-            ]}
-          >
+      <BottomSheet
+        visible={paymentModalOpen}
+        onClose={() => {
+          setPaymentModalOpen(false);
+          setAllocations({});
+          setOtherMethodDetail("");
+        }}
+        dismissOnBackdropPress={false}
+      >
             <View
-              style={[
-                modalStyles.header,
-                { borderBottomColor: palette.outlineVariant },
-              ]}
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                paddingBottom: spacing.md,
+                borderBottomWidth: 1,
+                borderBottomColor: palette.outlineVariant,
+              }}
             >
               <Text variant="headlineMd" color="onSurface">
                 {t("studentFeeDetail.paymentModal.title")}
@@ -794,7 +798,10 @@ export default function StudentFeeDetailPage() {
                 <AppIcon name="close" size="lg" color="onSurface" />
               </TouchableOpacity>
             </View>
-            <ScrollView style={{ padding: spacing.lg, maxHeight: modalBodyHeight }}>
+            <ScrollView
+              style={{ maxHeight: modalBodyHeight }}
+              keyboardShouldPersistTaps="handled"
+            >
               <View
                 style={{
                   backgroundColor: palette.surfaceContainer,
@@ -858,6 +865,7 @@ export default function StudentFeeDetailPage() {
               </View>
               <TextInput
                 style={{
+                  ...typography.bodyMd,
                   borderWidth: 1,
                   borderColor: amountExceedsRemaining
                     ? palette.error
@@ -979,6 +987,7 @@ export default function StudentFeeDetailPage() {
                         >
                           <TextInput
                             style={{
+                              ...typography.bodyMd,
                               width: 70,
                               borderWidth: 1,
                               borderColor: palette.outlineVariant,
@@ -1097,6 +1106,7 @@ export default function StudentFeeDetailPage() {
                   </Text>
                   <TextInput
                     style={{
+                      ...typography.bodyMd,
                       borderWidth: 1,
                       borderColor: palette.outlineVariant,
                       borderRadius: radius.md,
@@ -1124,6 +1134,7 @@ export default function StudentFeeDetailPage() {
               </Text>
               <TextInput
                 style={{
+                  ...typography.bodyMd,
                   borderWidth: 1,
                   borderColor: palette.outlineVariant,
                   borderRadius: radius.md,
@@ -1147,6 +1158,7 @@ export default function StudentFeeDetailPage() {
               </Text>
               <TextInput
                 style={{
+                  ...typography.bodyMd,
                   borderWidth: 1,
                   borderColor: palette.outlineVariant,
                   borderRadius: radius.md,
@@ -1206,24 +1218,26 @@ export default function StudentFeeDetailPage() {
                 )}
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
-      </Modal>
+      </BottomSheet>
 
-      {/* PRESERVED: Refund Modal */}
-      <Modal visible={refundModalOpen} animationType="slide" transparent>
-        <View style={modalStyles.overlay}>
-          <View
-            style={[
-              modalStyles.content,
-              { backgroundColor: palette.surface },
-            ]}
-          >
+      {/* Refund */}
+      <BottomSheet
+        visible={refundModalOpen}
+        onClose={() => {
+          setRefundModalOpen(false);
+          setRefundPaymentId(null);
+        }}
+        dismissOnBackdropPress={false}
+      >
             <View
-              style={[
-                modalStyles.header,
-                { borderBottomColor: palette.outlineVariant },
-              ]}
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                paddingBottom: spacing.md,
+                borderBottomWidth: 1,
+                borderBottomColor: palette.outlineVariant,
+              }}
             >
               <Text variant="headlineMd" color="onSurface">
                 {t("studentFeeDetail.refundModal.title")}
@@ -1237,7 +1251,7 @@ export default function StudentFeeDetailPage() {
                 <AppIcon name="close" size="lg" color="onSurface" />
               </TouchableOpacity>
             </View>
-            <View style={{ padding: spacing.lg }}>
+            <View style={{ paddingTop: spacing.md }}>
               <View
                 style={{
                   flexDirection: "row",
@@ -1266,6 +1280,7 @@ export default function StudentFeeDetailPage() {
               </Text>
               <TextInput
                 style={{
+                  ...typography.bodyMd,
                   borderWidth: 1,
                   borderColor: palette.outlineVariant,
                   borderRadius: radius.md,
@@ -1322,9 +1337,7 @@ export default function StudentFeeDetailPage() {
                 )}
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
-      </Modal>
+      </BottomSheet>
     </View>
   );
 }
@@ -1365,21 +1378,3 @@ const STATUS_PILL_ACCENT: Record<string, keyof Palette> = {
 };
 
 
-const modalStyles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "flex-end",
-  },
-  content: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 24,
-    borderBottomWidth: 1,
-  },
-});
