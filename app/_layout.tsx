@@ -45,7 +45,22 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
-    void seedBakedTenant().then(() => setTenantSeeded(true));
+    // `tenantSeeded` gates both hiding the splash screen and mounting
+    // `RootLayoutReady` — which is where `ErrorBoundary` lives. An unhandled
+    // rejection here would therefore leave the splash up forever with
+    // nothing mounted to catch it: not a broken screen, a bricked app until
+    // reinstall. `SecureStore` can genuinely reject in production (a
+    // corrupted Android keystore, a restore onto a different device, an
+    // OS-level decrypt failure), so a seeding failure degrades to
+    // "unseeded" — the tree mounts, `getBakedTenant`/`getTenantId` reads
+    // downstream see no tenant, and a baked build falls back to the same
+    // `select-school` flow a general build already needs to handle — rather
+    // than blocking everything below the splash.
+    void seedBakedTenant()
+      .catch((error) => {
+        console.error("seedBakedTenant failed; continuing unseeded", error);
+      })
+      .then(() => setTenantSeeded(true));
   }, []);
 
   useEffect(() => {

@@ -22,6 +22,7 @@ import {
   setEnabledFeatures,
   setTenantId,
   getTenantId,
+  getTenantSubdomain,
   hasKnownTenant,
   clearAuth,
   getTenantName,
@@ -377,11 +378,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     // always has. A mobile number means nothing without a school, so a
     // header-only attempt is refused outright; sending it here is what makes
     // this work from a phone at all.
+    //
+    // A tenant_id is not always on record yet: someone who arrived via
+    // `select-school` has only stored a subdomain (no login has happened, so
+    // there is no tenant_id to have) — `authService.login`'s `subdomain`
+    // field already exists for exactly this reason, even though email
+    // sign-in itself never needs it (`email_password` is the one method the
+    // server will resolve without a named tenant). Falling back to it here
+    // is what makes PIN sign-in reachable at all for that visitor.
     const tenantId = await getTenantId();
+    const subdomain = tenantId ? null : await getTenantSubdomain();
     const response = await loginWithMobilePinService({
       mobile,
       pin,
       ...(tenantId ? { tenant_id: tenantId } : {}),
+      ...(subdomain ? { subdomain } : {}),
     });
     await setAuthData(response);
   };
@@ -394,15 +405,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     setPendingTenantChoice(null);
 
     // Same reasoning as `loginWithMobilePin` above: the school is named in
-    // the body because a mobile number means nothing without one, and the
+    // the body because a mobile number means nothing without one, the
     // sign-in pipeline reads the body — not just the header — to decide
-    // whether a school was named.
+    // whether a school was named, and a visitor who arrived via
+    // `select-school` has only a subdomain on record, not a tenant_id yet.
     const tenantId = await getTenantId();
+    const subdomain = tenantId ? null : await getTenantSubdomain();
     const response = await loginWithMobileOtpService({
       mobile,
       code,
       challenge_id: challengeId,
       ...(tenantId ? { tenant_id: tenantId } : {}),
+      ...(subdomain ? { subdomain } : {}),
     });
     await setAuthData(response);
   };
@@ -456,6 +470,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     setPermissionsState([]);
     setEnabledFeaturesState([]);
     setMustResetPasswordState(false);
+    // `clearAuth()` deliberately leaves tenant identity alone (see its
+    // docstring), so this will normally still read true right after a
+    // sign-out — but `tenantKnownState` was previously set once, at mount, by
+    // `checkAuth()`, and never touched again. Recomputing it here rather than
+    // assuming "unchanged" keeps it truthful for any future caller of this
+    // function that *does* clear tenant identity first (a "switch school"
+    // action), instead of quietly reintroducing the staleness this session's
+    // fix removed.
+    setTenantKnownState(await hasKnownTenant());
   };
 
   const logout = async () => {

@@ -16,15 +16,22 @@ function NotificationResponseBridge() {
 }
 
 export default function ProtectedLayout() {
-  const { isAuthenticated, isLoading, mustResetPassword } = useAuth();
+  const { isAuthenticated, isLoading, mustResetPassword, tenantKnown } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (isLoading) return;
 
-    // Redirect to login if not authenticated
+    // Same choice as `app/index.tsx`'s signed-out redirect, and for the same
+    // reason: sending a tenant-less phone straight to `login` is the
+    // unbranded, method-blind screen this app works to avoid. Sign-out no
+    // longer clears tenant identity (see `clearAuth`), so this will normally
+    // still be true here — but hardcoding `login` regardless of `tenantKnown`
+    // is exactly the assumption that made the old sign-out bug invisible in
+    // this file, so it is consulted rather than assumed, the same as every
+    // other redirect in this app.
     if (!isAuthenticated) {
-      router.replace("/(auth)/login");
+      router.replace(tenantKnown ? "/(auth)/login" : "/(auth)/select-school");
       return;
     }
 
@@ -35,7 +42,7 @@ export default function ProtectedLayout() {
     if (mustResetPassword) {
       router.replace("/(auth)/set-password");
     }
-  }, [isAuthenticated, isLoading, mustResetPassword, router]);
+  }, [isAuthenticated, isLoading, mustResetPassword, tenantKnown, router]);
 
   if (isLoading || !isAuthenticated || mustResetPassword) {
     return null;

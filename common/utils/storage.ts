@@ -236,6 +236,33 @@ export const getCachedTenantTheme = async (): Promise<Record<string, string> | n
   }
 };
 
+/**
+ * Forget everything about the current sign-in — but not which school this
+ * installation belongs to.
+ *
+ * `tenant_id` / `tenant_subdomain` used to be deleted here, on the theory
+ * that a phone's next sign-in "resolves its own tenant from scratch". That
+ * theory is wrong: which school an install belongs to is not a property of
+ * a session or an account, it is a property of the phone. A baked build is
+ * physically that school's app — signing out of it does not make it stop
+ * being that school's app. A general build becomes one school's app the
+ * moment `select-school` names a subdomain, for the same reason a person
+ * doesn't "forget" their school by logging out of its portal on the web.
+ *
+ * Deleting it here was actively harmful: a baked build fell back to the
+ * generic, unbranded, method-blind login on *every* sign-out (not just first
+ * launch, since `seedBakedTenant` only runs once per process and nothing else
+ * calls it), and a general build at an OTP-only school lost `tenant_subdomain`
+ * entirely — `hasKnownTenant()` went false, no methods were published, and the
+ * screen fell back to an email form the school may not even issue credentials
+ * for, with no link back to `select-school`.
+ *
+ * So sign-out (this function) leaves tenant identity alone. The only thing
+ * that should ever clear it is a deliberate "switch school" action — see
+ * `clearTenantIdentity` below — which does not exist as a UI flow yet and is
+ * out of scope here; this export is the seam for it so nobody reaches for
+ * `clearAuth` (or re-adds these two lines to it) to build one.
+ */
 export const clearAuth = async () => {
   await Promise.all([
     SecureStore.deleteItemAsync(KEYS.ACCESS_TOKEN),
@@ -243,19 +270,27 @@ export const clearAuth = async () => {
     SecureStore.deleteItemAsync(KEYS.USER_DATA),
     SecureStore.deleteItemAsync(KEYS.PERMISSIONS),
     SecureStore.deleteItemAsync(KEYS.ENABLED_FEATURES),
-    SecureStore.deleteItemAsync(KEYS.TENANT_ID),
     SecureStore.deleteItemAsync(KEYS.TENANT_NAME),
-    // This is a single app for every school (general build) or fixed to one
-    // (school build). Either way, the next sign-in on this phone — the same
-    // person or someone else — resolves its own tenant from scratch: a baked
-    // build reseeds it (see `seedBakedTenant`), and the general build asks
-    // again via the school-selection step. Keeping a stale subdomain around
-    // would otherwise skip that step with the *previous* session's school.
-    SecureStore.deleteItemAsync(KEYS.TENANT_SUBDOMAIN),
     SecureStore.deleteItemAsync(KEYS.FORCE_PASSWORD_RESET),
     SecureStore.deleteItemAsync(KEYS.SELECTED_ACADEMIC_YEAR_ID),
     SecureStore.deleteItemAsync(KEYS.RECENT_SEARCHES),
     SecureStore.deleteItemAsync(KEYS.TENANT_THEME),
     clearPushDeviceToken(),
+  ]);
+};
+
+/**
+ * Forget which school this installation belongs to — `tenant_id` and
+ * `tenant_subdomain` both. Not called anywhere yet: there is no "switch
+ * school" UI in the app today, and building one is out of scope for the fix
+ * that added this function. It exists so that whenever that flow is built,
+ * it has a correctly-named place to call instead of either reinventing this
+ * or reaching back into `clearAuth` (see its docstring for why that would
+ * reintroduce the bug this was split out of).
+ */
+export const clearTenantIdentity = async () => {
+  await Promise.all([
+    SecureStore.deleteItemAsync(KEYS.TENANT_ID),
+    SecureStore.deleteItemAsync(KEYS.TENANT_SUBDOMAIN),
   ]);
 };

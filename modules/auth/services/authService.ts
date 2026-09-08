@@ -47,17 +47,27 @@ export interface MessageResponse {
  * runs the gates it already has rather than a second copy of them. The PIN
  * travels in the `password` field because that is the field the endpoint uses
  * for a proof, whatever kind of proof it is.
+ *
+ * `subdomain` exists for the same reason it does on `login` below: a caller
+ * who only has a subdomain (the `select-school` step, before any tenant_id
+ * exists) still needs the school named *in the body* — `mobile_pin` declares
+ * `requires_tenant = True` on the server (`modules/auth/pipeline.py`
+ * `AuthenticationRequest.names_a_tenant`), and that check reads the body only,
+ * never `X-Tenant-ID` / `X-Tenant-Subdomain`. A header-only attempt is
+ * refused before the PIN is even looked at.
  */
 export const loginWithMobilePin = (data: {
   mobile: string;
   pin: string;
   tenant_id?: string;
+  subdomain?: string;
 }) =>
   apiPost<LoginResponse>(API_ENDPOINTS.LOGIN, {
     method: 'mobile_pin',
     identifier: data.mobile,
     password: data.pin,
     ...(data.tenant_id ? { tenant_id: data.tenant_id } : {}),
+    ...(data.subdomain ? { subdomain: data.subdomain } : {}),
   });
 
 /**
@@ -68,12 +78,18 @@ export const loginWithMobilePin = (data: {
  * account status, finalization) rather than a second copy of them. The code
  * travels in the `password` field for the same reason the PIN does above: it
  * is the field the endpoint uses for a proof, whatever kind of proof it is.
+ *
+ * `subdomain`: same reasoning as `loginWithMobilePin` above — `mobile_otp`
+ * also declares `requires_tenant = True`, and the pipeline only reads the
+ * body for a named school, so a caller with only a subdomain must still put
+ * it in the body, not just the header.
  */
 export const loginWithMobileOtp = (data: {
   mobile: string;
   code: string;
   challenge_id?: string;
   tenant_id?: string;
+  subdomain?: string;
 }) =>
   apiPost<LoginResponse>(API_ENDPOINTS.LOGIN, {
     method: 'mobile_otp',
@@ -81,6 +97,7 @@ export const loginWithMobileOtp = (data: {
     password: data.code,
     ...(data.challenge_id ? { challenge_id: data.challenge_id } : {}),
     ...(data.tenant_id ? { tenant_id: data.tenant_id } : {}),
+    ...(data.subdomain ? { subdomain: data.subdomain } : {}),
   });
 
 /** A code sent to a phone, and how long it is good for. Never the code itself. */

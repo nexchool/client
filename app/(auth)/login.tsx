@@ -47,13 +47,13 @@ export default function LoginScreen() {
   const [choosingTenant, setChoosingTenant] = useState(false);
 
   // `email_password` is a real, disable-able method key like the other two
-  // (`server/modules/auth/policy.py`) — but until the branding request
-  // settles, or for a school with no policy row of its own, "no methods
-  // published" must not read as "no email sign-in": that was this app's only
-  // way in before this feature existed, and treating a still-loading or
-  // failed fetch as "email disabled" would strand every existing school the
-  // moment their phone lost signal on this one screen.
-  const emailOffered = !loaded || methods.includes('email_password');
+  // (`server/modules/auth/policy.py`). Whether it is *offered as a link* from
+  // another form only matters once `loaded` is true — nothing method-specific
+  // renders before then (see below) — and an empty `methods` (offline, or a
+  // school with no policy row) still lands on the email form regardless of
+  // this value, via `homeMode`'s own fallback a few lines down. So this no
+  // longer needs a `!loaded` escape hatch the way it used to.
+  const emailOffered = methods.includes('email_password');
   const otpOffered = allows('mobile_otp');
   const pinOffered = allows('mobile_pin');
 
@@ -171,7 +171,19 @@ export default function LoginScreen() {
       <BrandHeader branding={branding} loaded={loaded} />
 
       <View style={{ paddingHorizontal: spacing.marginMobile }}>
-        {activeMode === 'email' ? (
+        {!loaded ? (
+          // Rendering the email form here (the old behaviour) is what made an
+          // OTP-only school visibly swap forms once its policy landed —
+          // nothing method-specific is known yet, so nothing method-specific
+          // renders. `BrandHeader` above already shows its own loaded=false
+          // treatment (a plain mark, no borrowed identity); this is that same
+          // "still asking" moment for the form area, not a second design.
+          <ActivityIndicator
+            size="large"
+            color={palette.primary}
+            style={{ marginTop: spacing.xl }}
+          />
+        ) : activeMode === 'email' ? (
           <EmailPasswordForm
             wasSessionExpired={wasSessionExpired}
             onUseOtp={otpOffered ? () => setMode('otp') : undefined}

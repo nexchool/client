@@ -42,10 +42,16 @@ export function useSelectSchool() {
       await apiGet('/api/auth/tenant-branding');
       router.replace('/(auth)/login');
     } catch (err: unknown) {
-      // Reverts what was just stored — a subdomain that turned out wrong
-      // must not linger and get sent on the next request as if it were good.
-      await deleteTenantSubdomain();
+      // Reverts what was just stored — but only when the check actually
+      // proved the subdomain wrong. `status === 0` is `common/services/api.ts`
+      // reporting that `fetch` itself failed (no connection), which says
+      // nothing about whether the subdomain resolves — deleting it here on a
+      // plain network failure would drop a *good* entry back to a blank
+      // field for a problem that has nothing to do with what was typed.
       const offline = err instanceof ApiException && err.status === 0;
+      if (!offline) {
+        await deleteTenantSubdomain();
+      }
       setError(i18n.t(offline ? 'auth:errors.network' : 'auth:errors.schoolNotFound'));
     } finally {
       setLoading(false);
