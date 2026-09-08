@@ -19,7 +19,9 @@
     "left": "left",
     "components": "components",
     "componentsLine": "{{count}} components",
-    "optional": "(optional)"
+    "optional": "(optional)",
+    "comingSoon": "Coming soon",
+    "tryAgainLater": "Please try again."
   },
   "dashboard": {
     "title": "Finance",
@@ -350,5 +352,11 @@
     "classAny": "All classes",
     "classSearchPlaceholder": "Search classes…",
     "noClassMatches": "No matching classes."
+  },
+  "createInvoice": {
+    "invalidField": "Invalid",
+    "itemNamePlaceholder": "Tuition",
+    "itemPeriodPlaceholder": "Term 1",
+    "itemAmountPlaceholder": "0.00"
   }
 }

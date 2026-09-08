@@ -28,6 +28,8 @@ import { AppIcon } from "@/common/components/AppIcon";
 import { Skeleton } from "@/common/components/Skeleton";
 import { EmptyState } from "@/common/components/EmptyState";
 import { BackHeader } from "@/common/components/BackHeader";
+import { StatusPill as SharedStatusPill } from "@/common/components/StatusPill";
+import { SummaryRow } from "@/common/components/SummaryRow";
 import { formatCurrency } from "@/common/utils/formatCurrency";
 import { useModalBodyHeight } from '@/common/hooks/useModalBodyHeight';
 import { useDialog, useToast } from "@/common/feedback";
@@ -496,19 +498,19 @@ export default function StudentFeeDetailPage() {
             },
           ]}
         >
-          <DetailRow
+          <SummaryRow
             label={t("studentFeeDetail.paid", { defaultValue: "Paid" })}
             value={formatCurrency(data.paid_amount)}
             valueColor="success"
           />
-          <DetailRow
+          <SummaryRow
             label={t("studentFeeDetail.remaining", {
               defaultValue: "Remaining",
             })}
             value={formatCurrency(remaining)}
             valueColor={remaining > 0 ? "warning" : "onSurface"}
           />
-          <DetailRow
+          <SummaryRow
             label={t("studentFeeDetail.dueDate", { defaultValue: "Due date" })}
             value={`${formatDate(data.due_date, locale)}${
               dueDays != null && remaining > 0
@@ -741,7 +743,7 @@ export default function StudentFeeDetailPage() {
         {/* Statement CTA */}
         <Pressable
           onPress={() =>
-            toast.info("Coming soon")
+            toast.info(t("common.comingSoon", { defaultValue: "Coming soon" }))
           }
           style={({ pressed }) => ({
             flexDirection: "row",
@@ -1327,30 +1329,28 @@ export default function StudentFeeDetailPage() {
   );
 }
 
-function DetailRow({
-  label,
-  value,
-  valueColor,
+
+/**
+ * Two vocabularies, one appearance. A fee is paid/partial/overdue, a payment
+ * transaction is success/failed/refunded; they are different lists that read
+ * the same, so the words stay here and `StatusPill` owns the pill.
+ */
+function StatusPill({
+  status,
+  kind = "fee",
 }: {
-  label: string;
-  value: string;
-  valueColor?: keyof Palette;
+  status: string;
+  kind?: "fee" | "payment";
 }) {
+  const { t } = useTranslation("finance");
   return (
-    <View
-      style={{
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-      }}
-    >
-      <Text variant="labelMd" color="onSurfaceVariant">
-        {label}
-      </Text>
-      <Text variant="labelMd" color={valueColor ?? "onSurface"} numberOfLines={1}>
-        {value}
-      </Text>
-    </View>
+    <SharedStatusPill
+      tone={STATUS_PILL_ACCENT[status] ?? "onSurfaceVariant"}
+      label={t(
+        kind === "payment" ? `paymentTxnStatuses.${status}` : `studentFeeStatuses.${status}`,
+        { defaultValue: status }
+      )}
+    />
   );
 }
 
@@ -1364,38 +1364,6 @@ const STATUS_PILL_ACCENT: Record<string, keyof Palette> = {
   unpaid: "onSurfaceVariant",
 };
 
-function StatusPill({
-  status,
-  kind = "fee",
-}: {
-  status: string;
-  kind?: "fee" | "payment";
-}) {
-  const { t } = useTranslation("finance");
-  const toast = useToast();
-  const { palette, spacing, radius } = useTheme();
-  const color = palette[STATUS_PILL_ACCENT[status] ?? "onSurfaceVariant"];
-  const labelKey =
-    kind === "payment"
-      ? `paymentTxnStatuses.${status}`
-      : `studentFeeStatuses.${status}`;
-  return (
-    <View
-      style={{
-        paddingHorizontal: spacing.sm,
-        paddingVertical: 2,
-        borderRadius: radius.full,
-        borderWidth: 1,
-        borderColor: color,
-        backgroundColor: `${color}15`,
-      }}
-    >
-      <Text variant="labelSm" style={{ color }}>
-        {t(labelKey, { defaultValue: status })}
-      </Text>
-    </View>
-  );
-}
 
 const modalStyles = StyleSheet.create({
   overlay: {

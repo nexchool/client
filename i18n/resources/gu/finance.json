@@ -19,7 +19,9 @@
     "left": "બાકી",
     "components": "ઘટકો",
     "componentsLine": "{{count}} ઘટકો",
-    "optional": "(વૈકલ્પિક)"
+    "optional": "(વૈકલ્પિક)",
+    "comingSoon": "ટૂંક સમયમાં",
+    "tryAgainLater": "કૃપા કરીને ફરી પ્રયાસ કરો."
   },
   "dashboard": {
     "title": "નાણાં",
@@ -350,5 +352,11 @@
     "classAny": "બધા વર્ગો",
     "classSearchPlaceholder": "વર્ગ શોધો…",
     "noClassMatches": "કોઈ મેળ ખાતો વર્ગ નથી."
+  },
+  "createInvoice": {
+    "invalidField": "અમાન્ય",
+    "itemNamePlaceholder": "ટ્યુશન",
+    "itemPeriodPlaceholder": "સત્ર 1",
+    "itemAmountPlaceholder": "0.00"
   }
 }

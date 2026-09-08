@@ -204,12 +204,12 @@ export default function CreateInvoiceScreen() {
         for (const d of details) {
           if (d?.field) {
             setError(d.field as Path<CreateInvoiceInput>, {
-              message: String(d.issue ?? d.message ?? 'Invalid'),
+              message: String(d.issue ?? d.message ?? t('createInvoice.invalidField', { defaultValue: 'Invalid' })),
             });
           }
         }
       } else {
-        toast.error(anyErr?.message ?? 'Please try again.');
+        toast.error(anyErr?.message ?? t('common.tryAgainLater', { defaultValue: 'Please try again.' }));
       }
     }
   };
@@ -334,7 +334,7 @@ export default function CreateInvoiceScreen() {
                 label={t('invoiceCreate.fieldFeeHead', {
                   defaultValue: 'Fee head',
                 })}
-                placeholder="Tuition"
+                placeholder={t("createInvoice.itemNamePlaceholder", { defaultValue: "Tuition" })}
               />
               <FormField
                 control={control}
@@ -342,7 +342,7 @@ export default function CreateInvoiceScreen() {
                 label={t('invoiceCreate.fieldPeriod', {
                   defaultValue: 'Period (optional)',
                 })}
-                placeholder="Term 1"
+                placeholder={t("createInvoice.itemPeriodPlaceholder", { defaultValue: "Term 1" })}
               />
               <FormField
                 control={control}
@@ -351,7 +351,7 @@ export default function CreateInvoiceScreen() {
                   defaultValue: 'Amount',
                 })}
                 keyboardType="decimal-pad"
-                placeholder="0.00"
+                placeholder={t("createInvoice.itemAmountPlaceholder", { defaultValue: "0.00" })}
               />
             </View>
           ))}

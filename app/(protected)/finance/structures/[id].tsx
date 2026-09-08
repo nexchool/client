@@ -31,6 +31,7 @@ import { BackHeader } from "@/common/components/BackHeader";
 import { PageHeader } from "@/common/components/PageHeader";
 import { useModalBodyHeight } from '@/common/hooks/useModalBodyHeight';
 import { useDialog, useToast } from "@/common/feedback";
+import { formatCurrency } from "@/common/utils/formatCurrency";
 
 function formatDate(s: string, locale: string) {
   try {
@@ -38,10 +39,6 @@ function formatDate(s: string, locale: string) {
   } catch {
     return s;
   }
-}
-
-function formatCurrency(n: number) {
-  return `₹${Number(n).toLocaleString("en-IN")}`;
 }
 
 export default function FeeStructureInfoPage() {
