@@ -33,7 +33,7 @@ export default function TeachersScreen() {
   const { t } = useTranslation("teachers");
   const router = useRouter();
   const { teachers, departments, loading, fetchTeachers } = useTeachers();
-  const { palette, spacing, radius, elevation } = useTheme();
+  const { palette, spacing, radius, elevation, typography } = useTheme();
 
   // Seeded from the global search screen's "See all", so the term the
   // person typed there is already applied when this list opens.
@@ -97,7 +97,7 @@ export default function TeachersScreen() {
       >
         <AppIcon name="search" size="md" color="outline" />
         <TextInput
-          style={[styles.searchInput, { color: palette.onSurface }]}
+          style={[typography.bodyMd, styles.searchInput, { color: palette.onSurface }]}
           placeholder={t("list.searchPlaceholder")}
           placeholderTextColor={palette.onSurfaceVariant}
           value={searchQuery}

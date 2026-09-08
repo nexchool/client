@@ -94,7 +94,7 @@ export function StudentDetailSheet({
               placeholder={t('remarksPlaceholder', { defaultValue: 'Optional note...' })}
               placeholderTextColor={palette.outline}
               multiline
-              style={[
+              style={[typography.bodyMd, 
                 bodyMdType,
                 {
                   backgroundColor: palette.surfaceContainerLow,

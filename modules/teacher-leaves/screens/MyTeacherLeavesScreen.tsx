@@ -722,7 +722,7 @@ function ApplyModal({ visible, balances, onClose, onSubmit }: ApplyModalProps) {
             )}
           </Text>
           <TextInput
-            style={[am.input, { height: 80, textAlignVertical: "top", paddingTop: spacing.sm }]}
+            style={[typography.bodyMd, am.input, { height: 80, textAlignVertical: "top", paddingTop: spacing.sm }]}
             value={reason}
             onChangeText={setReason}
             placeholder={t("tracker.applyModal.placeholderReason")}

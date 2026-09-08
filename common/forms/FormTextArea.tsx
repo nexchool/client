@@ -46,6 +46,7 @@ export function FormTextArea<TForm extends FieldValues>({
             numberOfLines={numberOfLines}
             maxLength={maxLength}
             style={{
+              ...typography.bodyMd,
               minHeight: numberOfLines * 22 + 16,
               borderWidth: 1,
               borderColor: error ? palette.error : palette.outlineVariant,

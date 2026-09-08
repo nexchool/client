@@ -59,7 +59,7 @@ export default function StudentsScreen() {
   } = useStudents();
   const { hasPermission, hasAnyPermission } = usePermissions();
   const { selectedAcademicYearId } = useAcademicYearContext();
-  const { palette, spacing, radius, elevation } = useTheme();
+  const { palette, spacing, radius, elevation, typography } = useTheme();
 
   // Seeded from the global search screen's "See all", so the term the
   // person typed there is already applied when this list opens.
@@ -114,7 +114,7 @@ export default function StudentsScreen() {
           >
             <AppIcon name="search" size="md" color="outline" />
             <TextInput
-              style={[styles.searchInput, { color: palette.onSurface }]}
+              style={[typography.bodyMd, styles.searchInput, { color: palette.onSurface }]}
               placeholder={t("list.searchPlaceholder")}
               placeholderTextColor={palette.onSurfaceVariant}
               value={searchQuery}

@@ -84,7 +84,7 @@ export function HostelGatepassDetailScreen() {
   const toast = useToast();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { palette, spacing, radius, elevation } = useTheme();
+  const { palette, spacing, radius, elevation, typography } = useTheme();
   const { hasPermission } = usePermissions();
   const { data, isLoading, error, refetch, isRefetching } = useHostelGatepass(id);
 
@@ -357,7 +357,7 @@ export function HostelGatepassDetailScreen() {
               placeholderTextColor={palette.onSurfaceVariant}
               multiline
               editable={!busy}
-              style={{
+              style={{ ...typography.bodyMd,
                 minHeight: 80,
                 textAlignVertical: "top",
                 backgroundColor: palette.surfaceContainerHigh,

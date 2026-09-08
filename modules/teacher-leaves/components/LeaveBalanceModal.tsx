@@ -283,7 +283,7 @@ export function LeaveBalanceModal({
                             {t("balanceModal.setAllocated")}
                           </Text>
                           <TextInput
-                            style={s.editInput}
+                            style={[bodyMdType, s.editInput]}
                             value={editDays}
                             onChangeText={setEditDays}
                             keyboardType="numeric"
@@ -294,7 +294,7 @@ export function LeaveBalanceModal({
                             {t("balanceModal.adminNote")}
                           </Text>
                           <TextInput
-                            style={[s.editInput, { height: 60, textAlignVertical: "top" }]}
+                            style={[bodyMdType, s.editInput, { height: 60, textAlignVertical: "top" }]}
                             value={editNotes}
                             onChangeText={setEditNotes}
                             placeholder={t("balanceModal.adminNotePlaceholder")}

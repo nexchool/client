@@ -33,7 +33,7 @@ export default function TeacherLeavesScreen({
   const { t } = useTranslation("teacherLeaves");
   const { confirm } = useDialog();
   const toast = useToast();
-  const { palette, spacing, radius, elevation } = useTheme();
+  const { palette, spacing, radius, elevation, typography } = useTheme();
   const { hasPermission } = usePermissions();
   const canManage = hasPermission(PERMS.TEACHER_LEAVE_MANAGE);
 
@@ -309,7 +309,7 @@ export default function TeacherLeavesScreen({
       <View style={styles.searchContainer}>
         <AppIcon name="search-outline" size="md" color="onSurfaceVariant" />
         <TextInput
-          style={styles.searchInput}
+          style={[typography.bodyMd, styles.searchInput]}
           value={searchQuery}
           onChangeText={setSearchQuery}
           placeholder={t("screen.searchPlaceholder")}

@@ -146,7 +146,7 @@ export function CreateAcademicYearModal({
             {t("academicYearCreate.nameLabel")}
           </Text>
           <TextInput
-            style={[
+            style={[bodyMdType, 
               styles.input,
               bodyMdType,
               {

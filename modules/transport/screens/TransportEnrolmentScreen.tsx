@@ -31,7 +31,7 @@ function statusMeta(status: TransportEnrollmentDerivedStatus | null | undefined)
 export function TransportEnrolmentScreen() {
   const { t } = useTranslation("transport");
   const router = useRouter();
-  const { palette, spacing, radius, elevation } = useTheme();
+  const { palette, spacing, radius, elevation, typography } = useTheme();
   const { data: rows = [], isLoading, error, refetch, isRefetching } = useTransportEnrollments();
   const [query, setQuery] = useState("");
 
@@ -133,7 +133,7 @@ export function TransportEnrolmentScreen() {
             onChangeText={setQuery}
             placeholder={t("enrolment.search", { defaultValue: "Search student, route or bus" })}
             placeholderTextColor={palette.outline}
-            style={{ flex: 1, color: palette.onSurface, paddingVertical: 0 }}
+            style={{ ...typography.bodyMd, flex: 1, color: palette.onSurface, paddingVertical: 0 }}
             autoCapitalize="none"
             returnKeyType="search"
           />

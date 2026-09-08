@@ -302,7 +302,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
             {/* ─── Name ─────────────────────────────────────────── */}
             <Text variant="labelMd" color="onSurface" style={fieldLabelStyle}>{t('holidayForm.nameLabel')}</Text>
             <TextInput
-              style={{
+              style={{ ...typography.bodyMd,
                 backgroundColor: palette.surfaceContainerLow,
                 borderWidth: fieldErrors.name ? 2 : 1,
                 borderColor: fieldErrors.name ? palette.error : palette.outlineVariant,
@@ -534,7 +534,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
             {/* ─── Description ─────────────────────────────────── */}
             <Text variant="labelMd" color="onSurface" style={fieldLabelStyle}>{t('holidayForm.descriptionLabel')}</Text>
             <TextInput
-              style={{
+              style={{ ...typography.bodyMd,
                 backgroundColor: palette.surfaceContainerLow,
                 borderWidth: fieldErrors.description ? 2 : 1,
                 borderColor: fieldErrors.description ? palette.error : palette.outlineVariant,
