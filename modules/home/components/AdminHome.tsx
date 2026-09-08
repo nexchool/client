@@ -8,6 +8,9 @@ import { AppIcon } from '@/common/components/AppIcon';
 import { Skeleton } from '@/common/components/Skeleton';
 import { EmptyState } from '@/common/components/EmptyState';
 import { useAdminDashboard } from '@/modules/dashboard/hooks/useAdminDashboard';
+import type { SectionVisibility } from '@/modules/dashboard/types';
+import { usePermissions } from '@/modules/permissions/hooks/usePermissions';
+import * as PERMS from '@/modules/permissions/constants/permissions';
 import { DashboardKpiCard } from './DashboardKpiCard';
 import { FeeTrendChart } from './FeeTrendChart';
 import { DashboardActionRow } from './DashboardActionRow';
@@ -35,8 +38,29 @@ export function AdminHome() {
   const alerts = data?.alerts;
   const flags = data?.feature_flags;
 
-  const attendanceEnabled = !!flags?.attendance && todayOps?.enabled !== false;
-  const feesEnabled = !!flags?.fees_management && finance?.enabled !== false;
+  // Two independent reasons a section is absent, and they are not the same
+  // question. `enabled` asks whether the school is on that plan; `visible`
+  // asks whether this person may see it — a finance sub-admin gets the fee
+  // card and nothing else, decided server-side so the data never arrives.
+  const shown = (section?: SectionVisibility) => section?.visible !== false;
+
+  // Quick Actions are shortcuts to other screens, so they answer to the same
+  // permissions those screens do — not to the dashboard payload. A fees desk
+  // offered "Take Attendance" would be offered a 403.
+  const { hasPermission, hasAnyPermission } = usePermissions();
+  const canMarkAttendance = hasPermission(PERMS.ATTENDANCE_MARK);
+  const canAddStudent = hasPermission(PERMS.STUDENT_CREATE);
+  const canRecordPayment = hasAnyPermission([
+    PERMS.FEES_PAYMENT_RECORD,
+    PERMS.FINANCE_COLLECT,
+  ]);
+  const canAnnounce = hasPermission(PERMS.ANNOUNCEMENT_CREATE);
+
+  const attendanceEnabled =
+    !!flags?.attendance && todayOps?.enabled !== false && shown(todayOps);
+  const feesEnabled =
+    !!flags?.fees_management && finance?.enabled !== false && shown(finance);
+  const overviewShown = shown(overview);
 
   const trendPct = finance?.trend_percentage ?? 0;
   const trendTone: 'up' | 'down' | 'flat' = trendPct > 0 ? 'up' : trendPct < 0 ? 'down' : 'flat';
@@ -47,7 +71,7 @@ export function AdminHome() {
         { count: alerts.overdue_fees_students, label: t('admin.alert.overdueFees', { defaultValue: '{{n}} overdue fee students', n: alerts.overdue_fees_students }) },
         { count: alerts.timetable_conflicts, label: t('admin.alert.timetableConflicts', { defaultValue: '{{n}} timetable conflicts', n: alerts.timetable_conflicts }) },
         { count: alerts.classes_without_timetable, label: t('admin.alert.classesNoTimetable', { defaultValue: '{{n}} classes without a timetable', n: alerts.classes_without_timetable }) },
-      ].filter((row) => row.count > 0).slice(0, 4)
+      ].filter((row) => (row.count ?? 0) > 0).slice(0, 4)
     : [];
 
   return (
@@ -83,6 +107,7 @@ export function AdminHome() {
         </View>
       ) : (
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+          {overviewShown ? (
           <View style={{ width: '48%' }}>
             <DashboardKpiCard
               label={t('admin.kpi.students', { defaultValue: 'Total Students' })}
@@ -98,6 +123,8 @@ export function AdminHome() {
               }
             />
           </View>
+          ) : null}
+          {overviewShown ? (
           <View style={{ width: '48%' }}>
             <DashboardKpiCard
               label={t('admin.kpi.teachers', { defaultValue: 'Total Teachers' })}
@@ -108,6 +135,8 @@ export function AdminHome() {
               iconChipFg="onTertiaryContainer"
             />
           </View>
+          ) : null}
+          {shown(todayOps) ? (
           <View style={{ width: '48%' }}>
             <DashboardKpiCard
               label={t('admin.kpi.attendance', { defaultValue: 'Attendance Today' })}
@@ -127,6 +156,7 @@ export function AdminHome() {
               }
             />
           </View>
+          ) : null}
           {feesEnabled ? (
             <View style={{ width: '48%' }}>
               <DashboardKpiCard
@@ -180,6 +210,7 @@ export function AdminHome() {
         <Text variant="headlineMd" color="onSurface" style={{ marginBottom: spacing.md }}>
           {t('admin.quickActions', { defaultValue: 'Quick Actions' })}
         </Text>
+        {canMarkAttendance ? (
         <DashboardActionRow
           title={t('admin.action.takeAttendance', { defaultValue: 'Take Attendance' })}
           subtitle={t('admin.action.takeAttendanceSub', { defaultValue: "Mark today's classes" })}
@@ -188,6 +219,8 @@ export function AdminHome() {
           iconChipFg="onPrimaryContainer"
           onPress={() => router.push('/(protected)/attendance/overview')}
         />
+        ) : null}
+        {canAddStudent ? (
         <DashboardActionRow
           title={t('admin.action.addStudent', { defaultValue: 'Add Student' })}
           subtitle={t('admin.action.addStudentSub', { defaultValue: 'Enroll a new student' })}
@@ -196,6 +229,8 @@ export function AdminHome() {
           iconChipFg="onSecondaryContainer"
           onPress={() => router.push('/(protected)/students/new')}
         />
+        ) : null}
+        {canRecordPayment ? (
         <DashboardActionRow
           title={t('admin.action.recordPayment', { defaultValue: 'Record Payment' })}
           subtitle={t('admin.action.recordPaymentSub', { defaultValue: 'Log a fee collection' })}
@@ -204,6 +239,8 @@ export function AdminHome() {
           iconChipFg="onTertiaryContainer"
           onPress={() => setRecordPaymentVisible(true)}
         />
+        ) : null}
+        {canAnnounce ? (
         <DashboardActionRow
           title={t('admin.action.announcements', { defaultValue: 'Announcements' })}
           subtitle={t('admin.action.announcementsSub', { defaultValue: 'Send a notice' })}
@@ -212,6 +249,7 @@ export function AdminHome() {
           iconChipFg="onSurfaceVariant"
           onPress={() => router.push('/(protected)/announcements')}
         />
+        ) : null}
       </View>
 
       <View
