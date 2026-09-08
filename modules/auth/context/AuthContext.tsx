@@ -31,6 +31,7 @@ import {
   getForcePasswordReset,
   setForcePasswordReset,
   getPushNotificationsPreference,
+  getBiometricUnlockEnabled,
 } from "@/common/utils/storage";
 import {
   login as loginService,
@@ -59,6 +60,7 @@ import {
   registerDeviceForPushNotifications,
   unregisterDevicePushNotifications,
 } from "@/modules/devices/pushRegistration";
+import { unlock, UnlockOutcome } from "@/modules/auth/biometrics/unlock";
 
 /**
  * Min interval (ms) between GET /profile refreshes when app is opened or returns to foreground.
@@ -124,6 +126,27 @@ interface AuthContextType {
   clearPendingTenantChoice: () => void;
   /** Call after the force-reset endpoint succeeds — the session is now unrestricted. */
   clearMustResetPassword: () => Promise<void>;
+  /**
+   * A session was restored from storage on this phone, and its owner asked for
+   * Face ID / a fingerprint before it is handed back.
+   *
+   * Separate from `isAuthenticated` on purpose: the session is real and valid,
+   * and the person is entitled to it — they have simply not proved they are the
+   * one holding the phone yet. Collapsing the two would mean signing them out
+   * to represent a gate they can pass in one tap.
+   */
+  isLocked: boolean;
+  /**
+   * Ask the phone for the owner. `'unlocked'` opens the session.
+   *
+   * The prompt's wording is passed in rather than built here: what the OS
+   * dialog says is copy, it is translated, and it belongs to the screen that
+   * has `t` — not to the provider that owns the session.
+   */
+  unlockSession: (prompt: {
+    message: string;
+    cancelLabel: string;
+  }) => Promise<UnlockOutcome>;
   logout: () => Promise<void>;
   setAuthData: (data: LoginResponse) => Promise<void>;
   hasPermission: (permission: string) => boolean;
@@ -162,6 +185,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   // corrects it before `isLoading` clears, so nothing routes on a guess.
   const [tenantKnown, setTenantKnownState] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  // Starts false and is only ever raised by `checkAuth` below, which is the
+  // one place that restores a session without anybody proving anything. A
+  // sign-in performed here and now is proof enough on its own.
+  const [isLocked, setIsLocked] = useState(false);
   const lastAuthSnapshotRefreshRef = useRef(0);
   const queryClient = useQueryClient();
 
@@ -273,6 +300,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           storedTenantName,
           storedMustResetPassword,
           tenantKnownNow,
+          biometricUnlockWanted,
         ] = await Promise.all([
           getAccessToken(),
           getRefreshToken(),
@@ -282,6 +310,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           getTenantName(),
           getForcePasswordReset(),
           hasKnownTenant(),
+          getBiometricUnlockEnabled(),
         ]);
 
         // Read regardless of whether a session exists: `(auth)/select-school`
@@ -300,6 +329,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           // every request the server refuses. The profile refresh above then
           // corrects it in either direction.
           setMustResetPasswordState(storedMustResetPassword);
+
+          // This is the only path that hands a session back without anybody
+          // proving anything — storage had the tokens, so the app opened. That
+          // is exactly what the gate is for, and it is raised *before*
+          // `isLoading` clears so no protected screen ever renders unlocked.
+          setIsLocked(biometricUnlockWanted);
         }
       } catch (error) {
         console.error("Error checking auth:", error);
@@ -470,6 +505,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     setPermissionsState([]);
     setEnabledFeaturesState([]);
     setMustResetPasswordState(false);
+    // There is no session left to gate, and leaving this raised would put a
+    // lock screen in front of the sign-in screen. `clearAuth()` has already
+    // dropped the stored preference, so the next person here starts fresh.
+    setIsLocked(false);
     // `clearAuth()` deliberately leaves tenant identity alone (see its
     // docstring), so this will normally still read true right after a
     // sign-out — but `tenantKnownState` was previously set once, at mount, by
@@ -557,6 +596,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     return permissions.includes(PERMS.SYSTEM_MANAGE);
   };
 
+  /**
+   * Ask the phone for its owner, and open the session if it answers.
+   *
+   * Only `'unlocked'` lowers the gate. `'dismissed'` and `'unavailable'` both
+   * leave it up — a prompt that could not run is not a prompt that passed, and
+   * the difference between those two is the screen's business, not this one's:
+   * one means "try again", the other means "sign in with your password
+   * instead".
+   */
+  const unlockSession = async (prompt: {
+    message: string;
+    cancelLabel: string;
+  }): Promise<UnlockOutcome> => {
+    const outcome = await unlock(prompt);
+    if (outcome === "unlocked") setIsLocked(false);
+    return outcome;
+  };
+
   // Check if user has a specific permission
   const hasPermission = (permission: string): boolean => {
     if (!permissions || permissions.length === 0) return false;
@@ -597,6 +654,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         isLoading,
         tenantKnown,
         mustResetPassword,
+        isLocked,
+        unlockSession,
         pendingTenantChoice,
         login,
         loginWithMobilePin,

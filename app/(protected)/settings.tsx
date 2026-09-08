@@ -15,6 +15,7 @@ import { LanguageSheet, currentLanguageLabel } from "@/common/components/Languag
 import { AppIcon } from "@/common/components/AppIcon";
 import { PageHeader } from "@/common/components/PageHeader";
 import { ProfileActionRow } from "@/modules/profile/components/ProfileActionRow";
+import { BiometricUnlockRow } from "@/modules/auth/components/BiometricUnlockRow";
 import { useAuth } from "@/modules/auth/hooks/useAuth";
 import { useDialog } from "@/common/feedback";
 import {
@@ -157,6 +158,7 @@ export default function SettingsScreen() {
             )
           }
         />
+        <BiometricUnlockRow />
         <ProfileActionRow
           icon="language-outline"
           label={t("settings:languageSectionTitle")}

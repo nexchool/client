@@ -112,6 +112,11 @@ const KEYS = {
   RECENT_SEARCHES: 'recent_searches',
   /** The school's resolved colour palette, so a cold start opens branded. */
   TENANT_THEME: 'tenant_theme',
+  /** This person, on this phone, asked for Face ID / fingerprint on re-entry. */
+  BIOMETRIC_UNLOCK_ENABLED: 'biometric_unlock_enabled',
+  /** Whether the one-time "sign in faster?" offer has already been made, so a
+   *  person who said no is not asked again after every single sign-in. */
+  BIOMETRIC_OFFER_MADE: 'biometric_offer_made',
 } as const;
 
 export const setAccessToken = async (token: string) => {
@@ -330,6 +335,34 @@ export const getCachedTenantTheme = async (): Promise<Record<string, string> | n
 };
 
 /**
+ * Whether re-entry on this phone is gated behind Face ID or a fingerprint.
+ *
+ * Off unless somebody said yes. Stored rather than derived because the cold
+ * start that has to honour it happens before any network call — the whole
+ * point is that the app must not hand back a restored session until the gate
+ * has been passed, and it cannot ask the server what the gate is.
+ */
+export const getBiometricUnlockEnabled = async (): Promise<boolean> => {
+  return (await store.getItemAsync(KEYS.BIOMETRIC_UNLOCK_ENABLED)) === 'true';
+};
+
+export const setBiometricUnlockEnabled = async (enabled: boolean) => {
+  await store.setItemAsync(
+    KEYS.BIOMETRIC_UNLOCK_ENABLED,
+    enabled ? 'true' : 'false'
+  );
+};
+
+/** Whether this person has already been offered biometric unlock once. */
+export const getBiometricOfferMade = async (): Promise<boolean> => {
+  return (await store.getItemAsync(KEYS.BIOMETRIC_OFFER_MADE)) === 'true';
+};
+
+export const setBiometricOfferMade = async () => {
+  await store.setItemAsync(KEYS.BIOMETRIC_OFFER_MADE, 'true');
+};
+
+/**
  * Forget everything about the current sign-in — but not which school this
  * installation belongs to.
  *
@@ -368,6 +401,14 @@ export const clearAuth = async () => {
     store.deleteItemAsync(KEYS.SELECTED_ACADEMIC_YEAR_ID),
     store.deleteItemAsync(KEYS.RECENT_SEARCHES),
     store.deleteItemAsync(KEYS.TENANT_THEME),
+    // Both go, and that is the point: biometric unlock is a property of a
+    // person on a phone, not of the phone. Unlike the school identity above —
+    // which a sign-out must not forget — the next person to sign in here may be
+    // a sibling or a colleague, and they must not inherit a gate somebody else
+    // chose, nor have their own offer silently skipped because somebody else
+    // already declined it.
+    store.deleteItemAsync(KEYS.BIOMETRIC_UNLOCK_ENABLED),
+    store.deleteItemAsync(KEYS.BIOMETRIC_OFFER_MADE),
     clearPushDeviceToken(),
   ]);
 };

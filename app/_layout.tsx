@@ -7,9 +7,10 @@ import {
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AuthProvider } from "@/modules/auth/context/AuthContext";
+import { AuthProvider, useAuthContext } from "@/modules/auth/context/AuthContext";
+import { LockScreen } from "@/modules/auth/components/LockScreen";
 import { seedBakedTenant } from "@/modules/auth/bootstrap/seedBakedTenant";
 import { checkAndFetchUpdateInBackground } from "@/common/utils/checkForAppUpdate";
 import { initI18n } from "@/i18n";
@@ -18,6 +19,7 @@ import { ErrorBoundary } from "@/common/components/ErrorBoundary";
 import { FeedbackProvider } from "@/common/feedback";
 import { useTenantTheme } from "@/modules/branding/useTenantTheme";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 const queryClient = new QueryClient();
 
@@ -83,6 +85,45 @@ export default function RootLayout() {
 }
 
 /**
+ * The biometric gate, above the router rather than inside any one group.
+ *
+ * It started life in `(protected)/_layout.tsx`, which was wrong in a way worth
+ * recording. A forced password change redirects to `(auth)/set-password` —
+ * *outside* the protected group — so the gate there was simply never rendered
+ * for an account in that state. And `set-password` takes only a new password:
+ * "the caller is already signed in, and the session itself is the credential"
+ * (`useForceResetPassword`). So an admin resetting somebody's password turned
+ * their locked phone into an unlocked one: whoever held it could set a new
+ * password and walk in, having passed no biometric prompt at all.
+ *
+ * A gate that only covers some routes is not a gate. This one sits above the
+ * `Stack`, so every route — signed-in, forced-reset, deep-linked from a
+ * notification — is behind it.
+ *
+ * It cannot strand anybody signed out: `isLocked` is only ever raised for a
+ * session actually restored from storage, so the sign-in screens are never
+ * behind it, and "sign in with your password instead" clears the session,
+ * which lowers the gate on its way out.
+ */
+function SessionGate({ children }: { children: ReactNode }) {
+  const { isLocked } = useAuthContext();
+  if (!isLocked) return <>{children}</>;
+
+  // `SafeAreaProvider` only for this branch. Every other screen in the app
+  // renders inside the `Stack`, and React Navigation puts a provider there —
+  // this is the one screen that renders with the `Stack` unmounted, so it is
+  // the one screen that would be relying on a context nothing else supplies.
+  // Nesting providers is supported, so this costs nothing if one already
+  // exists; leaving it out would make the lock screen the only place in the
+  // app whose insets depend on an implementation detail of the router.
+  return (
+    <SafeAreaProvider>
+      <LockScreen />
+    </SafeAreaProvider>
+  );
+}
+
+/**
  * Split out from `RootLayout` so `useTenantTheme` — and everything under
  * `AuthProvider` that reads the current tenant, starting with the login
  * screen's `usePublishedAuthMethods` — mounts only once `tenantSeeded` is
@@ -114,11 +155,13 @@ function RootLayoutReady() {
                 every screen rather than scrolling away with one.
               */}
               <FeedbackProvider>
-                <Stack screenOptions={{ headerShown: false }}>
-                  <Stack.Screen name="index" />
-                  <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                  <Stack.Screen name="(protected)" options={{ headerShown: false }} />
-                </Stack>
+                <SessionGate>
+                  <Stack screenOptions={{ headerShown: false }}>
+                    <Stack.Screen name="index" />
+                    <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                    <Stack.Screen name="(protected)" options={{ headerShown: false }} />
+                  </Stack>
+                </SessionGate>
               </FeedbackProvider>
             </AuthProvider>
           </QueryClientProvider>

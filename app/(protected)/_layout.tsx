@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/modules/auth/hooks/useAuth";
 import MainLayout from "@/common/components/MainLayout";
+import { BiometricUnlockOffer } from "@/modules/auth/components/BiometricUnlockOffer";
 import { AcademicYearProvider } from "@/modules/academics/context/AcademicYearContext";
 import { useNotificationResponseNavigation } from "@/modules/notifications/hooks/useNotificationResponseNavigation";
 import { useNotificationQuerySync } from "@/modules/notifications/hooks/useNotificationQuerySync";
@@ -51,6 +52,10 @@ export default function ProtectedLayout() {
   return (
     <AcademicYearProvider>
       <NotificationResponseBridge />
+      {/* Mounted below the lock check above, so the offer can never appear over
+          a locked session — the question only makes sense to somebody who is
+          actually in. */}
+      <BiometricUnlockOffer />
       <MainLayout />
     </AcademicYearProvider>
   );
