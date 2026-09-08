@@ -172,63 +172,79 @@ export default function LoginScreen() {
 
   return (
     <ScreenContainer noHorizontalPadding>
-      <BrandHeader branding={branding} loaded={loaded} />
+      {/* `ScreenContainer`'s scroll content is `flexGrow: 1` (see its
+       * `scrollContent` style) so this View — the sole child of that
+       * content — is always at least viewport-tall. Without a
+       * `justifyContent` here the two groups below stack top-aligned and
+       * any slack a tall viewport hands back collects in one place: below
+       * the footer, as dead background nobody asked for. `space-between`
+       * sends that same slack to the gap between the card group and the
+       * footer instead, where it reads as breathing room. When content
+       * does not fit (short device, error banner, large font scale) this
+       * View's height is driven by its children instead, `space-between`
+       * has no extra space to distribute, and the outer ScrollView takes
+       * over — same as before this change. */}
+      <View style={{ flex: 1, justifyContent: 'space-between' }}>
+        <View>
+          <BrandHeader branding={branding} loaded={loaded} />
 
-      <View
-        style={{
-          paddingHorizontal: spacing.marginMobile,
-          marginTop: spacing.xs,
-          // `scrollBottom` (96) exists to clear the bottom TAB BAR on
-          // scrolling app screens (see its doc comment in tokens.ts) — this
-          // screen has no tab bar, it has its own footer, so that 96px was
-          // pure dead space below "Need help?", enough on its own to push a
-          // page that otherwise fits the viewport into being scrollable.
-          // `ScreenContainer` already reserves the real bottom safe-area
-          // inset for this screen: its `SafeAreaView` always includes the
-          // `bottom` edge (see `ScreenContainer`'s `edges`), which sits
-          // *outside* this scroll content, below it — so re-adding
-          // `insets.bottom` here would double-count it. All this needs is
-          // its own small trailing gap instead of tab-bar clearance it will
-          // never use.
-          paddingBottom: spacing.md,
-        }}
-      >
-        <AuthCard>
-          {!loaded ? (
-            // Rendering the email form here (the old behaviour) is what made
-            // an OTP-only school visibly swap forms once its policy landed —
-            // nothing method-specific is known yet, so nothing
-            // method-specific renders. `BrandHeader` above already shows its
-            // own loaded=false treatment (a plain mark, no borrowed
-            // identity); this is that same "still asking" moment for the
-            // form area, not a second design. The card itself still renders
-            // — it is chrome, not borrowed identity, so there is nothing
-            // dishonest about showing it before branding settles.
-            <ActivityIndicator
-              size="large"
-              color={palette.primary}
-              style={{ marginTop: spacing.xl }}
-            />
-          ) : activeMode === 'email' ? (
-            <EmailPasswordForm
-              wasSessionExpired={wasSessionExpired}
-              onUseOtp={otpOffered ? () => setMode('otp') : undefined}
-              onUsePin={pinOffered ? () => setMode('pin') : undefined}
-            />
-          ) : activeMode === 'otp' ? (
-            <MobileOtpForm
-              onBack={emailOffered ? () => setMode('email') : undefined}
-              onUsePin={pinOffered ? () => setMode('pin') : undefined}
-            />
-          ) : (
-            <MobilePinForm
-              onBack={emailOffered ? () => setMode('email') : undefined}
-              onUseOtp={otpOffered ? () => setMode('otp') : undefined}
-            />
-          )}
-        </AuthCard>
+          <View
+            style={{
+              paddingHorizontal: spacing.marginMobile,
+              marginTop: spacing.xs,
+            }}
+          >
+            <AuthCard>
+              {!loaded ? (
+                // Rendering the email form here (the old behaviour) is what made
+                // an OTP-only school visibly swap forms once its policy landed —
+                // nothing method-specific is known yet, so nothing
+                // method-specific renders. `BrandHeader` above already shows its
+                // own loaded=false treatment (a plain mark, no borrowed
+                // identity); this is that same "still asking" moment for the
+                // form area, not a second design. The card itself still renders
+                // — it is chrome, not borrowed identity, so there is nothing
+                // dishonest about showing it before branding settles.
+                <ActivityIndicator
+                  size="large"
+                  color={palette.primary}
+                  style={{ marginTop: spacing.xl }}
+                />
+              ) : activeMode === 'email' ? (
+                <EmailPasswordForm
+                  wasSessionExpired={wasSessionExpired}
+                  onUseOtp={otpOffered ? () => setMode('otp') : undefined}
+                  onUsePin={pinOffered ? () => setMode('pin') : undefined}
+                />
+              ) : activeMode === 'otp' ? (
+                <MobileOtpForm
+                  onBack={emailOffered ? () => setMode('email') : undefined}
+                  onUsePin={pinOffered ? () => setMode('pin') : undefined}
+                />
+              ) : (
+                <MobilePinForm
+                  onBack={emailOffered ? () => setMode('email') : undefined}
+                  onUseOtp={otpOffered ? () => setMode('otp') : undefined}
+                />
+              )}
+            </AuthCard>
+          </View>
+        </View>
 
-        <AuthTrustFooter />
+        <View
+          style={{
+            paddingHorizontal: spacing.marginMobile,
+            // `ScreenContainer` already reserves the real bottom safe-area
+            // inset for this screen: its `SafeAreaView` always includes the
+            // `bottom` edge (see `ScreenContainer`'s `edges`), which sits
+            // *outside* this scroll content, below it — so re-adding
+            // `insets.bottom` here would double-count it. This is only the
+            // small deliberate gap between "Need help?" and that inset.
+            paddingBottom: spacing.md,
+          }}
+        >
+          <AuthTrustFooter />
+        </View>
       </View>
     </ScreenContainer>
   );
