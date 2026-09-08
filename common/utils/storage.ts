@@ -1,4 +1,97 @@
+import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
+
+/**
+ * Backend for every read/write/delete below.
+ *
+ * Native: `expo-secure-store`, completely unchanged. `store` *is* the
+ * `SecureStore` module object on native — not a wrapper around it — so every
+ * call below (`store.setItemAsync(...)`) is the exact same function call,
+ * with the exact same await and the exact same error behaviour, that used to
+ * be written as `SecureStore.setItemAsync(...)`. Nothing about native
+ * behaviour changes by this file knowing web exists.
+ *
+ * Web: `expo-secure-store` has no web implementation — it isn't a shim with
+ * reduced guarantees, it simply doesn't exist there, and calling it throws
+ * `getValueWithKeyAsync is not a function` before a single pixel renders.
+ * That crash used to take down every screen that touches storage on load,
+ * including the login screen the web target exists to let us look at (see
+ * `.claude/memory/v2-refactor.md` — web is a dev-time renderer, not a
+ * shipping target).
+ *
+ * `localStorage` is the fallback, and it is **not** a substitute for secure
+ * storage: it is plain text, readable by any script running on the page's
+ * origin, and not encrypted at rest. Shipping a real login on top of it would
+ * put refresh tokens where any XSS on the page could read them. That is
+ * acceptable here for exactly one reason — this path only exists to serve
+ * the Expo **web** target, which this project has never shipped and does not
+ * plan to. It is not an endorsement of `localStorage` for anything real; it
+ * is a rendering convenience for a target with no production audience.
+ *
+ * To keep that line from blurring, the web backend refuses to persist once
+ * `__DEV__` is false: it logs once and every read comes back empty rather
+ * than writing session data to `localStorage`. It does not throw in that
+ * case — throwing would crash the very bootstrap paths (theme cache, session
+ * restore) this file exists to stop crashing, which would just swap one
+ * startup crash for another. A quiet no-op is the more honest failure mode
+ * for "this build should not be trusted with real credentials."
+ *
+ * The platform decision is made once, right here — every function below
+ * calls `store.xxxAsync`, never `Platform.OS` directly.
+ */
+interface StorageBackend {
+  getItemAsync(key: string): Promise<string | null>;
+  setItemAsync(key: string, value: string): Promise<void>;
+  deleteItemAsync(key: string): Promise<void>;
+}
+
+const WEB_STORAGE_DISABLED_WARNING =
+  'storage: refusing to persist to localStorage outside development. ' +
+  'The web target is a development renderer only and must never hold real session data.';
+
+let warnedWebStorageDisabled = false;
+
+const webBackend: StorageBackend = {
+  async getItemAsync(key) {
+    if (!__DEV__) {
+      if (!warnedWebStorageDisabled) {
+        warnedWebStorageDisabled = true;
+        console.error(WEB_STORAGE_DISABLED_WARNING);
+      }
+      return null;
+    }
+    try {
+      return globalThis.localStorage?.getItem(key) ?? null;
+    } catch {
+      // Private browsing, disabled site data, or no localStorage at all —
+      // treat it as "nothing stored" rather than crashing the caller.
+      return null;
+    }
+  },
+  async setItemAsync(key, value) {
+    if (!__DEV__) {
+      if (!warnedWebStorageDisabled) {
+        warnedWebStorageDisabled = true;
+        console.error(WEB_STORAGE_DISABLED_WARNING);
+      }
+      return;
+    }
+    try {
+      globalThis.localStorage?.setItem(key, value);
+    } catch {
+      // A write we can't make (quota, disabled storage) isn't worth a crash.
+    }
+  },
+  async deleteItemAsync(key) {
+    try {
+      globalThis.localStorage?.removeItem(key);
+    } catch {
+      /* ignore — nothing to clean up if storage never worked */
+    }
+  },
+};
+
+const store: StorageBackend = Platform.OS === 'web' ? webBackend : SecureStore;
 
 const KEYS = {
   ACCESS_TOKEN: 'access_token',
@@ -22,66 +115,66 @@ const KEYS = {
 } as const;
 
 export const setAccessToken = async (token: string) => {
-  await SecureStore.setItemAsync(KEYS.ACCESS_TOKEN, token);
+  await store.setItemAsync(KEYS.ACCESS_TOKEN, token);
 };
 
 export const getAccessToken = async (): Promise<string | null> => {
-  return SecureStore.getItemAsync(KEYS.ACCESS_TOKEN);
+  return store.getItemAsync(KEYS.ACCESS_TOKEN);
 };
 
 export const setRefreshToken = async (token: string) => {
-  await SecureStore.setItemAsync(KEYS.REFRESH_TOKEN, token);
+  await store.setItemAsync(KEYS.REFRESH_TOKEN, token);
 };
 
 export const getRefreshToken = async (): Promise<string | null> => {
-  return SecureStore.getItemAsync(KEYS.REFRESH_TOKEN);
+  return store.getItemAsync(KEYS.REFRESH_TOKEN);
 };
 
 export const setUserData = async (userData: any) => {
-  await SecureStore.setItemAsync(KEYS.USER_DATA, JSON.stringify(userData));
+  await store.setItemAsync(KEYS.USER_DATA, JSON.stringify(userData));
 };
 
 export const getUserData = async (): Promise<any | null> => {
-  const data = await SecureStore.getItemAsync(KEYS.USER_DATA);
+  const data = await store.getItemAsync(KEYS.USER_DATA);
     return data ? JSON.parse(data) : null;
 };
 
 export const setPermissions = async (permissions: string[]) => {
-  await SecureStore.setItemAsync(KEYS.PERMISSIONS, JSON.stringify(permissions));
+  await store.setItemAsync(KEYS.PERMISSIONS, JSON.stringify(permissions));
 };
 
 export const getPermissions = async (): Promise<string[] | null> => {
-  const data = await SecureStore.getItemAsync(KEYS.PERMISSIONS);
+  const data = await store.getItemAsync(KEYS.PERMISSIONS);
   return data ? JSON.parse(data) : null;
 };
 
 export const setEnabledFeatures = async (features: string[]) => {
-  await SecureStore.setItemAsync(KEYS.ENABLED_FEATURES, JSON.stringify(features));
+  await store.setItemAsync(KEYS.ENABLED_FEATURES, JSON.stringify(features));
 };
 
 export const getEnabledFeatures = async (): Promise<string[] | null> => {
-  const data = await SecureStore.getItemAsync(KEYS.ENABLED_FEATURES);
+  const data = await store.getItemAsync(KEYS.ENABLED_FEATURES);
   return data ? JSON.parse(data) : null;
 };
 
 export const setTenantId = async (tenantId: string) => {
-  await SecureStore.setItemAsync(KEYS.TENANT_ID, tenantId);
+  await store.setItemAsync(KEYS.TENANT_ID, tenantId);
 };
 
 export const getTenantId = async (): Promise<string | null> => {
-  return SecureStore.getItemAsync(KEYS.TENANT_ID);
+  return store.getItemAsync(KEYS.TENANT_ID);
 };
 
 export const setTenantName = async (name: string) => {
-  await SecureStore.setItemAsync(KEYS.TENANT_NAME, name);
+  await store.setItemAsync(KEYS.TENANT_NAME, name);
 };
 
 export const getTenantName = async (): Promise<string | null> => {
-  return SecureStore.getItemAsync(KEYS.TENANT_NAME);
+  return store.getItemAsync(KEYS.TENANT_NAME);
 };
 
 export const deleteTenantName = async () => {
-  await SecureStore.deleteItemAsync(KEYS.TENANT_NAME);
+  await store.deleteItemAsync(KEYS.TENANT_NAME);
 };
 
 /**
@@ -95,15 +188,15 @@ export const deleteTenantName = async () => {
  * is no tenant_id yet.
  */
 export const setTenantSubdomain = async (subdomain: string) => {
-  await SecureStore.setItemAsync(KEYS.TENANT_SUBDOMAIN, subdomain);
+  await store.setItemAsync(KEYS.TENANT_SUBDOMAIN, subdomain);
 };
 
 export const getTenantSubdomain = async (): Promise<string | null> => {
-  return SecureStore.getItemAsync(KEYS.TENANT_SUBDOMAIN);
+  return store.getItemAsync(KEYS.TENANT_SUBDOMAIN);
 };
 
 export const deleteTenantSubdomain = async () => {
-  await SecureStore.deleteItemAsync(KEYS.TENANT_SUBDOMAIN);
+  await store.deleteItemAsync(KEYS.TENANT_SUBDOMAIN);
 };
 
 /**
@@ -133,36 +226,36 @@ export const hasKnownTenant = async (): Promise<boolean> => {
  * would open on a home screen every request of which the server refuses.
  */
 export const setForcePasswordReset = async (required: boolean) => {
-  await SecureStore.setItemAsync(
+  await store.setItemAsync(
     KEYS.FORCE_PASSWORD_RESET,
     required ? 'true' : 'false'
   );
 };
 
 export const getForcePasswordReset = async (): Promise<boolean> => {
-  const value = await SecureStore.getItemAsync(KEYS.FORCE_PASSWORD_RESET);
+  const value = await store.getItemAsync(KEYS.FORCE_PASSWORD_RESET);
   return value === 'true';
 };
 
 export const setSelectedAcademicYearId = async (id: string) => {
-  await SecureStore.setItemAsync(KEYS.SELECTED_ACADEMIC_YEAR_ID, id);
+  await store.setItemAsync(KEYS.SELECTED_ACADEMIC_YEAR_ID, id);
 };
 
 export const getSelectedAcademicYearId = async (): Promise<string | null> => {
-  return SecureStore.getItemAsync(KEYS.SELECTED_ACADEMIC_YEAR_ID);
+  return store.getItemAsync(KEYS.SELECTED_ACADEMIC_YEAR_ID);
 };
 
 export const setPushDeviceToken = async (token: string) => {
-  await SecureStore.setItemAsync(KEYS.PUSH_DEVICE_TOKEN, token);
+  await store.setItemAsync(KEYS.PUSH_DEVICE_TOKEN, token);
 };
 
 export const getPushDeviceToken = async (): Promise<string | null> => {
-  return SecureStore.getItemAsync(KEYS.PUSH_DEVICE_TOKEN);
+  return store.getItemAsync(KEYS.PUSH_DEVICE_TOKEN);
 };
 
 export const clearPushDeviceToken = async () => {
   try {
-    await SecureStore.deleteItemAsync(KEYS.PUSH_DEVICE_TOKEN);
+    await store.deleteItemAsync(KEYS.PUSH_DEVICE_TOKEN);
   } catch {
     /* ignore */
   }
@@ -170,13 +263,13 @@ export const clearPushDeviceToken = async () => {
 
 /** Whether the user wants school push alerts (defaults to true if unset). */
 export const getPushNotificationsPreference = async (): Promise<boolean> => {
-  const v = await SecureStore.getItemAsync(KEYS.PUSH_NOTIFICATIONS_ENABLED);
+  const v = await store.getItemAsync(KEYS.PUSH_NOTIFICATIONS_ENABLED);
   if (v == null || v === "") return true;
   return v === "true" || v === "1";
 };
 
 export const setPushNotificationsPreference = async (enabled: boolean) => {
-  await SecureStore.setItemAsync(
+  await store.setItemAsync(
     KEYS.PUSH_NOTIFICATIONS_ENABLED,
     enabled ? "true" : "false"
   );
@@ -191,11 +284,11 @@ export const setPushNotificationsPreference = async (enabled: boolean) => {
  * the rest of the session.
  */
 export const setRecentSearches = async (terms: string[]) => {
-  await SecureStore.setItemAsync(KEYS.RECENT_SEARCHES, JSON.stringify(terms));
+  await store.setItemAsync(KEYS.RECENT_SEARCHES, JSON.stringify(terms));
 };
 
 export const getRecentSearches = async (): Promise<string[]> => {
-  const raw = await SecureStore.getItemAsync(KEYS.RECENT_SEARCHES);
+  const raw = await store.getItemAsync(KEYS.RECENT_SEARCHES);
   if (!raw) return [];
   try {
     const parsed: unknown = JSON.parse(raw);
@@ -219,14 +312,14 @@ export const getRecentSearches = async (): Promise<string[]> => {
  */
 export const setCachedTenantTheme = async (colors: Record<string, string> | null) => {
   if (colors === null) {
-    await SecureStore.deleteItemAsync(KEYS.TENANT_THEME);
+    await store.deleteItemAsync(KEYS.TENANT_THEME);
     return;
   }
-  await SecureStore.setItemAsync(KEYS.TENANT_THEME, JSON.stringify(colors));
+  await store.setItemAsync(KEYS.TENANT_THEME, JSON.stringify(colors));
 };
 
 export const getCachedTenantTheme = async (): Promise<Record<string, string> | null> => {
-  const raw = await SecureStore.getItemAsync(KEYS.TENANT_THEME);
+  const raw = await store.getItemAsync(KEYS.TENANT_THEME);
   if (!raw) return null;
   try {
     const parsed: unknown = JSON.parse(raw);
@@ -265,16 +358,16 @@ export const getCachedTenantTheme = async (): Promise<Record<string, string> | n
  */
 export const clearAuth = async () => {
   await Promise.all([
-    SecureStore.deleteItemAsync(KEYS.ACCESS_TOKEN),
-    SecureStore.deleteItemAsync(KEYS.REFRESH_TOKEN),
-    SecureStore.deleteItemAsync(KEYS.USER_DATA),
-    SecureStore.deleteItemAsync(KEYS.PERMISSIONS),
-    SecureStore.deleteItemAsync(KEYS.ENABLED_FEATURES),
-    SecureStore.deleteItemAsync(KEYS.TENANT_NAME),
-    SecureStore.deleteItemAsync(KEYS.FORCE_PASSWORD_RESET),
-    SecureStore.deleteItemAsync(KEYS.SELECTED_ACADEMIC_YEAR_ID),
-    SecureStore.deleteItemAsync(KEYS.RECENT_SEARCHES),
-    SecureStore.deleteItemAsync(KEYS.TENANT_THEME),
+    store.deleteItemAsync(KEYS.ACCESS_TOKEN),
+    store.deleteItemAsync(KEYS.REFRESH_TOKEN),
+    store.deleteItemAsync(KEYS.USER_DATA),
+    store.deleteItemAsync(KEYS.PERMISSIONS),
+    store.deleteItemAsync(KEYS.ENABLED_FEATURES),
+    store.deleteItemAsync(KEYS.TENANT_NAME),
+    store.deleteItemAsync(KEYS.FORCE_PASSWORD_RESET),
+    store.deleteItemAsync(KEYS.SELECTED_ACADEMIC_YEAR_ID),
+    store.deleteItemAsync(KEYS.RECENT_SEARCHES),
+    store.deleteItemAsync(KEYS.TENANT_THEME),
     clearPushDeviceToken(),
   ]);
 };
@@ -290,7 +383,7 @@ export const clearAuth = async () => {
  */
 export const clearTenantIdentity = async () => {
   await Promise.all([
-    SecureStore.deleteItemAsync(KEYS.TENANT_ID),
-    SecureStore.deleteItemAsync(KEYS.TENANT_SUBDOMAIN),
+    store.deleteItemAsync(KEYS.TENANT_ID),
+    store.deleteItemAsync(KEYS.TENANT_SUBDOMAIN),
   ]);
 };
