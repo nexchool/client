@@ -1,27 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
+import { View, Pressable, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
 import { ScreenContainer } from '@/common/components/ScreenContainer';
 import { Text } from '@/common/components/Text';
-import { Logo } from '@/common/components/Logo';
-import { Input } from '@/common/components/Input';
-import { Button } from '@/common/components/Button';
 import { Link } from '@/common/components/Link';
-import { useLogin } from '@/modules/auth/hooks/useLogin';
-import {
-  PIN_LENGTH,
-  useMobilePinLogin,
-} from '@/modules/auth/hooks/useMobilePinLogin';
+import { BrandHeader } from '@/modules/auth/components/BrandHeader';
+import { EmailPasswordForm } from '@/modules/auth/components/EmailPasswordForm';
+import { MobilePinForm } from '@/modules/auth/components/MobilePinForm';
+import { MobileOtpForm } from '@/modules/auth/components/MobileOtpForm';
 import { usePublishedAuthMethods } from '@/modules/auth/hooks/usePublishedAuthMethods';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
-import { isLoginFieldError } from '@/modules/auth/errors/LoginFieldError';
 import { didSessionExpire } from '@/common/services/sessionExpiry';
+
+/** Which form is on screen. `'home'` is a sentinel, not a fourth form — it
+ * resolves to whichever method is this school's default (see `homeMode`
+ * below) until the visitor explicitly picks a different one. Using a
+ * sentinel rather than seeding the real state with `homeMode` means a
+ * navigation choice already made is never silently overwritten by branding
+ * arriving late. */
+type Mode = 'home' | 'email' | 'otp' | 'pin';
 
 export default function LoginScreen() {
   const { t } = useTranslation('auth');
-  const { palette, spacing, radius } = useTheme();
+  const { palette, spacing } = useTheme();
 
   // Arriving here mid-task because the session died, rather than because the
   // user asked to sign out, needs saying — otherwise the app looks like it
@@ -30,82 +33,55 @@ export default function LoginScreen() {
   // it, so there is nothing to re-render for.
   const [wasSessionExpired] = useState(didSessionExpire);
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [emailError, setEmailError] = useState('');
-  const [passwordError, setPasswordError] = useState('');
+  // Which ways in this school allows, and its display identity — both read
+  // from the same public branding response. A method a school has not
+  // enabled is not offered, and because the server refuses it anyway this
+  // hides an option rather than enforcing a rule. `loaded` distinguishes
+  // "still asking" from "asked and this school offers nothing extra" — see
+  // `usePublishedAuthMethods`.
+  const { allows, methods, branding, loaded } = usePublishedAuthMethods();
+  const [mode, setMode] = useState<Mode>('home');
+
+  const { isAuthenticated, mustResetPassword, pendingTenantChoice, loginWithTenant, clearPendingTenantChoice } =
+    useAuth();
   const [choosingTenant, setChoosingTenant] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
-  // Signing in with a mobile number and a PIN, where the school allows it.
-  // Read from the school's own policy, so a method it has not enabled is not
-  // offered — and because the server refuses it anyway, this hides an option
-  // rather than enforcing a rule.
-  const { allows } = usePublishedAuthMethods();
-  const [usingPin, setUsingPin] = useState(false);
-  const [mobile, setMobile] = useState('');
-  const [pin, setPin] = useState('');
-  const [mobileError, setMobileError] = useState('');
-  const [pinError, setPinError] = useState('');
-  const {
-    signIn: signInWithPin,
-    loading: pinLoading,
-    error: pinLoginError,
-  } = useMobilePinLogin();
+  // `email_password` is a real, disable-able method key like the other two
+  // (`server/modules/auth/policy.py`) — but until the branding request
+  // settles, or for a school with no policy row of its own, "no methods
+  // published" must not read as "no email sign-in": that was this app's only
+  // way in before this feature existed, and treating a still-loading or
+  // failed fetch as "email disabled" would strand every existing school the
+  // moment their phone lost signal on this one screen.
+  const emailOffered = !loaded || methods.includes('email_password');
+  const otpOffered = allows('mobile_otp');
+  const pinOffered = allows('mobile_pin');
 
-  const { login, loading, error } = useLogin();
-  const {
-    isAuthenticated,
-    mustResetPassword,
-    pendingTenantChoice,
-    loginWithTenant,
-    clearPendingTenantChoice,
-  } = useAuth();
+  // The screen this school lands on. Email whenever it is offered — the
+  // common case, and every staff account's only method — otherwise whichever
+  // mobile method is. If a policy row somehow enables none of the three
+  // (a configuration the panel does not let anyone reach), email is still
+  // the fallback: a signed-out screen must never render as empty.
+  const homeMode: 'email' | 'otp' | 'pin' = emailOffered
+    ? 'email'
+    : otpOffered
+      ? 'otp'
+      : pinOffered
+        ? 'pin'
+        : 'email';
+  const activeMode: 'email' | 'otp' | 'pin' = mode === 'home' ? homeMode : mode;
 
   // Both sign-in paths land here — plain sign-in and the tenant picker below
   // both end in the auth context accepting a login response — so the one place
   // that reads the response's `force_password_reset` is the one place that
-  // decides where sign-in goes.
+  // decides where sign-in goes. True of all three methods now, not just
+  // email: each writes to the same auth context state this effect watches.
   useEffect(() => {
     if (!isAuthenticated) return;
     router.replace(
       mustResetPassword ? '/(auth)/set-password' : '/(protected)/home',
     );
   }, [isAuthenticated, mustResetPassword]);
-
-  const handleLogin = async () => {
-    setEmailError('');
-    setPasswordError('');
-
-    try {
-      await login(email, password);
-    } catch (err: unknown) {
-      if (isLoginFieldError(err)) {
-        if (err.field === 'email') {
-          setEmailError(err.message);
-        } else {
-          setPasswordError(err.message);
-        }
-      }
-    }
-  };
-
-  const handlePinLogin = async () => {
-    setMobileError('');
-    setPinError('');
-
-    try {
-      await signInWithPin(mobile, pin);
-    } catch (err: unknown) {
-      if (isLoginFieldError(err)) {
-        if (err.field === 'mobile') {
-          setMobileError(err.message);
-        } else {
-          setPinError(err.message);
-        }
-      }
-    }
-  };
 
   const handleChooseSchool = async (tenantId: string) => {
     setChoosingTenant(true);
@@ -121,7 +97,9 @@ export default function LoginScreen() {
     }
   };
 
-  // Tenant-choice sub-state — preserves existing multi-tenant flow.
+  // Tenant-choice sub-state — preserves existing multi-tenant flow. Email
+  // sign-in only: a mobile number is unique inside one school at best, so
+  // neither mobile method ever produces this choice.
   if (pendingTenantChoice?.tenants?.length) {
     return (
       <ScreenContainer>
@@ -188,204 +166,29 @@ export default function LoginScreen() {
     );
   }
 
-  if (usingPin) {
-    return (
-      <ScreenContainer>
-        <View style={styles.header}>
-          <Logo size="lg" />
-        </View>
-
-        <Text
-          variant="display"
-          color="onSurface"
-          style={{ textAlign: 'center', marginTop: spacing.xl }}
-        >
-          {t('welcomeBack')}
-        </Text>
-        <Text
-          variant="bodyMd"
-          color="onSurfaceVariant"
-          style={{ textAlign: 'center', marginTop: spacing.xs }}
-        >
-          {t('pinSubtitle')}
-        </Text>
-
-        <View style={{ marginTop: spacing.xl, gap: spacing.md }}>
-          <Input
-            label={t('mobileLabel')}
-            placeholder={t('mobilePlaceholder')}
-            value={mobile}
-            onChangeText={setMobile}
-            keyboardType="phone-pad"
-            autoComplete="tel"
-            autoCapitalize="none"
-            error={mobileError}
-          />
-
-          <Input
-            label={t('pinLabel')}
-            placeholder={t('pinPlaceholder')}
-            value={pin}
-            // Digits only, capped at the length a PIN is — the component takes
-            // no maxLength, and doing it here also strips anything a keyboard
-            // with punctuation would otherwise let through.
-            onChangeText={(value) =>
-              setPin(value.replace(/[^0-9]/g, '').slice(0, PIN_LENGTH))
-            }
-            keyboardType="number-pad"
-            secureTextEntry={!showPassword}
-            autoComplete="off"
-            autoCapitalize="none"
-            error={pinError}
-            rightSlot={
-              <Link onPress={() => setShowPassword((s) => !s)}>
-                {showPassword
-                  ? t('hide', { defaultValue: 'Hide' })
-                  : t('show', { defaultValue: 'Show' })}
-              </Link>
-            }
-          />
-        </View>
-
-        {pinLoginError ? (
-          <Text
-            variant="bodyMd"
-            color="error"
-            style={{ textAlign: 'center', marginTop: spacing.md }}
-          >
-            {pinLoginError}
-          </Text>
-        ) : null}
-
-        <View style={{ marginTop: spacing.lg, paddingBottom: 32, gap: spacing.md }}>
-          <Button
-            variant="primary"
-            fullWidth
-            loading={pinLoading}
-            onPress={handlePinLogin}
-          >
-            {t('signIn')}
-          </Button>
-          <View style={{ alignItems: 'center' }}>
-            <Link
-              onPress={() => {
-                setUsingPin(false);
-                setPin('');
-              }}
-            >
-              {t('signInWithEmail')}
-            </Link>
-          </View>
-        </View>
-      </ScreenContainer>
-    );
-  }
-
   return (
-    <ScreenContainer>
-      <View style={styles.header}>
-        <Logo size="lg" />
-      </View>
+    <ScreenContainer noHorizontalPadding>
+      <BrandHeader branding={branding} loaded={loaded} />
 
-      <Text
-        variant="display"
-        color="onSurface"
-        style={{ textAlign: 'center', marginTop: spacing.xl }}
-      >
-        {t('welcomeBack')}
-      </Text>
-      <Text
-        variant="bodyMd"
-        color="onSurfaceVariant"
-        style={{ textAlign: 'center', marginTop: spacing.xs }}
-      >
-        {t('signInSubtitle')}
-      </Text>
-
-      {wasSessionExpired ? (
-        <View
-          style={{
-            marginTop: spacing.lg,
-            padding: spacing.md,
-            borderRadius: radius.lg,
-            backgroundColor: palette.errorContainer,
-          }}
-        >
-          <Text variant="bodyMd" color="onErrorContainer" style={{ textAlign: 'center' }}>
-            {t('sessionExpired', {
-              defaultValue: 'Your session has expired. Please sign in again.',
-            })}
-          </Text>
-        </View>
-      ) : null}
-
-      <View style={{ marginTop: spacing.xl, gap: spacing.md }}>
-        <Input
-          label={t('emailLabel')}
-          placeholder={t('emailPlaceholder')}
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoComplete="email"
-          autoCapitalize="none"
-          error={emailError}
-        />
-
-        <Input
-          label={t('passwordLabel')}
-          placeholder={t('passwordPlaceholder')}
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry={!showPassword}
-          autoComplete="password"
-          autoCapitalize="none"
-          error={passwordError}
-          rightSlot={
-            <Link onPress={() => setShowPassword((s) => !s)}>
-              {showPassword
-                ? t('hide', { defaultValue: 'Hide' })
-                : t('show', { defaultValue: 'Show' })}
-            </Link>
-          }
-        />
-
-        <View style={{ alignItems: 'flex-end' }}>
-          <Link onPress={() => router.push('/(auth)/forgot-password')}>
-            {t('forgotPassword')}
-          </Link>
-        </View>
-      </View>
-
-      {error ? (
-        <Text
-          variant="bodyMd"
-          color="error"
-          style={{ textAlign: 'center', marginTop: spacing.md }}
-        >
-          {error}
-        </Text>
-      ) : null}
-
-      {/*
-        No sign-up link: schools issue credentials, and the self-service
-        register endpoint this used to point at has been deleted from the
-        server.
-      */}
-      <View style={{ marginTop: spacing.lg, paddingBottom: 32, gap: spacing.md }}>
-        <Button variant="primary" fullWidth loading={loading} onPress={handleLogin}>
-          {t('signIn')}
-        </Button>
-
-        {allows('mobile_pin') ? (
-          <View style={{ alignItems: 'center' }}>
-            <Link onPress={() => setUsingPin(true)}>{t('signInWithPin')}</Link>
-          </View>
-        ) : null}
+      <View style={{ paddingHorizontal: spacing.marginMobile }}>
+        {activeMode === 'email' ? (
+          <EmailPasswordForm
+            wasSessionExpired={wasSessionExpired}
+            onUseOtp={otpOffered ? () => setMode('otp') : undefined}
+            onUsePin={pinOffered ? () => setMode('pin') : undefined}
+          />
+        ) : activeMode === 'otp' ? (
+          <MobileOtpForm
+            onBack={emailOffered ? () => setMode('email') : undefined}
+            onUsePin={pinOffered ? () => setMode('pin') : undefined}
+          />
+        ) : (
+          <MobilePinForm
+            onBack={emailOffered ? () => setMode('email') : undefined}
+            onUseOtp={otpOffered ? () => setMode('otp') : undefined}
+          />
+        )}
       </View>
     </ScreenContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  header: { alignItems: 'center', paddingTop: 32 },
-});

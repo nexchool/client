@@ -1,5 +1,5 @@
 /** Which box on the sign-in screen a problem belongs under. */
-export type LoginField = "email" | "password" | "mobile" | "pin";
+export type LoginField = "email" | "password" | "mobile" | "pin" | "code";
 
 export class LoginFieldError extends Error {
   readonly field: LoginField;

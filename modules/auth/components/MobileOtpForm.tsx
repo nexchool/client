@@ -1,0 +1,208 @@
+import React, { useState } from 'react';
+import { View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { useTheme } from '@/common/theme';
+import { Text } from '@/common/components/Text';
+import { Input } from '@/common/components/Input';
+import { Button } from '@/common/components/Button';
+import { Link } from '@/common/components/Link';
+import { OTP_LENGTH, useMobileOtpLogin } from '@/modules/auth/hooks/useMobileOtpLogin';
+import { isLoginFieldError } from '@/modules/auth/errors/LoginFieldError';
+
+type Props = {
+  /** Return to the email form. Omitted where this school offers no email
+   * sign-in — there is then nothing to go back to, and this form *is* the
+   * home screen. */
+  onBack?: () => void;
+  /** Switch to the mobile-PIN form instead, where this school offers both
+   * and email is not one of them. */
+  onUsePin?: () => void;
+};
+
+type Step = 'mobile' | 'code';
+
+/**
+ * Signing in with a code sent to a phone.
+ *
+ * Two steps, unlike `MobilePinForm`'s one: a code has to be asked for before
+ * it can be checked. The wording on the code step is deliberately
+ * conditional ("if that number can sign in here") rather than a plain
+ * confirmation — see `useMobileOtpLogin` and the server's `otp.py` — because
+ * saying it plainly would answer, for free, whether a given number belongs to
+ * anybody at this school.
+ *
+ * Only reachable where the school's authentication policy publishes
+ * `mobile_otp` (`usePublishedAuthMethods`), and the server refuses it
+ * otherwise, so this hides an option rather than enforcing a rule.
+ */
+export function MobileOtpForm({ onBack, onUsePin }: Props) {
+  const { t } = useTranslation('auth');
+  const { spacing } = useTheme();
+
+  const [step, setStep] = useState<Step>('mobile');
+  const [mobile, setMobile] = useState('');
+  const [code, setCode] = useState('');
+  const [challengeId, setChallengeId] = useState<string | undefined>();
+  const [mobileError, setMobileError] = useState('');
+  const [codeError, setCodeError] = useState('');
+
+  const { requestCode, verifyCode, requestLoading, verifyLoading, error } =
+    useMobileOtpLogin();
+
+  const handleRequestCode = async () => {
+    setMobileError('');
+    try {
+      const id = await requestCode(mobile);
+      // No challenge id means the server declined to say why — that is the
+      // designed answer, not a failure, so the form advances regardless.
+      setChallengeId(id);
+      setStep('code');
+    } catch (err: unknown) {
+      if (isLoginFieldError(err)) {
+        setMobileError(err.message);
+      }
+      // A genuine request failure (offline, server error) is surfaced by
+      // `error` below rather than advancing the step.
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    setCodeError('');
+    try {
+      await verifyCode(mobile, code, challengeId);
+    } catch (err: unknown) {
+      if (isLoginFieldError(err)) {
+        setCodeError(err.message);
+      }
+    }
+  };
+
+  if (step === 'mobile') {
+    return (
+      <View>
+        <Text
+          variant="display"
+          color="onSurface"
+          style={{ textAlign: 'center', marginTop: spacing.xl }}
+        >
+          {t('welcomeBack')}
+        </Text>
+        <Text
+          variant="bodyMd"
+          color="onSurfaceVariant"
+          style={{ textAlign: 'center', marginTop: spacing.xs }}
+        >
+          {t('otpSubtitle')}
+        </Text>
+
+        <View style={{ marginTop: spacing.xl, gap: spacing.md }}>
+          <Input
+            label={t('mobileLabel')}
+            placeholder={t('mobilePlaceholder')}
+            value={mobile}
+            onChangeText={setMobile}
+            keyboardType="phone-pad"
+            autoComplete="tel"
+            autoCapitalize="none"
+            error={mobileError}
+          />
+        </View>
+
+        {error ? (
+          <Text
+            variant="bodyMd"
+            color="error"
+            style={{ textAlign: 'center', marginTop: spacing.md }}
+          >
+            {error}
+          </Text>
+        ) : null}
+
+        <View style={{ marginTop: spacing.lg, paddingBottom: 32, gap: spacing.md }}>
+          <Button
+            variant="primary"
+            fullWidth
+            loading={requestLoading}
+            onPress={handleRequestCode}
+          >
+            {t('sendCode')}
+          </Button>
+
+          {onBack ? (
+            <View style={{ alignItems: 'center' }}>
+              <Link onPress={onBack}>{t('signInWithEmail')}</Link>
+            </View>
+          ) : null}
+
+          {onUsePin ? (
+            <View style={{ alignItems: 'center' }}>
+              <Link onPress={onUsePin}>{t('signInWithPin')}</Link>
+            </View>
+          ) : null}
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View>
+      <Text
+        variant="display"
+        color="onSurface"
+        style={{ textAlign: 'center', marginTop: spacing.xl }}
+      >
+        {t('welcomeBack')}
+      </Text>
+      <Text
+        variant="bodyMd"
+        color="onSurfaceVariant"
+        style={{ textAlign: 'center', marginTop: spacing.xs }}
+      >
+        {t('otpSentHelp')}
+      </Text>
+
+      <View style={{ marginTop: spacing.xl, gap: spacing.md }}>
+        <Input
+          label={t('otpLabel')}
+          placeholder={t('otpPlaceholder')}
+          value={code}
+          onChangeText={(value) =>
+            setCode(value.replace(/[^0-9]/g, '').slice(0, OTP_LENGTH))
+          }
+          keyboardType="number-pad"
+          autoComplete="one-time-code"
+          autoCapitalize="none"
+          error={codeError}
+        />
+      </View>
+
+      {error ? (
+        <Text
+          variant="bodyMd"
+          color="error"
+          style={{ textAlign: 'center', marginTop: spacing.md }}
+        >
+          {error}
+        </Text>
+      ) : null}
+
+      <View style={{ marginTop: spacing.lg, paddingBottom: 32, gap: spacing.md }}>
+        <Button variant="primary" fullWidth loading={verifyLoading} onPress={handleVerifyCode}>
+          {t('signIn')}
+        </Button>
+
+        <View style={{ alignItems: 'center' }}>
+          <Link
+            onPress={() => {
+              setStep('mobile');
+              setCode('');
+              setCodeError('');
+            }}
+          >
+            {t('useAnotherNumber')}
+          </Link>
+        </View>
+      </View>
+    </View>
+  );
+}

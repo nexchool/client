@@ -53,6 +53,8 @@ export const API_ENDPOINTS = {
   ENABLED_FEATURES: '/api/auth/enabled-features',
   /** Full session snapshot: user, permissions, enabled_features (same as admin GET /profile). */
   PROFILE: '/api/auth/profile',
+  /** Ask for a sign-in code. Verifying it goes through LOGIN with method=mobile_otp, not this endpoint. */
+  OTP_REQUEST: '/api/auth/otp/request',
 } as const;
 
 /**

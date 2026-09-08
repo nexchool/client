@@ -60,6 +60,49 @@ export const loginWithMobilePin = (data: {
     ...(data.tenant_id ? { tenant_id: data.tenant_id } : {}),
   });
 
+/**
+ * Sign in with a code sent to a phone.
+ *
+ * The same endpoint as an email sign-in, with the method named — so the
+ * server runs every gate it already has (maintenance, policy, lockout,
+ * account status, finalization) rather than a second copy of them. The code
+ * travels in the `password` field for the same reason the PIN does above: it
+ * is the field the endpoint uses for a proof, whatever kind of proof it is.
+ */
+export const loginWithMobileOtp = (data: {
+  mobile: string;
+  code: string;
+  challenge_id?: string;
+  tenant_id?: string;
+}) =>
+  apiPost<LoginResponse>(API_ENDPOINTS.LOGIN, {
+    method: 'mobile_otp',
+    identifier: data.mobile,
+    password: data.code,
+    ...(data.challenge_id ? { challenge_id: data.challenge_id } : {}),
+    ...(data.tenant_id ? { tenant_id: data.tenant_id } : {}),
+  });
+
+/** A code sent to a phone, and how long it is good for. Never the code itself. */
+export interface OtpRequestResponse {
+  sent: boolean;
+  challenge_id?: string;
+  expires_at?: string;
+}
+
+/**
+ * Ask for a sign-in code.
+ *
+ * Answers the same way whether or not the number belongs to anybody, so a
+ * response here means "if that number can sign in, a code is on its way" —
+ * never "that number exists". See `otp.py` on the server for why.
+ */
+export const requestMobileOtp = (data: { mobile: string; tenant_id?: string }) =>
+  apiPost<OtpRequestResponse>(API_ENDPOINTS.OTP_REQUEST, {
+    mobile: data.mobile,
+    ...(data.tenant_id ? { tenant_id: data.tenant_id } : {}),
+  });
+
 export const login = (data: {
   email: string;
   password: string;

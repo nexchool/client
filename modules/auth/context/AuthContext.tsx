@@ -34,6 +34,7 @@ import {
 import {
   login as loginService,
   loginWithMobilePin as loginWithMobilePinService,
+  loginWithMobileOtp as loginWithMobileOtpService,
   LoginResponse,
   TenantChoice,
 } from "@/modules/auth/services/authService";
@@ -107,6 +108,16 @@ interface AuthContextType {
    * school at best, so there is never a list of schools to pick from.
    */
   loginWithMobilePin: (mobile: string, pin: string) => Promise<void>;
+  /**
+   * Sign in with a code sent to a phone. Offered only where the school's
+   * policy publishes `mobile_otp`. Same no-tenant-choice shape as PIN, and
+   * the same reason: a number is unique inside one school at best.
+   */
+  loginWithMobileOtp: (
+    mobile: string,
+    code: string,
+    challengeId?: string,
+  ) => Promise<void>;
   /** After user picks a school from pendingTenantChoice */
   loginWithTenant: (tenantId: string) => Promise<void>;
   clearPendingTenantChoice: () => void;
@@ -375,6 +386,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     await setAuthData(response);
   };
 
+  const loginWithMobileOtp = async (
+    mobile: string,
+    code: string,
+    challengeId?: string,
+  ) => {
+    setPendingTenantChoice(null);
+
+    // Same reasoning as `loginWithMobilePin` above: the school is named in
+    // the body because a mobile number means nothing without one, and the
+    // sign-in pipeline reads the body — not just the header — to decide
+    // whether a school was named.
+    const tenantId = await getTenantId();
+    const response = await loginWithMobileOtpService({
+      mobile,
+      code,
+      challenge_id: challengeId,
+      ...(tenantId ? { tenant_id: tenantId } : {}),
+    });
+    await setAuthData(response);
+  };
+
   const loginWithTenant = async (tenantId: string) => {
     if (!pendingTenantChoice) return;
     const { email, password } = pendingTenantChoice;
@@ -545,6 +577,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         pendingTenantChoice,
         login,
         loginWithMobilePin,
+        loginWithMobileOtp,
         loginWithTenant,
         clearPendingTenantChoice,
         clearMustResetPassword,
