@@ -9,7 +9,6 @@ import { Link } from '@/common/components/Link';
 import { BrandHeader } from '@/modules/auth/components/BrandHeader';
 import { AuthCard } from '@/modules/auth/components/AuthCard';
 import { AuthTrustFooter } from '@/modules/auth/components/AuthTrustFooter';
-import { SupportFab } from '@/modules/auth/components/SupportFab';
 import { EmailPasswordForm } from '@/modules/auth/components/EmailPasswordForm';
 import { MobilePinForm } from '@/modules/auth/components/MobilePinForm';
 import { MobileOtpForm } from '@/modules/auth/components/MobileOtpForm';
@@ -105,138 +104,126 @@ export default function LoginScreen() {
   // neither mobile method ever produces this choice.
   if (pendingTenantChoice?.tenants?.length) {
     return (
-      <View style={{ flex: 1 }}>
-        <ScreenContainer>
-          <View style={{ paddingTop: spacing.xl }}>
-            <Text variant="headlineLg" color="onSurface">
-              {t('whichSchool')}
-            </Text>
-            <Text
-              variant="bodyMd"
-              color="onSurfaceVariant"
-              style={{ marginTop: spacing.xs }}
-            >
-              {t('tenantSubtitle')}
-            </Text>
+      <ScreenContainer>
+        <View style={{ paddingTop: spacing.xl }}>
+          <Text variant="headlineLg" color="onSurface">
+            {t('whichSchool')}
+          </Text>
+          <Text
+            variant="bodyMd"
+            color="onSurfaceVariant"
+            style={{ marginTop: spacing.xs }}
+          >
+            {t('tenantSubtitle')}
+          </Text>
 
-            <View style={{ marginTop: spacing.lg, marginBottom: spacing.lg }}>
-              <Link onPress={clearPendingTenantChoice}>{t('backToLogin')}</Link>
-            </View>
-
-            {choosingTenant ? (
-              <ActivityIndicator
-                size="large"
-                color={palette.primary}
-                style={{ marginTop: spacing.xl }}
-              />
-            ) : (
-              <View style={{ gap: spacing.sm }}>
-                {pendingTenantChoice.tenants.map((tenant) => (
-                  <Pressable
-                    key={tenant.id}
-                    onPress={() => handleChooseSchool(tenant.id)}
-                    accessibilityRole="button"
-                    accessibilityLabel={tenant.name}
-                    style={({ pressed }) => [
-                      {
-                        backgroundColor: palette.surfaceContainerLowest,
-                        borderRadius: 12,
-                        borderWidth: 1,
-                        borderColor: palette.outlineVariant,
-                        paddingVertical: spacing.md,
-                        paddingHorizontal: spacing.lg,
-                        opacity: pressed ? 0.85 : 1,
-                      },
-                    ]}
-                  >
-                    <Text variant="bodyLg" color="onSurface">
-                      {tenant.name}
-                    </Text>
-                    {tenant.subdomain ? (
-                      <Text
-                        variant="labelSm"
-                        color="onSurfaceVariant"
-                        style={{ marginTop: spacing.xs }}
-                      >
-                        {tenant.subdomain}
-                      </Text>
-                    ) : null}
-                  </Pressable>
-                ))}
-              </View>
-            )}
+          <View style={{ marginTop: spacing.lg, marginBottom: spacing.lg }}>
+            <Link onPress={clearPendingTenantChoice}>{t('backToLogin')}</Link>
           </View>
-        </ScreenContainer>
-        <SupportFab />
-      </View>
+
+          {choosingTenant ? (
+            <ActivityIndicator
+              size="large"
+              color={palette.primary}
+              style={{ marginTop: spacing.xl }}
+            />
+          ) : (
+            <View style={{ gap: spacing.sm }}>
+              {pendingTenantChoice.tenants.map((tenant) => (
+                <Pressable
+                  key={tenant.id}
+                  onPress={() => handleChooseSchool(tenant.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={tenant.name}
+                  style={({ pressed }) => [
+                    {
+                      backgroundColor: palette.surfaceContainerLowest,
+                      borderRadius: 12,
+                      borderWidth: 1,
+                      borderColor: palette.outlineVariant,
+                      paddingVertical: spacing.md,
+                      paddingHorizontal: spacing.lg,
+                      opacity: pressed ? 0.85 : 1,
+                    },
+                  ]}
+                >
+                  <Text variant="bodyLg" color="onSurface">
+                    {tenant.name}
+                  </Text>
+                  {tenant.subdomain ? (
+                    <Text
+                      variant="labelSm"
+                      color="onSurfaceVariant"
+                      style={{ marginTop: spacing.xs }}
+                    >
+                      {tenant.subdomain}
+                    </Text>
+                  ) : null}
+                </Pressable>
+              ))}
+            </View>
+          )}
+        </View>
+
+        <AuthTrustFooter />
+      </ScreenContainer>
     );
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <ScreenContainer noHorizontalPadding>
-        <BrandHeader branding={branding} loaded={loaded} />
+    <ScreenContainer noHorizontalPadding>
+      <BrandHeader branding={branding} loaded={loaded} />
 
-        <View
-          style={{
-            paddingHorizontal: spacing.marginMobile,
-            marginTop: spacing.xs,
-            // `SupportFab` floats over this column, fixed to the screen's
-            // bottom-right rather than scrolled with it (see that
-            // component). At the default content height the card and trust
-            // footer already clear the FAB's small fixed offset, but on a
-            // short device (375x812) they end within a few px of the
-            // viewport edge — a longer translation, a shown field error, or
-            // a larger accessibility font size is enough to push the footer
-            // past that margin. This trailing padding is what keeps the
-            // footer clear of the FAB's reserved corner even then: once
-            // scrolled to the end, there is still this much blank space
-            // between the footer and wherever the FAB sits, on any device.
-            // `scrollBottomWithFooter` is the token this app already uses
-            // for "content behind a pinned bottom control"; this is that
-            // same shape, so it reuses it rather than a new constant.
-            paddingBottom: spacing.scrollBottomWithFooter,
-          }}
-        >
-          <AuthCard>
-            {!loaded ? (
-              // Rendering the email form here (the old behaviour) is what made
-              // an OTP-only school visibly swap forms once its policy landed —
-              // nothing method-specific is known yet, so nothing
-              // method-specific renders. `BrandHeader` above already shows its
-              // own loaded=false treatment (a plain mark, no borrowed
-              // identity); this is that same "still asking" moment for the
-              // form area, not a second design. The card itself still renders
-              // — it is chrome, not borrowed identity, so there is nothing
-              // dishonest about showing it before branding settles.
-              <ActivityIndicator
-                size="large"
-                color={palette.primary}
-                style={{ marginTop: spacing.xl }}
-              />
-            ) : activeMode === 'email' ? (
-              <EmailPasswordForm
-                wasSessionExpired={wasSessionExpired}
-                onUseOtp={otpOffered ? () => setMode('otp') : undefined}
-                onUsePin={pinOffered ? () => setMode('pin') : undefined}
-              />
-            ) : activeMode === 'otp' ? (
-              <MobileOtpForm
-                onBack={emailOffered ? () => setMode('email') : undefined}
-                onUsePin={pinOffered ? () => setMode('pin') : undefined}
-              />
-            ) : (
-              <MobilePinForm
-                onBack={emailOffered ? () => setMode('email') : undefined}
-                onUseOtp={otpOffered ? () => setMode('otp') : undefined}
-              />
-            )}
-          </AuthCard>
+      <View
+        style={{
+          paddingHorizontal: spacing.marginMobile,
+          marginTop: spacing.xs,
+          // No pinned control floats over this column anymore (the old
+          // `SupportFab` — see `AuthTrustFooter`, where its affordance
+          // lives now), so this is just ordinary trailing scroll comfort,
+          // not clearance for a sibling. `scrollBottom` is the token this
+          // app already uses for that on plain scroll screens with no
+          // action bar pinned over the content.
+          paddingBottom: spacing.scrollBottom,
+        }}
+      >
+        <AuthCard>
+          {!loaded ? (
+            // Rendering the email form here (the old behaviour) is what made
+            // an OTP-only school visibly swap forms once its policy landed —
+            // nothing method-specific is known yet, so nothing
+            // method-specific renders. `BrandHeader` above already shows its
+            // own loaded=false treatment (a plain mark, no borrowed
+            // identity); this is that same "still asking" moment for the
+            // form area, not a second design. The card itself still renders
+            // — it is chrome, not borrowed identity, so there is nothing
+            // dishonest about showing it before branding settles.
+            <ActivityIndicator
+              size="large"
+              color={palette.primary}
+              style={{ marginTop: spacing.xl }}
+            />
+          ) : activeMode === 'email' ? (
+            <EmailPasswordForm
+              wasSessionExpired={wasSessionExpired}
+              onUseOtp={otpOffered ? () => setMode('otp') : undefined}
+              onUsePin={pinOffered ? () => setMode('pin') : undefined}
+            />
+          ) : activeMode === 'otp' ? (
+            <MobileOtpForm
+              onBack={emailOffered ? () => setMode('email') : undefined}
+              onUsePin={pinOffered ? () => setMode('pin') : undefined}
+            />
+          ) : (
+            <MobilePinForm
+              onBack={emailOffered ? () => setMode('email') : undefined}
+              onUseOtp={otpOffered ? () => setMode('otp') : undefined}
+            />
+          )}
+        </AuthCard>
 
-          <AuthTrustFooter />
-        </View>
-      </ScreenContainer>
-      <SupportFab />
-    </View>
+        <AuthTrustFooter />
+      </View>
+    </ScreenContainer>
   );
 }

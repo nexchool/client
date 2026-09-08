@@ -148,7 +148,7 @@ export function EmailPasswordForm({ wasSessionExpired, onUseOtp, onUsePin }: Pro
         register endpoint this used to point at has been deleted from the
         server.
       */}
-      <View style={{ marginTop: spacing[10], paddingBottom: spacing.xl, gap: spacing.sm }}>
+      <View style={{ marginTop: spacing[10], gap: spacing.sm }}>
         <AuthPrimaryButton fullWidth loading={loading} onPress={handleLogin}>
           {t('signIn')}
         </AuthPrimaryButton>

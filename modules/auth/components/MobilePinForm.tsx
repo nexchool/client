@@ -128,7 +128,7 @@ export function MobilePinForm({ onBack, onUseOtp }: Props) {
         </Text>
       ) : null}
 
-      <View style={{ marginTop: spacing[10], paddingBottom: spacing.xl, gap: spacing.sm }}>
+      <View style={{ marginTop: spacing[10], gap: spacing.sm }}>
         <AuthPrimaryButton fullWidth loading={loading} onPress={handleSubmit}>
           {t('signIn')}
         </AuthPrimaryButton>

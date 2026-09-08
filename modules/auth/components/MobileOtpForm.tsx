@@ -124,7 +124,7 @@ export function MobileOtpForm({ onBack, onUsePin }: Props) {
           </Text>
         ) : null}
 
-        <View style={{ marginTop: spacing[10], paddingBottom: spacing.xl, gap: spacing.sm }}>
+        <View style={{ marginTop: spacing[10], gap: spacing.sm }}>
           <AuthPrimaryButton fullWidth loading={requestLoading} onPress={handleRequestCode}>
             {t('sendCode')}
           </AuthPrimaryButton>
@@ -193,7 +193,7 @@ export function MobileOtpForm({ onBack, onUsePin }: Props) {
         </Text>
       ) : null}
 
-      <View style={{ marginTop: spacing[10], paddingBottom: spacing.xl, gap: spacing.sm }}>
+      <View style={{ marginTop: spacing[10], gap: spacing.sm }}>
         <AuthPrimaryButton fullWidth loading={verifyLoading} onPress={handleVerifyCode}>
           {t('signIn')}
         </AuthPrimaryButton>
