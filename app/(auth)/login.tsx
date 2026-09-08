@@ -181,11 +181,21 @@ export default function LoginScreen() {
           style={{
             paddingHorizontal: spacing.marginMobile,
             marginTop: spacing.xs,
-            // Extra breathing room below the trust footer, on top of the
-            // safe-area bottom inset `ScreenContainer`'s SafeAreaView already
-            // reserves — without it the footer's last line can sit flush
-            // against that inset with no visual margin of its own.
-            paddingBottom: spacing.lg,
+            // `SupportFab` floats over this column, fixed to the screen's
+            // bottom-right rather than scrolled with it (see that
+            // component). At the default content height the card and trust
+            // footer already clear the FAB's small fixed offset, but on a
+            // short device (375x812) they end within a few px of the
+            // viewport edge — a longer translation, a shown field error, or
+            // a larger accessibility font size is enough to push the footer
+            // past that margin. This trailing padding is what keeps the
+            // footer clear of the FAB's reserved corner even then: once
+            // scrolled to the end, there is still this much blank space
+            // between the footer and wherever the FAB sits, on any device.
+            // `scrollBottomWithFooter` is the token this app already uses
+            // for "content behind a pinned bottom control"; this is that
+            // same shape, so it reuses it rather than a new constant.
+            paddingBottom: spacing.scrollBottomWithFooter,
           }}
         >
           <AuthCard>

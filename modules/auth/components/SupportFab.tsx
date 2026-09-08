@@ -9,16 +9,6 @@ import { PressScale } from '@/common/components/PressScale';
 const SUPPORT_EMAIL = 'hello@nexchool.in';
 
 /**
- * Clearance above the safe-area inset, sized to clear `AuthTrustFooter`'s
- * two-line block (shield + trust line, then copyright) rather than just
- * `spacing.lg` — on a device with a home indicator, the old offset put this
- * FAB directly on top of that text (reported against the owner's own
- * screenshot). Not itself a spacing-scale value: it is a measurement of a
- * sibling component's footprint, not a rhythm step.
- */
-const FOOTER_CLEARANCE = 72;
-
-/**
  * Circular support shortcut, bottom-right — admin-web's `<a href="mailto:">`
  * FAB, ported to a `Pressable` opening the same mailto link via `Linking`.
  * Rendered as a sibling of `ScreenContainer` (absolutely positioned) rather
@@ -27,6 +17,17 @@ const FOOTER_CLEARANCE = 72;
  * pattern `Toast.tsx` uses) rather than `ScreenContainer`'s own bottom
  * inset — this sits outside that container, as its sibling, precisely so it
  * does not scroll away with it.
+ *
+ * The bottom offset is a plain `spacing.sm` — a standard small FAB margin —
+ * rather than a measurement of `AuthTrustFooter`'s height. That earlier
+ * approach (a hardcoded clearance sized to clear the footer) sized this FAB
+ * for the footer and, on a short device, still landed it on top of the
+ * card's own bottom-right corner instead: the card and footer sit close
+ * enough to the bottom of a 375x812 viewport that no single fixed offset
+ * clears both from the same spot. The fix belongs on the content side, not
+ * here — `app/(auth)/login.tsx` gives the scrollable card+footer column a
+ * bottom padding that clears this FAB's footprint, so this component only
+ * has to say "hug the corner," never "leave room for a sibling."
  *
  * `SUPPORT_EMAIL` duplicated locally rather than imported: matches the
  * existing local constant in `app/(protected)/help-support.tsx`, which has
@@ -50,7 +51,7 @@ export function SupportFab() {
       style={[
         {
           position: 'absolute',
-          bottom: insets.bottom + FOOTER_CLEARANCE,
+          bottom: insets.bottom + spacing.sm,
           right: insets.right + spacing.lg,
           width: 48,
           height: 48,
