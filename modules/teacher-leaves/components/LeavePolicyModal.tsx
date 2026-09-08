@@ -185,7 +185,7 @@ export function LeavePolicyModal({
                         {t("policyModal.annualDays")}
                       </Text>
                       <TextInput
-                        style={[bodyMdType, s.numInput]}
+                        style={s.numInput}
                         value={String(current.total_days ?? policy.total_days)}
                         onChangeText={(v) =>
                           onUpdate(policy.leave_type, "total_days", parseInt(v, 10) || 0)
@@ -218,7 +218,7 @@ export function LeavePolicyModal({
                         {t("policyModal.maxCarryForward")}
                       </Text>
                       <TextInput
-                        style={[bodyMdType, s.numInput]}
+                        style={s.numInput}
                         value={String(
                           current.max_carry_forward_days ?? policy.max_carry_forward_days
                         )}

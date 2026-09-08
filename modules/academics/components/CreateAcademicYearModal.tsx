@@ -4,15 +4,10 @@ import {
   View,
   TextInput,
   StyleSheet,
-  Modal,
-  TouchableOpacity,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
 } from "react-native";
 import { useTheme } from "@/common/theme";
 import { Text } from "@/common/components/Text";
-import { AppIcon } from "@/common/components/AppIcon";
+import { Dialog } from "@/common/components/Dialog";
 import { academicYearService, type AcademicYear } from "../services/academicYearService";
 import { DatePicker } from '@/common/components/datepicker';
 
@@ -82,139 +77,81 @@ export function CreateAcademicYearModal({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade">
-      <KeyboardAvoidingView
-        style={styles.overlay}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        <TouchableOpacity
-          style={[styles.backdrop, { backgroundColor: "rgba(0,0,0,0.4)" }]}
-          activeOpacity={1}
-          onPress={onClose}
-        />
+    <Dialog
+      visible={visible}
+      onClose={onClose}
+      title={t("academicYearCreate.title")}
+      // No tone icon: this is a form to fill in, not a question to answer, and
+      // the well would push the first field below the fold on a small phone.
+      icon={null}
+      actions={[
+        { label: t("cancel"), onPress: onClose, disabled: loading },
+        {
+          label: t("academicYearCreate.create"),
+          onPress: () => void handleSubmit(),
+          loading,
+          disabled: loading,
+        },
+      ]}
+    >
+      {error ? (
         <View
           style={{
-            backgroundColor: palette.surface,
-            borderRadius: radius.md,
-            padding: spacing.lg,
-            width: "100%",
-            maxWidth: 360,
+            backgroundColor: palette.errorContainer,
+            padding: spacing.sm,
+            borderRadius: radius.sm,
+            borderLeftWidth: 4,
+            borderLeftColor: palette.error,
           }}
         >
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: spacing.md,
-            }}
-          >
-            <Text variant="headlineMd" color="onSurface">
-              {t("academicYearCreate.title")}
-            </Text>
-            <AppIcon
-              name="close"
-              size="lg"
-              color="onSurface"
-              onPress={onClose}
-              style={{ padding: spacing.xs }}
-            />
-          </View>
-
-          {error && (
-            <View
-              style={{
-                backgroundColor: palette.errorContainer,
-                padding: spacing.sm,
-                borderRadius: radius.sm,
-                marginBottom: spacing.md,
-                borderLeftWidth: 4,
-                borderLeftColor: palette.error,
-              }}
-            >
-              <Text variant="labelMd" color="error">
-                {error}
-              </Text>
-            </View>
-          )}
-
-          <Text
-            variant="labelMd"
-            color="onSurface"
-            style={{ marginBottom: spacing.xs }}
-          >
-            {t("academicYearCreate.nameLabel")}
+          <Text variant="labelMd" color="error">
+            {error}
           </Text>
-          <TextInput
-            style={[bodyMdType, 
-              styles.input,
-              bodyMdType,
-              {
-                borderColor: palette.outlineVariant,
-                borderRadius: radius.sm,
-                padding: spacing.md,
-                color: palette.onSurface,
-                backgroundColor: palette.surfaceContainerLow,
-                marginBottom: spacing.md,
-              },
-            ]}
-            value={name}
-            onChangeText={setName}
-            placeholder={t("academicYearCreate.namePlaceholder")}
-            placeholderTextColor={palette.outline}
-            editable={!loading}
-          />
-
-          <DatePicker
-            label={t("academicYearCreate.startDate")}
-            value={startDate}
-            onChange={setStartDate}
-            placeholder={t("academicYearCreate.datePlaceholder")}
-          />
-
-          <DatePicker
-            label={t("academicYearCreate.endDate")}
-            value={endDate}
-            onChange={setEndDate}
-            placeholder={t("academicYearCreate.datePlaceholder")}
-          />
-
-          <TouchableOpacity
-            style={{
-              backgroundColor: palette.primary,
-              padding: spacing.md,
-              borderRadius: radius.md,
-              alignItems: "center",
-              marginTop: spacing.sm,
-              opacity: loading ? 0.6 : 1,
-            }}
-            onPress={handleSubmit}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color={palette.onPrimary} />
-            ) : (
-              <Text variant="labelLg" color="onPrimary">
-                {t("academicYearCreate.create")}
-              </Text>
-            )}
-          </TouchableOpacity>
         </View>
-      </KeyboardAvoidingView>
-    </Modal>
+      ) : null}
+
+      <View>
+        <Text variant="labelMd" color="onSurface" style={{ marginBottom: spacing.xs }}>
+          {t("academicYearCreate.nameLabel")}
+        </Text>
+        <TextInput
+          style={[
+            styles.input,
+            bodyMdType,
+            {
+              borderColor: palette.outlineVariant,
+              borderRadius: radius.sm,
+              padding: spacing.md,
+              color: palette.onSurface,
+              backgroundColor: palette.surfaceContainerLow,
+            },
+          ]}
+          value={name}
+          onChangeText={setName}
+          placeholder={t("academicYearCreate.namePlaceholder")}
+          placeholderTextColor={palette.outline}
+          editable={!loading}
+        />
+      </View>
+
+      <DatePicker
+        label={t("academicYearCreate.startDate")}
+        value={startDate}
+        onChange={setStartDate}
+        placeholder={t("academicYearCreate.datePlaceholder")}
+      />
+
+      <DatePicker
+        label={t("academicYearCreate.endDate")}
+        value={endDate}
+        onChange={setEndDate}
+        placeholder={t("academicYearCreate.datePlaceholder")}
+      />
+    </Dialog>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-  },
   input: {
     borderWidth: 1,
   },

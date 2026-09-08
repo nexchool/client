@@ -3,7 +3,6 @@ import {
   View,
   StyleSheet,
   ScrollView,
-  Modal,
   Pressable,
   ActivityIndicator,
   Switch,
@@ -13,6 +12,7 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/common/theme";
 import { Text } from "@/common/components/Text";
+import { Dialog } from "@/common/components/Dialog";
 import { AppIcon } from "@/common/components/AppIcon";
 import { PageHeader } from "@/common/components/PageHeader";
 import { ProfileActionRow } from "@/modules/profile/components/ProfileActionRow";
@@ -39,7 +39,7 @@ const LANGUAGE_OPTIONS: {
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { palette, spacing } = useTheme();
+  const { palette, spacing, radius } = useTheme();
   const { t } = useTranslation(["navigation", "settings", "common", "profile"]);
   const { confirm } = useDialog();
   const { logout } = useAuth();
@@ -245,76 +245,55 @@ export default function SettingsScreen() {
         />
       </ScrollView>
 
-      <Modal
+      <Dialog
         visible={dropdownOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setDropdownOpen(false)}
+        onClose={() => setDropdownOpen(false)}
+        title={t("settings:languageSectionTitle")}
+        // A selector, not a question: no tone icon, and no action buttons —
+        // choosing a language is the confirmation.
+        icon={null}
       >
-        <Pressable
-          style={[styles.modalOverlay, { backgroundColor: "rgba(11, 28, 48, 0.40)" }]}
-          onPress={() => setDropdownOpen(false)}
-        >
-          <Pressable
-            style={[
-              styles.modalSheet,
-              {
-                backgroundColor: palette.surfaceContainerLowest,
-                paddingBottom: spacing.xs,
-              },
-            ]}
-            onPress={(e) => e.stopPropagation()}
-          >
-            <Text
-              variant="labelSm"
-              color="onSurfaceVariant"
-              style={{
-                paddingHorizontal: spacing.md,
-                paddingTop: spacing.md,
-                paddingBottom: spacing.sm,
-              }}
-            >
-              {t("settings:languageSectionTitle")}
-            </Text>
-            <View
-              style={[styles.modalDivider, { backgroundColor: palette.outlineVariant }]}
-            />
-            {LANGUAGE_OPTIONS.map(({ code, labelKey }, index) => {
-              const selected = current === code;
-              const isLast = index === LANGUAGE_OPTIONS.length - 1;
-              return (
-                <Pressable
-                  key={code}
-                  style={[
-                    styles.modalOption,
-                    { paddingVertical: spacing.md, paddingHorizontal: spacing.md },
-                    !isLast && {
-                      borderBottomWidth: StyleSheet.hairlineWidth,
-                      borderBottomColor: palette.outlineVariant,
-                    },
-                  ]}
-                  onPress={() => void selectLanguage(code)}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected }}
+        <View>
+          {LANGUAGE_OPTIONS.map(({ code, labelKey }, index) => {
+            const selected = current === code;
+            const isLast = index === LANGUAGE_OPTIONS.length - 1;
+            return (
+              <Pressable
+                key={code}
+                style={({ pressed }) => [
+                  styles.modalOption,
+                  {
+                    minHeight: 48,
+                    paddingHorizontal: spacing.sm,
+                    borderRadius: radius.DEFAULT,
+                    backgroundColor: pressed ? palette.surfaceContainerHigh : "transparent",
+                  },
+                  !isLast && {
+                    borderBottomWidth: StyleSheet.hairlineWidth,
+                    borderBottomColor: palette.outlineVariant,
+                  },
+                ]}
+                onPress={() => void selectLanguage(code)}
+                accessibilityRole="radio"
+                accessibilityState={{ selected }}
+              >
+                <Text
+                  variant="bodyMd"
+                  color={selected ? "primary" : "onSurface"}
+                  style={{ flex: 1 }}
                 >
-                  <Text
-                    variant="bodyMd"
-                    color={selected ? "primary" : "onSurface"}
-                    style={{ flex: 1 }}
-                  >
-                    {t(`settings:${labelKey}`)}
-                  </Text>
-                  {selected ? (
-                    <AppIcon name="checkmark" size="md" color="primary" />
-                  ) : (
-                    <View style={styles.modalOptionSpacer} />
-                  )}
-                </Pressable>
-              );
-            })}
-          </Pressable>
-        </Pressable>
-      </Modal>
+                  {t(`settings:${labelKey}`)}
+                </Text>
+                {selected ? (
+                  <AppIcon name="checkmark" size="md" color="primary" />
+                ) : (
+                  <View style={styles.modalOptionSpacer} />
+                )}
+              </Pressable>
+            );
+          })}
+        </View>
+      </Dialog>
     </View>
   );
 }
@@ -322,22 +301,6 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scroll: { flex: 1 },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-  },
-  modalSheet: {
-    width: "100%",
-    maxWidth: 300,
-    borderRadius: 16,
-    overflow: "hidden",
-  },
-  modalDivider: {
-    height: StyleSheet.hairlineWidth,
-    marginHorizontal: 16,
-  },
   modalOption: {
     flexDirection: "row",
     alignItems: "center",
