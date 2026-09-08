@@ -1,9 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   View,
   StyleSheet,
   ScrollView,
-  Pressable,
   ActivityIndicator,
   Switch,
 } from "react-native";
@@ -12,12 +11,11 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/common/theme";
 import { Text } from "@/common/components/Text";
-import { Dialog } from "@/common/components/Dialog";
+import { LanguageSheet, currentLanguageLabel } from "@/common/components/LanguageSheet";
 import { AppIcon } from "@/common/components/AppIcon";
 import { PageHeader } from "@/common/components/PageHeader";
 import { ProfileActionRow } from "@/modules/profile/components/ProfileActionRow";
 import { useAuth } from "@/modules/auth/hooks/useAuth";
-import { setAppLanguage, getAppLanguage, type SupportedLanguage } from "@/i18n";
 import { useDialog } from "@/common/feedback";
 import {
   getPushNotificationsPreference,
@@ -28,50 +26,20 @@ import {
   unregisterDevicePushNotifications,
 } from "@/modules/devices/pushRegistration";
 
-const LANGUAGE_OPTIONS: {
-  code: SupportedLanguage;
-  labelKey: "language.english" | "language.gujarati" | "language.hindi";
-}[] = [
-  { code: "en", labelKey: "language.english" },
-  { code: "gu", labelKey: "language.gujarati" },
-  { code: "hi", labelKey: "language.hindi" },
-];
-
 export default function SettingsScreen() {
   const router = useRouter();
-  const { palette, spacing, radius } = useTheme();
+  const { palette, spacing } = useTheme();
   const { t } = useTranslation(["navigation", "settings", "common", "profile"]);
   const { confirm } = useDialog();
   const { logout } = useAuth();
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [pending, setPending] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(true);
   const [pushBusy, setPushBusy] = useState(false);
 
-  const current = getAppLanguage();
 
   useEffect(() => {
     void getPushNotificationsPreference().then(setPushEnabled);
-  }, []);
-
-  const currentLabel = useMemo(() => {
-    const opt = LANGUAGE_OPTIONS.find((o) => o.code === current);
-    return opt ? t(`settings:${opt.labelKey}`) : "";
-  }, [current, t]);
-
-  const selectLanguage = useCallback(async (lng: SupportedLanguage) => {
-    if (lng === getAppLanguage()) {
-      setDropdownOpen(false);
-      return;
-    }
-    setPending(true);
-    try {
-      await setAppLanguage(lng);
-      setDropdownOpen(false);
-    } finally {
-      setPending(false);
-    }
   }, []);
 
   const handleBack = useCallback(() => {
@@ -192,22 +160,9 @@ export default function SettingsScreen() {
         <ProfileActionRow
           icon="language-outline"
           label={t("settings:languageSectionTitle")}
-          hint={currentLabel}
-          onPress={() => !pending && setDropdownOpen(true)}
-          trailing={
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: spacing.sm,
-              }}
-            >
-              {pending ? (
-                <ActivityIndicator size="small" color={palette.primary} />
-              ) : null}
-              <AppIcon name="chevron-forward" size="md" color="onSurfaceVariant" />
-            </View>
-          }
+          hint={currentLanguageLabel()}
+          onPress={() => setDropdownOpen(true)}
+          trailing={<AppIcon name="chevron-forward" size="md" color="onSurfaceVariant" />}
         />
         {!Device.isDevice ? (
           <Text
@@ -245,55 +200,10 @@ export default function SettingsScreen() {
         />
       </ScrollView>
 
-      <Dialog
+      <LanguageSheet
         visible={dropdownOpen}
         onClose={() => setDropdownOpen(false)}
-        title={t("settings:languageSectionTitle")}
-        // A selector, not a question: no tone icon, and no action buttons —
-        // choosing a language is the confirmation.
-        icon={null}
-      >
-        <View>
-          {LANGUAGE_OPTIONS.map(({ code, labelKey }, index) => {
-            const selected = current === code;
-            const isLast = index === LANGUAGE_OPTIONS.length - 1;
-            return (
-              <Pressable
-                key={code}
-                style={({ pressed }) => [
-                  styles.modalOption,
-                  {
-                    minHeight: 48,
-                    paddingHorizontal: spacing.sm,
-                    borderRadius: radius.DEFAULT,
-                    backgroundColor: pressed ? palette.surfaceContainerHigh : "transparent",
-                  },
-                  !isLast && {
-                    borderBottomWidth: StyleSheet.hairlineWidth,
-                    borderBottomColor: palette.outlineVariant,
-                  },
-                ]}
-                onPress={() => void selectLanguage(code)}
-                accessibilityRole="radio"
-                accessibilityState={{ selected }}
-              >
-                <Text
-                  variant="bodyMd"
-                  color={selected ? "primary" : "onSurface"}
-                  style={{ flex: 1 }}
-                >
-                  {t(`settings:${labelKey}`)}
-                </Text>
-                {selected ? (
-                  <AppIcon name="checkmark" size="md" color="primary" />
-                ) : (
-                  <View style={styles.modalOptionSpacer} />
-                )}
-              </Pressable>
-            );
-          })}
-        </View>
-      </Dialog>
+      />
     </View>
   );
 }
@@ -301,10 +211,4 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scroll: { flex: 1 },
-  modalOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  modalOptionSpacer: { width: 20, height: 20 },
 });
