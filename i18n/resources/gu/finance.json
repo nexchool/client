@@ -340,5 +340,15 @@
     "itemNumber": "મુદ્દો {{n}}",
     "removeItem": "મુદ્દો દૂર કરો",
     "addItem": "+ બીજો ફી મુદ્દો ઉમેરો"
+  },
+  "filters": {
+    "title": "ફિલ્ટર",
+    "clearAll": "બધા હટાવો",
+    "apply": "પરિણામ જુઓ",
+    "statusLabel": "સ્થિતિ",
+    "classLabel": "વર્ગ",
+    "classAny": "બધા વર્ગો",
+    "classSearchPlaceholder": "વર્ગ શોધો…",
+    "noClassMatches": "કોઈ મેળ ખાતો વર્ગ નથી."
   }
 }

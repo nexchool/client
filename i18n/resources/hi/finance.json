@@ -340,5 +340,15 @@
     "itemNumber": "मद {{n}}",
     "removeItem": "मद हटाएँ",
     "addItem": "+ और शुल्क मद जोड़ें"
+  },
+  "filters": {
+    "title": "फ़िल्टर",
+    "clearAll": "सभी हटाएँ",
+    "apply": "परिणाम देखें",
+    "statusLabel": "स्थिति",
+    "classLabel": "कक्षा",
+    "classAny": "सभी कक्षाएँ",
+    "classSearchPlaceholder": "कक्षाएँ खोजें…",
+    "noClassMatches": "कोई मेल खाती कक्षा नहीं।"
   }
 }

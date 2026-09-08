@@ -340,5 +340,15 @@
     "itemNumber": "Item {{n}}",
     "removeItem": "Remove item",
     "addItem": "+ Add another fee item"
+  },
+  "filters": {
+    "title": "Filters",
+    "clearAll": "Clear all",
+    "apply": "Show results",
+    "statusLabel": "Status",
+    "classLabel": "Class",
+    "classAny": "All classes",
+    "classSearchPlaceholder": "Search classes…",
+    "noClassMatches": "No matching classes."
   }
 }
