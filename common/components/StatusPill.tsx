@@ -2,6 +2,9 @@ import React from 'react';
 import { View } from 'react-native';
 import { useTheme, withAlpha, type Palette } from '@/common/theme';
 import { Text } from '@/common/components/Text';
+import { AppIcon } from '@/common/components/AppIcon';
+
+type AppIconName = React.ComponentProps<typeof AppIcon>['name'];
 
 /**
  * One status, wearing its colour.
@@ -23,16 +26,26 @@ import { Text } from '@/common/components/Text';
 export function StatusPill({
   label,
   tone,
+  icon,
 }: {
   label: string;
   /** Palette token the pill borrows for its border, text and washed fill. */
   tone: keyof Palette;
+  /**
+   * Optional leading glyph. The invoice list distinguishes six statuses where
+   * the fee list has four, and at that many the colour alone stops carrying
+   * the difference — `unpaid` and `partial` share a tone deliberately.
+   */
+  icon?: AppIconName;
 }) {
   const { palette, spacing, radius } = useTheme();
   const color = palette[tone];
   return (
     <View
       style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.xs,
         paddingHorizontal: spacing.sm,
         paddingVertical: 2,
         borderRadius: radius.full,
@@ -41,6 +54,7 @@ export function StatusPill({
         backgroundColor: withAlpha(color, 0.08),
       }}
     >
+      {icon ? <AppIcon name={icon} size="sm" color={tone} /> : null}
       <Text variant="labelSm" style={{ color }}>
         {label}
       </Text>

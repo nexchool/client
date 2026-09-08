@@ -14,7 +14,9 @@ import { Skeleton } from "@/common/components/Skeleton";
 import { EmptyState } from "@/common/components/EmptyState";
 import { FilterChips } from "@/common/components/FilterChips";
 import { DashboardKpiCard } from "@/modules/home/components/DashboardKpiCard";
-import { formatCurrency } from "@/common/utils/formatCurrency";
+import { StatusPill } from "@/common/components/StatusPill";
+import { PageHeader } from "@/common/components/PageHeader";
+import { formatCurrency, formatCurrencyCompact } from "@/common/utils/formatCurrency";
 import { Protected } from "@/modules/permissions/components/Protected";
 import * as PERMS from "@/modules/permissions/constants/permissions";
 
@@ -53,26 +55,13 @@ const STATUS_META: Record<string, { accent: keyof Palette; icon: IconName }> = {
 
 function StatusBadge({ status }: { status: string }) {
   const { t } = useTranslation("finance");
-  const { palette, spacing, radius } = useTheme();
   const meta = STATUS_META[status] ?? STATUS_META.draft;
-  const color = palette[meta.accent];
   return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 4,
-        paddingHorizontal: spacing.sm,
-        paddingVertical: 2,
-        borderRadius: radius.full,
-        backgroundColor: `${color}1A`,
-      }}
-    >
-      <AppIcon name={meta.icon} size="sm" color={meta.accent} />
-      <Text variant="labelSm" style={{ color }}>
-        {t(`invoiceStatuses.${status}`, { defaultValue: status })}
-      </Text>
-    </View>
+    <StatusPill
+      tone={meta.accent}
+      icon={meta.icon}
+      label={t(`invoiceStatuses.${status}`, { defaultValue: status })}
+    />
   );
 }
 
@@ -192,6 +181,15 @@ export default function InvoicesListPage() {
 
   return (
     <View style={{ flex: 1, backgroundColor: palette.surface }}>
+      <PageHeader
+        title={t("invoices.title", { defaultValue: "Invoices" })}
+        subtitle={t("invoices.headerSubline", {
+          defaultValue: "{{n}} invoices · {{amount}} due",
+          n: invoiceCount,
+          amount: formatCurrency(totalOutstanding),
+        })}
+        onBack={() => router.back()}
+      />
       <FlatList
         data={filteredInvoices}
         keyExtractor={(item) => item.id}
@@ -210,32 +208,21 @@ export default function InvoicesListPage() {
         }}
         ListHeaderComponent={
           <View>
-            <View style={{ marginBottom: spacing.lg }}>
-              <Text variant="display" color="onSurface">
-                {t("invoices.title", { defaultValue: "Invoices" })}
-              </Text>
-              <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
-                {t("invoices.headerSubline", {
-                  defaultValue: "{{n}} invoices · {{amount}} due",
-                  n: invoiceCount,
-                  amount: formatCurrency(totalOutstanding),
-                })}
-              </Text>
-            </View>
-
-            <View style={{ flexDirection: "row", gap: spacing.sm, marginBottom: spacing.lg }}>
-              <View style={{ flex: 1 }}>
+            <View style={{ gap: spacing.sm, marginBottom: spacing.lg }}>
+              <View>
                 <DashboardKpiCard
+                  layout="row"
                   label={t("invoices.totalOutstanding", { defaultValue: "Total Outstanding" })}
-                  value={formatCurrency(totalOutstanding)}
+                  value={formatCurrencyCompact(totalOutstanding)}
                   accentColor={totalOutstanding > 0 ? "error" : "success"}
                   iconName="wallet-outline"
                   iconChipBg={totalOutstanding > 0 ? "errorContainer" : "surfaceContainerHigh"}
                   iconChipFg={totalOutstanding > 0 ? "onErrorContainer" : "success"}
                 />
               </View>
-              <View style={{ flex: 1 }}>
+              <View>
                 <DashboardKpiCard
+                  layout="row"
                   label={t("invoices.nextDueDate", { defaultValue: "Next Due Date" })}
                   value={
                     nextDueDate

@@ -4,7 +4,6 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
-  Pressable,
   ActivityIndicator,
   RefreshControl,
   TextInput,
@@ -31,6 +30,7 @@ import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
 import { PressScale } from "@/common/components/PressScale";
 import { EmptyState } from "@/common/components/EmptyState";
+import { FilterChips } from "@/common/components/FilterChips";
 import { PageHeader } from "@/common/components/PageHeader";
 import { useModalBodyHeight } from '@/common/hooks/useModalBodyHeight';
 import { useToast } from "@/common/feedback";
@@ -49,16 +49,10 @@ export default function FeeStructuresPage() {
   const router = useRouter();
   const { palette, spacing, radius, elevation } = useTheme();
   const { selectedAcademicYearId: contextYearId } = useAcademicYearContext();
-  const [academicYearFilter, setAcademicYearFilter] = useState<string>("");
   const [modalOpen, setModalOpen] = useState(false);
 
   const { data: academicYears = [] } = useAcademicYears(false);
   const { data: classes = [] } = useClasses();
-
-  useEffect(() => {
-    if (contextYearId)
-      setAcademicYearFilter((prev) => (prev === "" ? contextYearId : prev));
-  }, [contextYearId]);
 
   const {
     data: structures = [],
@@ -67,7 +61,7 @@ export default function FeeStructuresPage() {
     refetch,
     isRefetching,
   } = useStructures({
-    academic_year_id: academicYearFilter || undefined,
+    academic_year_id: contextYearId || undefined,
   });
 
   const createMut = useCreateStructure();
@@ -104,11 +98,11 @@ export default function FeeStructuresPage() {
         <AppIcon name="layers" size="lg" color="onPrimaryContainer" />
       </View>
       <View style={{ flex: 1 }}>
-        <Text variant="labelMd" color="onSurface" numberOfLines={1}>
+        <Text variant="titleSm" color="onSurface" numberOfLines={1}>
           {s.name}
         </Text>
         <Text
-          variant="labelSm"
+          variant="bodySm"
           color="onSurfaceVariant"
           numberOfLines={1}
           style={{ marginTop: 2 }}
@@ -157,40 +151,6 @@ export default function FeeStructuresPage() {
           />
         }
       />
-
-      {/* Academic year filter */}
-      <View
-        style={{
-          paddingHorizontal: spacing.marginMobile,
-          paddingTop: spacing.sm,
-          gap: spacing.sm,
-        }}
-      >
-        <Text variant="labelSm" color="onSurfaceVariant">
-          {t("structures.academicYear")}
-        </Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: spacing.sm }}
-        >
-          <Chip
-            active={!academicYearFilter}
-            label={t("common.all")}
-            onPress={() => setAcademicYearFilter("")}
-          />
-          {academicYears.map((ay) => (
-            <Chip
-              key={ay.id}
-              active={academicYearFilter === ay.id}
-              label={ay.name}
-              onPress={() =>
-                setAcademicYearFilter(academicYearFilter === ay.id ? "" : ay.id)
-              }
-            />
-          ))}
-        </ScrollView>
-      </View>
 
       {error ? (
         <View style={{ padding: spacing.lg, alignItems: "center" }}>
@@ -259,36 +219,6 @@ export default function FeeStructuresPage() {
         isUpdating={updateMut.isPending}
       />
     </View>
-  );
-}
-
-function Chip({
-  active,
-  label,
-  onPress,
-}: {
-  active: boolean;
-  label: string;
-  onPress: () => void;
-}) {
-  const { palette, spacing, radius } = useTheme();
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => ({
-        paddingHorizontal: spacing.md,
-        paddingVertical: spacing.xs,
-        borderRadius: radius.full,
-        backgroundColor: active ? palette.primary : palette.surfaceContainerLow,
-        borderWidth: 1,
-        borderColor: active ? palette.primary : palette.outlineVariant,
-        opacity: pressed ? 0.85 : 1,
-      })}
-    >
-      <Text variant="labelSm" color={active ? "onPrimary" : "onSurface"}>
-        {label}
-      </Text>
-    </Pressable>
   );
 }
 
@@ -555,21 +485,16 @@ function StructureModal({
                 >
                   {t("structures.modal.academicYear")}
                 </Text>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ gap: spacing.sm }}
-                  style={{ marginBottom: spacing.md }}
-                >
-                  {academicYears.map((ay) => (
-                    <Chip
-                      key={ay.id}
-                      active={academicYearId === ay.id}
-                      label={ay.name}
-                      onPress={() => setAcademicYearId(ay.id)}
-                    />
-                  ))}
-                </ScrollView>
+                {/* Which year the new structure belongs to — a form field, not
+                    a list filter, which is why this row survives while the
+                    one over the list did not. */}
+                <View style={{ marginBottom: spacing.md }}>
+                  <FilterChips
+                    options={academicYears.map((ay) => ({ value: ay.id, label: ay.name }))}
+                    value={academicYearId}
+                    onChange={setAcademicYearId}
+                  />
+                </View>
               </>
             )}
 
