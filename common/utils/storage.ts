@@ -8,6 +8,8 @@ const KEYS = {
   ENABLED_FEATURES: 'enabled_features',
   TENANT_ID: 'tenant_id',
   TENANT_NAME: 'tenant_name',
+  /** The school's subdomain, known before a tenant_id exists — see setTenantSubdomain. */
+  TENANT_SUBDOMAIN: 'tenant_subdomain',
   FORCE_PASSWORD_RESET: 'force_password_reset',
   SELECTED_ACADEMIC_YEAR_ID: 'selected_academic_year_id',
   PUSH_DEVICE_TOKEN: 'push_device_token',
@@ -80,6 +82,47 @@ export const getTenantName = async (): Promise<string | null> => {
 
 export const deleteTenantName = async () => {
   await SecureStore.deleteItemAsync(KEYS.TENANT_NAME);
+};
+
+/**
+ * The school's subdomain (e.g. "greenwood"), known before any tenant_id is.
+ *
+ * A build with no school baked in (see `config/appConfig.ts#getBakedTenant`)
+ * has no tenant_id until someone signs in, so it cannot send `X-Tenant-ID` —
+ * but the school-selection step can still name a subdomain, and the server
+ * resolves a tenant from `X-Tenant-Subdomain` just as well (`core/tenant.py`
+ * on the server). `common/services/api.ts` sends this header whenever there
+ * is no tenant_id yet.
+ */
+export const setTenantSubdomain = async (subdomain: string) => {
+  await SecureStore.setItemAsync(KEYS.TENANT_SUBDOMAIN, subdomain);
+};
+
+export const getTenantSubdomain = async (): Promise<string | null> => {
+  return SecureStore.getItemAsync(KEYS.TENANT_SUBDOMAIN);
+};
+
+export const deleteTenantSubdomain = async () => {
+  await SecureStore.deleteItemAsync(KEYS.TENANT_SUBDOMAIN);
+};
+
+/**
+ * Whether the app can identify a school at all — a resolved tenant_id, or
+ * just a subdomain the school-selection step recorded before any tenant_id
+ * existed. Neither `X-Tenant-ID` nor `X-Tenant-Subdomain` is "the" tenant
+ * header on its own (`common/services/api.ts` picks whichever is stored), so
+ * anywhere that only needs to know "is there enough to ask the server with" —
+ * `usePublishedAuthMethods`, `useTenantTheme`, the initial-route redirect in
+ * `app/index.tsx` — should ask this rather than `getTenantId()` alone, or a
+ * general build stuck on the school-selection subdomain would look
+ * tenant-less to them even after someone had already answered it.
+ */
+export const hasKnownTenant = async (): Promise<boolean> => {
+  const [tenantId, tenantSubdomain] = await Promise.all([
+    getTenantId(),
+    getTenantSubdomain(),
+  ]);
+  return !!(tenantId || tenantSubdomain);
 };
 
 /**
@@ -202,6 +245,13 @@ export const clearAuth = async () => {
     SecureStore.deleteItemAsync(KEYS.ENABLED_FEATURES),
     SecureStore.deleteItemAsync(KEYS.TENANT_ID),
     SecureStore.deleteItemAsync(KEYS.TENANT_NAME),
+    // This is a single app for every school (general build) or fixed to one
+    // (school build). Either way, the next sign-in on this phone — the same
+    // person or someone else — resolves its own tenant from scratch: a baked
+    // build reseeds it (see `seedBakedTenant`), and the general build asks
+    // again via the school-selection step. Keeping a stale subdomain around
+    // would otherwise skip that step with the *previous* session's school.
+    SecureStore.deleteItemAsync(KEYS.TENANT_SUBDOMAIN),
     SecureStore.deleteItemAsync(KEYS.FORCE_PASSWORD_RESET),
     SecureStore.deleteItemAsync(KEYS.SELECTED_ACADEMIC_YEAR_ID),
     SecureStore.deleteItemAsync(KEYS.RECENT_SEARCHES),

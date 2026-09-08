@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { apiGet } from '@/common/services/api';
-import { getTenantId } from '@/common/utils/storage';
+import { hasKnownTenant } from '@/common/utils/storage';
 
 /**
  * The ways in this school allows, from its authentication policy.
@@ -18,9 +18,10 @@ import { getTenantId } from '@/common/utils/storage';
  * sign-in screen, and sharing the cache would mean a school's palette and its
  * sign-in options expiring together for no reason.
  *
- * Fails quiet. With no tenant resolved, no network, or an older server that
- * does not publish the field, the answer is "no extra methods" — which leaves
- * the screen exactly as it was before this existed.
+ * Fails quiet. With no tenant known yet (`common/utils/storage.ts`
+ * `hasKnownTenant` — no id, no subdomain either), no network, or an older
+ * server that does not publish the field, the answer is "no extra methods" —
+ * which leaves the screen exactly as it was before this existed.
  */
 type AuthMethodsResponse = {
   auth?: { methods?: string[] };
@@ -33,8 +34,8 @@ export function usePublishedAuthMethods() {
     let active = true;
 
     void (async () => {
-      const tenant = await getTenantId();
-      if (!tenant) return;
+      const known = await hasKnownTenant();
+      if (!known) return;
       try {
         const data = await apiGet<AuthMethodsResponse>('/api/auth/tenant-branding');
         if (active) setMethods(data?.auth?.methods ?? []);

@@ -5,7 +5,7 @@ import { useAuth } from "@/modules/auth/hooks/useAuth";
 import { Colors } from "@/common/constants/colors";
 
 export default function Index() {
-  const { isAuthenticated, isLoading, mustResetPassword } = useAuth();
+  const { isAuthenticated, isLoading, mustResetPassword, tenantKnown } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
@@ -16,7 +16,15 @@ export default function Index() {
     const inProtectedGroup = segments[0] === "(protected)";
 
     if (!isAuthenticated) {
-      if (!inAuthGroup) router.replace("/(auth)/login");
+      if (!inAuthGroup) {
+        // No school known yet (no baked build, nobody has signed in on this
+        // phone before) means tenant-branding and the sign-in method policy
+        // have nothing to resolve against — sending this cold start straight
+        // to `login` is the unbranded, method-blind screen this feature
+        // exists to avoid. `select-school` itself routes on to `login` once
+        // it has stored one.
+        router.replace(tenantKnown ? "/(auth)/login" : "/(auth)/select-school");
+      }
       return;
     }
 
@@ -31,7 +39,7 @@ export default function Index() {
     if (!inProtectedGroup) {
       router.replace("/(protected)/home");
     }
-  }, [isAuthenticated, isLoading, mustResetPassword, segments, router]);
+  }, [isAuthenticated, isLoading, mustResetPassword, tenantKnown, segments, router]);
 
   if (isLoading) {
     return (

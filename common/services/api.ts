@@ -9,6 +9,7 @@ import {
 import {
   getAccessToken,
   getTenantId,
+  getTenantSubdomain,
   setAccessToken,
 } from "@/common/utils/storage";
 
@@ -72,9 +73,10 @@ const apiRequest = async (
   skipJsonContentType = false,
 ): Promise<Response> => {
   const url = getApiUrl(endpoint);
-  const [accessToken, tenantId] = await Promise.all([
+  const [accessToken, tenantId, tenantSubdomain] = await Promise.all([
     getAccessToken(),
     getTenantId(),
+    getTenantSubdomain(),
   ]);
 
   const headers: Record<string, string> = skipJsonContentType
@@ -93,6 +95,13 @@ const apiRequest = async (
   }
   if (tenantId) {
     headers["X-Tenant-ID"] = tenantId;
+  } else if (tenantSubdomain) {
+    // No confirmed tenant yet — only a subdomain the school-selection step
+    // (or a not-yet-signed-in baked build) recorded. The server resolves this
+    // the same way it resolves the ID header, just one slug lookup further
+    // (core/tenant.py `find_tenant`), which is what lets tenant-branding and
+    // the sign-in policy work before anyone has a token.
+    headers["X-Tenant-Subdomain"] = tenantSubdomain;
   }
 
   try {

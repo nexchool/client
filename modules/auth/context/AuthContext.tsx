@@ -22,6 +22,7 @@ import {
   setEnabledFeatures,
   setTenantId,
   getTenantId,
+  hasKnownTenant,
   clearAuth,
   getTenantName,
   setTenantName,
@@ -81,6 +82,14 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   /**
+   * Whether the app knows which school it belongs to — a tenant_id (baked in
+   * at build time, or from a previous login) or a subdomain (chosen on the
+   * school-selection step). `app/index.tsx` uses this, not `isAuthenticated`,
+   * to decide whether a signed-out cold start needs `(auth)/select-school`
+   * before it can even show a branded, method-aware `(auth)/login`.
+   */
+  tenantKnown: boolean;
+  /**
    * The signed-in account is holding a password its school issued and must
    * choose its own. The server enforces this: while it is true every endpoint
    * outside the password-reset allowlist answers 403, so the app must show
@@ -137,6 +146,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   } | null>(null);
   const [tenantName, setTenantNameState] = useState<string | null>(null);
   const [mustResetPassword, setMustResetPasswordState] = useState(false);
+  // Starts false rather than assuming a tenant exists — `checkAuth` below
+  // corrects it before `isLoading` clears, so nothing routes on a guess.
+  const [tenantKnown, setTenantKnownState] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const lastAuthSnapshotRefreshRef = useRef(0);
   const queryClient = useQueryClient();
@@ -248,6 +260,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           storedEnabledFeatures,
           storedTenantName,
           storedMustResetPassword,
+          tenantKnownNow,
         ] = await Promise.all([
           getAccessToken(),
           getRefreshToken(),
@@ -256,7 +269,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           getEnabledFeatures(),
           getTenantName(),
           getForcePasswordReset(),
+          hasKnownTenant(),
         ]);
+
+        // Read regardless of whether a session exists: `(auth)/select-school`
+        // is a signed-out screen, and by the time this runs a baked build has
+        // already had `seedBakedTenant` write its tenant_id (see
+        // `app/_layout.tsx`), so this is a plain storage read either way.
+        setTenantKnownState(tenantKnownNow);
 
         if (accessToken && refreshToken && userData) {
           setUser(userData);
@@ -520,6 +540,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         enabledFeatures,
         isAuthenticated: !!user,
         isLoading,
+        tenantKnown,
         mustResetPassword,
         pendingTenantChoice,
         login,

@@ -5,7 +5,7 @@ import { apiGet } from '@/common/services/api';
 import {
   getCachedTenantTheme,
   setCachedTenantTheme,
-  getTenantId,
+  hasKnownTenant,
 } from '@/common/utils/storage';
 import { registerThemeRefreshHandler } from './themeRefresh';
 
@@ -44,11 +44,13 @@ export function useTenantTheme(tenantId: string | null) {
   }, []);
 
   const refresh = useCallback(async () => {
-    // The endpoint resolves the school from the tenant header the API client
-    // already sends. With no tenant there is nobody to be branded as, and the
-    // sign-in screen stays in the app's own colours.
-    const tenant = await getTenantId();
-    if (!tenant) return;
+    // The endpoint resolves the school from whichever tenant header the API
+    // client already sends — an id, or just the subdomain the school-
+    // selection step recorded before any id existed (`common/utils/storage.ts`
+    // `hasKnownTenant`). With neither there is nobody to be branded as, and
+    // the sign-in screen stays in the app's own colours.
+    const known = await hasKnownTenant();
+    if (!known) return;
     try {
       const data = await apiGet<BrandingResponse>('/api/auth/tenant-branding');
       const colors = data?.theme?.colors ?? null;

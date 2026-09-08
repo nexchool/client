@@ -10,6 +10,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/modules/auth/context/AuthContext";
+import { seedBakedTenant } from "@/modules/auth/bootstrap/seedBakedTenant";
 import { checkAndFetchUpdateInBackground } from "@/common/utils/checkForAppUpdate";
 import { initI18n } from "@/i18n";
 import { ThemeProvider } from "@/common/theme";
@@ -25,10 +26,12 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [i18nReady, setI18nReady] = useState(false);
-  // Read from cache before the first paint, then corrected from the server.
-  // The tenant is read from storage inside the hook, because this sits above
-  // AuthProvider on purpose — see the ErrorBoundary note below.
-  const { palette: tenantPalette } = useTenantTheme(null);
+  // Whether `seedBakedTenant` has run. Gates mounting `RootLayoutReady` below
+  // — not just a background task — because that is where `useTenantTheme`
+  // lives, and its first read of the tenant must not race the seed write.
+  // See `seedBakedTenant.ts` for what "the tenant" means here and why a
+  // signed-in session's tenant is never overwritten by it.
+  const [tenantSeeded, setTenantSeeded] = useState(false);
 
   const [fontsLoaded, fontError] = useFonts({
     Inter_400Regular,
@@ -42,10 +45,14 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
-    if ((fontsLoaded || fontError) && i18nReady) {
+    void seedBakedTenant().then(() => setTenantSeeded(true));
+  }, []);
+
+  useEffect(() => {
+    if ((fontsLoaded || fontError) && i18nReady && tenantSeeded) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, fontError, i18nReady]);
+  }, [fontsLoaded, fontError, i18nReady, tenantSeeded]);
 
   useEffect(() => {
     if (!fontsLoaded && !fontError) return;
@@ -53,9 +60,26 @@ export default function RootLayout() {
     void checkAndFetchUpdateInBackground();
   }, [fontsLoaded, fontError, i18nReady]);
 
-  if ((!fontsLoaded && !fontError) || !i18nReady) {
+  if ((!fontsLoaded && !fontError) || !i18nReady || !tenantSeeded) {
     return null;
   }
+
+  return <RootLayoutReady />;
+}
+
+/**
+ * Split out from `RootLayout` so `useTenantTheme` — and everything under
+ * `AuthProvider` that reads the current tenant, starting with the login
+ * screen's `usePublishedAuthMethods` — mounts only once `tenantSeeded` is
+ * true. A baked build's tenant_id is in storage *before* this component
+ * exists, not merely before this component happens to finish an async read,
+ * which is what makes the very first paint branded instead of racing to be.
+ */
+function RootLayoutReady() {
+  // Read from cache before the first paint, then corrected from the server.
+  // The tenant is read from storage inside the hook, because this sits above
+  // AuthProvider on purpose — see the ErrorBoundary note below.
+  const { palette: tenantPalette } = useTenantTheme(null);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
