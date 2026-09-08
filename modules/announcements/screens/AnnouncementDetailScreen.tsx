@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Linking, Modal, Pressable, ScrollView, View } from 'react-native';
+import { Linking, Pressable, ScrollView, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
 import { Text } from '@/common/components/Text';
+import { BottomSheet } from '@/common/components/sheet';
 import { AppIcon } from '@/common/components/AppIcon';
 import { PressScale } from '@/common/components/PressScale';
 import { Skeleton } from '@/common/components/Skeleton';
@@ -306,37 +307,7 @@ export default function AnnouncementDetailScreen() {
         ) : null}
       </ScrollView>
 
-      <Modal
-        visible={recallVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setRecallVisible(false)}
-      >
-        <Pressable
-          onPress={() => setRecallVisible(false)}
-          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' }}
-        >
-          <Pressable
-            onPress={(e) => e.stopPropagation()}
-            style={{
-              marginTop: 'auto',
-              backgroundColor: palette.surfaceContainerLowest,
-              borderTopLeftRadius: radius.xl,
-              borderTopRightRadius: radius.xl,
-              padding: spacing.lg,
-              gap: spacing.md,
-            }}
-          >
-            <View style={{ alignItems: 'center' }}>
-              <View
-                style={{
-                  width: 40,
-                  height: 4,
-                  borderRadius: radius.sm,
-                  backgroundColor: palette.outlineVariant,
-                }}
-              />
-            </View>
+      <BottomSheet visible={recallVisible} onClose={() => setRecallVisible(false)}>
             <Text variant="headlineMd" color="onSurface">
               {t('recall.title', { defaultValue: 'Recall announcement' })}
             </Text>
@@ -370,9 +341,7 @@ export default function AnnouncementDetailScreen() {
                 </Button>
               </View>
             </View>
-          </Pressable>
-        </Pressable>
-      </Modal>
+      </BottomSheet>
     </View>
   );
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { ContentMaxWidth, useTheme } from '@/common/theme';
 import { Text } from '@/common/components/Text';
 import { AppIcon } from '@/common/components/AppIcon';
@@ -41,15 +41,25 @@ export function BottomSheet({
         accessibilityLabel={dismissOnBackdropPress ? 'Dismiss' : undefined}
       />
       {/*
-        Two views, because an absolutely-positioned card cannot centre itself:
-        with left and right both pinned, alignSelf has nothing to act on. The
-        outer one spans the bottom edge and centres; the card inside it takes
-        the content width.
+        Two elements, because an absolutely-positioned card cannot centre
+        itself: with left and right both pinned, alignSelf has nothing to act
+        on. The outer one spans the bottom edge and centres; the card inside it
+        takes the content width. Without it a picker on a 1366pt iPad is a
+        1366pt-wide card with its options strung across it. On any phone the
+        cap never binds.
 
-        Without this a picker on a 1366pt iPad is a 1366pt-wide card with its
-        options strung across it. On any phone the cap never binds.
+        That outer element is a KeyboardAvoidingView rather than a plain View
+        because a sheet is anchored to the bottom edge — exactly where the
+        keyboard comes up. Without it a text field in the lower half of any
+        sheet is covered the moment it is focused, and on a form the submit
+        button beneath it cannot be reached at all.
+
+        iOS needs `padding` named explicitly; Android resizes the window itself
+        (`adjustResize`, Expo's default), and naming a behaviour there makes
+        the two mechanisms fight — hence `undefined` rather than `height`.
       */}
-      <View
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{
           position: 'absolute',
           bottom: 0,
@@ -58,30 +68,30 @@ export function BottomSheet({
           alignItems: 'center',
         }}
       >
-      <View
-        style={{
-          width: '100%',
-          maxWidth: ContentMaxWidth,
-          backgroundColor: palette.surfaceContainerLowest,
-          borderTopLeftRadius: radius.xl,
-          borderTopRightRadius: radius.xl,
-          padding: spacing.lg,
-          paddingBottom: spacing.xl,
-          gap: spacing.md,
-        }}
-      >
         <View
           style={{
-            alignSelf: 'center',
-            width: 36,
-            height: 4,
-            borderRadius: 2,
-            backgroundColor: palette.outlineVariant,
+            width: '100%',
+            maxWidth: ContentMaxWidth,
+            backgroundColor: palette.surfaceContainerLowest,
+            borderTopLeftRadius: radius.xl,
+            borderTopRightRadius: radius.xl,
+            padding: spacing.lg,
+            paddingBottom: spacing.xl,
+            gap: spacing.md,
           }}
-        />
-        {children}
-      </View>
-      </View>
+        >
+          <View
+            style={{
+              alignSelf: 'center',
+              width: 36,
+              height: 4,
+              borderRadius: 2,
+              backgroundColor: palette.outlineVariant,
+            }}
+          />
+          {children}
+        </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

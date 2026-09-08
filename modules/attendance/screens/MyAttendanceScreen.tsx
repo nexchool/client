@@ -1,11 +1,12 @@
 import React, { useMemo, useState } from 'react';
-import { Modal, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
 import { useMyAttendanceV2 } from '@/modules/academics/hooks/useAcademicQueries';
 import { AppIcon } from '@/common/components/AppIcon';
 import { Text } from '@/common/components/Text';
+import { BottomSheet } from '@/common/components/sheet';
 import { HomeKpiCard } from '@/modules/home/components/HomeKpiCard';
 import { ProgressRing } from '@/modules/home/components/ProgressRing';
 import { Skeleton } from '@/common/components/Skeleton';
@@ -246,36 +247,18 @@ export default function MyAttendanceScreen() {
       </ScrollView>
 
       {/* Day detail modal */}
-      <Modal visible={!!selectedCell} transparent animationType="slide" onRequestClose={() => setSelectedCell(null)}>
-        <Pressable style={[StyleSheet.absoluteFillObject, styles.scrim]} onPress={() => setSelectedCell(null)} />
-        <View
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            backgroundColor: palette.surfaceContainerLowest,
-            borderTopLeftRadius: radius.xl,
-            borderTopRightRadius: radius.xl,
-            padding: spacing.lg,
-            paddingBottom: spacing.xl,
-          }}
-        >
-          <View style={{ alignSelf: 'center', width: 36, height: 4, borderRadius: 2, backgroundColor: palette.outlineVariant }} />
-          <Text variant="headlineMd" color="onSurface" style={{ marginTop: spacing.md }}>
+      <BottomSheet visible={!!selectedCell} onClose={() => setSelectedCell(null)}>
+          <Text variant="headlineMd" color="onSurface">
             {selectedCell ? new Date(selectedCell.date).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' }) : ''}
           </Text>
-          <Text variant="bodyMd" color={colorFor(selectedCell?.status ?? null)} style={{ marginTop: spacing.sm }}>
+          <Text variant="bodyMd" color={colorFor(selectedCell?.status ?? null)}>
             {selectedCell?.status ? selectedCell.status.toUpperCase() : '—'}
           </Text>
-        </View>
-      </Modal>
+      </BottomSheet>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  backBtn: { width: 44, height: 44, justifyContent: 'center' },
   weekdayHead: { width: 36, textAlign: 'center' },
-  scrim: { backgroundColor: 'rgba(11, 28, 48, 0.40)' },
 });

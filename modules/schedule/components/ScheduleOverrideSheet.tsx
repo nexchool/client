@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { ScrollView, View, useWindowDimensions } from 'react-native';
 import { Text } from '@/common/components/Text';
+import { BottomSheet } from '@/common/components/sheet';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
@@ -28,7 +29,7 @@ function todayIso(): string {
 export function ScheduleOverrideSheet({ visible, onClose, defaultDate, defaultSlotId }: Props) {
   const { t } = useTranslation('schedule');
   const toast = useToast();
-  const { palette, spacing, radius } = useTheme();
+  const { spacing } = useTheme();
   const { teachers, fetchTeachers } = useTeachers();
   const createMutation = useCreateScheduleOverride();
 
@@ -115,38 +116,12 @@ export function ScheduleOverrideSheet({ visible, onClose, defaultDate, defaultSl
   const sheetMaxHeight = windowHeight * 0.85;
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable
-        style={[styles.backdrop, { backgroundColor: 'rgba(11, 28, 48, 0.40)' }]}
-        onPress={onClose}
-      />
-      <View
-        style={[
-          styles.sheet,
-          {
-            backgroundColor: palette.surfaceContainerLowest,
-            borderTopLeftRadius: radius.xl,
-            borderTopRightRadius: radius.xl,
-            padding: spacing.lg,
-            paddingBottom: spacing.xl,
-            maxHeight: sheetMaxHeight,
-          },
-        ]}
-      >
-        <View
-          style={{
-            alignSelf: 'center',
-            width: 40,
-            height: 4,
-            borderRadius: 2,
-            backgroundColor: palette.outlineVariant,
-            marginBottom: spacing.md,
-          }}
-        />
+    <BottomSheet visible={visible} onClose={onClose} dismissOnBackdropPress={false}>
         <Text variant="headlineMd" color="onSurface">
           {t('override.title', { defaultValue: 'Override period' })}
         </Text>
         <ScrollView
+          style={{ maxHeight: sheetMaxHeight }}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingVertical: spacing.md, gap: spacing.md }}
           keyboardShouldPersistTaps="handled"
@@ -221,12 +196,7 @@ export function ScheduleOverrideSheet({ visible, onClose, defaultDate, defaultSl
             </Button>
           </View>
         </View>
-      </View>
-    </Modal>
+    </BottomSheet>
   );
 }
 
-const styles = StyleSheet.create({
-  backdrop: { ...StyleSheet.absoluteFillObject },
-  sheet: { position: 'absolute', bottom: 0, left: 0, right: 0 },
-});

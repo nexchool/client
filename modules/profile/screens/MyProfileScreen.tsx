@@ -6,7 +6,6 @@ import {
   Pressable,
   ActivityIndicator,
   Platform,
-  Modal,
   Linking,
 } from "react-native";
 import Constants from "expo-constants";
@@ -15,6 +14,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import { useTheme } from "@/common/theme";
 import { Text } from "@/common/components/Text";
+import { BottomSheet } from "@/common/components/sheet";
 import { AppIcon } from "@/common/components/AppIcon";
 import { Button } from "@/common/components/Button";
 import { DetailCard } from "@/common/components/DetailCard";
@@ -89,45 +89,17 @@ function LanguageSheet({
   const { confirm } = useDialog();
   const toast = useToast();
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-      statusBarTranslucent
-    >
-      <Pressable
-        style={[styles.backdrop, { backgroundColor: "rgba(11, 28, 48, 0.40)" }]}
-        onPress={onClose}
-      />
-      <View
-        style={[
-          styles.sheet,
-          {
-            backgroundColor: palette.surfaceContainerLowest,
-            borderTopLeftRadius: radius.xl,
-            borderTopRightRadius: radius.xl,
-            padding: spacing.lg,
-            paddingBottom: spacing.xl,
-          },
-        ]}
-      >
-        <View
-          style={[
-            styles.handle,
-            { backgroundColor: palette.outlineVariant, alignSelf: "center" },
-          ]}
-        />
-        <Text variant="headlineMd" color="onSurface" style={{ marginTop: spacing.md }}>
+    <BottomSheet visible={visible} onClose={onClose}>
+        <Text variant="headlineMd" color="onSurface">
           {t("languageSheet.title", { defaultValue: "Language" })}
         </Text>
-        <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
+        <Text variant="bodyMd" color="onSurfaceVariant">
           {t("languageSheet.subtitle", {
             defaultValue: "Choose your preferred language.",
           })}
         </Text>
 
-        <View style={{ marginTop: spacing.lg, gap: spacing.sm }}>
+        <View style={{ gap: spacing.sm }}>
           {SUPPORTED_LANGUAGES.map((lng) => {
             const isSelected = lng === current;
             return (
@@ -167,8 +139,7 @@ function LanguageSheet({
             {t("languageSheet.cancel", { defaultValue: "Cancel" })}
           </Button>
         </View>
-      </View>
-    </Modal>
+    </BottomSheet>
   );
 }
 
@@ -668,18 +639,4 @@ export default function MyProfileScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   loadingFill: { flex: 1, justifyContent: "center", alignItems: "center" },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  sheet: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  handle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-  },
 });

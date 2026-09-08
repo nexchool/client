@@ -1,9 +1,10 @@
 // client/modules/student-leaves/components/CancelRequestSheet.tsx
 import React, { useState } from 'react';
-import { Modal, Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
 import { Text } from '@/common/components/Text';
+import { BottomSheet } from '@/common/components/sheet';
 import { Input } from '@/common/components/Input';
 import { Button } from '@/common/components/Button';
 import { Link } from '@/common/components/Link';
@@ -17,7 +18,7 @@ type Props = {
 
 export function CancelRequestSheet({ visible, onClose, onSubmit, loading }: Props) {
   const { t } = useTranslation('studentLeaves');
-  const { palette, spacing, radius } = useTheme();
+  const { spacing } = useTheme();
   const [reason, setReason] = useState('');
 
   const handleSubmit = async () => {
@@ -27,22 +28,7 @@ export function CancelRequestSheet({ visible, onClose, onSubmit, loading }: Prop
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable onPress={onClose} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' }}>
-        <Pressable
-          onPress={(e) => e.stopPropagation()}
-          style={{
-            marginTop: 'auto',
-            backgroundColor: palette.surfaceContainerLowest,
-            borderTopLeftRadius: radius.xl,
-            borderTopRightRadius: radius.xl,
-            padding: spacing.lg,
-            gap: spacing.md,
-          }}
-        >
-          <View style={{ alignItems: 'center' }}>
-            <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: palette.outlineVariant }} />
-          </View>
+    <BottomSheet visible={visible} onClose={onClose} dismissOnBackdropPress={false}>
           <Text variant="headlineMd" color="onSurface">
             {t('cancel.title', { defaultValue: 'Request cancellation' })}
           </Text>
@@ -63,8 +49,6 @@ export function CancelRequestSheet({ visible, onClose, onSubmit, loading }: Prop
               </Button>
             </View>
           </View>
-        </Pressable>
-      </Pressable>
-    </Modal>
+    </BottomSheet>
   );
 }

@@ -7,7 +7,6 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   View,
-  Modal,
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
@@ -15,6 +14,8 @@ import {
 import * as DocumentPicker from "expo-document-picker";
 import { useTheme } from "@/common/theme";
 import { Text } from "@/common/components/Text";
+import { BottomSheet } from "@/common/components/sheet";
+import { useModalBodyHeight } from "@/common/hooks/useModalBodyHeight";
 import { AppIcon } from "@/common/components/AppIcon";
 import {
   DOCUMENT_TYPES,
@@ -48,6 +49,7 @@ export function UploadDocumentModal({
   const { t } = useTranslation("profile");
   const toast = useToast();
   const { palette, spacing, radius } = useTheme();
+  const bodyHeight = useModalBodyHeight(460);
   const [documentType, setDocumentType] = useState<DocumentTypeValue | "">("");
   const [selectedFile, setSelectedFile] = useState<{
     uri: string;
@@ -134,33 +136,13 @@ export function UploadDocumentModal({
   };
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={handleClose}
-    >
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: "rgba(0,0,0,0.5)",
-          justifyContent: "flex-end",
-        }}
-      >
-        <View
-          style={{
-            backgroundColor: palette.surface,
-            borderTopLeftRadius: radius.lg,
-            borderTopRightRadius: radius.lg,
-            maxHeight: "80%",
-          }}
-        >
+    <BottomSheet visible={visible} onClose={handleClose} dismissOnBackdropPress={false}>
           <View
             style={{
               flexDirection: "row",
               justifyContent: "space-between",
               alignItems: "center",
-              padding: spacing.lg,
+              paddingBottom: spacing.md,
               borderBottomWidth: 1,
               borderBottomColor: palette.outlineVariant,
             }}
@@ -177,7 +159,7 @@ export function UploadDocumentModal({
             />
           </View>
 
-          <ScrollView style={{ padding: spacing.lg }} keyboardShouldPersistTaps="handled">
+          <ScrollView style={{ maxHeight: bodyHeight }} keyboardShouldPersistTaps="handled">
             {/* Document Type */}
             <Text variant="labelMd" color="onSurfaceVariant" style={{ marginBottom: spacing.xs }}>
               {t("uploadModal.documentType")}
@@ -332,8 +314,6 @@ export function UploadDocumentModal({
               )}
             </TouchableOpacity>
           </View>
-        </View>
-      </View>
-    </Modal>
+    </BottomSheet>
   );
 }

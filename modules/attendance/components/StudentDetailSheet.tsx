@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
 import { Button } from '@/common/components/Button';
 import { Text } from '@/common/components/Text';
+import { BottomSheet } from '@/common/components/sheet';
 import { ProfileAvatar } from '@/common/components/ProfileAvatar';
 import { AttendanceStatusSegmented, type AttendanceStatus } from './AttendanceStatusSegmented';
 
@@ -42,32 +43,7 @@ export function StudentDetailSheet({
   }, [visible, currentStatus, currentRemarks]);
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable
-        style={[StyleSheet.absoluteFillObject, { backgroundColor: 'rgba(11, 28, 48, 0.40)' }]}
-        onPress={onClose}
-      />
-      <View
-        style={[
-          styles.sheet,
-          {
-            backgroundColor: palette.surfaceContainerLowest,
-            borderTopLeftRadius: radius.xl,
-            borderTopRightRadius: radius.xl,
-            padding: spacing.lg,
-            paddingBottom: spacing.xl,
-          },
-        ]}
-      >
-        <View
-          style={{
-            alignSelf: 'center',
-            width: 36,
-            height: 4,
-            borderRadius: 2,
-            backgroundColor: palette.outlineVariant,
-          }}
-        />
+    <BottomSheet visible={visible} onClose={onClose} dismissOnBackdropPress={false}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: spacing.md }}>
           <ProfileAvatar size={48} name={studentName} />
           <View style={{ flex: 1 }}>
@@ -130,11 +106,7 @@ export function StudentDetailSheet({
             </View>
           ) : null}
         </View>
-      </View>
-    </Modal>
+    </BottomSheet>
   );
 }
 
-const styles = StyleSheet.create({
-  sheet: { position: 'absolute', bottom: 0, left: 0, right: 0 },
-});
