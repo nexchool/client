@@ -43,7 +43,11 @@ function AdminFinanceDashboard() {
   // trend that the finance summary endpoint does not. Reused honestly (labeled
   // "last 7 days"). Admin dashboard aggregate; the finance section is rendered
   // only when feature_flags.fees_management is on.
-  const { data: adminData } = useAdminDashboard();
+  // Refetched alongside the finance summary, not just read. Pull-to-refresh
+  // used to call refetch() for the summary alone, so the KPIs above the chart
+  // updated and the chart itself did not — the two halves of this screen come
+  // from two different queries.
+  const { data: adminData, refetch: refetchAdmin } = useAdminDashboard();
   const finance = adminData?.finance;
   const collectionSeries = finance?.last_7_days_collection ?? [];
   const trendPct = finance?.trend_percentage ?? 0;
@@ -87,7 +91,15 @@ function AdminFinanceDashboard() {
         gap: spacing.lg,
         paddingBottom: spacing.scrollBottom,
       }}
-      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} />}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefetching}
+          onRefresh={() => {
+            void refetch();
+            void refetchAdmin();
+          }}
+        />
+      }
       showsVerticalScrollIndicator={false}
     >
       <View>

@@ -49,7 +49,9 @@
     "goToStudentFees": "छात्र शुल्क पर जाएँ",
     "overdueTrend": "ध्यान देने योग्य",
     "collectionChartTitle": "शुल्क संग्रह",
-    "collectionChartSubtitle": "पिछले 7 दिन"
+    "collectionChartSubtitle": "पिछले 7 दिन",
+    "chartEmpty": "पिछले 7 दिनों में कोई फ़ीस संग्रह नहीं।",
+    "chartTotalLabel": "इस सप्ताह संग्रहित"
   },
   "feeFilters": {
     "all": "सभी",

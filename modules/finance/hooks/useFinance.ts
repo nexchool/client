@@ -7,6 +7,7 @@ import { financeService, type CreateInvoicePayload } from "../services/financeSe
 import { academicYearService } from "../services/academicYearService";
 import { financeClassService } from "../services/classService";
 import { studentService } from "@/modules/students/services/studentService";
+import { dashboardKeys } from "@/modules/dashboard/hooks/useAdminDashboard";
 import type {
   CreateStructureInput,
   UpdateStructureInput,
@@ -73,6 +74,7 @@ export function useCreateStructure() {
       qc.invalidateQueries({ queryKey: KEYS.summary });
       qc.invalidateQueries({ queryKey: KEYS.studentFees });
       qc.invalidateQueries({ queryKey: ["finance", "dashboard"] });
+      qc.invalidateQueries({ queryKey: dashboardKeys.admin });
     },
   });
 }
@@ -89,6 +91,7 @@ export function useUpdateStructure() {
       qc.invalidateQueries({ queryKey: KEYS.studentFees });
       qc.invalidateQueries({ queryKey: KEYS.summary });
       qc.invalidateQueries({ queryKey: ["finance", "dashboard"] });
+      qc.invalidateQueries({ queryKey: dashboardKeys.admin });
     },
   });
 }
@@ -103,6 +106,7 @@ export function useDeleteStructure() {
       qc.invalidateQueries({ queryKey: KEYS.studentFees });
       qc.invalidateQueries({ queryKey: KEYS.summary });
       qc.invalidateQueries({ queryKey: ["finance", "dashboard"] });
+      qc.invalidateQueries({ queryKey: dashboardKeys.admin });
     },
   });
 }
@@ -177,6 +181,7 @@ export function useDeleteStudentFee() {
         qc.invalidateQueries({ queryKey: KEYS.studentFee(id) }),
         qc.invalidateQueries({ queryKey: KEYS.summary }),
         qc.invalidateQueries({ queryKey: ["finance", "dashboard"] }),
+        qc.invalidateQueries({ queryKey: dashboardKeys.admin }),
         qc.invalidateQueries({
           queryKey: ["finance", "recentPayments"],
           refetchType: "all",
@@ -203,6 +208,7 @@ export function useRecordPayment() {
       qc.invalidateQueries({ queryKey: KEYS.summary });
       qc.invalidateQueries({ queryKey: ["finance", "dashboard"] });
       qc.invalidateQueries({ queryKey: ["finance", "recentPayments"] });
+      qc.invalidateQueries({ queryKey: dashboardKeys.admin });
     },
   });
 }
@@ -217,6 +223,7 @@ export function useRefundPayment(studentFeeId?: string) {
       qc.invalidateQueries({ queryKey: ["finance", "recentPayments"] });
       qc.invalidateQueries({ queryKey: KEYS.summary });
       qc.invalidateQueries({ queryKey: ["finance", "dashboard"] });
+      qc.invalidateQueries({ queryKey: dashboardKeys.admin });
       if (studentFeeId) {
         qc.invalidateQueries({ queryKey: KEYS.studentFee(studentFeeId) });
       }
@@ -233,6 +240,7 @@ export function useCreateInvoice() {
       qc.invalidateQueries({ queryKey: ["fees"] });
       qc.invalidateQueries({ queryKey: KEYS.summary });
       qc.invalidateQueries({ queryKey: ["finance", "dashboard"] });
+      qc.invalidateQueries({ queryKey: dashboardKeys.admin });
     },
   });
 }

@@ -49,7 +49,9 @@
     "goToStudentFees": "Go to Student Fees",
     "overdueTrend": "Needs attention",
     "collectionChartTitle": "Fee Collection",
-    "collectionChartSubtitle": "Last 7 days"
+    "collectionChartSubtitle": "Last 7 days",
+    "chartEmpty": "No fee collections in the last 7 days.",
+    "chartTotalLabel": "Collected this week"
   },
   "feeFilters": {
     "all": "All",

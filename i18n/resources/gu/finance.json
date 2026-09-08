@@ -49,7 +49,9 @@
     "goToStudentFees": "વિદ્યાર્થી ફી પર જાઓ",
     "overdueTrend": "ધ્યાન જરૂરી",
     "collectionChartTitle": "ફી સંગ્રહ",
-    "collectionChartSubtitle": "છેલ્લા 7 દિવસ"
+    "collectionChartSubtitle": "છેલ્લા 7 દિવસ",
+    "chartEmpty": "છેલ્લા 7 દિવસમાં કોઈ ફી વસૂલાત નથી.",
+    "chartTotalLabel": "આ અઠવાડિયે વસૂલ"
   },
   "feeFilters": {
     "all": "બધા",

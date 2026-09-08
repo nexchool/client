@@ -8,6 +8,7 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
+import { dashboardKeys } from "@/modules/dashboard/hooks/useAdminDashboard";
 import { feesService } from "../services/feesService";
 import type {
   CreateInvoiceInput,
@@ -82,6 +83,8 @@ export function useRecordPayment(invoiceId?: string) {
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: KEYS.invoice(vars.invoice_id) });
       qc.invalidateQueries({ queryKey: KEYS.invoices });
+      // An invoice payment is money collected too — it moves the same bars.
+      qc.invalidateQueries({ queryKey: dashboardKeys.admin });
     },
   });
 }
