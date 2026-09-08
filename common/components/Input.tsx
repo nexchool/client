@@ -30,6 +30,21 @@ type Props = {
   autoCapitalize?: TextInputProps['autoCapitalize'];
   disabled?: boolean;
   testID?: string;
+  /**
+   * 'outlined' (default) is every existing caller: a hairline border visible
+   * at rest, white/`surfaceContainerLowest` fill. 'filled' is the sign-in
+   * screen's soft-tint treatment — border only appears for focus/error
+   * feedback, not at rest, so the field itself (not a border) is the
+   * affordance. Scoped to a prop rather than a new default so the other 15
+   * call sites of this component are pixel-unchanged.
+   */
+  variant?: 'outlined' | 'filled';
+  /** Field corner radius override. Defaults to `radius.DEFAULT` (8), matching
+   * every existing caller. */
+  cornerRadius?: number;
+  /** Gap between the label row and the field box. Defaults to 8 (existing
+   * behavior). */
+  labelGap?: number;
 };
 
 export function Input({
@@ -48,16 +63,21 @@ export function Input({
   autoCapitalize,
   disabled,
   testID,
+  variant = 'outlined',
+  cornerRadius,
+  labelGap = 8,
 }: Props) {
   const { palette, spacing, radius, typography, elevation } = useTheme();
   const [focused, setFocused] = useState(false);
+  const isFilled = variant === 'filled';
 
   const borderColor = error
     ? palette.error
     : focused
     ? palette.primary
     : palette.outlineVariant;
-  const borderWidth = error || focused ? 1.5 : 1;
+  const showBorder = !isFilled || !!error || focused;
+  const borderWidth = showBorder ? (error || focused ? 1.5 : 1) : 0;
 
   const helperColor = error ? palette.error : palette.onSurfaceVariant;
   const helperText = error ?? helper ?? ' '; // reserve height
@@ -68,7 +88,7 @@ export function Input({
         <Text maxFontSizeMultiplier={FontScaleCap.labelMd}
           style={[
             typography.labelMd,
-            { color: palette.onSurfaceVariant, marginBottom: 8, includeFontPadding: false },
+            { color: palette.onSurfaceVariant, marginBottom: labelGap, includeFontPadding: false },
           ]}
         >
           {label}
@@ -79,8 +99,12 @@ export function Input({
         style={[
           styles.fieldWrap,
           {
-            backgroundColor: disabled ? palette.surfaceContainer : palette.surfaceContainerLowest,
-            borderRadius: radius.DEFAULT,
+            backgroundColor: disabled
+              ? palette.surfaceContainer
+              : isFilled
+              ? palette.surfaceContainerLow
+              : palette.surfaceContainerLowest,
+            borderRadius: cornerRadius ?? radius.DEFAULT,
             borderColor,
             borderWidth,
             paddingHorizontal: spacing.md,

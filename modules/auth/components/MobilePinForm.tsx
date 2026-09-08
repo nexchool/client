@@ -7,6 +7,7 @@ import { Text } from '@/common/components/Text';
 import { Input } from '@/common/components/Input';
 import { Link } from '@/common/components/Link';
 import { AuthPrimaryButton } from '@/modules/auth/components/AuthPrimaryButton';
+import { PasswordVisibilityToggle } from '@/modules/auth/components/PasswordVisibilityToggle';
 import { TermsAgreement } from '@/modules/auth/components/TermsAgreement';
 import { PIN_LENGTH, useMobilePinLogin } from '@/modules/auth/hooks/useMobilePinLogin';
 import { isLoginFieldError } from '@/modules/auth/errors/LoginFieldError';
@@ -34,7 +35,7 @@ type Props = {
  */
 export function MobilePinForm({ onBack, onUseOtp }: Props) {
   const { t } = useTranslation('auth');
-  const { spacing, palette, iconSize } = useTheme();
+  const { spacing, palette, radius, iconSize } = useTheme();
 
   const [mobile, setMobile] = useState('');
   const [pin, setPin] = useState('');
@@ -66,19 +67,19 @@ export function MobilePinForm({ onBack, onUseOtp }: Props) {
       <Text
         variant="display"
         color="onSurface"
-        style={{ textAlign: 'center', marginTop: spacing.xl }}
+        style={{ textAlign: 'center' }}
       >
         {t('welcomeBack')}
       </Text>
       <Text
         variant="bodyMd"
         color="onSurfaceVariant"
-        style={{ textAlign: 'center', marginTop: spacing.xs }}
+        style={{ textAlign: 'center', marginTop: spacing[6] }}
       >
         {t('pinSubtitle')}
       </Text>
 
-      <View style={{ marginTop: spacing.xl, gap: spacing.md }}>
+      <View style={{ marginTop: spacing.lg }}>
         <Input
           label={t('mobileLabel')}
           placeholder={t('mobilePlaceholder')}
@@ -89,6 +90,9 @@ export function MobilePinForm({ onBack, onUseOtp }: Props) {
           autoCapitalize="none"
           error={mobileError}
           leftIcon={<Ionicons name="call-outline" size={iconSize.md} color={palette.onSurfaceVariant} />}
+          variant="filled"
+          cornerRadius={radius[14]}
+          labelGap={spacing[6]}
         />
 
         <Input
@@ -107,13 +111,10 @@ export function MobilePinForm({ onBack, onUseOtp }: Props) {
           autoCapitalize="none"
           error={pinError}
           leftIcon={<Ionicons name="lock-closed-outline" size={iconSize.md} color={palette.onSurfaceVariant} />}
-          rightSlot={
-            <Link onPress={() => setShowPin((s) => !s)}>
-              {showPin
-                ? t('hide', { defaultValue: 'Hide' })
-                : t('show', { defaultValue: 'Show' })}
-            </Link>
-          }
+          variant="filled"
+          cornerRadius={radius[14]}
+          labelGap={spacing[6]}
+          rightSlot={<PasswordVisibilityToggle visible={showPin} onToggle={() => setShowPin((s) => !s)} />}
         />
       </View>
 
@@ -127,7 +128,7 @@ export function MobilePinForm({ onBack, onUseOtp }: Props) {
         </Text>
       ) : null}
 
-      <View style={{ marginTop: spacing.lg, paddingBottom: 32, gap: spacing.md }}>
+      <View style={{ marginTop: spacing[10], paddingBottom: spacing.xl, gap: spacing.sm }}>
         <AuthPrimaryButton fullWidth loading={loading} onPress={handleSubmit}>
           {t('signIn')}
         </AuthPrimaryButton>

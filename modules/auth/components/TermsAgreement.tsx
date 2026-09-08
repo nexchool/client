@@ -38,7 +38,7 @@ export function TermsAgreement() {
   const { spacing } = useTheme();
 
   return (
-    <View style={{ marginTop: spacing.sm }}>
+    <View style={{ marginTop: spacing[12] }}>
       <Text variant="labelSm" color="onSurfaceVariant" style={{ textAlign: 'center' }}>
         {t('termsAgreementPrefix')}{' '}
         <Text variant="labelSm" color="primary" onPress={() => void Linking.openURL(TERMS_URL)}>

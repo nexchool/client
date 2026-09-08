@@ -39,7 +39,7 @@ type Step = 'mobile' | 'code';
  */
 export function MobileOtpForm({ onBack, onUsePin }: Props) {
   const { t } = useTranslation('auth');
-  const { spacing, palette, iconSize } = useTheme();
+  const { spacing, palette, radius, iconSize } = useTheme();
 
   const [step, setStep] = useState<Step>('mobile');
   const [mobile, setMobile] = useState('');
@@ -85,19 +85,19 @@ export function MobileOtpForm({ onBack, onUsePin }: Props) {
         <Text
           variant="display"
           color="onSurface"
-          style={{ textAlign: 'center', marginTop: spacing.xl }}
+          style={{ textAlign: 'center' }}
         >
           {t('welcomeBack')}
         </Text>
         <Text
           variant="bodyMd"
           color="onSurfaceVariant"
-          style={{ textAlign: 'center', marginTop: spacing.xs }}
+          style={{ textAlign: 'center', marginTop: spacing[6] }}
         >
           {t('otpSubtitle')}
         </Text>
 
-        <View style={{ marginTop: spacing.xl, gap: spacing.md }}>
+        <View style={{ marginTop: spacing.lg }}>
           <Input
             label={t('mobileLabel')}
             placeholder={t('mobilePlaceholder')}
@@ -108,6 +108,9 @@ export function MobileOtpForm({ onBack, onUsePin }: Props) {
             autoCapitalize="none"
             error={mobileError}
             leftIcon={<Ionicons name="call-outline" size={iconSize.md} color={palette.onSurfaceVariant} />}
+            variant="filled"
+            cornerRadius={radius[14]}
+            labelGap={spacing[6]}
           />
         </View>
 
@@ -121,7 +124,7 @@ export function MobileOtpForm({ onBack, onUsePin }: Props) {
           </Text>
         ) : null}
 
-        <View style={{ marginTop: spacing.lg, paddingBottom: 32, gap: spacing.md }}>
+        <View style={{ marginTop: spacing[10], paddingBottom: spacing.xl, gap: spacing.sm }}>
           <AuthPrimaryButton fullWidth loading={requestLoading} onPress={handleRequestCode}>
             {t('sendCode')}
           </AuthPrimaryButton>
@@ -149,19 +152,19 @@ export function MobileOtpForm({ onBack, onUsePin }: Props) {
       <Text
         variant="display"
         color="onSurface"
-        style={{ textAlign: 'center', marginTop: spacing.xl }}
+        style={{ textAlign: 'center' }}
       >
         {t('welcomeBack')}
       </Text>
       <Text
         variant="bodyMd"
         color="onSurfaceVariant"
-        style={{ textAlign: 'center', marginTop: spacing.xs }}
+        style={{ textAlign: 'center', marginTop: spacing[6] }}
       >
         {t('otpSentHelp')}
       </Text>
 
-      <View style={{ marginTop: spacing.xl, gap: spacing.md }}>
+      <View style={{ marginTop: spacing.lg }}>
         <Input
           label={t('otpLabel')}
           placeholder={t('otpPlaceholder')}
@@ -174,6 +177,9 @@ export function MobileOtpForm({ onBack, onUsePin }: Props) {
           autoCapitalize="none"
           error={codeError}
           leftIcon={<Ionicons name="keypad-outline" size={iconSize.md} color={palette.onSurfaceVariant} />}
+          variant="filled"
+          cornerRadius={radius[14]}
+          labelGap={spacing[6]}
         />
       </View>
 
@@ -187,7 +193,7 @@ export function MobileOtpForm({ onBack, onUsePin }: Props) {
         </Text>
       ) : null}
 
-      <View style={{ marginTop: spacing.lg, paddingBottom: 32, gap: spacing.md }}>
+      <View style={{ marginTop: spacing[10], paddingBottom: spacing.xl, gap: spacing.sm }}>
         <AuthPrimaryButton fullWidth loading={verifyLoading} onPress={handleVerifyCode}>
           {t('signIn')}
         </AuthPrimaryButton>

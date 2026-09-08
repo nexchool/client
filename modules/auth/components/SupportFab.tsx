@@ -9,6 +9,16 @@ import { PressScale } from '@/common/components/PressScale';
 const SUPPORT_EMAIL = 'hello@nexchool.in';
 
 /**
+ * Clearance above the safe-area inset, sized to clear `AuthTrustFooter`'s
+ * two-line block (shield + trust line, then copyright) rather than just
+ * `spacing.lg` — on a device with a home indicator, the old offset put this
+ * FAB directly on top of that text (reported against the owner's own
+ * screenshot). Not itself a spacing-scale value: it is a measurement of a
+ * sibling component's footprint, not a rhythm step.
+ */
+const FOOTER_CLEARANCE = 72;
+
+/**
  * Circular support shortcut, bottom-right — admin-web's `<a href="mailto:">`
  * FAB, ported to a `Pressable` opening the same mailto link via `Linking`.
  * Rendered as a sibling of `ScreenContainer` (absolutely positioned) rather
@@ -40,7 +50,7 @@ export function SupportFab() {
       style={[
         {
           position: 'absolute',
-          bottom: insets.bottom + spacing.lg,
+          bottom: insets.bottom + FOOTER_CLEARANCE,
           right: insets.right + spacing.lg,
           width: 48,
           height: 48,

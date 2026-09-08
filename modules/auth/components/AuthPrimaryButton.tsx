@@ -48,8 +48,8 @@ export function AuthPrimaryButton({ children, onPress, loading = false, disabled
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={{
-          height: 56,
-          borderRadius: radius.DEFAULT,
+          height: 52,
+          borderRadius: radius[14],
           alignItems: 'center',
           justifyContent: 'center',
           flexDirection: 'row',

@@ -24,16 +24,18 @@ export function AuthCard({ children }: Props) {
       style={[
         {
           backgroundColor: palette.surfaceContainerLowest,
-          borderRadius: radius.lg,
+          borderRadius: radius[20],
           borderWidth: 1,
           borderColor: palette.outlineVariant,
-          padding: spacing.xl,
+          paddingHorizontal: spacing.lg,
+          paddingTop: spacing[28],
+          paddingBottom: spacing.lg,
         },
-        elevation.card,
+        elevation.floating,
       ]}
     >
       <View style={{ alignItems: 'center' }}>
-        <SchoolIllustration />
+        <SchoolIllustration size={76} />
       </View>
       <View style={{ marginTop: spacing.md }}>{children}</View>
     </View>

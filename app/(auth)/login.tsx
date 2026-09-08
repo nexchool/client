@@ -177,7 +177,17 @@ export default function LoginScreen() {
       <ScreenContainer noHorizontalPadding>
         <BrandHeader branding={branding} loaded={loaded} />
 
-        <View style={{ paddingHorizontal: spacing.marginMobile, marginTop: spacing.xs }}>
+        <View
+          style={{
+            paddingHorizontal: spacing.marginMobile,
+            marginTop: spacing.xs,
+            // Extra breathing room below the trust footer, on top of the
+            // safe-area bottom inset `ScreenContainer`'s SafeAreaView already
+            // reserves — without it the footer's last line can sit flush
+            // against that inset with no visual margin of its own.
+            paddingBottom: spacing.lg,
+          }}
+        >
           <AuthCard>
             {!loaded ? (
               // Rendering the email form here (the old behaviour) is what made
