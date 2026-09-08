@@ -12,10 +12,21 @@ const expoConfig = require('eslint-config-expo/flat');
  */
 const SPACING_SCALE = [0, 2, 4, 8, 12, 16, 20, 24, 32, 40, 48, 96, 120];
 
+/**
+ * `'auto'` is a layout instruction, not a measurement — `marginTop: 'auto'` is
+ * how a footer is pushed to the bottom of a flex column, and there is no
+ * "on-scale" version of it to prefer. The selector matches any Literal that is
+ * not one of the scale numbers, and a string is not one of them, so without
+ * this the rule fired on all five legitimate uses in the app.
+ *
+ * It went unnoticed because the rule was never running on the code that has
+ * them: `expo lint` covers /src, /app and /components, and this project keeps
+ * its screens in modules/ and its primitives in common/.
+ */
 const spacingRule = {
   selector:
     "Property[key.name=/^(padding|margin|gap|rowGap|columnGap)(Top|Bottom|Left|Right|Horizontal|Vertical|Start|End)?$/]" +
-    ` > Literal${SPACING_SCALE.map((n) => `[value!=${n}]`).join('')}`,
+    ` > Literal[value!='auto']${SPACING_SCALE.map((n) => `[value!=${n}]`).join('')}`,
   message:
     'Off-scale spacing. Use useTheme().spacing (xs 4 · sm 8 · md 16 · lg 24 · xl 32), ' +
     'or spacing.scrollBottom / spacing.scrollBottomWithFooter for list insets.',

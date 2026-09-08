@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   FlatList,
-  Modal,
   Pressable,
   StyleSheet,
   View,
@@ -11,6 +10,8 @@ import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
 import { useTheme } from '@/common/theme';
 import { Text } from '@/common/components/Text';
+import { BottomSheet } from '@/common/components/sheet';
+import { useModalBodyHeight } from '@/common/hooks/useModalBodyHeight';
 import { AppIcon } from '@/common/components/AppIcon';
 import { Input } from '@/common/components/Input';
 import { Skeleton } from '@/common/components/Skeleton';
@@ -37,6 +38,7 @@ function initials(name?: string | null): string {
 export function RecordPaymentPicker({ visible, onClose }: Props) {
   const { t } = useTranslation('home');
   const { palette, spacing, radius } = useTheme();
+  const bodyHeight = useModalBodyHeight(420);
   const [searchQuery, setSearchQuery] = useState('');
   // Debounce so typing a name doesn't fire 3 queries per keystroke.
   const debouncedQuery = useDebounce(searchQuery, 350);
@@ -138,39 +140,7 @@ export function RecordPaymentPicker({ visible, onClose }: Props) {
   };
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={handleClose}
-    >
-      <Pressable
-        style={[styles.backdrop, { backgroundColor: 'rgba(0,0,0,0.4)' }]}
-        onPress={handleClose}
-      />
-      <View
-        style={[
-          styles.sheet,
-          {
-            backgroundColor: palette.surfaceContainerLowest,
-            borderTopLeftRadius: radius.xl,
-            borderTopRightRadius: radius.xl,
-            padding: spacing.lg,
-            paddingBottom: spacing.xl,
-            maxHeight: sheetMaxHeight,
-          },
-        ]}
-      >
-        <View
-          style={{
-            alignSelf: 'center',
-            width: 40,
-            height: 4,
-            borderRadius: 2,
-            backgroundColor: palette.outlineVariant,
-            marginBottom: spacing.md,
-          }}
-        />
+    <BottomSheet visible={visible} onClose={handleClose}>
         <Text
           variant="headlineMd"
           color="onSurface"
@@ -204,6 +174,7 @@ export function RecordPaymentPicker({ visible, onClose }: Props) {
             />
           ) : (
             <FlatList
+              style={{ maxHeight: bodyHeight }}
               data={combined}
               keyExtractor={(item) => item.id}
               renderItem={renderItem}
@@ -221,14 +192,11 @@ export function RecordPaymentPicker({ visible, onClose }: Props) {
             />
           )}
         </View>
-      </View>
-    </Modal>
+    </BottomSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { ...StyleSheet.absoluteFillObject },
-  sheet: { position: 'absolute', bottom: 0, left: 0, right: 0 },
   avatar: {
     width: 40,
     height: 40,

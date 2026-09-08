@@ -1,14 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  View, Modal, TextInput,
-  TouchableOpacity, ScrollView, KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { useTheme } from '@/common/theme';
 import { Button } from '@/common/components/Button';
 import { Link } from '@/common/components/Link';
 import { Text } from '@/common/components/Text';
+import { BottomSheet } from '@/common/components/sheet';
+import { useModalBodyHeight } from '@/common/hooks/useModalBodyHeight';
 import { AppIcon } from '@/common/components/AppIcon';
 import { Holiday, CreateHolidayDTO, HolidayType } from '../types';
 import { validateHolidayData } from '../validation/schemas';
@@ -64,6 +62,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
 }) => {
   const { t } = useTranslation('teacherLeaves');
   const { palette, spacing, radius, typography } = useTheme();
+  const bodyHeight = useModalBodyHeight(460);
   const { bodyMd: bodyMdType } = typography;
   const trZod = useCallback((msg: string) => {
     const key = ZOD_MSG_KEYS[msg];
@@ -186,32 +185,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}
-      >
-        <View
-          style={{
-            backgroundColor: palette.surfaceContainerLowest,
-            borderTopLeftRadius: radius.xl,
-            borderTopRightRadius: radius.xl,
-            height: '90%',
-            paddingHorizontal: spacing.lg,
-            paddingBottom: spacing.lg,
-          }}
-        >
-          {/* Drag handle */}
-          <View style={{ alignItems: 'center', paddingTop: spacing.sm, paddingBottom: spacing.md }}>
-            <View
-              style={{
-                width: 40,
-                height: 4,
-                borderRadius: 2,
-                backgroundColor: palette.outlineVariant,
-              }}
-            />
-          </View>
+    <BottomSheet visible={visible} onClose={onClose} dismissOnBackdropPress={false}>
 
           {/* Header */}
           <View
@@ -252,7 +226,11 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
             </View>
           )}
 
-          <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          <ScrollView
+            style={{ maxHeight: bodyHeight }}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
 
             {/* ─── Holiday Mode Tabs ─────────────────────────────── */}
             <Text variant="labelSm" color="onSurfaceVariant" style={sectionLabelStyle}>{t('holidayForm.sectionSchedule')}</Text>
@@ -302,7 +280,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
             {/* ─── Name ─────────────────────────────────────────── */}
             <Text variant="labelMd" color="onSurface" style={fieldLabelStyle}>{t('holidayForm.nameLabel')}</Text>
             <TextInput
-              style={{
+              style={{ ...typography.bodyMd,
                 backgroundColor: palette.surfaceContainerLow,
                 borderWidth: fieldErrors.name ? 2 : 1,
                 borderColor: fieldErrors.name ? palette.error : palette.outlineVariant,
@@ -534,7 +512,7 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
             {/* ─── Description ─────────────────────────────────── */}
             <Text variant="labelMd" color="onSurface" style={fieldLabelStyle}>{t('holidayForm.descriptionLabel')}</Text>
             <TextInput
-              style={{
+              style={{ ...typography.bodyMd,
                 backgroundColor: palette.surfaceContainerLow,
                 borderWidth: fieldErrors.description ? 2 : 1,
                 borderColor: fieldErrors.description ? palette.error : palette.outlineVariant,
@@ -584,8 +562,6 @@ export const HolidayFormModal: React.FC<HolidayFormModalProps> = ({
               </Button>
             </View>
           </View>
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
+    </BottomSheet>
   );
 };

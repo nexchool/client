@@ -4,11 +4,9 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
-  Pressable,
   ActivityIndicator,
   RefreshControl,
   TextInput,
-  Modal,
   Switch,
   FlatList,
 } from "react-native";
@@ -31,7 +29,9 @@ import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
 import { PressScale } from "@/common/components/PressScale";
 import { EmptyState } from "@/common/components/EmptyState";
+import { FilterChips } from "@/common/components/FilterChips";
 import { PageHeader } from "@/common/components/PageHeader";
+import { BottomSheet } from "@/common/components/sheet";
 import { useModalBodyHeight } from '@/common/hooks/useModalBodyHeight';
 import { useToast } from "@/common/feedback";
 
@@ -49,16 +49,10 @@ export default function FeeStructuresPage() {
   const router = useRouter();
   const { palette, spacing, radius, elevation } = useTheme();
   const { selectedAcademicYearId: contextYearId } = useAcademicYearContext();
-  const [academicYearFilter, setAcademicYearFilter] = useState<string>("");
   const [modalOpen, setModalOpen] = useState(false);
 
   const { data: academicYears = [] } = useAcademicYears(false);
   const { data: classes = [] } = useClasses();
-
-  useEffect(() => {
-    if (contextYearId)
-      setAcademicYearFilter((prev) => (prev === "" ? contextYearId : prev));
-  }, [contextYearId]);
 
   const {
     data: structures = [],
@@ -67,7 +61,7 @@ export default function FeeStructuresPage() {
     refetch,
     isRefetching,
   } = useStructures({
-    academic_year_id: academicYearFilter || undefined,
+    academic_year_id: contextYearId || undefined,
   });
 
   const createMut = useCreateStructure();
@@ -104,11 +98,11 @@ export default function FeeStructuresPage() {
         <AppIcon name="layers" size="lg" color="onPrimaryContainer" />
       </View>
       <View style={{ flex: 1 }}>
-        <Text variant="labelMd" color="onSurface" numberOfLines={1}>
+        <Text variant="titleSm" color="onSurface" numberOfLines={1}>
           {s.name}
         </Text>
         <Text
-          variant="labelSm"
+          variant="bodySm"
           color="onSurfaceVariant"
           numberOfLines={1}
           style={{ marginTop: 2 }}
@@ -157,40 +151,6 @@ export default function FeeStructuresPage() {
           />
         }
       />
-
-      {/* Academic year filter */}
-      <View
-        style={{
-          paddingHorizontal: spacing.marginMobile,
-          paddingTop: spacing.sm,
-          gap: spacing.sm,
-        }}
-      >
-        <Text variant="labelSm" color="onSurfaceVariant">
-          {t("structures.academicYear")}
-        </Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: spacing.sm }}
-        >
-          <Chip
-            active={!academicYearFilter}
-            label={t("common.all")}
-            onPress={() => setAcademicYearFilter("")}
-          />
-          {academicYears.map((ay) => (
-            <Chip
-              key={ay.id}
-              active={academicYearFilter === ay.id}
-              label={ay.name}
-              onPress={() =>
-                setAcademicYearFilter(academicYearFilter === ay.id ? "" : ay.id)
-              }
-            />
-          ))}
-        </ScrollView>
-      </View>
 
       {error ? (
         <View style={{ padding: spacing.lg, alignItems: "center" }}>
@@ -262,36 +222,6 @@ export default function FeeStructuresPage() {
   );
 }
 
-function Chip({
-  active,
-  label,
-  onPress,
-}: {
-  active: boolean;
-  label: string;
-  onPress: () => void;
-}) {
-  const { palette, spacing, radius } = useTheme();
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => ({
-        paddingHorizontal: spacing.md,
-        paddingVertical: spacing.xs,
-        borderRadius: radius.full,
-        backgroundColor: active ? palette.primary : palette.surfaceContainerLow,
-        borderWidth: 1,
-        borderColor: active ? palette.primary : palette.outlineVariant,
-        opacity: pressed ? 0.85 : 1,
-      })}
-    >
-      <Text variant="labelSm" color={active ? "onPrimary" : "onSurface"}>
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
-
 interface StructureModalProps {
   visible: boolean;
   onClose: () => void;
@@ -341,7 +271,7 @@ function StructureModal({
   const modalBodyHeight = useModalBodyHeight(400);
   const { t } = useTranslation("finance");
   const toast = useToast();
-  const { palette, spacing, radius } = useTheme();
+  const { palette, spacing, radius, typography } = useTheme();
   const editing = editingId ? structures.find((s) => s.id === editingId) : null;
 
   const [name, setName] = useState(editing?.name ?? "");
@@ -471,6 +401,7 @@ function StructureModal({
   }));
 
   const inputStyle = {
+    ...typography.bodyMd,
     borderWidth: 1,
     borderColor: palette.outlineVariant,
     borderRadius: radius.md,
@@ -480,32 +411,8 @@ function StructureModal({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent>
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: "rgba(0,0,0,0.5)",
-          justifyContent: "flex-end",
-        }}
-      >
-        <View
-          style={{
-            backgroundColor: palette.surface,
-            borderTopLeftRadius: radius.xl,
-            borderTopRightRadius: radius.xl,
-            maxHeight: "90%",
-          }}
-        >
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              padding: spacing.lg,
-              borderBottomWidth: 1,
-              borderBottomColor: palette.outlineVariant,
-            }}
-          >
+    <BottomSheet visible={visible} onClose={onClose} dismissOnBackdropPress={false}>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
             <Text variant="headlineMd" color="onSurface">
               {editingId
                 ? t("structures.modal.editTitle")
@@ -521,8 +428,9 @@ function StructureModal({
           </View>
 
           <ScrollView
-            style={{ padding: spacing.lg, maxHeight: modalBodyHeight }}
+            style={{ maxHeight: modalBodyHeight }}
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
             <Text
               variant="labelMd"
@@ -555,21 +463,16 @@ function StructureModal({
                 >
                   {t("structures.modal.academicYear")}
                 </Text>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ gap: spacing.sm }}
-                  style={{ marginBottom: spacing.md }}
-                >
-                  {academicYears.map((ay) => (
-                    <Chip
-                      key={ay.id}
-                      active={academicYearId === ay.id}
-                      label={ay.name}
-                      onPress={() => setAcademicYearId(ay.id)}
-                    />
-                  ))}
-                </ScrollView>
+                {/* Which year the new structure belongs to — a form field, not
+                    a list filter, which is why this row survives while the
+                    one over the list did not. */}
+                <View style={{ marginBottom: spacing.md }}>
+                  <FilterChips
+                    options={academicYears.map((ay) => ({ value: ay.id, label: ay.name }))}
+                    value={academicYearId}
+                    onChange={setAcademicYearId}
+                  />
+                </View>
               </>
             )}
 
@@ -686,7 +589,7 @@ function StructureModal({
             style={{
               flexDirection: "row",
               gap: spacing.md,
-              padding: spacing.lg,
+              paddingTop: spacing.md,
               borderTopWidth: 1,
               borderTopColor: palette.outlineVariant,
             }}
@@ -722,8 +625,6 @@ function StructureModal({
               )}
             </TouchableOpacity>
           </View>
-        </View>
-      </View>
-    </Modal>
+    </BottomSheet>
   );
 }

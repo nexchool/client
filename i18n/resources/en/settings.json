@@ -22,5 +22,18 @@
     "security": "Password & Security",
     "securitySubtitle": "Change your password",
     "helpSupport": "Help & Support"
+  },
+  "biometrics": {
+    "sectionTitle": "Biometric unlock",
+    "face": "Use Face ID to unlock",
+    "fingerprint": "Use your fingerprint to unlock",
+    "generic": "Use biometrics to unlock",
+    "subtitle": "Ask for it when you open the app, instead of your password. It only unlocks a session you are already signed in to on this phone.",
+    "notEnrolled": "Set up Face ID or a fingerprint in your phone's settings to use this.",
+    "failed": "That did not work, so the setting was left off.",
+    "offerTitle": "Open Nexchool faster?",
+    "offerBody": "Use your face or fingerprint next time instead of typing your password.",
+    "offerAccept": "Turn it on",
+    "offerDecline": "Not now"
   }
 }

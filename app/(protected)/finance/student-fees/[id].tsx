@@ -2,14 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   View,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
   Pressable,
   ActivityIndicator,
   RefreshControl,
   TextInput,
-  Modal,
   Platform,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -28,6 +26,9 @@ import { AppIcon } from "@/common/components/AppIcon";
 import { Skeleton } from "@/common/components/Skeleton";
 import { EmptyState } from "@/common/components/EmptyState";
 import { BackHeader } from "@/common/components/BackHeader";
+import { StatusPill as SharedStatusPill } from "@/common/components/StatusPill";
+import { BottomSheet } from "@/common/components/sheet";
+import { SummaryRow } from "@/common/components/SummaryRow";
 import { formatCurrency } from "@/common/utils/formatCurrency";
 import { useModalBodyHeight } from '@/common/hooks/useModalBodyHeight';
 import { useDialog, useToast } from "@/common/feedback";
@@ -59,7 +60,7 @@ export default function StudentFeeDetailPage() {
   const locale = calendarLocaleForLanguage(i18n.language ?? "en");
   const { id, action } = useLocalSearchParams<{ id: string; action?: string }>();
   const router = useRouter();
-  const { palette, spacing, radius, elevation } = useTheme();
+  const { palette, spacing, radius, elevation, typography } = useTheme();
   const modalBodyHeight = useModalBodyHeight(420);
 
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
@@ -496,19 +497,19 @@ export default function StudentFeeDetailPage() {
             },
           ]}
         >
-          <DetailRow
+          <SummaryRow
             label={t("studentFeeDetail.paid", { defaultValue: "Paid" })}
             value={formatCurrency(data.paid_amount)}
             valueColor="success"
           />
-          <DetailRow
+          <SummaryRow
             label={t("studentFeeDetail.remaining", {
               defaultValue: "Remaining",
             })}
             value={formatCurrency(remaining)}
             valueColor={remaining > 0 ? "warning" : "onSurface"}
           />
-          <DetailRow
+          <SummaryRow
             label={t("studentFeeDetail.dueDate", { defaultValue: "Due date" })}
             value={`${formatDate(data.due_date, locale)}${
               dueDays != null && remaining > 0
@@ -741,7 +742,7 @@ export default function StudentFeeDetailPage() {
         {/* Statement CTA */}
         <Pressable
           onPress={() =>
-            toast.info("Coming soon")
+            toast.info(t("common.comingSoon", { defaultValue: "Coming soon" }))
           }
           style={({ pressed }) => ({
             flexDirection: "row",
@@ -765,19 +766,24 @@ export default function StudentFeeDetailPage() {
       </ScrollView>
 
       {/* PRESERVED: Record Payment Modal verbatim */}
-      <Modal visible={paymentModalOpen} animationType="slide" transparent>
-        <View style={modalStyles.overlay}>
-          <View
-            style={[
-              modalStyles.content,
-              { backgroundColor: palette.surface },
-            ]}
-          >
+      <BottomSheet
+        visible={paymentModalOpen}
+        onClose={() => {
+          setPaymentModalOpen(false);
+          setAllocations({});
+          setOtherMethodDetail("");
+        }}
+        dismissOnBackdropPress={false}
+      >
             <View
-              style={[
-                modalStyles.header,
-                { borderBottomColor: palette.outlineVariant },
-              ]}
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                paddingBottom: spacing.md,
+                borderBottomWidth: 1,
+                borderBottomColor: palette.outlineVariant,
+              }}
             >
               <Text variant="headlineMd" color="onSurface">
                 {t("studentFeeDetail.paymentModal.title")}
@@ -792,7 +798,10 @@ export default function StudentFeeDetailPage() {
                 <AppIcon name="close" size="lg" color="onSurface" />
               </TouchableOpacity>
             </View>
-            <ScrollView style={{ padding: spacing.lg, maxHeight: modalBodyHeight }}>
+            <ScrollView
+              style={{ maxHeight: modalBodyHeight }}
+              keyboardShouldPersistTaps="handled"
+            >
               <View
                 style={{
                   backgroundColor: palette.surfaceContainer,
@@ -856,6 +865,7 @@ export default function StudentFeeDetailPage() {
               </View>
               <TextInput
                 style={{
+                  ...typography.bodyMd,
                   borderWidth: 1,
                   borderColor: amountExceedsRemaining
                     ? palette.error
@@ -977,6 +987,7 @@ export default function StudentFeeDetailPage() {
                         >
                           <TextInput
                             style={{
+                              ...typography.bodyMd,
                               width: 70,
                               borderWidth: 1,
                               borderColor: palette.outlineVariant,
@@ -1095,6 +1106,7 @@ export default function StudentFeeDetailPage() {
                   </Text>
                   <TextInput
                     style={{
+                      ...typography.bodyMd,
                       borderWidth: 1,
                       borderColor: palette.outlineVariant,
                       borderRadius: radius.md,
@@ -1122,6 +1134,7 @@ export default function StudentFeeDetailPage() {
               </Text>
               <TextInput
                 style={{
+                  ...typography.bodyMd,
                   borderWidth: 1,
                   borderColor: palette.outlineVariant,
                   borderRadius: radius.md,
@@ -1145,6 +1158,7 @@ export default function StudentFeeDetailPage() {
               </Text>
               <TextInput
                 style={{
+                  ...typography.bodyMd,
                   borderWidth: 1,
                   borderColor: palette.outlineVariant,
                   borderRadius: radius.md,
@@ -1204,24 +1218,26 @@ export default function StudentFeeDetailPage() {
                 )}
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
-      </Modal>
+      </BottomSheet>
 
-      {/* PRESERVED: Refund Modal */}
-      <Modal visible={refundModalOpen} animationType="slide" transparent>
-        <View style={modalStyles.overlay}>
-          <View
-            style={[
-              modalStyles.content,
-              { backgroundColor: palette.surface },
-            ]}
-          >
+      {/* Refund */}
+      <BottomSheet
+        visible={refundModalOpen}
+        onClose={() => {
+          setRefundModalOpen(false);
+          setRefundPaymentId(null);
+        }}
+        dismissOnBackdropPress={false}
+      >
             <View
-              style={[
-                modalStyles.header,
-                { borderBottomColor: palette.outlineVariant },
-              ]}
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                paddingBottom: spacing.md,
+                borderBottomWidth: 1,
+                borderBottomColor: palette.outlineVariant,
+              }}
             >
               <Text variant="headlineMd" color="onSurface">
                 {t("studentFeeDetail.refundModal.title")}
@@ -1235,7 +1251,7 @@ export default function StudentFeeDetailPage() {
                 <AppIcon name="close" size="lg" color="onSurface" />
               </TouchableOpacity>
             </View>
-            <View style={{ padding: spacing.lg }}>
+            <View style={{ paddingTop: spacing.md }}>
               <View
                 style={{
                   flexDirection: "row",
@@ -1264,6 +1280,7 @@ export default function StudentFeeDetailPage() {
               </Text>
               <TextInput
                 style={{
+                  ...typography.bodyMd,
                   borderWidth: 1,
                   borderColor: palette.outlineVariant,
                   borderRadius: radius.md,
@@ -1320,37 +1337,33 @@ export default function StudentFeeDetailPage() {
                 )}
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
-      </Modal>
+      </BottomSheet>
     </View>
   );
 }
 
-function DetailRow({
-  label,
-  value,
-  valueColor,
+
+/**
+ * Two vocabularies, one appearance. A fee is paid/partial/overdue, a payment
+ * transaction is success/failed/refunded; they are different lists that read
+ * the same, so the words stay here and `StatusPill` owns the pill.
+ */
+function StatusPill({
+  status,
+  kind = "fee",
 }: {
-  label: string;
-  value: string;
-  valueColor?: keyof Palette;
+  status: string;
+  kind?: "fee" | "payment";
 }) {
+  const { t } = useTranslation("finance");
   return (
-    <View
-      style={{
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-      }}
-    >
-      <Text variant="labelMd" color="onSurfaceVariant">
-        {label}
-      </Text>
-      <Text variant="labelMd" color={valueColor ?? "onSurface"} numberOfLines={1}>
-        {value}
-      </Text>
-    </View>
+    <SharedStatusPill
+      tone={STATUS_PILL_ACCENT[status] ?? "onSurfaceVariant"}
+      label={t(
+        kind === "payment" ? `paymentTxnStatuses.${status}` : `studentFeeStatuses.${status}`,
+        { defaultValue: status }
+      )}
+    />
   );
 }
 
@@ -1364,54 +1377,4 @@ const STATUS_PILL_ACCENT: Record<string, keyof Palette> = {
   unpaid: "onSurfaceVariant",
 };
 
-function StatusPill({
-  status,
-  kind = "fee",
-}: {
-  status: string;
-  kind?: "fee" | "payment";
-}) {
-  const { t } = useTranslation("finance");
-  const toast = useToast();
-  const { palette, spacing, radius } = useTheme();
-  const color = palette[STATUS_PILL_ACCENT[status] ?? "onSurfaceVariant"];
-  const labelKey =
-    kind === "payment"
-      ? `paymentTxnStatuses.${status}`
-      : `studentFeeStatuses.${status}`;
-  return (
-    <View
-      style={{
-        paddingHorizontal: spacing.sm,
-        paddingVertical: 2,
-        borderRadius: radius.full,
-        borderWidth: 1,
-        borderColor: color,
-        backgroundColor: `${color}15`,
-      }}
-    >
-      <Text variant="labelSm" style={{ color }}>
-        {t(labelKey, { defaultValue: status })}
-      </Text>
-    </View>
-  );
-}
 
-const modalStyles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "flex-end",
-  },
-  content: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 24,
-    borderBottomWidth: 1,
-  },
-});

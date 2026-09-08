@@ -16,7 +16,7 @@ import { DashboardKpiCard } from "@/modules/home/components/DashboardKpiCard";
 import { FeeTrendChart } from "@/modules/home/components/FeeTrendChart";
 import { DashboardActionRow } from "@/modules/home/components/DashboardActionRow";
 import { useStudentAcademicDashboard } from "@/modules/academics/hooks/useAcademicQueries";
-import { formatCurrency } from "@/common/utils/formatCurrency";
+import { formatCurrency, formatCurrencyCompact } from "@/common/utils/formatCurrency";
 
 export default function FinanceIndex() {
   const { isStudent } = useUiRole();
@@ -43,7 +43,11 @@ function AdminFinanceDashboard() {
   // trend that the finance summary endpoint does not. Reused honestly (labeled
   // "last 7 days"). Admin dashboard aggregate; the finance section is rendered
   // only when feature_flags.fees_management is on.
-  const { data: adminData } = useAdminDashboard();
+  // Refetched alongside the finance summary, not just read. Pull-to-refresh
+  // used to call refetch() for the summary alone, so the KPIs above the chart
+  // updated and the chart itself did not — the two halves of this screen come
+  // from two different queries.
+  const { data: adminData, refetch: refetchAdmin } = useAdminDashboard();
   const finance = adminData?.finance;
   const collectionSeries = finance?.last_7_days_collection ?? [];
   const trendPct = finance?.trend_percentage ?? 0;
@@ -87,7 +91,15 @@ function AdminFinanceDashboard() {
         gap: spacing.lg,
         paddingBottom: spacing.scrollBottom,
       }}
-      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} />}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefetching}
+          onRefresh={() => {
+            void refetch();
+            void refetchAdmin();
+          }}
+        />
+      }
       showsVerticalScrollIndicator={false}
     >
       <View>
@@ -101,57 +113,67 @@ function AdminFinanceDashboard() {
         </Text>
       </View>
 
+      {/*
+        Full width, stacked, rather than the two-up grid this was: a trust's
+        collected total is eight or nine digits, and at 48% the card had about
+        150pt for a figure that wants 250, so the headline number on the
+        finance screen was the one truncating to ₹1,45,77,19…. Three row
+        cards also cost about what the old two-plus-orphan grid did in height.
+      */}
       {isLoading && !dashboardData ? (
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: spacing.sm }}>
-          <Skeleton width="48%" height={120} radius={radius.xl} />
-          <Skeleton width="48%" height={120} radius={radius.xl} />
-          <Skeleton width="48%" height={120} radius={radius.xl} />
+        <View style={{ gap: spacing.sm }}>
+          <Skeleton width="100%" height={92} radius={radius.xl} />
+          <Skeleton width="100%" height={92} radius={radius.xl} />
+          <Skeleton width="100%" height={92} radius={radius.xl} />
         </View>
       ) : (
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: spacing.sm }}>
-          <View style={{ width: "48%" }}>
-            <DashboardKpiCard
-              label={t("dashboard.totalCollected", { defaultValue: "Total Collected" })}
-              value={formatCurrency(totalCollected)}
-              accentColor="success"
-              iconName="wallet-outline"
-              iconChipBg="surfaceContainerHigh"
-              iconChipFg="success"
-              trend={
-                trendPct !== 0
-                  ? { label: `${trendPct > 0 ? "+" : ""}${trendPct}%`, tone: trendTone }
-                  : undefined
-              }
-            />
-          </View>
-          <View style={{ width: "48%" }}>
-            <DashboardKpiCard
-              label={t("dashboard.totalOutstanding", { defaultValue: "Pending Fees" })}
-              value={formatCurrency(totalOutstanding)}
-              accentColor="secondary"
-              iconName="hourglass-outline"
-              iconChipBg="secondaryContainer"
-              iconChipFg="onSecondaryContainer"
-            />
-          </View>
-          <View style={{ width: "48%" }}>
-            <DashboardKpiCard
-              label={t("dashboard.overdue", { defaultValue: "Overdue Payments" })}
-              value={String(overdueCount)}
-              accentColor="error"
-              iconName="alert-circle-outline"
-              iconChipBg="errorContainer"
-              iconChipFg="onErrorContainer"
-              trend={
-                overdueCount > 0
-                  ? {
-                      label: t("dashboard.overdueTrend", { defaultValue: "Needs attention" }),
-                      tone: "down",
-                    }
-                  : undefined
-              }
-            />
-          </View>
+        <View style={{ gap: spacing.sm }}>
+          {/*
+            Compact formatting drops the `.00`. Nobody reconciles paise off a
+            dashboard tile — the exact figure is one tap away on Student Fees —
+            and the two characters it saves are two characters of the crore
+            that used to fall off the end.
+          */}
+          <DashboardKpiCard
+            layout="row"
+            label={t("dashboard.totalCollected", { defaultValue: "Total Collected" })}
+            value={formatCurrencyCompact(totalCollected)}
+            accentColor="success"
+            iconName="wallet-outline"
+            iconChipBg="surfaceContainerHigh"
+            iconChipFg="success"
+            trend={
+              trendPct !== 0
+                ? { label: `${trendPct > 0 ? "+" : ""}${trendPct}%`, tone: trendTone }
+                : undefined
+            }
+          />
+          <DashboardKpiCard
+            layout="row"
+            label={t("dashboard.totalOutstanding", { defaultValue: "Pending Fees" })}
+            value={formatCurrencyCompact(totalOutstanding)}
+            accentColor="secondary"
+            iconName="hourglass-outline"
+            iconChipBg="secondaryContainer"
+            iconChipFg="onSecondaryContainer"
+          />
+          <DashboardKpiCard
+            layout="row"
+            label={t("dashboard.overdue", { defaultValue: "Overdue Payments" })}
+            value={String(overdueCount)}
+            accentColor="error"
+            iconName="alert-circle-outline"
+            iconChipBg="errorContainer"
+            iconChipFg="onErrorContainer"
+            trend={
+              overdueCount > 0
+                ? {
+                    label: t("dashboard.overdueTrend", { defaultValue: "Needs attention" }),
+                    tone: "down",
+                  }
+                : undefined
+            }
+          />
         </View>
       )}
 
@@ -347,9 +369,15 @@ function StudentFinanceLanding() {
       {isLoading && !data ? (
         <Skeleton width="100%" height={120} radius={radius.xl} />
       ) : (
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: spacing.sm }}>
+        <View style={{ gap: spacing.sm }}>
+          {/*
+            A student's own outstanding balance stays exact — they are about
+            to pay that number, not skim it — so this keeps formatCurrency
+            where the admin tiles went compact.
+          */}
           <View style={{ width: "100%" }}>
             <DashboardKpiCard
+              layout="row"
               label={
                 totalOutstanding > 0
                   ? t("student.pendingFees", { defaultValue: "Pending Fees" })
@@ -386,6 +414,7 @@ function StudentFinanceLanding() {
           {overdueCount > 0 ? (
             <View style={{ width: "100%" }}>
               <DashboardKpiCard
+                layout="row"
                 label={t("student.overdueInvoices", { defaultValue: "Overdue Invoices" })}
                 value={String(overdueCount)}
                 accentColor="error"

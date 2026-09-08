@@ -5,14 +5,28 @@
  * an optional `enabled` discriminator so the screen can guard cleanly.
  */
 
-export interface DashboardOverview {
+/**
+ * Carried by every dashboard section the server composes per caller.
+ *
+ * `visible: false` is a fact about the *person* — they may not see this — and
+ * the only correct rendering is nothing at all.
+ *
+ * Not the same field as `enabled`, which is a fact about the *school*: it is
+ * not on that plan. A finance sub-admin should be shown neither the section
+ * nor a note about the school's plan, which is a different question's answer.
+ */
+export interface SectionVisibility {
+  visible?: boolean;
+}
+
+export interface DashboardOverview extends SectionVisibility {
   total_students: number;
   total_teachers: number;
   total_classes: number;
   academic_year: string;
 }
 
-export interface DashboardToday {
+export interface DashboardToday extends SectionVisibility {
   enabled?: boolean;
   lectures_today?: number;
   attendance_marked_classes?: number;
@@ -23,15 +37,15 @@ export interface DashboardToday {
   last_attendance_marked_at?: string | null;
 }
 
-export interface DashboardAlerts {
-  timetable_conflicts: number;
-  classes_without_timetable: number;
-  subjects_without_teacher: number;
-  classes_without_subjects: number;
-  students_without_class: number;
-  overdue_fees_students: number;
-  transport_issues: number;
-  total_issues: number;
+export interface DashboardAlerts extends SectionVisibility {
+  timetable_conflicts?: number;
+  classes_without_timetable?: number;
+  subjects_without_teacher?: number;
+  classes_without_subjects?: number;
+  students_without_class?: number;
+  overdue_fees_students?: number;
+  transport_issues?: number;
+  total_issues?: number;
 }
 
 export interface FeeCollectionPoint {
@@ -39,7 +53,7 @@ export interface FeeCollectionPoint {
   amount: number;
 }
 
-export interface DashboardFinance {
+export interface DashboardFinance extends SectionVisibility {
   enabled?: boolean;
   total_expected?: number;
   total_collected?: number;
@@ -51,7 +65,7 @@ export interface DashboardFinance {
   trend_percentage?: number;
 }
 
-export interface DashboardTransport {
+export interface DashboardTransport extends SectionVisibility {
   enabled?: boolean;
   [key: string]: unknown;
 }
@@ -61,9 +75,9 @@ export interface UpcomingHoliday {
   date: string;
 }
 
-export interface DashboardActions {
-  pending_leave_requests: number;
-  upcoming_holidays: UpcomingHoliday[];
+export interface DashboardActions extends SectionVisibility {
+  pending_leave_requests?: number;
+  upcoming_holidays?: UpcomingHoliday[];
 }
 
 export interface DashboardFeatureFlags {

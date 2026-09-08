@@ -1,10 +1,11 @@
 import React from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
 import { Text } from '@/common/components/Text';
 import { AppIcon } from '@/common/components/AppIcon';
 import { Button } from '@/common/components/Button';
+import { BottomSheet } from '@/common/components/sheet';
 import type { AppIconProps } from '@/common/components/AppIcon';
 import type { WeeklyPeriod } from '../types';
 
@@ -25,30 +26,8 @@ export function PeriodDetailSheet({ period, visible, onClose }: Props) {
   const { palette, spacing, radius } = useTheme();
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose} />
-      <View
-        style={[
-          styles.sheet,
-          {
-            backgroundColor: palette.surfaceContainerLowest,
-            borderTopLeftRadius: radius.xl,
-            borderTopRightRadius: radius.xl,
-            padding: spacing.lg,
-            paddingBottom: spacing.xl,
-          },
-        ]}
-      >
-        <View
-          style={[styles.grabber, { backgroundColor: palette.outlineVariant }]}
-        />
-
-        <View
-          style={[
-            styles.titleRow,
-            { marginTop: spacing.md, gap: spacing.sm },
-          ]}
-        >
+    <BottomSheet visible={visible} onClose={onClose}>
+        <View style={[styles.titleRow, { gap: spacing.sm }]}>
           <View style={[styles.accent, { backgroundColor: palette.primary }]} />
           <Text variant="headlineMd" color="onSurface" style={{ flex: 1 }} numberOfLines={2}>
             {period?.subject?.name ?? '—'}
@@ -67,7 +46,7 @@ export function PeriodDetailSheet({ period, visible, onClose }: Props) {
           ) : null}
         </View>
 
-        <View style={{ marginTop: spacing.md, gap: spacing.sm }}>
+        <View style={{ gap: spacing.sm }}>
           <Row icon="time-outline" label={`${period?.start_time} - ${period?.end_time}`} />
           {period?.class?.name ? (
             <Row icon="school-outline" label={period.class.name} />
@@ -86,13 +65,10 @@ export function PeriodDetailSheet({ period, visible, onClose }: Props) {
           ) : null}
         </View>
 
-        <View style={{ marginTop: spacing.lg }}>
-          <Button variant="ghost" fullWidth onPress={onClose}>
-            {t('close', { defaultValue: 'Close' })}
-          </Button>
-        </View>
-      </View>
-    </Modal>
+        <Button variant="ghost" fullWidth onPress={onClose}>
+          {t('close', { defaultValue: 'Close' })}
+        </Button>
+    </BottomSheet>
   );
 }
 
@@ -108,9 +84,6 @@ function Row({ icon, label }: { icon: AppIconProps['name']; label: string }) {
 }
 
 const styles = StyleSheet.create({
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(11, 28, 48, 0.40)' },
-  sheet: { position: 'absolute', bottom: 0, left: 0, right: 0 },
-  grabber: { alignSelf: 'center', width: 36, height: 4, borderRadius: 2 },
   titleRow: { flexDirection: 'row', alignItems: 'center' },
   accent: { width: 4, height: 28, borderRadius: 2 },
   pill: { paddingHorizontal: 8, paddingVertical: 4 },

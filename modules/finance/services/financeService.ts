@@ -5,12 +5,8 @@ import {
   apiPut,
 } from "@/common/services/api";
 import { getApiUrl } from "@/common/constants/api";
-import {
-  getAccessToken,
-  getRefreshToken,
-  getTenantId,
-} from "@/common/utils/storage";
 import { downloadAndSharePdf } from "@/common/utils/sharePdf";
+import { authHeaders, refreshSession } from "@/common/services/sessionRefresh";
 import type {
   FeeStructure,
   StudentFee,
@@ -203,16 +199,13 @@ export const financeService = {
   /** Download invoice PDF for a student fee. Returns blob for save/print. */
   downloadInvoicePdf: async (studentFeeId: string): Promise<Blob> => {
     const url = getApiUrl(`/api/finance/student-fees/${studentFeeId}/download-invoice`);
-    const [accessToken, refreshToken, tenantId] = await Promise.all([
-      getAccessToken(),
-      getRefreshToken(),
-      getTenantId(),
-    ]);
-    const headers: Record<string, string> = {};
-    if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
-    if (refreshToken) headers["X-Refresh-Token"] = refreshToken;
-    if (tenantId) headers["X-Tenant-ID"] = tenantId;
-    const res = await fetch(url, { headers });
+    const headers = await authHeaders();
+    let res = await fetch(url, { headers });
+    // The same one renewal the API client does, for the same reason: an
+    // expired access token is ordinary. Once only — a second refusal is real.
+    if (res.status === 401 && (await refreshSession())) {
+      res = await fetch(url, { headers: await authHeaders() });
+    }
     if (!res.ok) throw new Error("Failed to download invoice PDF");
     return await res.blob();
   },
@@ -220,16 +213,13 @@ export const financeService = {
   /** Download receipt PDF for a payment. Returns blob for save/print. */
   downloadReceiptPdf: async (paymentId: string): Promise<Blob> => {
     const url = getApiUrl(`/api/finance/payments/${paymentId}/download-receipt`);
-    const [accessToken, refreshToken, tenantId] = await Promise.all([
-      getAccessToken(),
-      getRefreshToken(),
-      getTenantId(),
-    ]);
-    const headers: Record<string, string> = {};
-    if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
-    if (refreshToken) headers["X-Refresh-Token"] = refreshToken;
-    if (tenantId) headers["X-Tenant-ID"] = tenantId;
-    const res = await fetch(url, { headers });
+    const headers = await authHeaders();
+    let res = await fetch(url, { headers });
+    // The same one renewal the API client does, for the same reason: an
+    // expired access token is ordinary. Once only — a second refusal is real.
+    if (res.status === 401 && (await refreshSession())) {
+      res = await fetch(url, { headers: await authHeaders() });
+    }
     if (!res.ok) throw new Error("Failed to download receipt PDF");
     return await res.blob();
   },
@@ -245,16 +235,13 @@ export const financeService = {
   /** Open invoice print page in a new window. Handles auth headers via blob fetch. */
   printInvoice: async (studentFeeId: string): Promise<void> => {
     const url = getApiUrl(`/api/finance/student-fees/${studentFeeId}/print-invoice?autoprint=1`);
-    const [accessToken, refreshToken, tenantId] = await Promise.all([
-      getAccessToken(),
-      getRefreshToken(),
-      getTenantId(),
-    ]);
-    const headers: Record<string, string> = {};
-    if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
-    if (refreshToken) headers["X-Refresh-Token"] = refreshToken;
-    if (tenantId) headers["X-Tenant-ID"] = tenantId;
-    const res = await fetch(url, { headers });
+    const headers = await authHeaders();
+    let res = await fetch(url, { headers });
+    // The same one renewal the API client does, for the same reason: an
+    // expired access token is ordinary. Once only — a second refusal is real.
+    if (res.status === 401 && (await refreshSession())) {
+      res = await fetch(url, { headers: await authHeaders() });
+    }
     if (!res.ok) throw new Error("Failed to load invoice for print");
     const html = await res.text();
     const blob = new Blob([html], { type: "text/html" });
@@ -272,16 +259,13 @@ export const financeService = {
   /** Open receipt print page in a new window. Handles auth headers via blob fetch. */
   printReceipt: async (paymentId: string): Promise<void> => {
     const url = getApiUrl(`/api/finance/payments/${paymentId}/print-receipt?autoprint=1`);
-    const [accessToken, refreshToken, tenantId] = await Promise.all([
-      getAccessToken(),
-      getRefreshToken(),
-      getTenantId(),
-    ]);
-    const headers: Record<string, string> = {};
-    if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
-    if (refreshToken) headers["X-Refresh-Token"] = refreshToken;
-    if (tenantId) headers["X-Tenant-ID"] = tenantId;
-    const res = await fetch(url, { headers });
+    const headers = await authHeaders();
+    let res = await fetch(url, { headers });
+    // The same one renewal the API client does, for the same reason: an
+    // expired access token is ordinary. Once only — a second refusal is real.
+    if (res.status === 401 && (await refreshSession())) {
+      res = await fetch(url, { headers: await authHeaders() });
+    }
     if (!res.ok) throw new Error("Failed to load receipt for print");
     const html = await res.text();
     const blob = new Blob([html], { type: "text/html" });

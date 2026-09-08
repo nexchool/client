@@ -15,7 +15,7 @@ import type { HostelAllocation } from "../adminTypes";
 export function HostelResidentsScreen() {
   const { t } = useTranslation("hostel");
   const router = useRouter();
-  const { palette, spacing, radius, elevation } = useTheme();
+  const { palette, spacing, radius, elevation, typography } = useTheme();
   const [query, setQuery] = useState("");
   const [appliedQuery, setAppliedQuery] = useState("");
 
@@ -120,7 +120,7 @@ export function HostelResidentsScreen() {
             onChangeText={setQuery}
             placeholder={t("residents.search", { defaultValue: "Search student or hostel" })}
             placeholderTextColor={palette.outline}
-            style={{ flex: 1, color: palette.onSurface, paddingVertical: 0 }}
+            style={{ ...typography.bodyMd, flex: 1, color: palette.onSurface, paddingVertical: 0 }}
             autoCapitalize="none"
             returnKeyType="search"
           />

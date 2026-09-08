@@ -24,16 +24,12 @@ import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import { getApiUrl } from "@/common/constants/api";
 import { apiGetBlob } from "@/common/services/api";
-import {
-  getAccessToken,
-  getRefreshToken,
-  getTenantId,
-} from "@/common/utils/storage";
 import { useTheme } from "@/common/theme";
 import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
 import type { StudentDocument } from "../types";
 import { useToast } from "@/common/feedback";
+import { authHeaders, refreshSession } from "@/common/services/sessionRefresh";
 
 // --- constants ----------------------------------------------------------------
 
@@ -139,17 +135,16 @@ function normalizeFileUri(uri: string): string {
 
 async function downloadToCache(endpoint: string, destPath: string): Promise<string> {
   const url = getApiUrl(endpoint);
-  const [accessToken, refreshToken, tenantId] = await Promise.all([
-    getAccessToken(),
-    getRefreshToken(),
-    getTenantId(),
-  ]);
-  const headers: Record<string, string> = {};
-  if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
-  if (refreshToken) headers["X-Refresh-Token"] = refreshToken;
-  if (tenantId) headers["X-Tenant-ID"] = tenantId;
-
-  const result = await FileSystem.downloadAsync(url, destPath, { headers });
+  let result = await FileSystem.downloadAsync(url, destPath, {
+    headers: await authHeaders(),
+  });
+  // The same one renewal the API client does, for the same reason: an expired
+  // access token is ordinary. Once only — a second refusal is real.
+  if (result.status === 401 && (await refreshSession())) {
+    result = await FileSystem.downloadAsync(url, destPath, {
+      headers: await authHeaders(),
+    });
+  }
   if (result.status < 200 || result.status >= 300) {
     throw new Error(`Download failed (${result.status})`);
   }

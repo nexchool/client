@@ -11,6 +11,8 @@ import { AppIcon } from "@/common/components/AppIcon";
 import { Skeleton } from "@/common/components/Skeleton";
 import { EmptyState } from "@/common/components/EmptyState";
 import { BackHeader } from "@/common/components/BackHeader";
+import { StatusPill } from "@/common/components/StatusPill";
+import { SummaryRow } from "@/common/components/SummaryRow";
 import { formatCurrency } from "@/common/utils/formatCurrency";
 import type { FeeInvoice } from "@/modules/fees/services/feesService";
 import { useToast } from "@/common/feedback";
@@ -304,7 +306,7 @@ export default function InvoiceDetailPage() {
           <SummaryRow
             label={t("invoiceDetail.remainingBalance")}
             value={formatCurrency(invoice.remaining_balance)}
-            bold
+            emphasis
           />
         </View>
 
@@ -448,59 +450,12 @@ export default function InvoiceDetailPage() {
   );
 }
 
-function SummaryRow({
-  label,
-  value,
-  valueColor,
-  bold,
-}: {
-  label: string;
-  value: string;
-  valueColor?: keyof Palette;
-  bold?: boolean;
-}) {
-  return (
-    <View
-      style={{
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-      }}
-    >
-      <Text variant="labelMd" color="onSurfaceVariant">
-        {label}
-      </Text>
-      <Text
-        variant={bold ? "headlineMd" : "labelMd"}
-        color={valueColor ?? "onSurface"}
-        numberOfLines={1}
-      >
-        {value}
-      </Text>
-    </View>
-  );
-}
-
 function StatusBadge({ status }: { status: FeeInvoice["status"] }) {
   const { t } = useTranslation("finance");
-  const toast = useToast();
-  const { palette, spacing, radius } = useTheme();
-  const accentToken = STATUS_ACCENT[status] ?? "onSurfaceVariant";
-  const color = palette[accentToken];
   return (
-    <View
-      style={{
-        paddingHorizontal: spacing.sm,
-        paddingVertical: 2,
-        borderRadius: radius.full,
-        borderWidth: 1,
-        borderColor: color,
-        backgroundColor: `${color}15`,
-      }}
-    >
-      <Text variant="labelSm" style={{ color }}>
-        {t(`invoiceStatuses.${status}`, { defaultValue: status })}
-      </Text>
-    </View>
+    <StatusPill
+      tone={STATUS_ACCENT[status] ?? "onSurfaceVariant"}
+      label={t(`invoiceStatuses.${status}`, { defaultValue: status })}
+    />
   );
 }

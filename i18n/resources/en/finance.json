@@ -19,7 +19,9 @@
     "left": "left",
     "components": "components",
     "componentsLine": "{{count}} components",
-    "optional": "(optional)"
+    "optional": "(optional)",
+    "comingSoon": "Coming soon",
+    "tryAgainLater": "Please try again."
   },
   "dashboard": {
     "title": "Finance",
@@ -47,7 +49,9 @@
     "goToStudentFees": "Go to Student Fees",
     "overdueTrend": "Needs attention",
     "collectionChartTitle": "Fee Collection",
-    "collectionChartSubtitle": "Last 7 days"
+    "collectionChartSubtitle": "Last 7 days",
+    "chartEmpty": "No fee collections in the last 7 days.",
+    "chartTotalLabel": "Collected this week"
   },
   "feeFilters": {
     "all": "All",
@@ -340,5 +344,21 @@
     "itemNumber": "Item {{n}}",
     "removeItem": "Remove item",
     "addItem": "+ Add another fee item"
+  },
+  "filters": {
+    "title": "Filters",
+    "clearAll": "Clear all",
+    "apply": "Show results",
+    "statusLabel": "Status",
+    "classLabel": "Class",
+    "classAny": "All classes",
+    "classSearchPlaceholder": "Search classes…",
+    "noClassMatches": "No matching classes."
+  },
+  "createInvoice": {
+    "invalidField": "Invalid",
+    "itemNamePlaceholder": "Tuition",
+    "itemPeriodPlaceholder": "Term 1",
+    "itemAmountPlaceholder": "0.00"
   }
 }

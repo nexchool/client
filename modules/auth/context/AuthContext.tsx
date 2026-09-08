@@ -21,6 +21,9 @@ import {
   setPermissions,
   setEnabledFeatures,
   setTenantId,
+  getTenantId,
+  getTenantSubdomain,
+  hasKnownTenant,
   clearAuth,
   getTenantName,
   setTenantName,
@@ -28,9 +31,12 @@ import {
   getForcePasswordReset,
   setForcePasswordReset,
   getPushNotificationsPreference,
+  getBiometricUnlockEnabled,
 } from "@/common/utils/storage";
 import {
   login as loginService,
+  loginWithMobilePin as loginWithMobilePinService,
+  loginWithMobileOtp as loginWithMobileOtpService,
   LoginResponse,
   TenantChoice,
 } from "@/modules/auth/services/authService";
@@ -54,6 +60,7 @@ import {
   registerDeviceForPushNotifications,
   unregisterDevicePushNotifications,
 } from "@/modules/devices/pushRegistration";
+import { unlock, UnlockOutcome } from "@/modules/auth/biometrics/unlock";
 
 /**
  * Min interval (ms) between GET /profile refreshes when app is opened or returns to foreground.
@@ -79,6 +86,14 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   /**
+   * Whether the app knows which school it belongs to — a tenant_id (baked in
+   * at build time, or from a previous login) or a subdomain (chosen on the
+   * school-selection step). `app/index.tsx` uses this, not `isAuthenticated`,
+   * to decide whether a signed-out cold start needs `(auth)/select-school`
+   * before it can even show a branded, method-aware `(auth)/login`.
+   */
+  tenantKnown: boolean;
+  /**
    * The signed-in account is holding a password its school issued and must
    * choose its own. The server enforces this: while it is true every endpoint
    * outside the password-reset allowlist answers 403, so the app must show
@@ -88,11 +103,50 @@ interface AuthContextType {
   /** After login with email+password only; set when backend returns multiple schools for that email */
   pendingTenantChoice: { tenants: TenantChoice[]; email: string; password: string } | null;
   login: (email: string, password: string) => Promise<void>;
+  /**
+   * Sign in with a mobile number and a PIN. Offered only where the school's
+   * policy publishes `mobile_pin`.
+   *
+   * No tenant-choice branch, unlike email: a number is unique inside one
+   * school at best, so there is never a list of schools to pick from.
+   */
+  loginWithMobilePin: (mobile: string, pin: string) => Promise<void>;
+  /**
+   * Sign in with a code sent to a phone. Offered only where the school's
+   * policy publishes `mobile_otp`. Same no-tenant-choice shape as PIN, and
+   * the same reason: a number is unique inside one school at best.
+   */
+  loginWithMobileOtp: (
+    mobile: string,
+    code: string,
+    challengeId?: string,
+  ) => Promise<void>;
   /** After user picks a school from pendingTenantChoice */
   loginWithTenant: (tenantId: string) => Promise<void>;
   clearPendingTenantChoice: () => void;
   /** Call after the force-reset endpoint succeeds — the session is now unrestricted. */
   clearMustResetPassword: () => Promise<void>;
+  /**
+   * A session was restored from storage on this phone, and its owner asked for
+   * Face ID / a fingerprint before it is handed back.
+   *
+   * Separate from `isAuthenticated` on purpose: the session is real and valid,
+   * and the person is entitled to it — they have simply not proved they are the
+   * one holding the phone yet. Collapsing the two would mean signing them out
+   * to represent a gate they can pass in one tap.
+   */
+  isLocked: boolean;
+  /**
+   * Ask the phone for the owner. `'unlocked'` opens the session.
+   *
+   * The prompt's wording is passed in rather than built here: what the OS
+   * dialog says is copy, it is translated, and it belongs to the screen that
+   * has `t` — not to the provider that owns the session.
+   */
+  unlockSession: (prompt: {
+    message: string;
+    cancelLabel: string;
+  }) => Promise<UnlockOutcome>;
   logout: () => Promise<void>;
   setAuthData: (data: LoginResponse) => Promise<void>;
   hasPermission: (permission: string) => boolean;
@@ -127,7 +181,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   } | null>(null);
   const [tenantName, setTenantNameState] = useState<string | null>(null);
   const [mustResetPassword, setMustResetPasswordState] = useState(false);
+  // Starts false rather than assuming a tenant exists — `checkAuth` below
+  // corrects it before `isLoading` clears, so nothing routes on a guess.
+  const [tenantKnown, setTenantKnownState] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  // Starts false and is only ever raised by `checkAuth` below, which is the
+  // one place that restores a session without anybody proving anything. A
+  // sign-in performed here and now is proof enough on its own.
+  const [isLocked, setIsLocked] = useState(false);
   const lastAuthSnapshotRefreshRef = useRef(0);
   const queryClient = useQueryClient();
 
@@ -238,6 +299,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           storedEnabledFeatures,
           storedTenantName,
           storedMustResetPassword,
+          tenantKnownNow,
+          biometricUnlockWanted,
         ] = await Promise.all([
           getAccessToken(),
           getRefreshToken(),
@@ -246,7 +309,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           getEnabledFeatures(),
           getTenantName(),
           getForcePasswordReset(),
+          hasKnownTenant(),
+          getBiometricUnlockEnabled(),
         ]);
+
+        // Read regardless of whether a session exists: `(auth)/select-school`
+        // is a signed-out screen, and by the time this runs a baked build has
+        // already had `seedBakedTenant` write its tenant_id (see
+        // `app/_layout.tsx`), so this is a plain storage read either way.
+        setTenantKnownState(tenantKnownNow);
 
         if (accessToken && refreshToken && userData) {
           setUser(userData);
@@ -258,6 +329,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           // every request the server refuses. The profile refresh above then
           // corrects it in either direction.
           setMustResetPasswordState(storedMustResetPassword);
+
+          // This is the only path that hands a session back without anybody
+          // proving anything — storage had the tokens, so the app opened. That
+          // is exactly what the gate is for, and it is raised *before*
+          // `isLoading` clears so no protected screen ever renders unlocked.
+          setIsLocked(biometricUnlockWanted);
         }
       } catch (error) {
         console.error("Error checking auth:", error);
@@ -325,6 +402,60 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     await setAuthData(response);
   };
 
+  const loginWithMobilePin = async (mobile: string, pin: string) => {
+    setPendingTenantChoice(null);
+
+    // The school, named in the body rather than left to the header.
+    //
+    // The app scopes every other request with `X-Tenant-ID`, and the sign-in
+    // pipeline deliberately reads the *body* to decide whether a school was
+    // named — a Phase 0d decision that keeps email sign-in behaving as it
+    // always has. A mobile number means nothing without a school, so a
+    // header-only attempt is refused outright; sending it here is what makes
+    // this work from a phone at all.
+    //
+    // A tenant_id is not always on record yet: someone who arrived via
+    // `select-school` has only stored a subdomain (no login has happened, so
+    // there is no tenant_id to have) — `authService.login`'s `subdomain`
+    // field already exists for exactly this reason, even though email
+    // sign-in itself never needs it (`email_password` is the one method the
+    // server will resolve without a named tenant). Falling back to it here
+    // is what makes PIN sign-in reachable at all for that visitor.
+    const tenantId = await getTenantId();
+    const subdomain = tenantId ? null : await getTenantSubdomain();
+    const response = await loginWithMobilePinService({
+      mobile,
+      pin,
+      ...(tenantId ? { tenant_id: tenantId } : {}),
+      ...(subdomain ? { subdomain } : {}),
+    });
+    await setAuthData(response);
+  };
+
+  const loginWithMobileOtp = async (
+    mobile: string,
+    code: string,
+    challengeId?: string,
+  ) => {
+    setPendingTenantChoice(null);
+
+    // Same reasoning as `loginWithMobilePin` above: the school is named in
+    // the body because a mobile number means nothing without one, the
+    // sign-in pipeline reads the body — not just the header — to decide
+    // whether a school was named, and a visitor who arrived via
+    // `select-school` has only a subdomain on record, not a tenant_id yet.
+    const tenantId = await getTenantId();
+    const subdomain = tenantId ? null : await getTenantSubdomain();
+    const response = await loginWithMobileOtpService({
+      mobile,
+      code,
+      challenge_id: challengeId,
+      ...(tenantId ? { tenant_id: tenantId } : {}),
+      ...(subdomain ? { subdomain } : {}),
+    });
+    await setAuthData(response);
+  };
+
   const loginWithTenant = async (tenantId: string) => {
     if (!pendingTenantChoice) return;
     const { email, password } = pendingTenantChoice;
@@ -374,6 +505,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     setPermissionsState([]);
     setEnabledFeaturesState([]);
     setMustResetPasswordState(false);
+    // There is no session left to gate, and leaving this raised would put a
+    // lock screen in front of the sign-in screen. `clearAuth()` has already
+    // dropped the stored preference, so the next person here starts fresh.
+    setIsLocked(false);
+    // `clearAuth()` deliberately leaves tenant identity alone (see its
+    // docstring), so this will normally still read true right after a
+    // sign-out — but `tenantKnownState` was previously set once, at mount, by
+    // `checkAuth()`, and never touched again. Recomputing it here rather than
+    // assuming "unchanged" keeps it truthful for any future caller of this
+    // function that *does* clear tenant identity first (a "switch school"
+    // action), instead of quietly reintroducing the staleness this session's
+    // fix removed.
+    setTenantKnownState(await hasKnownTenant());
   };
 
   const logout = async () => {
@@ -452,6 +596,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     return permissions.includes(PERMS.SYSTEM_MANAGE);
   };
 
+  /**
+   * Ask the phone for its owner, and open the session if it answers.
+   *
+   * Only `'unlocked'` lowers the gate. `'dismissed'` and `'unavailable'` both
+   * leave it up — a prompt that could not run is not a prompt that passed, and
+   * the difference between those two is the screen's business, not this one's:
+   * one means "try again", the other means "sign in with your password
+   * instead".
+   */
+  const unlockSession = async (prompt: {
+    message: string;
+    cancelLabel: string;
+  }): Promise<UnlockOutcome> => {
+    const outcome = await unlock(prompt);
+    if (outcome === "unlocked") setIsLocked(false);
+    return outcome;
+  };
+
   // Check if user has a specific permission
   const hasPermission = (permission: string): boolean => {
     if (!permissions || permissions.length === 0) return false;
@@ -490,9 +652,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         enabledFeatures,
         isAuthenticated: !!user,
         isLoading,
+        tenantKnown,
         mustResetPassword,
+        isLocked,
+        unlockSession,
         pendingTenantChoice,
         login,
+        loginWithMobilePin,
+        loginWithMobileOtp,
         loginWithTenant,
         clearPendingTenantChoice,
         clearMustResetPassword,

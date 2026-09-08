@@ -27,7 +27,7 @@ function humanise(value: string): string {
 
 export default function SearchScreen() {
   const { t } = useTranslation('search');
-  const { palette, spacing, radius } = useTheme();
+  const { palette, spacing, radius, typography } = useTheme();
   const { query, setQuery, debounced, enabled, results, isInitialLoad } = useSearch();
   const { recents, remember, forget, clear } = useRecentSearches();
 
@@ -94,7 +94,7 @@ export default function SearchScreen() {
         >
           <AppIcon name="search" size="md" color="outline" />
           <TextInput
-            style={{ flex: 1, padding: 0, color: palette.onSurface }}
+            style={{ ...typography.bodyMd, flex: 1, padding: 0, color: palette.onSurface }}
             value={query}
             onChangeText={setQuery}
             placeholder={t('placeholder', {

@@ -2,11 +2,14 @@ import Constants from "expo-constants";
 
 export type AppEnvironment = "development" | "preview" | "production";
 
+export type BakedTenant = { id: string; subdomain: string | null };
+
 type Extra = {
   appName?: string;
   apiBaseUrl?: string;
   environment?: AppEnvironment;
   eas?: { projectId?: string };
+  tenant?: BakedTenant | null;
 };
 
 function getExtra(): Extra {
@@ -46,4 +49,23 @@ export function getConfiguredEnvironment(): AppEnvironment {
 /** EAS project id from `expo.extra.eas.projectId` (for diagnostics / tooling). */
 export function getEasProjectId(): string | undefined {
   return getExtra().eas?.projectId;
+}
+
+/**
+ * The tenant compiled into this build (`expo.extra.tenant`), or `null` for
+ * the general Nexchool app that ships with no school baked in.
+ *
+ * Read at the edge, once, by `seedBakedTenant` — nothing else in the app
+ * should need to ask what build it is; everywhere else reads the tenant that
+ * ended up in storage, baked or chosen.
+ */
+export function getBakedTenant(): BakedTenant | null {
+  const tenant = getExtra().tenant;
+  if (!tenant || typeof tenant.id !== "string" || tenant.id.length === 0) return null;
+  return {
+    id: tenant.id,
+    subdomain: typeof tenant.subdomain === "string" && tenant.subdomain.length > 0
+      ? tenant.subdomain
+      : null,
+  };
 }

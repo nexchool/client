@@ -19,7 +19,9 @@
     "left": "शेष",
     "components": "घटक",
     "componentsLine": "{{count}} घटक",
-    "optional": "(वैकल्पिक)"
+    "optional": "(वैकल्पिक)",
+    "comingSoon": "जल्द आ रहा है",
+    "tryAgainLater": "कृपया पुनः प्रयास करें।"
   },
   "dashboard": {
     "title": "वित्त",
@@ -47,7 +49,9 @@
     "goToStudentFees": "छात्र शुल्क पर जाएँ",
     "overdueTrend": "ध्यान देने योग्य",
     "collectionChartTitle": "शुल्क संग्रह",
-    "collectionChartSubtitle": "पिछले 7 दिन"
+    "collectionChartSubtitle": "पिछले 7 दिन",
+    "chartEmpty": "पिछले 7 दिनों में कोई फ़ीस संग्रह नहीं।",
+    "chartTotalLabel": "इस सप्ताह संग्रहित"
   },
   "feeFilters": {
     "all": "सभी",
@@ -340,5 +344,21 @@
     "itemNumber": "मद {{n}}",
     "removeItem": "मद हटाएँ",
     "addItem": "+ और शुल्क मद जोड़ें"
+  },
+  "filters": {
+    "title": "फ़िल्टर",
+    "clearAll": "सभी हटाएँ",
+    "apply": "परिणाम देखें",
+    "statusLabel": "स्थिति",
+    "classLabel": "कक्षा",
+    "classAny": "सभी कक्षाएँ",
+    "classSearchPlaceholder": "कक्षाएँ खोजें…",
+    "noClassMatches": "कोई मेल खाती कक्षा नहीं।"
+  },
+  "createInvoice": {
+    "invalidField": "अमान्य",
+    "itemNamePlaceholder": "ट्यूशन",
+    "itemPeriodPlaceholder": "सत्र 1",
+    "itemAmountPlaceholder": "0.00"
   }
 }

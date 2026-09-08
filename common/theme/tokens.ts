@@ -7,7 +7,22 @@
  * docs/superpowers/specs/2026-05-27-nexchool-ui-refactor-slice1-design.md.
  */
 
-const space = { 2: 2, 4: 4, 8: 8, 12: 12, 16: 16, 20: 20, 24: 24, 32: 32, 40: 40, 48: 48 } as const;
+const space = {
+  2: 2,
+  4: 4,
+  6: 6,
+  8: 8,
+  10: 10,
+  12: 12,
+  16: 16,
+  18: 18,
+  20: 20,
+  24: 24,
+  28: 28,
+  32: 32,
+  40: 40,
+  48: 48,
+} as const;
 export const Spacing = {
   ...space,
   xs: space[4],
@@ -64,12 +79,14 @@ export const Breakpoint = { sm: 600, md: 840, lg: 1200 } as const;
  */
 export const ContentMaxWidth = 720;
 
+const radiusScale = { 4: 4, 8: 8, 12: 12, 14: 14, 16: 16, 20: 20, 24: 24 } as const;
 export const Radius = {
-  sm: 4,
-  DEFAULT: 8,
-  md: 12,
-  lg: 16,
-  xl: 24,
+  ...radiusScale,
+  sm: radiusScale[4],
+  DEFAULT: radiusScale[8],
+  md: radiusScale[12],
+  lg: radiusScale[16],
+  xl: radiusScale[24],
   full: 9999,
 } as const;
 

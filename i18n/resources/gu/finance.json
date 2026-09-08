@@ -19,7 +19,9 @@
     "left": "બાકી",
     "components": "ઘટકો",
     "componentsLine": "{{count}} ઘટકો",
-    "optional": "(વૈકલ્પિક)"
+    "optional": "(વૈકલ્પિક)",
+    "comingSoon": "ટૂંક સમયમાં",
+    "tryAgainLater": "કૃપા કરીને ફરી પ્રયાસ કરો."
   },
   "dashboard": {
     "title": "નાણાં",
@@ -47,7 +49,9 @@
     "goToStudentFees": "વિદ્યાર્થી ફી પર જાઓ",
     "overdueTrend": "ધ્યાન જરૂરી",
     "collectionChartTitle": "ફી સંગ્રહ",
-    "collectionChartSubtitle": "છેલ્લા 7 દિવસ"
+    "collectionChartSubtitle": "છેલ્લા 7 દિવસ",
+    "chartEmpty": "છેલ્લા 7 દિવસમાં કોઈ ફી વસૂલાત નથી.",
+    "chartTotalLabel": "આ અઠવાડિયે વસૂલ"
   },
   "feeFilters": {
     "all": "બધા",
@@ -340,5 +344,21 @@
     "itemNumber": "મુદ્દો {{n}}",
     "removeItem": "મુદ્દો દૂર કરો",
     "addItem": "+ બીજો ફી મુદ્દો ઉમેરો"
+  },
+  "filters": {
+    "title": "ફિલ્ટર",
+    "clearAll": "બધા હટાવો",
+    "apply": "પરિણામ જુઓ",
+    "statusLabel": "સ્થિતિ",
+    "classLabel": "વર્ગ",
+    "classAny": "બધા વર્ગો",
+    "classSearchPlaceholder": "વર્ગ શોધો…",
+    "noClassMatches": "કોઈ મેળ ખાતો વર્ગ નથી."
+  },
+  "createInvoice": {
+    "invalidField": "અમાન્ય",
+    "itemNamePlaceholder": "ટ્યુશન",
+    "itemPeriodPlaceholder": "સત્ર 1",
+    "itemAmountPlaceholder": "0.00"
   }
 }

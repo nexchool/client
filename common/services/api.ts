@@ -1,5 +1,6 @@
 import { API_ENDPOINTS, getApiUrl } from "@/common/constants/api";
 import { noteFeatureStamp } from "@/common/services/featureStamp";
+import { refreshSession } from "@/common/services/sessionRefresh";
 import { notifySessionExpired } from "@/common/services/sessionExpiry";
 import {
   PASSWORD_RESET_REQUIRED_ERROR,
@@ -7,8 +8,8 @@ import {
 } from "@/common/services/passwordResetRequired";
 import {
   getAccessToken,
-  getRefreshToken,
   getTenantId,
+  getTenantSubdomain,
   setAccessToken,
 } from "@/common/utils/storage";
 
@@ -72,10 +73,10 @@ const apiRequest = async (
   skipJsonContentType = false,
 ): Promise<Response> => {
   const url = getApiUrl(endpoint);
-  const [accessToken, refreshToken, tenantId] = await Promise.all([
+  const [accessToken, tenantId, tenantSubdomain] = await Promise.all([
     getAccessToken(),
-    getRefreshToken(),
     getTenantId(),
+    getTenantSubdomain(),
   ]);
 
   const headers: Record<string, string> = skipJsonContentType
@@ -85,35 +86,58 @@ const apiRequest = async (
         ...(options.headers as Record<string, string>),
       };
 
+  // Which application is calling. Optional: the server records an absent
+  // header as "unknown", so a build already on a phone keeps working.
+  headers["X-Client-Surface"] = "student-mobile";
+
   if (accessToken) {
     headers["Authorization"] = `Bearer ${accessToken}`;
   }
-  if (refreshToken) {
-    headers["X-Refresh-Token"] = refreshToken;
-  }
   if (tenantId) {
     headers["X-Tenant-ID"] = tenantId;
+  } else if (tenantSubdomain) {
+    // No confirmed tenant yet — only a subdomain the school-selection step
+    // (or a not-yet-signed-in baked build) recorded. The server resolves this
+    // the same way it resolves the ID header, just one slug lookup further
+    // (core/tenant.py `find_tenant`), which is what lets tenant-branding and
+    // the sign-in policy work before anyone has a token.
+    headers["X-Tenant-Subdomain"] = tenantSubdomain;
   }
 
   try {
-    const response = await fetch(url, { ...options, headers });
+    let response = await fetch(url, { ...options, headers });
 
-    // Handle transparent token refresh
-    // Backend sends 'X-New-Access-Token' header if access token was expired but refresh was valid
+    const isExpiryEndpoint = !ENDPOINTS_WHERE_401_IS_NOT_EXPIRY.some((path) =>
+      endpoint.startsWith(path),
+    );
+
+    // The refresh token no longer rides along with every request. It used to,
+    // so that the server could renew in passing; now that a refresh token may
+    // be spent only once, sending it on twenty parallel requests is sending
+    // it twenty times, and the server cannot tell that from theft. So it is
+    // spent in one place, only when a 401 says it is needed, and the request
+    // is sent again with the new token.
+    //
+    // Once, never a loop: if the renewed token is refused too, the session
+    // really is over. One choke point for the whole app, because the
+    // alternative is every screen deciding for itself what a dead session
+    // looks like.
+    if (response.status === 401 && isExpiryEndpoint) {
+      if (await refreshSession()) {
+        const renewed = await getAccessToken();
+        if (renewed) headers["Authorization"] = `Bearer ${renewed}`;
+        response = await fetch(url, { ...options, headers });
+      }
+    }
+
+    // Older builds of the API renewed in passing and announced it here. Kept
+    // so a phone running against one still picks the new token up.
     const newAccessToken = response.headers.get("X-New-Access-Token");
     if (newAccessToken) {
-      console.log("Token refreshed transparently");
       await setAccessToken(newAccessToken);
     }
 
-    // The refresh token rides along with every request, so the refresh attempt
-    // has already happened by the time a 401 comes back — there is no second
-    // try to make. One choke point for the whole app, because the alternative
-    // is every screen deciding for itself what a dead session looks like.
-    if (
-      response.status === 401 &&
-      !ENDPOINTS_WHERE_401_IS_NOT_EXPIRY.some((path) => endpoint.startsWith(path))
-    ) {
+    if (response.status === 401 && isExpiryEndpoint) {
       notifySessionExpired();
     }
 

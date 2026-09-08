@@ -3,10 +3,8 @@ import {
   View,
   StyleSheet,
   ScrollView,
-  Pressable,
   ActivityIndicator,
   Platform,
-  Modal,
   Linking,
 } from "react-native";
 import Constants from "expo-constants";
@@ -15,8 +13,10 @@ import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import { useTheme } from "@/common/theme";
 import { Text } from "@/common/components/Text";
+import { LanguageSheet, currentLanguageLabel } from "@/common/components/LanguageSheet";
+
 import { AppIcon } from "@/common/components/AppIcon";
-import { Button } from "@/common/components/Button";
+
 import { DetailCard } from "@/common/components/DetailCard";
 import { DetailRow } from "@/common/components/DetailRow";
 import { useAuth } from "@/modules/auth/hooks/useAuth";
@@ -29,8 +29,7 @@ import { uploadProfilePicture } from "@/modules/auth/services/profileService";
 import { StudentDocumentsSection } from "@/modules/students/components/StudentDocumentsSection";
 import { ApiException } from "@/common/services/api";
 import { useTranslation } from "react-i18next";
-import { setAppLanguage, getAppLanguage } from "@/i18n/language";
-import { SUPPORTED_LANGUAGES, type SupportedLanguage } from "@/i18n/config";
+
 import { ProfileHeroCard } from "@/modules/profile/components/ProfileHeroCard";
 import { ProfileActionRow } from "@/modules/profile/components/ProfileActionRow";
 import { useDialog, useToast } from "@/common/feedback";
@@ -67,111 +66,6 @@ async function prepareImageForUploadUri(
   return { uri: dest, name: safeName, mimeType };
 }
 
-const LANGUAGE_LABELS: Record<SupportedLanguage, string> = {
-  en: "English",
-  hi: "हिन्दी",
-  gu: "ગુજરાતી",
-};
-
-function LanguageSheet({
-  visible,
-  onClose,
-  current,
-  onSelect,
-}: {
-  visible: boolean;
-  onClose: () => void;
-  current: SupportedLanguage;
-  onSelect: (lng: SupportedLanguage) => void;
-}) {
-  const { palette, spacing, radius } = useTheme();
-  const { t } = useTranslation("profile");
-  const { confirm } = useDialog();
-  const toast = useToast();
-  return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-      statusBarTranslucent
-    >
-      <Pressable
-        style={[styles.backdrop, { backgroundColor: "rgba(11, 28, 48, 0.40)" }]}
-        onPress={onClose}
-      />
-      <View
-        style={[
-          styles.sheet,
-          {
-            backgroundColor: palette.surfaceContainerLowest,
-            borderTopLeftRadius: radius.xl,
-            borderTopRightRadius: radius.xl,
-            padding: spacing.lg,
-            paddingBottom: spacing.xl,
-          },
-        ]}
-      >
-        <View
-          style={[
-            styles.handle,
-            { backgroundColor: palette.outlineVariant, alignSelf: "center" },
-          ]}
-        />
-        <Text variant="headlineMd" color="onSurface" style={{ marginTop: spacing.md }}>
-          {t("languageSheet.title", { defaultValue: "Language" })}
-        </Text>
-        <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
-          {t("languageSheet.subtitle", {
-            defaultValue: "Choose your preferred language.",
-          })}
-        </Text>
-
-        <View style={{ marginTop: spacing.lg, gap: spacing.sm }}>
-          {SUPPORTED_LANGUAGES.map((lng) => {
-            const isSelected = lng === current;
-            return (
-              <Pressable
-                key={lng}
-                onPress={() => onSelect(lng)}
-                style={({ pressed }) => ({
-                  flexDirection: "row",
-                  alignItems: "center",
-                  paddingVertical: spacing.md,
-                  paddingHorizontal: spacing.md,
-                  borderRadius: radius.DEFAULT,
-                  backgroundColor: isSelected
-                    ? palette.primaryContainer
-                    : pressed
-                    ? palette.surfaceContainer
-                    : "transparent",
-                })}
-              >
-                <Text
-                  variant="bodyLg"
-                  color={isSelected ? "onPrimaryContainer" : "onSurface"}
-                  style={{ flex: 1 }}
-                >
-                  {LANGUAGE_LABELS[lng]}
-                </Text>
-                {isSelected ? (
-                  <AppIcon name="checkmark" size="lg" color="onPrimaryContainer" />
-                ) : null}
-              </Pressable>
-            );
-          })}
-        </View>
-
-        <View style={{ marginTop: spacing.md }}>
-          <Button variant="ghost" fullWidth onPress={onClose}>
-            {t("languageSheet.cancel", { defaultValue: "Cancel" })}
-          </Button>
-        </View>
-      </View>
-    </Modal>
-  );
-}
-
 export default function MyProfileScreen() {
   const toast = useToast();
   const { confirm } = useDialog();
@@ -186,7 +80,6 @@ export default function MyProfileScreen() {
   const [student, setStudent] = useState<Student | null>(null);
   const [teacher, setTeacher] = useState<Teacher | null>(null);
   const [languageSheetOpen, setLanguageSheetOpen] = useState(false);
-  const [currentLang, setCurrentLang] = useState<SupportedLanguage>(getAppLanguage());
 
   useEffect(() => {
     let cancelled = false;
@@ -328,13 +221,6 @@ export default function MyProfileScreen() {
     });
     if (signOut) void logout();
   }, [logout, t]);
-
-  const handleSelectLanguage = useCallback(async (lng: SupportedLanguage) => {
-    setLanguageSheetOpen(false);
-    if (lng === currentLang) return;
-    await setAppLanguage(lng);
-    setCurrentLang(lng);
-  }, [currentLang]);
 
   const appVersion = Constants.expoConfig?.version ?? "—";
 
@@ -607,7 +493,7 @@ export default function MyProfileScreen() {
         trailing={
           <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.sm }}>
             <Text variant="bodyMd" color="onSurfaceVariant">
-              {LANGUAGE_LABELS[currentLang]}
+              {currentLanguageLabel()}
             </Text>
             <AppIcon name="chevron-forward" size="md" color="onSurfaceVariant" />
           </View>
@@ -658,8 +544,6 @@ export default function MyProfileScreen() {
       <LanguageSheet
         visible={languageSheetOpen}
         onClose={() => setLanguageSheetOpen(false)}
-        current={currentLang}
-        onSelect={(lng) => void handleSelectLanguage(lng)}
       />
     </ScrollView>
   );
@@ -668,18 +552,4 @@ export default function MyProfileScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   loadingFill: { flex: 1, justifyContent: "center", alignItems: "center" },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  sheet: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  handle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-  },
 });

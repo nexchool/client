@@ -1,10 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   View,
   StyleSheet,
   ScrollView,
-  Modal,
-  Pressable,
   ActivityIndicator,
   Switch,
 } from "react-native";
@@ -13,11 +11,12 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/common/theme";
 import { Text } from "@/common/components/Text";
+import { LanguageSheet, currentLanguageLabel } from "@/common/components/LanguageSheet";
 import { AppIcon } from "@/common/components/AppIcon";
 import { PageHeader } from "@/common/components/PageHeader";
 import { ProfileActionRow } from "@/modules/profile/components/ProfileActionRow";
+import { BiometricUnlockRow } from "@/modules/auth/components/BiometricUnlockRow";
 import { useAuth } from "@/modules/auth/hooks/useAuth";
-import { setAppLanguage, getAppLanguage, type SupportedLanguage } from "@/i18n";
 import { useDialog } from "@/common/feedback";
 import {
   getPushNotificationsPreference,
@@ -28,15 +27,6 @@ import {
   unregisterDevicePushNotifications,
 } from "@/modules/devices/pushRegistration";
 
-const LANGUAGE_OPTIONS: {
-  code: SupportedLanguage;
-  labelKey: "language.english" | "language.gujarati" | "language.hindi";
-}[] = [
-  { code: "en", labelKey: "language.english" },
-  { code: "gu", labelKey: "language.gujarati" },
-  { code: "hi", labelKey: "language.hindi" },
-];
-
 export default function SettingsScreen() {
   const router = useRouter();
   const { palette, spacing } = useTheme();
@@ -45,33 +35,12 @@ export default function SettingsScreen() {
   const { logout } = useAuth();
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [pending, setPending] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(true);
   const [pushBusy, setPushBusy] = useState(false);
 
-  const current = getAppLanguage();
 
   useEffect(() => {
     void getPushNotificationsPreference().then(setPushEnabled);
-  }, []);
-
-  const currentLabel = useMemo(() => {
-    const opt = LANGUAGE_OPTIONS.find((o) => o.code === current);
-    return opt ? t(`settings:${opt.labelKey}`) : "";
-  }, [current, t]);
-
-  const selectLanguage = useCallback(async (lng: SupportedLanguage) => {
-    if (lng === getAppLanguage()) {
-      setDropdownOpen(false);
-      return;
-    }
-    setPending(true);
-    try {
-      await setAppLanguage(lng);
-      setDropdownOpen(false);
-    } finally {
-      setPending(false);
-    }
   }, []);
 
   const handleBack = useCallback(() => {
@@ -189,25 +158,13 @@ export default function SettingsScreen() {
             )
           }
         />
+        <BiometricUnlockRow />
         <ProfileActionRow
           icon="language-outline"
           label={t("settings:languageSectionTitle")}
-          hint={currentLabel}
-          onPress={() => !pending && setDropdownOpen(true)}
-          trailing={
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: spacing.sm,
-              }}
-            >
-              {pending ? (
-                <ActivityIndicator size="small" color={palette.primary} />
-              ) : null}
-              <AppIcon name="chevron-forward" size="md" color="onSurfaceVariant" />
-            </View>
-          }
+          hint={currentLanguageLabel()}
+          onPress={() => setDropdownOpen(true)}
+          trailing={<AppIcon name="chevron-forward" size="md" color="onSurfaceVariant" />}
         />
         {!Device.isDevice ? (
           <Text
@@ -245,76 +202,10 @@ export default function SettingsScreen() {
         />
       </ScrollView>
 
-      <Modal
+      <LanguageSheet
         visible={dropdownOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setDropdownOpen(false)}
-      >
-        <Pressable
-          style={[styles.modalOverlay, { backgroundColor: "rgba(11, 28, 48, 0.40)" }]}
-          onPress={() => setDropdownOpen(false)}
-        >
-          <Pressable
-            style={[
-              styles.modalSheet,
-              {
-                backgroundColor: palette.surfaceContainerLowest,
-                paddingBottom: spacing.xs,
-              },
-            ]}
-            onPress={(e) => e.stopPropagation()}
-          >
-            <Text
-              variant="labelSm"
-              color="onSurfaceVariant"
-              style={{
-                paddingHorizontal: spacing.md,
-                paddingTop: spacing.md,
-                paddingBottom: spacing.sm,
-              }}
-            >
-              {t("settings:languageSectionTitle")}
-            </Text>
-            <View
-              style={[styles.modalDivider, { backgroundColor: palette.outlineVariant }]}
-            />
-            {LANGUAGE_OPTIONS.map(({ code, labelKey }, index) => {
-              const selected = current === code;
-              const isLast = index === LANGUAGE_OPTIONS.length - 1;
-              return (
-                <Pressable
-                  key={code}
-                  style={[
-                    styles.modalOption,
-                    { paddingVertical: spacing.md, paddingHorizontal: spacing.md },
-                    !isLast && {
-                      borderBottomWidth: StyleSheet.hairlineWidth,
-                      borderBottomColor: palette.outlineVariant,
-                    },
-                  ]}
-                  onPress={() => void selectLanguage(code)}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected }}
-                >
-                  <Text
-                    variant="bodyMd"
-                    color={selected ? "primary" : "onSurface"}
-                    style={{ flex: 1 }}
-                  >
-                    {t(`settings:${labelKey}`)}
-                  </Text>
-                  {selected ? (
-                    <AppIcon name="checkmark" size="md" color="primary" />
-                  ) : (
-                    <View style={styles.modalOptionSpacer} />
-                  )}
-                </Pressable>
-              );
-            })}
-          </Pressable>
-        </Pressable>
-      </Modal>
+        onClose={() => setDropdownOpen(false)}
+      />
     </View>
   );
 }
@@ -322,26 +213,4 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scroll: { flex: 1 },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-  },
-  modalSheet: {
-    width: "100%",
-    maxWidth: 300,
-    borderRadius: 16,
-    overflow: "hidden",
-  },
-  modalDivider: {
-    height: StyleSheet.hairlineWidth,
-    marginHorizontal: 16,
-  },
-  modalOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  modalOptionSpacer: { width: 20, height: 20 },
 });

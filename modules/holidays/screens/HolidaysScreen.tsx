@@ -29,7 +29,7 @@ function useDebounce<T>(value: T, delay: number): T {
 
 export default function HolidaysScreen() {
   const { t } = useTranslation('holidays');
-  const { palette, spacing, radius, elevation } = useTheme();
+  const { palette, spacing, radius, elevation, typography } = useTheme();
   const { selectedAcademicYearId } = useAcademicYearContext();
   const {
     holidays, recurringHolidays, loading, error,
@@ -110,7 +110,7 @@ export default function HolidaysScreen() {
       >
         <AppIcon name="search" size="md" color="onSurfaceVariant" />
         <TextInput
-          style={[styles.searchInput, { color: palette.onSurface }]}
+          style={[typography.bodyMd, styles.searchInput, { color: palette.onSurface }]}
           placeholder={t('screen.searchPlaceholder')}
           placeholderTextColor={palette.onSurfaceVariant}
           value={search}

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Pressable, View, FlatList } from 'react-native';
+import { Pressable, View, FlatList } from 'react-native';
 import { useTheme } from '@/common/theme';
 import { Text } from '@/common/components/Text';
+import { BottomSheet } from '@/common/components/sheet';
+import { useModalBodyHeight } from '@/common/hooks/useModalBodyHeight';
 import { Input } from '@/common/components/Input';
 import { Link } from '@/common/components/Link';
 import { useClasses } from '@/modules/finance/hooks/useFinance';
@@ -24,6 +26,7 @@ const DEFAULT_BY_SCOPE: Record<AudienceScope, AudienceJson> = {
 
 export function AudiencePicker({ value, onChange, error }: Props) {
   const { palette, spacing, radius } = useTheme();
+  const bodyHeight = useModalBodyHeight(420);
   const { data: classes = [] } = useClasses();
   const { students, fetchStudents } = useStudents();
   const [studentSheetVisible, setStudentSheetVisible] = useState(false);
@@ -183,31 +186,11 @@ export function AudiencePicker({ value, onChange, error }: Props) {
             </Text>
           </Pressable>
 
-          <Modal
+          <BottomSheet
             visible={studentSheetVisible}
-            transparent
-            animationType="slide"
-            onRequestClose={() => setStudentSheetVisible(false)}
+            onClose={() => setStudentSheetVisible(false)}
+            dismissOnBackdropPress={false}
           >
-            <Pressable
-              onPress={() => setStudentSheetVisible(false)}
-              style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' }}
-            >
-              <Pressable
-                onPress={(e) => e.stopPropagation()}
-                style={{
-                  marginTop: 'auto',
-                  height: '85%',
-                  backgroundColor: palette.surfaceContainerLowest,
-                  borderTopLeftRadius: radius.xl,
-                  borderTopRightRadius: radius.xl,
-                  padding: spacing.lg,
-                  gap: spacing.md,
-                }}
-              >
-                <View style={{ alignItems: 'center' }}>
-                  <View style={{ width: 40, height: 4, borderRadius: radius.sm, backgroundColor: palette.outlineVariant }} />
-                </View>
                 <Text variant="headlineMd" color="onSurface">Pick students</Text>
                 <Input
                   label=""
@@ -216,6 +199,7 @@ export function AudiencePicker({ value, onChange, error }: Props) {
                   placeholder="Search by name"
                 />
                 <FlatList
+                  style={{ maxHeight: bodyHeight }}
                   data={filteredStudents}
                   keyExtractor={(s: { id: string }) => s.id}
                   renderItem={({ item }: { item: { id: string; name?: string; admission_number?: string } }) => {
@@ -248,9 +232,7 @@ export function AudiencePicker({ value, onChange, error }: Props) {
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Link onPress={() => setStudentSheetVisible(false)}>Done</Link>
                 </View>
-              </Pressable>
-            </Pressable>
-          </Modal>
+          </BottomSheet>
         </View>
       ) : null}
 

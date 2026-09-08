@@ -93,6 +93,8 @@ export const PROFILE_MANAGE = 'profile.manage';
 
 // Finance Management (RBAC uses finance.read, finance.manage)
 export const FINANCE_READ = 'finance.read';
+export const FINANCE_COLLECT = 'finance.collect';
+export const FINANCE_REFUND = 'finance.refund';
 export const FINANCE_MANAGE = 'finance.manage';
 
 // Fees Invoice + Receipt (RBAC)

@@ -94,7 +94,7 @@ function SheetBody({
   footer?: React.ReactNode;
 }) {
   const { t } = useTranslation();
-  const { palette, spacing, radius } = useTheme();
+  const { palette, spacing, radius, typography } = useTheme();
   const [query, setQuery] = useState('');
   const showSearch = options.length > SEARCH_THRESHOLD;
   const filtered = useMemo(() => {
@@ -130,7 +130,10 @@ function SheetBody({
             onChangeText={setQuery}
             placeholder={t('select.searchPlaceholder', { defaultValue: 'Search…' })}
             placeholderTextColor={palette.onSurfaceVariant}
-            style={{ flex: 1, color: palette.onSurface, paddingVertical: 0 }}
+            // Spread the role, don't just colour it: a bare TextInput has no
+            // variant to inherit from, so without this the query renders in
+            // the system font while every option under it is Inter.
+            style={[typography.bodyMd, { flex: 1, color: palette.onSurface, paddingVertical: 0 }]}
           />
         </View>
       ) : null}

@@ -4,16 +4,12 @@ import {
   View,
   ScrollView,
   RefreshControl,
-  Modal,
-  Pressable,
   TextInput,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTheme, type Palette } from "@/common/theme";
 import { Text } from "@/common/components/Text";
+import { BottomSheet } from "@/common/components/sheet";
 import { AppIcon } from "@/common/components/AppIcon";
 import { PressScale } from "@/common/components/PressScale";
 import { Skeleton } from "@/common/components/Skeleton";
@@ -84,7 +80,7 @@ export function HostelGatepassDetailScreen() {
   const toast = useToast();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { palette, spacing, radius, elevation } = useTheme();
+  const { palette, spacing, radius, elevation, typography } = useTheme();
   const { hasPermission } = usePermissions();
   const { data, isLoading, error, refetch, isRefetching } = useHostelGatepass(id);
 
@@ -312,39 +308,11 @@ export function HostelGatepassDetailScreen() {
         ) : null}
       </ScrollView>
 
-      <Modal
+      <BottomSheet
         visible={rejectOpen}
-        transparent
-        animationType="slide"
-        onRequestClose={() => !busy && setRejectOpen(false)}
+        onClose={() => !busy && setRejectOpen(false)}
+        dismissOnBackdropPress={false}
       >
-        <Pressable
-          style={[StyleSheet.absoluteFillObject, { backgroundColor: "rgba(0,0,0,0.4)" }]}
-          onPress={() => !busy && setRejectOpen(false)}
-        />
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          style={{ position: "absolute", bottom: 0, left: 0, right: 0 }}
-        >
-          <View
-            style={{
-              backgroundColor: palette.surfaceContainerLowest,
-              borderTopLeftRadius: radius.xl,
-              borderTopRightRadius: radius.xl,
-              padding: spacing.lg,
-              paddingBottom: spacing.xl,
-              gap: spacing.md,
-            }}
-          >
-            <View
-              style={{
-                alignSelf: "center",
-                width: 36,
-                height: 4,
-                borderRadius: 2,
-                backgroundColor: palette.outlineVariant,
-              }}
-            />
             <Text variant="headlineMd" color="onSurface">
               {t("gatepass.confirmReject", { defaultValue: "Reject this gate pass?" })}
             </Text>
@@ -357,7 +325,7 @@ export function HostelGatepassDetailScreen() {
               placeholderTextColor={palette.onSurfaceVariant}
               multiline
               editable={!busy}
-              style={{
+              style={{ ...typography.bodyMd,
                 minHeight: 80,
                 textAlignVertical: "top",
                 backgroundColor: palette.surfaceContainerHigh,
@@ -382,9 +350,7 @@ export function HostelGatepassDetailScreen() {
                 onPress={submitReject}
               />
             </View>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
+      </BottomSheet>
     </View>
   );
 }

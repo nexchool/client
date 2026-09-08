@@ -19,11 +19,32 @@ type Props = {
   helper?: string;
   secureTextEntry?: boolean;
   rightSlot?: ReactNode;
+  /** Leading glyph inside the field, before the text input. Optional — most
+   * callers render no icon, so this changes nothing for them. */
+  leftIcon?: ReactNode;
+  /** Rendered at the far end of the label row, opposite `label` — e.g. an
+   * inline "Forgot password?" link beside the Password label. Optional. */
+  labelRight?: ReactNode;
   keyboardType?: KeyboardTypeOptions;
   autoComplete?: TextInputProps['autoComplete'];
   autoCapitalize?: TextInputProps['autoCapitalize'];
   disabled?: boolean;
   testID?: string;
+  /**
+   * 'outlined' (default) is every existing caller: a hairline border visible
+   * at rest, white/`surfaceContainerLowest` fill. 'filled' is the sign-in
+   * screen's soft-tint treatment — border only appears for focus/error
+   * feedback, not at rest, so the field itself (not a border) is the
+   * affordance. Scoped to a prop rather than a new default so the other 15
+   * call sites of this component are pixel-unchanged.
+   */
+  variant?: 'outlined' | 'filled';
+  /** Field corner radius override. Defaults to `radius.DEFAULT` (8), matching
+   * every existing caller. */
+  cornerRadius?: number;
+  /** Gap between the label row and the field box. Defaults to 8 (existing
+   * behavior). */
+  labelGap?: number;
 };
 
 export function Input({
@@ -35,41 +56,55 @@ export function Input({
   helper,
   secureTextEntry,
   rightSlot,
+  leftIcon,
+  labelRight,
   keyboardType,
   autoComplete,
   autoCapitalize,
   disabled,
   testID,
+  variant = 'outlined',
+  cornerRadius,
+  labelGap = 8,
 }: Props) {
   const { palette, spacing, radius, typography, elevation } = useTheme();
   const [focused, setFocused] = useState(false);
+  const isFilled = variant === 'filled';
 
   const borderColor = error
     ? palette.error
     : focused
     ? palette.primary
     : palette.outlineVariant;
-  const borderWidth = error || focused ? 1.5 : 1;
+  const showBorder = !isFilled || !!error || focused;
+  const borderWidth = showBorder ? (error || focused ? 1.5 : 1) : 0;
 
   const helperColor = error ? palette.error : palette.onSurfaceVariant;
   const helperText = error ?? helper ?? ' '; // reserve height
 
   return (
     <View style={styles.root}>
-      <Text maxFontSizeMultiplier={FontScaleCap.labelMd}
-        style={[
-          typography.labelMd,
-          { color: palette.onSurfaceVariant, marginBottom: 8, includeFontPadding: false },
-        ]}
-      >
-        {label}
-      </Text>
+      <View style={styles.labelRow}>
+        <Text maxFontSizeMultiplier={FontScaleCap.labelMd}
+          style={[
+            typography.labelMd,
+            { color: palette.onSurfaceVariant, marginBottom: labelGap, includeFontPadding: false },
+          ]}
+        >
+          {label}
+        </Text>
+        {labelRight}
+      </View>
       <View
         style={[
           styles.fieldWrap,
           {
-            backgroundColor: disabled ? palette.surfaceContainer : palette.surfaceContainerLowest,
-            borderRadius: radius.DEFAULT,
+            backgroundColor: disabled
+              ? palette.surfaceContainer
+              : isFilled
+              ? palette.surfaceContainerLow
+              : palette.surfaceContainerLowest,
+            borderRadius: cornerRadius ?? radius.DEFAULT,
             borderColor,
             borderWidth,
             paddingHorizontal: spacing.md,
@@ -78,6 +113,7 @@ export function Input({
           focused && !error ? elevation.focusRing(palette.primary) : null,
         ]}
       >
+        {leftIcon ? <View style={styles.left}>{leftIcon}</View> : null}
         <TextInput
           maxFontSizeMultiplier={FontScaleCap.bodyMd}
           testID={testID}
@@ -118,6 +154,7 @@ export function Input({
 
 const styles = StyleSheet.create({
   root: { width: '100%' },
+  labelRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   fieldWrap: {
     height: 52,
     flexDirection: 'row',
@@ -127,5 +164,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 0,
   },
+  left: { marginRight: 8 },
   right: { marginLeft: 8 },
 });

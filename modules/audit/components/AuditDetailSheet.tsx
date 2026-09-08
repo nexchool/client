@@ -1,9 +1,11 @@
 // client/modules/audit/components/AuditDetailSheet.tsx
 import React from 'react';
-import { Modal, Pressable, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
 import { Text } from '@/common/components/Text';
+import { BottomSheet } from '@/common/components/sheet';
+import { useModalBodyHeight } from '@/common/hooks/useModalBodyHeight';
 import type { AuditLogEntry } from '../types';
 
 function metaRows(meta: Record<string, unknown> | null): { key: string; value: string }[] {
@@ -24,7 +26,8 @@ type Props = {
 };
 
 export function AuditDetailSheet({ entry, visible, onClose }: Props) {
-  const { palette, spacing, radius } = useTheme();
+  const { spacing } = useTheme();
+  const bodyHeight = useModalBodyHeight(420);
   const { t } = useTranslation('audit');
 
   if (!entry) return null;
@@ -45,27 +48,11 @@ export function AuditDetailSheet({ entry, visible, onClose }: Props) {
   );
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable onPress={onClose} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' }}>
-        <Pressable
-          onPress={(e) => e.stopPropagation()}
-          style={{
-            marginTop: 'auto',
-            maxHeight: '85%',
-            backgroundColor: palette.surfaceContainerLowest,
-            borderTopLeftRadius: radius.xl,
-            borderTopRightRadius: radius.xl,
-            padding: spacing.lg,
-            gap: spacing.md,
-          }}
-        >
-          <View style={{ alignItems: 'center' }}>
-            <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: palette.outlineVariant }} />
-          </View>
+    <BottomSheet visible={visible} onClose={onClose}>
           <Text variant="headlineMd" color="onSurface">
             {entry.action}
           </Text>
-          <ScrollView contentContainerStyle={{ gap: spacing.md }} showsVerticalScrollIndicator={false}>
+          <ScrollView style={{ maxHeight: bodyHeight }} contentContainerStyle={{ gap: spacing.md }} showsVerticalScrollIndicator={false}>
             {labeledRow(t('detail.actor'), `${entry.actor_name} · ${entry.actor_role}`)}
             {labeledRow(t('detail.module'), entry.module)}
             {labeledRow(t('detail.resource'), resource)}
@@ -96,8 +83,6 @@ export function AuditDetailSheet({ entry, visible, onClose }: Props) {
               )}
             </View>
           </ScrollView>
-        </Pressable>
-      </Pressable>
-    </Modal>
+    </BottomSheet>
   );
 }

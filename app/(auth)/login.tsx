@@ -1,22 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
+import { View, Pressable, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
 import { ScreenContainer } from '@/common/components/ScreenContainer';
 import { Text } from '@/common/components/Text';
-import { Logo } from '@/common/components/Logo';
-import { Input } from '@/common/components/Input';
-import { Button } from '@/common/components/Button';
 import { Link } from '@/common/components/Link';
-import { useLogin } from '@/modules/auth/hooks/useLogin';
+import { BrandHeader } from '@/modules/auth/components/BrandHeader';
+import { AuthCard } from '@/modules/auth/components/AuthCard';
+import { AuthTrustFooter } from '@/modules/auth/components/AuthTrustFooter';
+import { EmailPasswordForm } from '@/modules/auth/components/EmailPasswordForm';
+import { MobilePinForm } from '@/modules/auth/components/MobilePinForm';
+import { MobileOtpForm } from '@/modules/auth/components/MobileOtpForm';
+import { usePublishedAuthMethods } from '@/modules/auth/hooks/usePublishedAuthMethods';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
-import { isLoginFieldError } from '@/modules/auth/errors/LoginFieldError';
 import { didSessionExpire } from '@/common/services/sessionExpiry';
+
+/** Which form is on screen. `'home'` is a sentinel, not a fourth form — it
+ * resolves to whichever method is this school's default (see `homeMode`
+ * below) until the visitor explicitly picks a different one. Using a
+ * sentinel rather than seeding the real state with `homeMode` means a
+ * navigation choice already made is never silently overwritten by branding
+ * arriving late. */
+type Mode = 'home' | 'email' | 'otp' | 'pin';
 
 export default function LoginScreen() {
   const { t } = useTranslation('auth');
-  const { palette, spacing, radius } = useTheme();
+  const { palette, spacing } = useTheme();
 
   // Arriving here mid-task because the session died, rather than because the
   // user asked to sign out, needs saying — otherwise the app looks like it
@@ -25,49 +35,55 @@ export default function LoginScreen() {
   // it, so there is nothing to re-render for.
   const [wasSessionExpired] = useState(didSessionExpire);
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [emailError, setEmailError] = useState('');
-  const [passwordError, setPasswordError] = useState('');
-  const [choosingTenant, setChoosingTenant] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  // Which ways in this school allows, and its display identity — both read
+  // from the same public branding response. A method a school has not
+  // enabled is not offered, and because the server refuses it anyway this
+  // hides an option rather than enforcing a rule. `loaded` distinguishes
+  // "still asking" from "asked and this school offers nothing extra" — see
+  // `usePublishedAuthMethods`.
+  const { allows, methods, branding, loaded } = usePublishedAuthMethods();
+  const [mode, setMode] = useState<Mode>('home');
 
-  const { login, loading, error } = useLogin();
-  const {
-    isAuthenticated,
-    mustResetPassword,
-    pendingTenantChoice,
-    loginWithTenant,
-    clearPendingTenantChoice,
-  } = useAuth();
+  const { isAuthenticated, mustResetPassword, pendingTenantChoice, loginWithTenant, clearPendingTenantChoice } =
+    useAuth();
+  const [choosingTenant, setChoosingTenant] = useState(false);
+
+  // `email_password` is a real, disable-able method key like the other two
+  // (`server/modules/auth/policy.py`). Whether it is *offered as a link* from
+  // another form only matters once `loaded` is true — nothing method-specific
+  // renders before then (see below) — and an empty `methods` (offline, or a
+  // school with no policy row) still lands on the email form regardless of
+  // this value, via `homeMode`'s own fallback a few lines down. So this no
+  // longer needs a `!loaded` escape hatch the way it used to.
+  const emailOffered = methods.includes('email_password');
+  const otpOffered = allows('mobile_otp');
+  const pinOffered = allows('mobile_pin');
+
+  // The screen this school lands on. Email whenever it is offered — the
+  // common case, and every staff account's only method — otherwise whichever
+  // mobile method is. If a policy row somehow enables none of the three
+  // (a configuration the panel does not let anyone reach), email is still
+  // the fallback: a signed-out screen must never render as empty.
+  const homeMode: 'email' | 'otp' | 'pin' = emailOffered
+    ? 'email'
+    : otpOffered
+      ? 'otp'
+      : pinOffered
+        ? 'pin'
+        : 'email';
+  const activeMode: 'email' | 'otp' | 'pin' = mode === 'home' ? homeMode : mode;
 
   // Both sign-in paths land here — plain sign-in and the tenant picker below
   // both end in the auth context accepting a login response — so the one place
   // that reads the response's `force_password_reset` is the one place that
-  // decides where sign-in goes.
+  // decides where sign-in goes. True of all three methods now, not just
+  // email: each writes to the same auth context state this effect watches.
   useEffect(() => {
     if (!isAuthenticated) return;
     router.replace(
       mustResetPassword ? '/(auth)/set-password' : '/(protected)/home',
     );
   }, [isAuthenticated, mustResetPassword]);
-
-  const handleLogin = async () => {
-    setEmailError('');
-    setPasswordError('');
-
-    try {
-      await login(email, password);
-    } catch (err: unknown) {
-      if (isLoginFieldError(err)) {
-        if (err.field === 'email') {
-          setEmailError(err.message);
-        } else {
-          setPasswordError(err.message);
-        }
-      }
-    }
-  };
 
   const handleChooseSchool = async (tenantId: string) => {
     setChoosingTenant(true);
@@ -83,7 +99,9 @@ export default function LoginScreen() {
     }
   };
 
-  // Tenant-choice sub-state — preserves existing multi-tenant flow.
+  // Tenant-choice sub-state — preserves existing multi-tenant flow. Email
+  // sign-in only: a mobile number is unique inside one school at best, so
+  // neither mobile method ever produces this choice.
   if (pendingTenantChoice?.tenants?.length) {
     return (
       <ScreenContainer>
@@ -146,109 +164,88 @@ export default function LoginScreen() {
             </View>
           )}
         </View>
+
+        <AuthTrustFooter />
       </ScreenContainer>
     );
   }
 
   return (
-    <ScreenContainer>
-      <View style={styles.header}>
-        <Logo size="lg" />
-      </View>
+    <ScreenContainer noHorizontalPadding>
+      {/* `ScreenContainer`'s scroll content is `flexGrow: 1` (see its
+       * `scrollContent` style) so this View — the sole child of that
+       * content — is always at least viewport-tall. Without a
+       * `justifyContent` here the two groups below stack top-aligned and
+       * any slack a tall viewport hands back collects in one place: below
+       * the footer, as dead background nobody asked for. `space-between`
+       * sends that same slack to the gap between the card group and the
+       * footer instead, where it reads as breathing room. When content
+       * does not fit (short device, error banner, large font scale) this
+       * View's height is driven by its children instead, `space-between`
+       * has no extra space to distribute, and the outer ScrollView takes
+       * over — same as before this change. */}
+      <View style={{ flex: 1, justifyContent: 'space-between' }}>
+        <View>
+          <BrandHeader branding={branding} loaded={loaded} />
 
-      <Text
-        variant="display"
-        color="onSurface"
-        style={{ textAlign: 'center', marginTop: spacing.xl }}
-      >
-        {t('welcomeBack')}
-      </Text>
-      <Text
-        variant="bodyMd"
-        color="onSurfaceVariant"
-        style={{ textAlign: 'center', marginTop: spacing.xs }}
-      >
-        {t('signInSubtitle')}
-      </Text>
+          <View
+            style={{
+              paddingHorizontal: spacing.marginMobile,
+              marginTop: spacing.xs,
+            }}
+          >
+            <AuthCard>
+              {!loaded ? (
+                // Rendering the email form here (the old behaviour) is what made
+                // an OTP-only school visibly swap forms once its policy landed —
+                // nothing method-specific is known yet, so nothing
+                // method-specific renders. `BrandHeader` above already shows its
+                // own loaded=false treatment (a plain mark, no borrowed
+                // identity); this is that same "still asking" moment for the
+                // form area, not a second design. The card itself still renders
+                // — it is chrome, not borrowed identity, so there is nothing
+                // dishonest about showing it before branding settles.
+                <ActivityIndicator
+                  size="large"
+                  color={palette.primary}
+                  style={{ marginTop: spacing.xl }}
+                />
+              ) : activeMode === 'email' ? (
+                <EmailPasswordForm
+                  wasSessionExpired={wasSessionExpired}
+                  onUseOtp={otpOffered ? () => setMode('otp') : undefined}
+                  onUsePin={pinOffered ? () => setMode('pin') : undefined}
+                />
+              ) : activeMode === 'otp' ? (
+                <MobileOtpForm
+                  onBack={emailOffered ? () => setMode('email') : undefined}
+                  onUsePin={pinOffered ? () => setMode('pin') : undefined}
+                />
+              ) : (
+                <MobilePinForm
+                  onBack={emailOffered ? () => setMode('email') : undefined}
+                  onUseOtp={otpOffered ? () => setMode('otp') : undefined}
+                />
+              )}
+            </AuthCard>
+          </View>
+        </View>
 
-      {wasSessionExpired ? (
         <View
           style={{
-            marginTop: spacing.lg,
-            padding: spacing.md,
-            borderRadius: radius.lg,
-            backgroundColor: palette.errorContainer,
+            paddingHorizontal: spacing.marginMobile,
+            // `ScreenContainer` already reserves the real bottom safe-area
+            // inset for this screen: its `SafeAreaView` always includes the
+            // `bottom` edge (see `ScreenContainer`'s `edges`), which sits
+            // *outside* this scroll content, below it — so re-adding
+            // `insets.bottom` here would double-count it. This is only the
+            // small deliberate gap between "Need help?" and that inset.
+            paddingBottom: spacing.md,
           }}
         >
-          <Text variant="bodyMd" color="onErrorContainer" style={{ textAlign: 'center' }}>
-            {t('sessionExpired', {
-              defaultValue: 'Your session has expired. Please sign in again.',
-            })}
-          </Text>
+          <AuthTrustFooter />
         </View>
-      ) : null}
-
-      <View style={{ marginTop: spacing.xl, gap: spacing.md }}>
-        <Input
-          label={t('emailLabel')}
-          placeholder={t('emailPlaceholder')}
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoComplete="email"
-          autoCapitalize="none"
-          error={emailError}
-        />
-
-        <Input
-          label={t('passwordLabel')}
-          placeholder={t('passwordPlaceholder')}
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry={!showPassword}
-          autoComplete="password"
-          autoCapitalize="none"
-          error={passwordError}
-          rightSlot={
-            <Link onPress={() => setShowPassword((s) => !s)}>
-              {showPassword
-                ? t('hide', { defaultValue: 'Hide' })
-                : t('show', { defaultValue: 'Show' })}
-            </Link>
-          }
-        />
-
-        <View style={{ alignItems: 'flex-end' }}>
-          <Link onPress={() => router.push('/(auth)/forgot-password')}>
-            {t('forgotPassword')}
-          </Link>
-        </View>
-      </View>
-
-      {error ? (
-        <Text
-          variant="bodyMd"
-          color="error"
-          style={{ textAlign: 'center', marginTop: spacing.md }}
-        >
-          {error}
-        </Text>
-      ) : null}
-
-      {/*
-        No sign-up link: schools issue credentials, and the self-service
-        register endpoint this used to point at has been deleted from the
-        server.
-      */}
-      <View style={{ marginTop: spacing.lg, paddingBottom: 32 }}>
-        <Button variant="primary" fullWidth loading={loading} onPress={handleLogin}>
-          {t('signIn')}
-        </Button>
       </View>
     </ScreenContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  header: { alignItems: 'center', paddingTop: 32 },
-});
