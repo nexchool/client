@@ -203,7 +203,10 @@ export function BrandHeader({ branding, loaded }: Props) {
 
   const primary = palette.primary;
   // The logo/name row sits near the top of the band, which is the start of
-  // this diagonal gradient (`start={{x:0.25,y:0}}`) — i.e. gradientColors[0].
+  // this now near-vertical gradient (`start={{x:0.5,y:0}}`, see below) — i.e.
+  // gradientColors[0]. Because the gradient is close to vertical rather than
+  // corner-to-corner, that stop covers the full width of the row, not just
+  // one corner of it, so this contrast holds regardless of viewport width.
   // That is the one stop white text depends on for contrast, so it is
   // computed to clear WCAG AA (4.5:1) with real margin: shade(primary, 0.45)
   // against white is ~12.75:1 for the app's default primary (#4648d4 →
@@ -221,10 +224,22 @@ export function BrandHeader({ branding, loaded }: Props) {
       <LinearGradient
         colors={gradientColors}
         locations={[0, 0.5, 1]}
-        // Approximates admin-web's 150deg direction (mostly down, tilted
-        // toward the right) in expo-linear-gradient's 0-1 start/end space.
-        start={{ x: 0.25, y: 0 }}
-        end={{ x: 0.75, y: 1 }}
+        // admin-web's 150deg direction was ported verbatim from a *tall*
+        // left-hand column, where a corner-to-corner diagonal reads fine. On
+        // this band (a wide 2.5:1 letterbox, not a column) the same diagonal
+        // — expressed in unit start/end coordinates, so it gets stretched by
+        // the box's real aspect ratio — drives the lightest stop into the
+        // top-right corner, right where the logo badge and school name sit.
+        // The wave (`BandWave`) cuts the band along its *bottom* edge, so the
+        // gradient is re-aimed close to vertical instead: lightness now
+        // increases downward, the lightest stop is mostly clipped by the
+        // wave, and the logo/name row — near the top, at any x — sits on the
+        // darkest stop (`gradientColors[0]`, see the contrast note above)
+        // regardless of viewport width. The small x-drift (0.5 -> 0.62) keeps
+        // a slight diagonal for visual interest without reintroducing a pale
+        // corner.
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.62, y: 1 }}
       >
         <BandDecor />
         <View

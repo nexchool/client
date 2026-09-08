@@ -178,13 +178,19 @@ export default function LoginScreen() {
         style={{
           paddingHorizontal: spacing.marginMobile,
           marginTop: spacing.xs,
-          // No pinned control floats over this column anymore (the old
-          // `SupportFab` — see `AuthTrustFooter`, where its affordance
-          // lives now), so this is just ordinary trailing scroll comfort,
-          // not clearance for a sibling. `scrollBottom` is the token this
-          // app already uses for that on plain scroll screens with no
-          // action bar pinned over the content.
-          paddingBottom: spacing.scrollBottom,
+          // `scrollBottom` (96) exists to clear the bottom TAB BAR on
+          // scrolling app screens (see its doc comment in tokens.ts) — this
+          // screen has no tab bar, it has its own footer, so that 96px was
+          // pure dead space below "Need help?", enough on its own to push a
+          // page that otherwise fits the viewport into being scrollable.
+          // `ScreenContainer` already reserves the real bottom safe-area
+          // inset for this screen: its `SafeAreaView` always includes the
+          // `bottom` edge (see `ScreenContainer`'s `edges`), which sits
+          // *outside* this scroll content, below it — so re-adding
+          // `insets.bottom` here would double-count it. All this needs is
+          // its own small trailing gap instead of tab-bar clearance it will
+          // never use.
+          paddingBottom: spacing.md,
         }}
       >
         <AuthCard>
