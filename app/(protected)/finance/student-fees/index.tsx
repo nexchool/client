@@ -1,22 +1,10 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  View,
-  RefreshControl,
-  TextInput,
-  FlatList,
-  ScrollView,
-  Pressable,
-} from "react-native";
+import { View, RefreshControl, FlatList, Pressable } from "react-native";
 import { useRouter } from "expo-router";
-import {
-  useStudentFees,
-  useAcademicYears,
-  useClasses,
-} from "@/modules/finance/hooks/useFinance";
+import { useStudentFees, useClasses } from "@/modules/finance/hooks/useFinance";
 import { useAcademicYearContext } from "@/modules/academics/context/AcademicYearContext";
 import { calendarLocaleForLanguage } from "@/i18n";
-import { ClassSelect } from "@/common/components/ClassSelect";
 import { ProfileAvatar } from "@/common/components/ProfileAvatar";
 import { useTheme, type Palette } from "@/common/theme";
 import { Text } from "@/common/components/Text";
@@ -24,6 +12,14 @@ import { AppIcon } from "@/common/components/AppIcon";
 import { Skeleton } from "@/common/components/Skeleton";
 import { EmptyState } from "@/common/components/EmptyState";
 import { PageHeader } from "@/common/components/PageHeader";
+import { StatusPill } from "@/common/components/StatusPill";
+import { SearchFilterBar } from "@/common/components/SearchFilterBar";
+import {
+  StudentFeeFiltersSheet,
+  EMPTY_STUDENT_FEE_FILTERS,
+  countActiveStudentFeeFilters,
+  type StudentFeeFilters,
+} from "@/modules/finance/components/StudentFeeFiltersSheet";
 import { formatCurrency } from "@/common/utils/formatCurrency";
 import { useDebounce } from "@/common/hooks/useDebounce";
 
@@ -35,9 +31,13 @@ function formatDate(s: string, locale: string) {
   }
 }
 
-const STATUS_VALUES = ["", "overdue", "unpaid", "partial", "paid"] as const;
-
-/** Maps a (derived) student-fee status to its accent palette token. */
+/**
+ * Maps a (derived) student-fee status to its accent palette token.
+ *
+ * The vocabulary stays here — a fee is unpaid or partial, an invoice is
+ * pending, a payment is refunded, and those are three different lists that
+ * merely share an appearance. `StatusPill` owns the appearance.
+ */
 function statusAccentToken(status: string): keyof Palette {
   switch (status) {
     case "paid":
@@ -49,28 +49,6 @@ function statusAccentToken(status: string): keyof Palette {
     default:
       return "onSurfaceVariant";
   }
-}
-
-function StatusPill({ status }: { status: string }) {
-  const { t } = useTranslation("finance");
-  const { palette, spacing, radius } = useTheme();
-  const color = palette[statusAccentToken(status)];
-  return (
-    <View
-      style={{
-        paddingHorizontal: spacing.sm,
-        paddingVertical: 2,
-        borderRadius: radius.full,
-        borderWidth: 1,
-        borderColor: color,
-        backgroundColor: `${color}15`,
-      }}
-    >
-      <Text variant="labelSm" style={{ color }}>
-        {t(`studentFeeStatuses.${status}`, { defaultValue: status })}
-      </Text>
-    </View>
-  );
 }
 
 /** Derive unique statuses from fee items. */
@@ -96,21 +74,18 @@ export default function StudentFeesPage() {
   const locale = calendarLocaleForLanguage(i18n.language ?? "en");
   const router = useRouter();
   const { palette, spacing, radius, elevation } = useTheme();
-  const { selectedAcademicYearId: contextYearId } = useAcademicYearContext();
-  const [academicYearId, setAcademicYearId] = useState<string>("");
-  const [classId, setClassId] = useState<string>("");
-  const [status, setStatus] = useState<string>("");
+  // The year comes from the app-wide switcher in the header and nowhere else.
+  // This screen used to carry its own chip rail as well, so a school with two
+  // year controls on one screen had no way to tell which one was in force.
+  const { selectedAcademicYearId } = useAcademicYearContext();
+  const [filters, setFilters] = useState<StudentFeeFilters>(EMPTY_STUDENT_FEE_FILTERS);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [search, setSearch] = useState("");
   // Debounce so the list doesn't refetch on every keystroke.
   const debouncedSearch = useDebounce(search, 350);
+  const activeFilterCount = countActiveStudentFeeFilters(filters);
 
-  const { data: academicYears = [] } = useAcademicYears(false);
   const { data: classes = [] } = useClasses();
-
-  useEffect(() => {
-    if (contextYearId)
-      setAcademicYearId((prev) => (prev === "" ? contextYearId : prev));
-  }, [contextYearId]);
 
   const {
     data: studentFees = [],
@@ -119,9 +94,9 @@ export default function StudentFeesPage() {
     refetch,
     isRefetching,
   } = useStudentFees({
-    academic_year_id: academicYearId || undefined,
-    class_id: classId || undefined,
-    status: status || undefined,
+    academic_year_id: selectedAcademicYearId || undefined,
+    class_id: filters.classId || undefined,
+    status: filters.status || undefined,
     search: debouncedSearch.trim() || undefined,
     include_items: true,
   });
@@ -130,12 +105,40 @@ export default function StudentFeesPage() {
     () =>
       classes.map((c) => ({
         id: c.id,
-        label: c.display_name ?? (c.section ? `${c.name ?? ""}-${c.section}` : c.name ?? c.id),
-        name: c.name,
-        section: c.section,
+        label:
+          c.display_name ??
+          (c.section ? `${c.name ?? ""}-${c.section}` : c.name ?? c.id),
       })),
     [classes]
   );
+
+  const classLabel = useMemo(
+    () => classOptions.find((c) => c.id === filters.classId)?.label ?? filters.classId,
+    [classOptions, filters.classId]
+  );
+
+  // What is applied, in the words the sheet used to set it.
+  const appliedPills = useMemo(() => {
+    const pills: { key: string; label: string; onRemove: () => void }[] = [];
+    if (filters.classId) {
+      pills.push({
+        key: "class",
+        label: `${t("filters.classLabel", { defaultValue: "Class" })}: ${classLabel}`,
+        onRemove: () => setFilters((prev) => ({ ...prev, classId: null })),
+      });
+    }
+    if (filters.status) {
+      pills.push({
+        key: "status",
+        label: `${t("filters.statusLabel", { defaultValue: "Status" })}: ${t(
+          `feeFilters.${filters.status}`,
+          { defaultValue: filters.status }
+        )}`,
+        onRemove: () => setFilters((prev) => ({ ...prev, status: "" })),
+      });
+    }
+    return pills;
+  }, [filters.classId, filters.status, classLabel, t]);
 
   // Totals KPIs
   const totals = useMemo(() => {
@@ -181,11 +184,11 @@ export default function StudentFeesPage() {
             style={{ marginRight: spacing.md }}
           />
           <View style={{ flex: 1 }}>
-            <Text variant="labelMd" color="onSurface" numberOfLines={1}>
+            <Text variant="titleSm" color="onSurface" numberOfLines={1}>
               {sf.student_name ?? "—"}
             </Text>
             <Text
-              variant="labelSm"
+              variant="bodySm"
               color="onSurfaceVariant"
               numberOfLines={1}
               style={{ marginTop: 2 }}
@@ -243,30 +246,24 @@ export default function StudentFeesPage() {
           }}
         >
           {getStatusesToDisplay(sf.items, sf.status).map((s) => (
-            <StatusPill key={s} status={s} />
+            <StatusPill
+              key={s}
+              tone={statusAccentToken(s)}
+              label={t(`studentFeeStatuses.${s}`, { defaultValue: s })}
+            />
           ))}
         </View>
       </Pressable>
     );
   };
 
-  return (
-    <View style={{ flex: 1, backgroundColor: palette.surface }}>
-      <PageHeader
-        title={t("studentFeesList.title", { defaultValue: "Fee structure" })}
-        onBack={() => router.back()}
-      />
-
-      {/* KPI summary */}
+  // The toolbar and the totals ride inside the list rather than above it.
+  // Pinned, they took roughly two-fifths of the screen before the first row
+  // and never gave it back — on a screen whose whole job is rows.
+  const listHeader = (
+    <View style={{ gap: spacing.md, paddingBottom: spacing.md }}>
       {!error ? (
-        <View
-          style={{
-            flexDirection: "row",
-            gap: spacing.md,
-            paddingHorizontal: spacing.marginMobile,
-            marginTop: spacing.sm,
-          }}
-        >
+        <View style={{ flexDirection: "row", gap: spacing.md }}>
           <View
             style={[
               elevation.card,
@@ -278,7 +275,7 @@ export default function StudentFeesPage() {
               },
             ]}
           >
-            <Text variant="labelSm" color="onSurfaceVariant">
+            <Text variant="overline" color="onSurfaceVariant">
               {t("studentFeesList.totalFees", { defaultValue: "Total fees" })}
             </Text>
             <Text
@@ -301,7 +298,7 @@ export default function StudentFeesPage() {
               },
             ]}
           >
-            <Text variant="labelSm" color="onSurfaceVariant">
+            <Text variant="overline" color="onSurfaceVariant">
               {t("studentFeesList.paidTotal", { defaultValue: "Paid" })}
             </Text>
             <Text
@@ -316,112 +313,26 @@ export default function StudentFeesPage() {
         </View>
       ) : null}
 
-      {/* Search */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          backgroundColor: palette.surfaceContainerLow,
-          borderRadius: radius.md,
-          paddingHorizontal: spacing.md,
-          marginHorizontal: spacing.marginMobile,
-          marginTop: spacing.md,
-        }}
-      >
-        <AppIcon name="search" size="md" color="onSurfaceVariant" />
-        <TextInput
-          style={{
-            flex: 1,
-            color: palette.onSurface,
-            paddingVertical: spacing.sm,
-            marginLeft: spacing.sm,
-          }}
-          value={search}
-          onChangeText={setSearch}
-          placeholder={t("studentFeesList.searchPlaceholder")}
-          placeholderTextColor={palette.onSurfaceVariant}
-        />
-        {search.length > 0 ? (
-          <AppIcon
-            name="close-circle"
-            size="md"
-            color="onSurfaceVariant"
-            onPress={() => setSearch("")}
-            accessibilityLabel="Clear search"
-          />
-        ) : null}
-      </View>
+      <SearchFilterBar
+        value={search}
+        onChangeText={setSearch}
+        placeholder={t("studentFeesList.searchPlaceholder")}
+        onOpenFilters={() => setFiltersOpen(true)}
+        activeFilterCount={activeFilterCount}
+        pills={appliedPills}
+        onClearAll={() => setFilters(EMPTY_STUDENT_FEE_FILTERS)}
+        clearAllLabel={t("filters.clearAll", { defaultValue: "Clear all" })}
+        filtersLabel={t("filters.title", { defaultValue: "Filters" })}
+      />
+    </View>
+  );
 
-      {/* Filters */}
-      <View
-        style={{
-          paddingHorizontal: spacing.marginMobile,
-          paddingTop: spacing.md,
-          gap: spacing.sm,
-        }}
-      >
-        <Text variant="labelSm" color="onSurfaceVariant">
-          {t("studentFeesList.academicYear")}
-        </Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: spacing.sm }}
-        >
-          <Chip
-            active={!academicYearId}
-            label={t("common.all")}
-            onPress={() => setAcademicYearId("")}
-          />
-          {academicYears.map((ay) => (
-            <Chip
-              key={ay.id}
-              active={academicYearId === ay.id}
-              label={ay.name}
-              onPress={() =>
-                setAcademicYearId(academicYearId === ay.id ? "" : ay.id)
-              }
-            />
-          ))}
-        </ScrollView>
-
-        <Text
-          variant="labelSm"
-          color="onSurfaceVariant"
-          style={{ marginTop: spacing.xs }}
-        >
-          {t("studentFeesList.class")}
-        </Text>
-        <ClassSelect
-          value={classId || null}
-          onChange={(id) => setClassId(id ?? "")}
-          options={classOptions}
-          allowEmpty
-          emptyLabel={t("common.all")}
-        />
-
-        <Text
-          variant="labelSm"
-          color="onSurfaceVariant"
-          style={{ marginTop: spacing.xs }}
-        >
-          {t("studentFeesList.status")}
-        </Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: spacing.sm }}
-        >
-          {STATUS_VALUES.map((fv) => (
-            <Chip
-              key={fv || "all"}
-              active={status === fv}
-              label={t(`feeFilters.${fv || "all"}`)}
-              onPress={() => setStatus(fv)}
-            />
-          ))}
-        </ScrollView>
-      </View>
+  return (
+    <View style={{ flex: 1, backgroundColor: palette.surface }}>
+      <PageHeader
+        title={t("studentFeesList.title", { defaultValue: "Fee structure" })}
+        onBack={() => router.back()}
+      />
 
       {error ? (
         <View style={{ padding: spacing.lg, alignItems: "center" }}>
@@ -440,6 +351,7 @@ export default function StudentFeesPage() {
           data={studentFees}
           keyExtractor={(item) => item.id}
           renderItem={renderFeeItem}
+          ListHeaderComponent={listHeader}
           contentContainerStyle={{
             paddingHorizontal: spacing.marginMobile,
             paddingTop: spacing.md,
@@ -449,27 +361,28 @@ export default function StudentFeesPage() {
             <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
           }
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
           ListEmptyComponent={
             <EmptyState
               icon={
                 <AppIcon
-                  name={search ? "search-outline" : "wallet-outline"}
+                  name={search || activeFilterCount > 0 ? "search-outline" : "wallet-outline"}
                   size="xl"
                   color="onSurfaceVariant"
                 />
               }
               title={
-                search
+                search || activeFilterCount > 0
                   ? t("studentFeesList.emptySearch")
                   : t("studentFeesList.emptyNoFees")
               }
               description={
-                search
+                search || activeFilterCount > 0
                   ? t("studentFeesList.emptySearchHint")
                   : t("studentFeesList.emptyNoFeesHint")
               }
               action={
-                !search
+                !search && activeFilterCount === 0
                   ? {
                       label: t("studentFeesList.goToStructures"),
                       onPress: () =>
@@ -483,36 +396,14 @@ export default function StudentFeesPage() {
           }
         />
       )}
-    </View>
-  );
-}
 
-function Chip({
-  active,
-  label,
-  onPress,
-}: {
-  active: boolean;
-  label: string;
-  onPress: () => void;
-}) {
-  const { palette, spacing, radius } = useTheme();
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => ({
-        paddingHorizontal: spacing.md,
-        paddingVertical: spacing.xs,
-        borderRadius: radius.full,
-        backgroundColor: active ? palette.primary : palette.surfaceContainerLow,
-        borderWidth: 1,
-        borderColor: active ? palette.primary : palette.outlineVariant,
-        opacity: pressed ? 0.85 : 1,
-      })}
-    >
-      <Text variant="labelSm" color={active ? "onPrimary" : "onSurface"}>
-        {label}
-      </Text>
-    </Pressable>
+      <StudentFeeFiltersSheet
+        visible={filtersOpen}
+        onClose={() => setFiltersOpen(false)}
+        filters={filters}
+        onChange={setFilters}
+        classes={classOptions}
+      />
+    </View>
   );
 }
