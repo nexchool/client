@@ -5,8 +5,10 @@ import { Text } from '@/common/components/Text';
 
 /**
  * The one filter-chip row for every list screen. Fixes the audit findings:
- * 44px touch targets everywhere, a single selected treatment (primary bg +
- * onPrimary text), horizontal scroll so chips never wrap mid-screen.
+ * a single selected treatment (primary bg + onPrimary text), horizontal
+ * scroll so chips never wrap mid-screen. 40px touch targets — same as
+ * `Button`'s own `sm` size — so a compact row of these reads at the same
+ * scale as the rest of the app's controls rather than standing out oversized.
  */
 
 export type FilterChipOption<T extends string = string> = {
@@ -42,12 +44,13 @@ export function FilterChips<T extends string = string>({
             onPress={() => onChange(opt.value)}
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
+            hitSlop={4}
             style={({ pressed }) => ({
-              minHeight: 44,
+              minHeight: 40,
               flexDirection: 'row',
               alignItems: 'center',
               gap: spacing.xs,
-              paddingHorizontal: spacing.md,
+              paddingHorizontal: spacing.sm,
               borderRadius: radius.full,
               borderWidth: 1,
               borderColor: active ? palette.primary : palette.outlineVariant,
@@ -58,7 +61,11 @@ export function FilterChips<T extends string = string>({
                   : 'transparent',
             })}
           >
-            <Text variant="labelLg" color={active ? 'onPrimary' : 'onSurface'}>
+            <Text
+              variant="labelMd"
+              color={active ? 'onPrimary' : 'onSurface'}
+              style={{ fontFamily: 'Inter_600SemiBold' }}
+            >
               {opt.label}
             </Text>
             {opt.count != null && opt.count > 0 ? (

@@ -110,7 +110,7 @@ export function StudentHome() {
         <Text variant="bodyLg" color="onSurfaceVariant">
           {t('student.welcomeBack', { defaultValue: 'Welcome back,' })}
         </Text>
-        <Text variant="display" color="onSurface" style={{ marginTop: spacing.xs }}>
+        <Text variant="headlineLg" color="onSurface" style={{ marginTop: spacing.xs }}>
           {fullName}
         </Text>
       </View>

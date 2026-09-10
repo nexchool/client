@@ -137,7 +137,7 @@ export default function AnnouncementDetailScreen() {
               gap: spacing.sm,
             }}
           >
-            <Text variant="display" color="onSurface" style={{ flex: 1 }}>
+            <Text variant="headlineLg" color="onSurface" style={{ flex: 1 }}>
               {a.title}
             </Text>
             <View

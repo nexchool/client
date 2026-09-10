@@ -60,7 +60,7 @@ export const ClassListItem: React.FC<Props> = ({
       {/* Header: title + stream pill on the left, student-count badge on the right */}
       <View style={styles.headerRow}>
         <View style={styles.headerText}>
-          <Text variant="display" color="onPrimary" numberOfLines={1}>
+          <Text variant="headlineLg" color="onPrimary" numberOfLines={1}>
             {title}
           </Text>
           {item.stream ? (

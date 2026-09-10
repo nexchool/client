@@ -60,7 +60,7 @@ export default function MyClassesScreen() {
         }}
       >
         <View style={{ flex: 1 }}>
-          <Text variant="display" color="onSurface">
+          <Text variant="headlineLg" color="onSurface">
             {t('myClasses.title', { defaultValue: 'Mark Attendance' })}
           </Text>
           <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>

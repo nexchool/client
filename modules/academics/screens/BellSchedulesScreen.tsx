@@ -96,7 +96,7 @@ export default function BellSchedulesScreen() {
       showsVerticalScrollIndicator={false}
     >
       <View>
-        <Text variant="display" color="onSurface">
+        <Text variant="headlineLg" color="onSurface">
           {t("bell.title", { defaultValue: "Bell schedules" })}
         </Text>
         <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>

@@ -103,7 +103,7 @@ function AdminFinanceDashboard() {
       showsVerticalScrollIndicator={false}
     >
       <View>
-        <Text variant="display" color="onSurface">
+        <Text variant="headlineLg" color="onSurface">
           {t("dashboard.title", { defaultValue: "Finance Dashboard" })}
         </Text>
         <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
@@ -358,7 +358,7 @@ function StudentFinanceLanding() {
       showsVerticalScrollIndicator={false}
     >
       <View>
-        <Text variant="display" color="onSurface">
+        <Text variant="headlineLg" color="onSurface">
           {t("student.title", { defaultValue: "Finance" })}
         </Text>
         <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>

@@ -21,7 +21,7 @@ export function SubjectsScreen() {
 
   const renderHeader = () => (
     <View style={{ marginBottom: spacing.lg }}>
-      <Text variant="display" color="onSurface">
+      <Text variant="headlineLg" color="onSurface">
         {t('mine.title')}
       </Text>
       <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
