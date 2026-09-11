@@ -74,7 +74,19 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
   runtimeVersion: {
-    policy: "appVersion",
+    // Fingerprint, not appVersion. `appVersion` makes the runtime identity
+    // "1.0.0" — a string that changes when somebody remembers to change it,
+    // which is never — so expo-updates considered a September JS bundle
+    // compatible with a July binary and delivered it. It was not: the July
+    // binary had no expo-local-authentication in it at all. The graceful
+    // degradation in `biometrics/capability.ts` is what kept that from being
+    // a crash, and graceful degradation is not a delivery policy.
+    //
+    // `fingerprint` hashes the native side — dependencies, plugins, config —
+    // so an update reaches only binaries that can actually run it. A native
+    // change now produces a new runtime automatically, and the phones that
+    // cannot run the new JS are simply not offered it.
+    policy: "fingerprint",
   },
   updates: {
     url: EAS_UPDATE_URL,

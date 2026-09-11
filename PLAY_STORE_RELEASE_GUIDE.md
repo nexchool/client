@@ -29,7 +29,10 @@ the JS bundle is no longer enough:
 - an Expo SDK upgrade
 - a change to app permissions
 - a change to `android.package`, the app name, or the icon
-- a change to `expo.version`
+
+Under the `fingerprint` runtime policy you do not have to get this call right
+by memory: an update whose native side differs simply will not be offered to
+the old binary. `eas fingerprint:compare` tells you in advance.
 
 Shipping an OTA when you needed a store build gives people JS written against
 native code their binary does not contain. The workflows keep these apart: a
@@ -109,7 +112,8 @@ build is uploaded.
 
 | Field | Who owns it | When it changes |
 |---|---|---|
-| `expo.version` (`app.config.ts`) | You, by hand | Meaningful releases. Also the `runtimeVersion` (policy `appVersion`), so **changing it means existing phones stop receiving OTA updates** until they install the new binary. |
+| `expo.version` (`app.config.ts`) | You, by hand | Meaningful releases. Purely cosmetic — the number humans read on the store listing. |
+| `runtimeVersion` | Computed, policy `fingerprint` | Automatically, whenever the native side changes. You never set it. |
 | Android `versionCode` | EAS, automatically | Every build. `appVersionSource: "remote"` + `autoIncrement` keeps the counter on EAS servers. |
 
 Do **not** put `versionCode` in `app.config.ts`. A dynamic config cannot be
@@ -150,8 +154,19 @@ Download the AAB from the EAS build page and upload it through Play Console
 once; every run after that works.
 
 **An OTA update did nothing**
-Check that `expo.version` still matches the binary people have — the
-`appVersion` runtime policy will not deliver an update across a version bump.
+Two ordinary causes before you go looking for a third. `expo-updates`
+downloads in the background and applies on the **next** launch, so a tester
+has to open the app twice. And under the `fingerprint` runtime policy an
+update reaches only binaries whose native side matches — if you changed a
+native dependency, a plugin, or app config, there is no OTA to be had and the
+answer is a store release. Confirm with:
+
+```bash
+eas fingerprint:compare --build-id <the build they installed> --environment production
+```
+
+This is deliberate. It is the mechanism that stops a JS bundle reaching a
+binary that cannot run it.
 
 **The app opens on the school-selection screen when it should not**
 `EXPO_PUBLIC_TENANT_SUBDOMAIN` was not set for that environment. Confirm with
