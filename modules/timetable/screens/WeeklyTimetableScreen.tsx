@@ -100,7 +100,7 @@ export default function WeeklyTimetableScreen() {
             justifyContent: 'space-between',
           }}
         >
-          <Text variant="display" color="onSurface">
+          <Text variant="headlineLg" color="onSurface">
             {t('title', { defaultValue: 'Timetable' })}
           </Text>
           <Link onPress={() => setWeekStart(isoMondayOf(new Date()))}>

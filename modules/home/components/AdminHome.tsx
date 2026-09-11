@@ -87,7 +87,7 @@ export function AdminHome() {
       showsVerticalScrollIndicator={false}
     >
       <View>
-        <Text variant="display" color="onSurface">
+        <Text variant="headlineLg" color="onSurface">
           {t('admin.title', { defaultValue: 'School Overview' })}
         </Text>
         <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>

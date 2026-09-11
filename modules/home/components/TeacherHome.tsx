@@ -87,7 +87,7 @@ export function TeacherHome() {
       showsVerticalScrollIndicator={false}
     >
       <View>
-        <Text variant="display" color="onSurface">
+        <Text variant="headlineLg" color="onSurface">
           {t('teacher.greeting', {
             defaultValue: '{{greeting}}, {{name}}',
             greeting,

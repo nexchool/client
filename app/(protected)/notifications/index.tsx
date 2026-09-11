@@ -80,7 +80,7 @@ export default function NotificationsListScreen() {
   return (
     <View style={{ flex: 1, padding: spacing.marginMobile, gap: spacing.lg }}>
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-        <Text variant="display" color="onSurface">
+        <Text variant="headlineLg" color="onSurface">
           {t("title", { defaultValue: "Notifications" })}
         </Text>
         {hasUnread ? (

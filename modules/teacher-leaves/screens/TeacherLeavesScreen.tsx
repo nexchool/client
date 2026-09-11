@@ -284,7 +284,7 @@ export default function TeacherLeavesScreen({
         {embedded ? (
           <View style={{ flex: 1 }} />
         ) : (
-          <Text variant="display" color="onSurface" style={{ flex: 1 }}>
+          <Text variant="headlineLg" color="onSurface" style={{ flex: 1 }}>
             {t("screen.title")}
           </Text>
         )}

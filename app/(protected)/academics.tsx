@@ -118,7 +118,7 @@ export default function AcademicsScreen() {
       showsVerticalScrollIndicator={false}
     >
       <View style={[styles.header, { paddingHorizontal: spacing.marginMobile, paddingTop: spacing.md, paddingBottom: spacing.md }]}>
-        <Text variant="display" color="onSurface">Academics</Text>
+        <Text variant="headlineLg" color="onSurface">Academics</Text>
         <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
           {isAdmin && "Manage academic operations"}
           {isTeacher && "My teaching & classes"}

@@ -83,7 +83,7 @@ export default function StudentLeaveDetailScreen() {
       >
         {/* Heading + status pill */}
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm }}>
-          <Text variant="display" color="onSurface" style={{ flex: 1, textTransform: 'capitalize' }}>
+          <Text variant="headlineLg" color="onSurface" style={{ flex: 1, textTransform: 'capitalize' }}>
             {leave.leave_type} {t('detail.leaveSuffix', { defaultValue: 'leave' })}
           </Text>
           <View

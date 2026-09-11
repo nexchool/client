@@ -1025,7 +1025,7 @@ export default function MyTeacherLeavesScreen() {
     <View style={s.container}>
       {/* ══ HEADER ══ */}
       <View style={s.header}>
-        <Text variant="display" color="onSurface" style={{ flex: 1 }}>
+        <Text variant="headlineLg" color="onSurface" style={{ flex: 1 }}>
           {t("tracker.title")}
         </Text>
         {topTab === "mydata" && canApplyLeave ? (
