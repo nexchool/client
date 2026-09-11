@@ -12,16 +12,9 @@
   "languageSwitcherHint": "Choose app language",
   "languageDropdownHint": "Opens a list of available languages",
   "sections": {
-    "account": "Account",
     "preferences": "Preferences",
-    "app": "App"
-  },
-  "rows": {
-    "personalInfo": "Personal Information",
-    "personalInfoSubtitle": "View your name, email, and details",
-    "security": "Password & Security",
-    "securitySubtitle": "Change your password",
-    "helpSupport": "Help & Support"
+    "support": "Support & legal",
+    "about": "About"
   },
   "biometrics": {
     "sectionTitle": "Biometric unlock",

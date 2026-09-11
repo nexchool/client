@@ -111,6 +111,24 @@ const ITEMS: readonly DrawerItem[] = [
 ];
 
 /**
+ * The two destinations that are not modules. They sit below the scroll rather
+ * than in a section, but they are still drawer rows — so they are declared
+ * like drawer rows and rendered by the same `renderRow`, which is the only way
+ * their icons stay on the same optical line as the twenty above them.
+ */
+const FOOTER_ITEMS: readonly {
+  key: string;
+  labelKey: string;
+  fallback: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  iconActive: keyof typeof Ionicons.glyphMap;
+  route: string;
+}[] = [
+  { key: 'settings', labelKey: 'settings', fallback: 'Settings', icon: 'settings-outline', iconActive: 'settings', route: '/(protected)/settings' },
+  { key: 'help-support', labelKey: 'helpSupport', fallback: 'Help & Support', icon: 'help-circle-outline', iconActive: 'help-circle', route: '/(protected)/help-support' },
+];
+
+/**
  * `usePathname()` resolves Expo Router paths WITHOUT route-group segments,
  * e.g. `/(protected)/attendance/overview` is reported as `/attendance/overview`.
  * Strip group segments like `(protected)` so item routes can be matched against it.
@@ -254,7 +272,10 @@ export function AppDrawer({ visible, onClose, onOpenYearPicker }: Props) {
     await logout();
   };
 
-  const renderRow = (item: DrawerItem) => {
+  /** One drawer row. Shared with the footer so both keep identical geometry. */
+  const renderRow = (
+    item: Pick<DrawerItem, 'key' | 'label' | 'icon' | 'iconActive' | 'route'>,
+  ) => {
     const active = isItemActive(item.route, pathname);
     return (
       <Pressable
@@ -337,8 +358,8 @@ export function AppDrawer({ visible, onClose, onOpenYearPicker }: Props) {
               paddingHorizontal: spacing.lg,
               paddingBottom: spacing.md,
               marginBottom: spacing.md,
-              borderBottomWidth: 1,
-              borderBottomColor: palette.surfaceContainerHigh,
+              borderBottomWidth: StyleSheet.hairlineWidth,
+              borderBottomColor: palette.outlineVariant,
               gap: spacing.md,
             },
           ]}
@@ -437,82 +458,48 @@ export function AppDrawer({ visible, onClose, onOpenYearPicker }: Props) {
 
         <View
           style={{
-            paddingHorizontal: spacing.lg,
-            paddingTop: spacing.md,
-            gap: spacing.xs,
-            borderTopWidth: 1,
-            borderTopColor: palette.surfaceContainerHigh,
+            paddingTop: spacing.sm,
+            gap: 2,
+            borderTopWidth: StyleSheet.hairlineWidth,
+            borderTopColor: palette.outlineVariant,
           }}
         >
-          {(() => {
-            const settingsActive = isItemActive('/(protected)/settings', pathname);
-            return (
-              <Pressable
-                onPress={() => handleNav('/(protected)/settings')}
-                style={({ pressed }) => [
-                  styles.row,
-                  {
-                    backgroundColor: settingsActive
-                      ? palette.primaryContainer
-                      : pressed
-                        ? palette.surfaceContainerHigh
-                        : 'transparent',
-                    borderRadius: radius.lg,
-                    paddingHorizontal: spacing.md,
-                    paddingVertical: spacing.sm + spacing.xs,
-                    gap: spacing.md,
-                  },
-                ]}
-              >
-                <AppIcon
-                  name={settingsActive ? 'settings' : 'settings-outline'}
-                  size="lg"
-                  color={settingsActive ? 'onPrimaryContainer' : 'onSurfaceVariant'}
-                />
-                <Text
-                  variant={settingsActive ? 'labelLg' : 'labelMd'}
-                  color={settingsActive ? 'onPrimaryContainer' : 'onSurfaceVariant'}
-                >
-                  {t('settings', { defaultValue: 'Settings' })}
-                </Text>
-              </Pressable>
-            );
-          })()}
+          {FOOTER_ITEMS.map((item) =>
+            renderRow({
+              key: item.key,
+              label: t(item.labelKey, { defaultValue: item.fallback }),
+              icon: item.icon,
+              iconActive: item.iconActive,
+              route: item.route,
+            }),
+          )}
+
+          {/*
+            Signing out is the one row here that is not a destination, so it is
+            the one row that reads differently — error ink, never an active
+            state. Everything else about it (inset, icon size, type ramp) is the
+            row above's, because a footer that changes its alignment for its
+            last item looks like a mistake rather than an emphasis.
+          */}
           <Pressable
-            onPress={() => handleNav('/(protected)/help-support')}
+            onPress={handleLogout}
+            accessibilityRole="button"
+            accessibilityLabel={t('signOut', { defaultValue: 'Sign out' })}
             style={({ pressed }) => [
               styles.row,
               {
-                backgroundColor: pressed ? palette.surfaceContainerHigh : 'transparent',
+                backgroundColor: pressed ? palette.errorContainer : 'transparent',
                 borderRadius: radius.lg,
+                marginHorizontal: spacing.sm,
+                marginTop: spacing.xs,
                 paddingHorizontal: spacing.md,
                 paddingVertical: spacing.sm + spacing.xs,
                 gap: spacing.md,
               },
             ]}
           >
-            <AppIcon name="help-circle-outline" size="lg" color="onSurfaceVariant" />
-            <Text variant="labelMd" color="onSurfaceVariant">
-              {t('helpSupport', { defaultValue: 'Help & Support' })}
-            </Text>
-          </Pressable>
-
-          <Pressable
-            onPress={handleLogout}
-            style={({ pressed }) => [
-              styles.signOut,
-              {
-                backgroundColor: pressed ? palette.errorContainer : 'transparent',
-                borderRadius: radius.lg,
-                paddingHorizontal: spacing.md,
-                paddingVertical: spacing.sm + spacing.xs,
-                gap: spacing.sm,
-                marginTop: spacing.xs,
-              },
-            ]}
-          >
             <AppIcon name="log-out-outline" size="lg" color="error" />
-            <Text variant="labelLg" color="error">
+            <Text variant="labelMd" color="error">
               {t('signOut', { defaultValue: 'Sign out' })}
             </Text>
           </Pressable>
@@ -549,9 +536,4 @@ const styles = StyleSheet.create({
   },
   profile: { flexDirection: 'row', alignItems: 'center' },
   row: { flexDirection: 'row', alignItems: 'center' },
-  signOut: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
 });
