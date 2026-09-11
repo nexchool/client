@@ -73,7 +73,6 @@ venv
 !.env.example
 !.env.*.example
 
-package-lock.json
 
 # logs / dumps
 *.log
