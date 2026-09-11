@@ -79,3 +79,6 @@ venv
 *.dump
 
 graphify-out/
+
+# Firebase Android config — per-build, fetched from EAS file env var in CI
+google-services.json

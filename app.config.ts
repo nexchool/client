@@ -62,6 +62,24 @@ const appIcon = process.env.EXPO_PUBLIC_APP_ICON?.trim() || "./assets/icon.png";
 const appScheme = process.env.EXPO_PUBLIC_APP_SCHEME?.trim() || "nexchool";
 const androidPackage = process.env.EXPO_PUBLIC_ANDROID_PACKAGE?.trim() || "in.nexchool.app";
 
+/**
+ * Firebase Android config, without which there is no push at all.
+ *
+ * An Android build registers with FCM before Expo will issue a push token, and
+ * it can only do that with the `google-services.json` Firebase generates for
+ * this exact package name. Expo Go carries Expo's own copy, which is why push
+ * worked in development and stopped dead in the first standalone build —
+ * `getExpoPushTokenAsync` throws, no token is ever POSTed to
+ * `/api/devices/register`, and the device_tokens table stays empty.
+ *
+ * Deliberately optional: an unset value leaves the key off the config
+ * entirely rather than pointing Expo at a file that is not there, which would
+ * fail the build instead of merely leaving push unavailable. Release builds
+ * get it from the EAS file environment variable of the same name; locally,
+ * put the file in this directory and set GOOGLE_SERVICES_JSON=./google-services.json.
+ */
+const googleServicesFile = process.env.GOOGLE_SERVICES_JSON?.trim() || undefined;
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: appName,
@@ -121,6 +139,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: androidPackage,
+    ...(googleServicesFile ? { googleServicesFile } : {}),
     // No `versionCode` and no `ios.buildNumber` on purpose. eas.json sets
     // `appVersionSource: "remote"` with `autoIncrement` on the preview and
     // production profiles, so EAS keeps the build number per platform and

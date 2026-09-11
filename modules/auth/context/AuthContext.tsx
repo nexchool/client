@@ -30,7 +30,6 @@ import {
   deleteTenantName,
   getForcePasswordReset,
   setForcePasswordReset,
-  getPushNotificationsPreference,
   getBiometricUnlockEnabled,
 } from "@/common/utils/storage";
 import {
@@ -57,6 +56,7 @@ import {
 import { API_ENDPOINTS } from "@/common/constants/api";
 import * as PERMS from "@/modules/permissions/constants/permissions";
 import {
+  logPushRegistrationOutcome,
   registerDeviceForPushNotifications,
   unregisterDevicePushNotifications,
 } from "@/modules/devices/pushRegistration";
@@ -280,11 +280,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   useEffect(() => {
     if (!user || mustResetPassword) return;
     void (async () => {
-      const allowed = await getPushNotificationsPreference();
-      if (!allowed) return;
-      await registerDeviceForPushNotifications().catch(() => {
-        /* simulator, permissions denied, or network */
-      });
+      // No preference check here: registerDeviceForPushNotifications makes the
+      // same check and reports it as an outcome. Asking twice meant the common
+      // "push is switched off" case exited here, silently, before the code that
+      // knows how to say so ever ran.
+      try {
+        logPushRegistrationOutcome(await registerDeviceForPushNotifications());
+      } catch (error) {
+        // registerDeviceForPushNotifications is documented not to throw, so
+        // reaching this means it broke its own contract. Which is worth
+        // hearing about — the empty catch that used to live here is why a
+        // feature that has never once worked in a release build looked, from
+        // in here, exactly like a feature that was working.
+        console.error("[push] registration threw unexpectedly", error);
+      }
     })();
   }, [user?.id, mustResetPassword]);
 
