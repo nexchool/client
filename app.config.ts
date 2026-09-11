@@ -33,11 +33,14 @@ const appEnv = resolveAppEnv();
  * release pipeline sets it, so an unconfigured build stays byte-for-byte the
  * general app.
  *
- * `tenantId` alone is enough for the running app to identify itself (it goes
- * straight into the `X-Tenant-ID` header — see `seedBakedTenant.ts`);
- * `tenantSubdomain` rides along mainly for readability in build metadata and
- * as a secondary identifier, not because runtime code needs it once the id is
- * known.
+ * Either identifier on its own is enough. `tenantId` goes straight into the
+ * `X-Tenant-ID` header; a build that sets only `tenantSubdomain` sends
+ * `X-Tenant-Subdomain` instead, which the server resolves the same way, one
+ * slug lookup further (`core/tenant.py` `find_tenant`) — see the header
+ * fallback in `common/services/api.ts`. Subdomain-only is the normal case for
+ * a per-school build: a slug is something a human can read off a release
+ * config and check, where a UUID has to be looked up in the database first
+ * and mistyped silently points a whole school's app at another school.
  */
 const bakedTenantId = process.env.EXPO_PUBLIC_TENANT_ID?.trim() || undefined;
 const bakedTenantSubdomain = process.env.EXPO_PUBLIC_TENANT_SUBDOMAIN?.trim() || undefined;
@@ -206,11 +209,18 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     appName,
     apiBaseUrl,
     environment: appEnv,
-    // Null (not omitted) so a running build can tell "general app, no school
-    // baked in" apart from "extra.tenant hasn't loaded yet" — see
-    // `config/appConfig.ts#getBakedTenant`.
-    tenant: bakedTenantId
-      ? { id: bakedTenantId, subdomain: bakedTenantSubdomain ?? null }
-      : null,
+    // Emitted (not omitted) so a running build can tell "general app, no
+    // school baked in" apart from "extra.tenant hasn't loaded yet". Note that
+    // Expo's manifest serialisation rewrites `null` as `{}` on the way to
+    // `Constants.expoConfig`, so the reader cannot test this field for null —
+    // `config/appConfig.ts#getBakedTenant` decides on whether either
+    // identifier survived, which is true of `{}` and of `{id: {}, ...}` alike.
+    tenant:
+      bakedTenantId || bakedTenantSubdomain
+        ? {
+            id: bakedTenantId ?? null,
+            subdomain: bakedTenantSubdomain ?? null,
+          }
+        : null,
   },
 });
