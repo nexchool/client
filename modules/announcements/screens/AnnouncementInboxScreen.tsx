@@ -38,7 +38,7 @@ export default function AnnouncementInboxScreen() {
 
   return (
     <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg }}>
-      <Text variant="display" color="onSurface">
+      <Text variant="headlineLg" color="onSurface">
         {t('inbox.title', { defaultValue: 'Announcements' })}
       </Text>
 

@@ -84,7 +84,7 @@ export function TransportAdminDashboardScreen() {
       showsVerticalScrollIndicator={false}
     >
       <View>
-        <Text variant="display" color="onSurface">
+        <Text variant="headlineLg" color="onSurface">
           {t("dashboard.title", { defaultValue: "Transport" })}
         </Text>
         <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>

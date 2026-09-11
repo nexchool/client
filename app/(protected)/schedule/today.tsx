@@ -169,7 +169,7 @@ function ScheduleTodayScreen() {
     >
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
         <View style={{ flex: 1 }}>
-          <Text variant="display" color="onSurface">
+          <Text variant="headlineLg" color="onSurface">
             {t('title', { defaultValue: 'Schedule' })}
           </Text>
           <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
