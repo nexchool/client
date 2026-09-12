@@ -4,7 +4,6 @@ import { View, ScrollView, Pressable, Alert, Platform } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useInvoice, useSendReminder } from "@/modules/fees/hooks/useFees";
 import { feesService } from "@/modules/fees/services/feesService";
-import { calendarLocaleForLanguage } from "@/i18n";
 import { useTheme, type Palette } from "@/common/theme";
 import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
@@ -16,18 +15,8 @@ import { SummaryRow } from "@/common/components/SummaryRow";
 import { formatCurrency } from "@/common/utils/formatCurrency";
 import type { FeeInvoice } from "@/modules/fees/services/feesService";
 import { useToast } from "@/common/feedback";
+import { formatDate } from "@/common/utils/datetime";
 
-function formatDate(s: string, locale: string) {
-  try {
-    return new Date(s).toLocaleDateString(locale, {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-  } catch {
-    return s;
-  }
-}
 
 /** Maps an invoice status to its accent palette token. */
 const STATUS_ACCENT: Record<FeeInvoice["status"], keyof Palette> = {
@@ -40,8 +29,7 @@ const STATUS_ACCENT: Record<FeeInvoice["status"], keyof Palette> = {
 
 export default function InvoiceDetailPage() {
   const toast = useToast();
-  const { t, i18n } = useTranslation("finance");
-  const locale = calendarLocaleForLanguage(i18n.language ?? "en");
+  const { t } = useTranslation("finance");
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { palette, spacing, radius, elevation } = useTheme();
@@ -212,7 +200,7 @@ export default function InvoiceDetailPage() {
                 {t("invoiceDetail.issueDate", { defaultValue: "Issued" })}
               </Text>
               <Text variant="labelMd" color="onSurface" style={{ marginTop: 2 }}>
-                {invoice.issue_date ? formatDate(invoice.issue_date, locale) : "—"}
+                {invoice.issue_date ? formatDate(invoice.issue_date) : "—"}
               </Text>
             </View>
             <View style={{ alignItems: "flex-end" }}>
@@ -220,7 +208,7 @@ export default function InvoiceDetailPage() {
                 {t("invoiceDetail.dueDate")}
               </Text>
               <Text variant="labelMd" color="onSurface" style={{ marginTop: 2 }}>
-                {formatDate(invoice.due_date, locale)}
+                {formatDate(invoice.due_date)}
               </Text>
             </View>
           </View>
@@ -353,7 +341,7 @@ export default function InvoiceDetailPage() {
                     {formatCurrency(p.amount)}
                   </Text>
                   <Text variant="labelSm" color="onSurfaceVariant" style={{ marginTop: 2 }}>
-                    {formatDate(p.payment_date || p.created_at, locale)} • {p.payment_method}
+                    {formatDate(p.payment_date || p.created_at)} • {p.payment_method}
                     {p.payment_reference
                       ? ` • ${t("invoiceDetail.refPrefix")} ${p.payment_reference}`
                       : ""}

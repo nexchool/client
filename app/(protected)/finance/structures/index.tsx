@@ -22,7 +22,6 @@ import {
 import { useAcademicYearContext } from "@/modules/academics/context/AcademicYearContext";
 import type { FeeStructure } from "@/modules/finance/types";
 import { ClassMultiSelect } from "@/common/components/ClassMultiSelect";
-import { calendarLocaleForLanguage } from "@/i18n";
 import { DatePicker } from '@/common/components/datepicker';
 import { useTheme } from "@/common/theme";
 import { Text } from "@/common/components/Text";
@@ -34,18 +33,11 @@ import { PageHeader } from "@/common/components/PageHeader";
 import { BottomSheet } from "@/common/components/sheet";
 import { useModalBodyHeight } from '@/common/hooks/useModalBodyHeight';
 import { useToast } from "@/common/feedback";
+import { formatDate } from "@/common/utils/datetime";
 
-function formatDate(s: string, locale: string) {
-  try {
-    return new Date(s).toLocaleDateString(locale);
-  } catch {
-    return s;
-  }
-}
 
 export default function FeeStructuresPage() {
-  const { t, i18n } = useTranslation("finance");
-  const locale = calendarLocaleForLanguage(i18n.language ?? "en");
+  const { t } = useTranslation("finance");
   const router = useRouter();
   const { palette, spacing, radius, elevation } = useTheme();
   const { selectedAcademicYearId: contextYearId } = useAcademicYearContext();
@@ -109,7 +101,7 @@ export default function FeeStructuresPage() {
         >
           {t("structures.classDetail", {
             classes: s.class_name ?? t("common.allClasses"),
-            date: formatDate(s.due_date, locale),
+            date: formatDate(s.due_date),
           })}
         </Text>
         {s.components?.length ? (

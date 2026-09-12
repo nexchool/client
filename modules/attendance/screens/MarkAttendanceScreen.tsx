@@ -23,7 +23,7 @@ import {
 import { AttendanceStatsBanner } from '../components/AttendanceStatsBanner';
 import { StudentDetailSheet } from '../components/StudentDetailSheet';
 import { useDialog, useToast } from '@/common/feedback';
-import { schoolTodayIso, toIsoDate, addDaysIso } from '@/common/utils/datetime';
+import { schoolTodayIso, toIsoDate, addDaysIso, weekdayOfIso } from '@/common/utils/datetime';
 
 type LocalRecord = {
   status: string;
@@ -112,7 +112,8 @@ export default function MarkAttendanceScreen() {
       month: string;
       isToday: boolean;
     }[] = [];
-    const todayDate = new Date();
+    // Centre the strip on the school's today; the Date is only for local labels.
+    const todayDate = new Date(`${schoolTodayIso()}T00:00:00`);
     for (let i = 29; i >= 0; i--) {
       const d = new Date(todayDate);
       d.setDate(d.getDate() - i);
@@ -155,8 +156,7 @@ export default function MarkAttendanceScreen() {
           }
         }
         for (const item of dateList) {
-          const d = new Date(item.dateStr);
-          const backendWeekday = (d.getDay() + 6) % 7;
+          const backendWeekday = (weekdayOfIso(item.dateStr) + 6) % 7;
           const match = recurring.find((r) => r.recurring_day_of_week === backendWeekday);
           if (match && !map[item.dateStr]) map[item.dateStr] = match;
         }

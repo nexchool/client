@@ -16,7 +16,7 @@ import { HomeKpiCard } from "@/modules/home/components/HomeKpiCard";
 import { Skeleton } from "@/common/components/Skeleton";
 import { EmptyState } from "@/common/components/EmptyState";
 import { PageHeader } from "@/common/components/PageHeader";
-import { schoolTodayIso } from "@/common/utils/datetime";
+import { schoolTodayIso, weekdayOfIso } from "@/common/utils/datetime";
 
 export default function AdminAttendanceScreen() {
   const { t } = useTranslation("attendance");
@@ -37,8 +37,7 @@ export default function AdminAttendanceScreen() {
       return;
     }
     try {
-      const d = new Date(dateStr);
-      const backendWeekday = (d.getDay() + 6) % 7;
+      const backendWeekday = (weekdayOfIso(dateStr) + 6) % 7;
       const [nonRecurring, recurring] = await Promise.all([
         holidayService.getHolidays({ start_date: dateStr, end_date: dateStr, include_recurring: false }),
         holidayService.getRecurring(),

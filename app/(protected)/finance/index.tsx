@@ -187,13 +187,11 @@ function AdminFinanceDashboard() {
             },
           ]}
         >
-          <Text variant="headlineMd" color="onSurface">
-            {t("dashboard.collectionChartTitle", { defaultValue: "Fee Collection" })}
-          </Text>
-          <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
-            {t("dashboard.collectionChartSubtitle", { defaultValue: "Last 7 days" })}
-          </Text>
-          <FeeTrendChart data={collectionSeries} />
+          <FeeTrendChart
+            data={collectionSeries}
+            title={t("dashboard.collectionChartTitle", { defaultValue: "Fee Collection" })}
+            subtitle={t("dashboard.collectionChartSubtitle", { defaultValue: "Last 7 days" })}
+          />
         </View>
       ) : null}
 

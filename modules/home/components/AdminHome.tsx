@@ -189,13 +189,11 @@ export function AdminHome() {
             },
           ]}
         >
-          <Text variant="headlineMd" color="onSurface">
-            {t('admin.feeTrend.title', { defaultValue: 'Fee Collection Trend' })}
-          </Text>
-          <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
-            {t('admin.feeTrend.subtitle', { defaultValue: 'Last 7 days' })}
-          </Text>
-          <FeeTrendChart data={finance?.last_7_days_collection ?? []} />
+          <FeeTrendChart
+            data={finance?.last_7_days_collection ?? []}
+            title={t('admin.feeTrend.title', { defaultValue: 'Fee Collection Trend' })}
+            subtitle={t('admin.feeTrend.subtitle', { defaultValue: 'Last 7 days' })}
+          />
         </View>
       ) : null}
 

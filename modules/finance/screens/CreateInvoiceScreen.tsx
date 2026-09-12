@@ -271,7 +271,7 @@ export default function CreateInvoiceScreen() {
             label={t('invoiceCreate.fieldDueDate', {
               defaultValue: 'Due date',
             })}
-            minDate={issueDate ? new Date(issueDate) : undefined}
+            minDate={issueDate ? new Date(`${issueDate}T00:00:00`) : undefined}
           />
         </FormSection>
 

@@ -93,6 +93,46 @@ export function toIsoDate(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+const wallClockFmt = new Intl.DateTimeFormat("en-CA", {
+  ...tz, year: "numeric", month: "2-digit", day: "2-digit",
+  hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+});
+
+/**
+ * The school's clock right now (or at `at`): the calendar day and the minutes
+ * since its midnight. This is what "is this period happening now" and "which
+ * class is up next" must be judged against — `new Date().getHours()` is the
+ * phone's clock, which for a phone set to another zone is a different
+ * afternoon entirely.
+ */
+export function schoolNow(at: Date = new Date()): { iso: string; minutes: number } {
+  const parts = Object.fromEntries(wallClockFmt.formatToParts(at).map((p) => [p.type, p.value]));
+  return {
+    iso: `${parts.year}-${parts.month}-${parts.day}`,
+    minutes: Number(parts.hour) * 60 + Number(parts.minute),
+  };
+}
+
+/** Minutes since midnight on the school's clock. */
+export function schoolNowMinutes(at: Date = new Date()): number {
+  return schoolNow(at).minutes;
+}
+
+/**
+ * Weekday of a `YYYY-MM-DD` (0 = Sunday … 6 = Saturday, like `getDay`), read
+ * in UTC so the answer does not depend on the device's zone. `new Date(iso)`
+ * is UTC midnight, and `.getDay()` on it is the *local* weekday of that
+ * instant — the day before, anywhere west of Greenwich.
+ */
+export function weekdayOfIso(iso: string): number {
+  return new Date(`${iso}T00:00:00Z`).getUTCDay();
+}
+
+/** The Monday of the week that `iso` falls in. */
+export function isoMondayOf(iso: string): string {
+  return addDaysIso(iso, -((weekdayOfIso(iso) + 6) % 7));
+}
+
 /** `iso` plus `delta` days, done in UTC so no zone can move it. */
 export function addDaysIso(iso: string, delta: number): string {
   const d = new Date(`${iso}T00:00:00Z`);
