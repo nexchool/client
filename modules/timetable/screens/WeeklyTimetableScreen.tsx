@@ -16,18 +16,17 @@ import {
   useClassWeeklyTimetable,
 } from '../hooks/useTimetable';
 import { WeeklyGrid } from '../components/WeeklyGrid';
+import { toIsoDate, addDaysIso } from '@/common/utils/datetime';
 
 function isoMondayOf(d: Date): string {
   const day = d.getDay() || 7; // Sunday → 7
   const monday = new Date(d);
   monday.setDate(d.getDate() - day + 1);
-  return monday.toISOString().slice(0, 10);
+  return toIsoDate(monday);
 }
 
 function shiftWeek(iso: string, deltaWeeks: number): string {
-  const d = new Date(iso);
-  d.setDate(d.getDate() + deltaWeeks * 7);
-  return d.toISOString().slice(0, 10);
+  return addDaysIso(iso, deltaWeeks * 7);
 }
 
 function formatWeekRange(start: string, end: string): string {

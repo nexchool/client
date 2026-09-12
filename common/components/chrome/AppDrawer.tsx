@@ -81,7 +81,6 @@ const ITEMS: readonly DrawerItem[] = [
   { key: 'subjects', label: 'Subjects', icon: 'book-outline', iconActive: 'book', route: '/(protected)/subjects', roles: ['admin', 'teacher', 'student'], section: 'people' },
 
   // Academics
-  { key: 'academics', label: 'Academics', icon: 'library-outline', iconActive: 'library', route: '/(protected)/academics', roles: ['admin'], section: 'academics' },
   { key: 'attendance', label: 'Attendance', icon: 'checkmark-done-outline', iconActive: 'checkmark-done', route: '/(protected)/attendance/overview', roles: ['admin', 'teacher'], flag: 'attendance', section: 'academics' },
   // Students and parents hold `attendance.read.self`, not the class/all reads
   // the overview screen is built on — so they get their own month calendar

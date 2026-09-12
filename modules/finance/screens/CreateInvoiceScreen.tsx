@@ -38,13 +38,10 @@ import {
 } from '../validation/invoiceSchemas';
 import type { CreateInvoicePayload } from '../services/financeService';
 import { useDialog, useToast } from '@/common/feedback';
+import { schoolTodayIso, addDaysIso } from '@/common/utils/datetime';
 
-const todayIso = () => new Date().toISOString().slice(0, 10);
-const isoPlusDays = (days: number) => {
-  const d = new Date();
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
-};
+const todayIso = () => schoolTodayIso();
+const isoPlusDays = (days: number) => addDaysIso(schoolTodayIso(), days);
 
 export default function CreateInvoiceScreen() {
   const { t } = useTranslation('finance');

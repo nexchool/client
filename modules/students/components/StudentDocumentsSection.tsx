@@ -30,6 +30,7 @@ import {
 import { UploadDocumentModal } from "./UploadDocumentModal";
 import { StudentDocumentViewerModal } from "./StudentDocumentViewerModal";
 import { useDialog, useToast } from "@/common/feedback";
+import { formatDate } from "@/common/utils/datetime";
 
 interface StudentDocumentsSectionProps {
   studentId: string;
@@ -317,9 +318,7 @@ export function StudentDocumentsSection({ studentId }: StudentDocumentsSectionPr
                     DOCUMENT_TYPE_LABELS[doc.document_type as DocumentType] ??
                     doc.document_type,
                 });
-              const dateText = doc.created_at
-                ? new Date(doc.created_at).toLocaleDateString()
-                : "";
+              const dateText = doc.created_at ? formatDate(doc.created_at) : "";
               return (
                 <TouchableOpacity
                   key={doc.id}

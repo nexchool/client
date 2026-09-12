@@ -5,6 +5,7 @@ import { Text } from '@/common/components/Text';
 import type { WeeklyTimetable, WeeklyPeriod } from '../types';
 import { WeeklyGridCell } from './WeeklyGridCell';
 import { PeriodDetailSheet } from './PeriodDetailSheet';
+import { schoolTodayIso, toIsoDate } from '@/common/utils/datetime';
 
 const TIME_COL_WIDTH = 56;
 const DAY_COL_WIDTH = 140;
@@ -27,7 +28,7 @@ function collectTimeSlots(data: WeeklyTimetable): string[] {
 }
 
 function isCurrentPeriod(period: WeeklyPeriod, dayDate: string, now = new Date()): boolean {
-  const today = now.toISOString().slice(0, 10);
+  const today = toIsoDate(now);
   if (dayDate !== today) return false;
   const [sh, sm] = period.start_time.split(':').map(Number);
   const [eh, em] = period.end_time.split(':').map(Number);
@@ -43,7 +44,7 @@ export function WeeklyGrid({ data, secondaryField }: Props) {
   const [selectedPeriod, setSelectedPeriod] = useState<WeeklyPeriod | null>(null);
 
   const timeSlots = useMemo(() => collectTimeSlots(data), [data]);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = schoolTodayIso();
 
   // Stable accent per subject name so the same subject keeps one color.
   const accentBySubject = useMemo(() => {

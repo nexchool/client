@@ -11,6 +11,7 @@ import { Skeleton } from '@/common/components/Skeleton';
 import { EmptyState } from '@/common/components/EmptyState';
 import { Link } from '@/common/components/Link';
 import { AttendanceClassCard } from '../components/AttendanceClassCard';
+import { schoolTodayIso, toIsoDate } from '@/common/utils/datetime';
 
 function buildDayStrip(today: Date) {
   const out: { date: Date; label: string; isToday: boolean; iso: string }[] = [];
@@ -21,7 +22,7 @@ function buildDayStrip(today: Date) {
       date: d,
       label: d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric' }),
       isToday: i === 0,
-      iso: d.toISOString().slice(0, 10),
+      iso: toIsoDate(d),
     });
   }
   return out;
@@ -31,7 +32,7 @@ export default function MyClassesScreen() {
   const { t } = useTranslation('attendance');
   const { palette, spacing, radius } = useTheme();
   const today = new Date();
-  const [selectedIso, setSelectedIso] = useState<string>(today.toISOString().slice(0, 10));
+  const [selectedIso, setSelectedIso] = useState<string>(schoolTodayIso());
   const { data: items = [], isLoading, refetch, isRefetching } =
     useEligibleAttendanceClasses(selectedIso);
 

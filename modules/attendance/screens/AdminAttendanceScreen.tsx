@@ -16,6 +16,7 @@ import { HomeKpiCard } from "@/modules/home/components/HomeKpiCard";
 import { Skeleton } from "@/common/components/Skeleton";
 import { EmptyState } from "@/common/components/EmptyState";
 import { PageHeader } from "@/common/components/PageHeader";
+import { schoolTodayIso } from "@/common/utils/datetime";
 
 export default function AdminAttendanceScreen() {
   const { t } = useTranslation("attendance");
@@ -24,7 +25,7 @@ export default function AdminAttendanceScreen() {
   const { classAttendance, loading: attLoading, fetchClassAttendance } = useAttendance();
   const { classes, fetchClasses, loading: classesLoading } = useClasses();
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = schoolTodayIso();
   const [selectedDate, setSelectedDate] = useState(today);
   const [selectedClass, setSelectedClass] = useState<ClassItem | null>(null);
   const [holidayInfo, setHolidayInfo] = useState<Holiday | null>(null);

@@ -2,25 +2,31 @@
   "screen": {
     "title": "Holidays",
     "subtitle": "View the school calendar and weekly offs",
-    "searchPlaceholder": "Search…"
+    "searchPlaceholder": "Search…",
+    "clearSearch": "Clear search"
   },
   "tabs": {
-    "all": "All",
     "upcoming": "Upcoming",
-    "recurring": "Recurring"
+    "all": "All",
+    "past": "Past",
+    "weeklyOff": "Weekly off"
   },
   "sections": {
-    "holidays": "Holidays",
-    "weeklyOff": "Weekly Off Days"
-  },
-  "summary": {
-    "holidays": "Holidays",
-    "weeklyOff": "Weekly Off"
+    "weeklyOff": "Weekly off days"
   },
   "empty": {
-    "title": "No holidays found",
-    "hintManage": "Tap + to add a holiday or weekly-off day.",
-    "hintReadOnly": "No holidays scheduled yet."
+    "title": "No holidays yet",
+    "body": "Holidays your school adds to the calendar will appear here.",
+    "noMatchTitle": "No holidays match your search",
+    "noMatchBody": "Try a different name, or clear the search to see the whole calendar.",
+    "noUpcomingTitle": "Nothing coming up",
+    "noUpcomingBody": "There are no holidays left in this academic year.",
+    "noPastTitle": "Nothing has passed yet",
+    "noPastBody": "Holidays that have finished will be listed here.",
+    "noWeeklyOffTitle": "No weekly off set",
+    "noWeeklyOffBody": "A weekly off repeats on the same day every week, like every Sunday.",
+    "showAll": "Show all holidays",
+    "addFirst": "Add a holiday"
   },
   "alerts": {
     "deleteTitle": "Delete Holiday",
@@ -28,17 +34,89 @@
     "recurringPart": " (recurring – every {{day}})",
     "cancel": "Cancel",
     "delete": "Delete",
-    "error": "Error",
     "deleteFailed": "Failed to delete holiday",
-    "holidayUpdated": "Holiday Updated",
-    "holidayAdded": "Holiday Added"
+    "created": "Holiday added",
+    "updated": "Holiday updated",
+    "deleted": "Holiday deleted"
   },
   "errors": {
-    "loadFailed": "Failed to load holidays"
+    "loadFailed": "Failed to load holidays",
+    "retry": "Try again"
   },
   "list": {
     "everyPrefix": "Every {{day}}",
     "fallsOnSunday": "Falls on Sunday (weekly off)",
-    "durationDays": "{{count}}d"
+    "durationDays": "{{count}}d",
+    "edit": "Edit holiday",
+    "delete": "Delete holiday"
+  },
+  "form": {
+    "titleAdd": "Add Holiday",
+    "titleEdit": "Edit Holiday",
+    "sectionSchedule": "Schedule",
+    "modeSingle": "Single Day",
+    "modeRange": "Date Range",
+    "modeRecurring": "Recurring",
+    "nameLabel": "Name *",
+    "namePlaceholder": "e.g. Diwali, Summer Vacation, Sunday Off",
+    "dateLabel": "Date *",
+    "startDateLabel": "Start Date *",
+    "endDateLabel": "End Date *",
+    "datePlaceholder": "YYYY-MM-DD",
+    "repeatsEvery": "Repeats Every *",
+    "recurringInfo": "Recurring holidays (e.g. every Sunday) apply across all weeks. They count as weekly-off days — any public holiday that also falls on this day will show a \"Falls on Sunday\" warning.",
+    "categoryLabel": "Category",
+    "types": {
+      "public": "Public",
+      "school": "School",
+      "regional": "Regional",
+      "optional": "Optional",
+      "weekly_off": "Weekly Off"
+    },
+    "daysShort": {
+      "0": "Mon",
+      "1": "Tue",
+      "2": "Wed",
+      "3": "Thu",
+      "4": "Fri",
+      "5": "Sat",
+      "6": "Sun"
+    },
+    "academicYear": "Academic Year",
+    "allYears": "All Years",
+    "descriptionLabel": "Description (optional)",
+    "descriptionPlaceholder": "Additional details about this holiday…",
+    "cancel": "Cancel",
+    "saveChanges": "Save Changes",
+    "addHoliday": "Add Holiday",
+    "saveFailed": "Failed to save holiday",
+    "validation": {
+      "nameRequired": "Name is required",
+      "nameMax": "Max 120 characters",
+      "descriptionMax": "Max 500 characters",
+      "invalidHolidayType": "Select a valid holiday type",
+      "startDateFormat": "Start date must be YYYY-MM-DD",
+      "endDateFormat": "End date must be YYYY-MM-DD",
+      "endAfterStart": "End date must be on or after start date",
+      "dayRequired": "Day of week is required",
+      "dayRange": "Must be 0-6"
+    },
+    "days": {
+      "0": "Monday",
+      "1": "Tuesday",
+      "2": "Wednesday",
+      "3": "Thursday",
+      "4": "Friday",
+      "5": "Saturday",
+      "6": "Sunday"
+    },
+    "dayPlaceholder": "Choose a day",
+    "scheduleLabel": "Kind of holiday",
+    "sectionDetails": "Details",
+    "discardTitle": "Discard changes?",
+    "discardBody": "What you have entered here will be lost.",
+    "discardConfirm": "Discard",
+    "discardCancel": "Keep editing",
+    "loadFailed": "Could not load this holiday"
   }
 }

@@ -21,6 +21,7 @@ import { createStudentLeaveSchema, type CreateStudentLeaveInput } from '../valid
 import { LEAVE_TYPE_OPTIONS, HALF_DAY_OPTIONS } from '../constants';
 import type { CreateStudentLeavePayload } from '../types';
 import { useDialog, useToast } from '@/common/feedback';
+import { schoolTodayIso } from '@/common/utils/datetime';
 
 export default function StudentLeaveFormScreen() {
   const { t } = useTranslation('studentLeaves');
@@ -35,7 +36,7 @@ export default function StudentLeaveFormScreen() {
   });
 
   const today = new Date();
-  const todayIso = today.toISOString().slice(0, 10);
+  const todayIso = schoolTodayIso();
 
   const {
     control,

@@ -2,25 +2,31 @@
   "screen": {
     "title": "छुट्टियाँ",
     "subtitle": "स्कूल कैलेंडर और साप्ताहिक अवकाश देखें",
-    "searchPlaceholder": "खोजें…"
+    "searchPlaceholder": "खोजें…",
+    "clearSearch": "खोज साफ़ करें"
   },
   "tabs": {
-    "all": "सभी",
     "upcoming": "आगामी",
-    "recurring": "आवर्ती"
-  },
-  "sections": {
-    "holidays": "छुट्टियाँ",
-    "weeklyOff": "साप्ताहिक अवकाश के दिन"
-  },
-  "summary": {
-    "holidays": "छुट्टियाँ",
+    "all": "सभी",
+    "past": "बीत चुकी",
     "weeklyOff": "साप्ताहिक अवकाश"
   },
+  "sections": {
+    "weeklyOff": "साप्ताहिक अवकाश के दिन"
+  },
   "empty": {
-    "title": "कोई छुट्टी नहीं मिली",
-    "hintManage": "छुट्टी या साप्ताहिक अवकाश जोड़ने के लिए + दबाएँ।",
-    "hintReadOnly": "अभी कोई छुट्टी निर्धारित नहीं।"
+    "title": "अभी कोई छुट्टी नहीं",
+    "body": "आपका स्कूल कैलेंडर में जो छुट्टियाँ जोड़ेगा, वे यहाँ दिखेंगी।",
+    "noMatchTitle": "आपकी खोज से कोई छुट्टी नहीं मिली",
+    "noMatchBody": "दूसरा नाम आज़माएँ, या पूरा कैलेंडर देखने के लिए खोज हटाएँ।",
+    "noUpcomingTitle": "आगे कुछ नहीं",
+    "noUpcomingBody": "इस शैक्षणिक वर्ष में अब कोई छुट्टी शेष नहीं है।",
+    "noPastTitle": "अभी कुछ बीता नहीं",
+    "noPastBody": "जो छुट्टियाँ बीत चुकी होंगी वे यहाँ दिखेंगी।",
+    "noWeeklyOffTitle": "कोई साप्ताहिक अवकाश तय नहीं",
+    "noWeeklyOffBody": "साप्ताहिक अवकाश हर सप्ताह उसी दिन दोहराता है, जैसे हर रविवार।",
+    "showAll": "सभी छुट्टियाँ दिखाएँ",
+    "addFirst": "छुट्टी जोड़ें"
   },
   "alerts": {
     "deleteTitle": "छुट्टी हटाएँ",
@@ -28,17 +34,89 @@
     "recurringPart": " (आवर्ती – हर {{day}})",
     "cancel": "रद्द करें",
     "delete": "हटाएँ",
-    "error": "त्रुटि",
     "deleteFailed": "छुट्टी हटाने में विफल",
-    "holidayUpdated": "छुट्टी अपडेट हुई",
-    "holidayAdded": "छुट्टी जोड़ी गई"
+    "created": "छुट्टी जोड़ी गई",
+    "updated": "छुट्टी अपडेट हुई",
+    "deleted": "छुट्टी हटाई गई"
   },
   "errors": {
-    "loadFailed": "छुट्टियाँ लोड करने में विफल"
+    "loadFailed": "छुट्टियाँ लोड करने में विफल",
+    "retry": "फिर कोशिश करें"
   },
   "list": {
     "everyPrefix": "हर {{day}}",
     "fallsOnSunday": "रविवार को पड़ती है (साप्ताहिक अवकाश)",
-    "durationDays": "{{count}}दि"
+    "durationDays": "{{count}}दि",
+    "edit": "छुट्टी संपादित करें",
+    "delete": "छुट्टी हटाएँ"
+  },
+  "form": {
+    "titleAdd": "छुट्टी जोड़ें",
+    "titleEdit": "छुट्टी संपादित करें",
+    "sectionSchedule": "अनुसूची",
+    "modeSingle": "एक दिन",
+    "modeRange": "तिथि सीमा",
+    "modeRecurring": "आवर्ती",
+    "nameLabel": "नाम *",
+    "namePlaceholder": "जैसे दीवाली, गर्मी की छुट्टी, रविवार अवकाश",
+    "dateLabel": "तिथि *",
+    "startDateLabel": "प्रारंभ तिथि *",
+    "endDateLabel": "समाप्ति तिथि *",
+    "datePlaceholder": "YYYY-MM-DD",
+    "repeatsEvery": "दोहराव *",
+    "recurringInfo": "आवर्ती छुट्टियाँ (जैसे हर रविवार) सभी सप्ताहों में लागू होती हैं। ये साप्ताहिक अवकाश मानी जाती हैं — कोई सार्वजनिक छुट्टी भी इस दिन पड़े तो \"रविवार को पड़ती है\" चेतावनी दिख सकती है।",
+    "categoryLabel": "श्रेणी",
+    "types": {
+      "public": "सार्वजनिक",
+      "school": "स्कूल",
+      "regional": "क्षेत्रीय",
+      "optional": "वैकल्पिक",
+      "weekly_off": "साप्ताहिक अवकाश"
+    },
+    "daysShort": {
+      "0": "सोम",
+      "1": "मंगल",
+      "2": "बुध",
+      "3": "गुरु",
+      "4": "शुक्र",
+      "5": "शनि",
+      "6": "रवि"
+    },
+    "academicYear": "शैक्षणिक वर्ष",
+    "allYears": "सभी वर्ष",
+    "descriptionLabel": "विवरण (वैकल्पिक)",
+    "descriptionPlaceholder": "इस छुट्टी के बारे में अतिरिक्त विवरण…",
+    "cancel": "रद्द करें",
+    "saveChanges": "परिवर्तन सहेजें",
+    "addHoliday": "छुट्टी जोड़ें",
+    "saveFailed": "छुट्टी सहेजने में विफल",
+    "validation": {
+      "nameRequired": "नाम आवश्यक है",
+      "nameMax": "अधिकतम 120 अक्षर",
+      "descriptionMax": "अधिकतम 500 अक्षर",
+      "invalidHolidayType": "मान्य छुट्टी प्रकार चुनें",
+      "startDateFormat": "प्रारंभ तिथि YYYY-MM-DD होनी चाहिए",
+      "endDateFormat": "समाप्ति तिथि YYYY-MM-DD होनी चाहिए",
+      "endAfterStart": "समाप्ति प्रारंभ के बाद या उसी दिन होनी चाहिए",
+      "dayRequired": "सप्ताह का दिन आवश्यक है",
+      "dayRange": "0-6 होना चाहिए"
+    },
+    "days": {
+      "0": "सोमवार",
+      "1": "मंगलवार",
+      "2": "बुधवार",
+      "3": "गुरुवार",
+      "4": "शुक्रवार",
+      "5": "शनिवार",
+      "6": "रविवार"
+    },
+    "dayPlaceholder": "दिन चुनें",
+    "scheduleLabel": "छुट्टी का प्रकार",
+    "sectionDetails": "विवरण",
+    "discardTitle": "बदलाव छोड़ें?",
+    "discardBody": "यहाँ भरी गई जानकारी खो जाएगी।",
+    "discardConfirm": "छोड़ें",
+    "discardCancel": "संपादन जारी रखें",
+    "loadFailed": "यह छुट्टी लोड नहीं हो सकी"
   }
 }

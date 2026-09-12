@@ -5,6 +5,7 @@ import { Text } from '@/common/components/Text';
 import { PressScale } from '@/common/components/PressScale';
 import type { Announcement } from '../types';
 import { STATUS_LABEL, statusAccent } from '../constants';
+import { formatDate } from '@/common/utils/datetime';
 
 type Props = {
   announcement: Announcement;
@@ -56,7 +57,7 @@ export function AnnouncementRow({ announcement: a, onPress }: Props) {
           {a.revision_count > 1 ? ' · Edited' : ''}
         </Text>
         <Text variant="labelSm" color="onSurfaceVariant">
-          {a.published_at ? new Date(a.published_at).toLocaleDateString() : a.created_at?.slice(0, 10)}
+          {formatDate(a.published_at ?? a.created_at)}
         </Text>
       </View>
     </PressScale>

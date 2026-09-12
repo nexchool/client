@@ -12,6 +12,7 @@ import { ProgressRing } from '@/modules/home/components/ProgressRing';
 import { Skeleton } from '@/common/components/Skeleton';
 import { EmptyState } from '@/common/components/EmptyState';
 import { PageHeader } from '@/common/components/PageHeader';
+import { schoolTodayIso } from '@/common/utils/datetime';
 
 type AttendanceRecord = { date: string; status: string; remarks: string | null; session_id: string };
 
@@ -32,7 +33,7 @@ type DayCell = { date: string; day: number; status: string | null; isFuture: boo
 function buildCalendar(month: string, records: AttendanceRecord[]): DayCell[] {
   const [y, m] = month.split('-').map(Number);
   const last = new Date(y, m, 0).getDate();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = schoolTodayIso();
   const cells: DayCell[] = [];
   const recordMap = new Map<string, string>();
   for (const r of records ?? []) {
@@ -193,7 +194,7 @@ export default function MyAttendanceScreen() {
           </View>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
             {calendarCells.map((c) => {
-              const isToday = c.date === today.toISOString().slice(0, 10);
+              const isToday = c.date === schoolTodayIso();
               const tappable = !c.isFuture && !!c.status;
               return (
                 <Pressable
