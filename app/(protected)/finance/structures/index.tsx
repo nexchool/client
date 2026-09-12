@@ -22,7 +22,6 @@ import {
 import { useAcademicYearContext } from "@/modules/academics/context/AcademicYearContext";
 import type { FeeStructure } from "@/modules/finance/types";
 import { ClassMultiSelect } from "@/common/components/ClassMultiSelect";
-import { calendarLocaleForLanguage } from "@/i18n";
 import { DatePicker } from '@/common/components/datepicker';
 import { useTheme } from "@/common/theme";
 import { Text } from "@/common/components/Text";
@@ -34,18 +33,11 @@ import { PageHeader } from "@/common/components/PageHeader";
 import { BottomSheet } from "@/common/components/sheet";
 import { useModalBodyHeight } from '@/common/hooks/useModalBodyHeight';
 import { useToast } from "@/common/feedback";
+import { formatDate } from "@/common/utils/datetime";
 
-function formatDate(s: string, locale: string) {
-  try {
-    return new Date(s).toLocaleDateString(locale);
-  } catch {
-    return s;
-  }
-}
 
 export default function FeeStructuresPage() {
-  const { t, i18n } = useTranslation("finance");
-  const locale = calendarLocaleForLanguage(i18n.language ?? "en");
+  const { t } = useTranslation("finance");
   const router = useRouter();
   const { palette, spacing, radius, elevation } = useTheme();
   const { selectedAcademicYearId: contextYearId } = useAcademicYearContext();
@@ -109,7 +101,7 @@ export default function FeeStructuresPage() {
         >
           {t("structures.classDetail", {
             classes: s.class_name ?? t("common.allClasses"),
-            date: formatDate(s.due_date, locale),
+            date: formatDate(s.due_date),
           })}
         </Text>
         {s.components?.length ? (
@@ -407,7 +399,7 @@ function StructureModal({
     borderRadius: radius.md,
     padding: spacing.md,
     color: palette.onSurface,
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   };
 
   return (
@@ -429,20 +421,21 @@ function StructureModal({
 
           <ScrollView
             style={{ maxHeight: modalBodyHeight }}
+            contentContainerStyle={{ paddingBottom: spacing.lg }}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
             <Text
               variant="labelMd"
               color="onSurface"
-              style={{ marginBottom: spacing.sm }}
+              style={{ marginBottom: spacing.xs }}
             >
               {t("structures.modal.structureName")}
             </Text>
             <Text
               variant="labelSm"
               color="onSurfaceVariant"
-              style={{ marginBottom: spacing.sm }}
+              style={{ marginBottom: spacing.xs }}
             >
               {t("structures.modal.structureNameHint")}
             </Text>
@@ -459,14 +452,14 @@ function StructureModal({
                 <Text
                   variant="labelMd"
                   color="onSurface"
-                  style={{ marginBottom: spacing.sm }}
+                  style={{ marginBottom: spacing.xs }}
                 >
                   {t("structures.modal.academicYear")}
                 </Text>
                 {/* Which year the new structure belongs to — a form field, not
                     a list filter, which is why this row survives while the
                     one over the list did not. */}
-                <View style={{ marginBottom: spacing.md }}>
+                <View style={{ marginBottom: spacing.sm }}>
                   <FilterChips
                     options={academicYears.map((ay) => ({ value: ay.id, label: ay.name }))}
                     value={academicYearId}
@@ -479,14 +472,14 @@ function StructureModal({
             <Text
               variant="labelMd"
               color="onSurface"
-              style={{ marginBottom: spacing.sm }}
+              style={{ marginBottom: spacing.xs }}
             >
               {t("structures.modal.classes")}
             </Text>
             <Text
               variant="labelSm"
               color="onSurfaceVariant"
-              style={{ marginBottom: spacing.sm }}
+              style={{ marginBottom: spacing.xs }}
             >
               {t("structures.modal.classesHint")}
             </Text>
@@ -495,6 +488,7 @@ function StructureModal({
               onChange={setClassIds}
               options={classOptions}
               placeholder={t("structures.modal.classesPlaceholder")}
+              style={{ marginBottom: spacing.sm }}
             />
 
             <DatePicker
@@ -509,6 +503,7 @@ function StructureModal({
                 flexDirection: "row",
                 justifyContent: "space-between",
                 alignItems: "center",
+                marginTop: spacing.sm,
               }}
             >
               <Text variant="labelMd" color="onSurface">

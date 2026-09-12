@@ -14,6 +14,7 @@ import { useTeachers } from '@/modules/teachers/hooks/useTeachers';
 import { scheduleOverrideSchema, type ScheduleOverrideInput } from '../validation/schemas';
 import { useCreateScheduleOverride } from '../hooks/useScheduleOverride';
 import { useToast } from '@/common/feedback';
+import { schoolTodayIso } from '@/common/utils/datetime';
 
 type Props = {
   visible: boolean;
@@ -23,7 +24,7 @@ type Props = {
 };
 
 function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+  return schoolTodayIso();
 }
 
 export function ScheduleOverrideSheet({ visible, onClose, defaultDate, defaultSlotId }: Props) {

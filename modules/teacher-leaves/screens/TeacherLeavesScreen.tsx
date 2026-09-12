@@ -22,6 +22,7 @@ import { LeaveRequestRow } from "../components/LeaveRequestRow";
 import { LeaveBalanceModal } from "../components/LeaveBalanceModal";
 import { LeavePolicyModal } from "../components/LeavePolicyModal";
 import { useDialog, useToast } from "@/common/feedback";
+import { schoolMonthIso } from "@/common/utils/datetime";
 
 export default function TeacherLeavesScreen({
   embedded = false,
@@ -103,7 +104,7 @@ export default function TeacherLeavesScreen({
 
   // Stats (counts shown above the list)
   const stats = useMemo(() => {
-    const thisMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+    const thisMonth = schoolMonthIso();
     return {
       pending: leaves.filter((l) => l.status === "pending").length,
       approvedMonth: leaves.filter(

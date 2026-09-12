@@ -6,6 +6,7 @@ import { Text } from '@/common/components/Text';
 import { PressScale } from '@/common/components/PressScale';
 import type { Palette } from '@/common/theme';
 import type { AuditLogEntry } from '../types';
+import { formatDayMonth } from '@/common/utils/datetime';
 
 function relativeTime(dateStr: string | null | undefined): string {
   if (!dateStr) return '';
@@ -18,7 +19,7 @@ function relativeTime(dateStr: string | null | undefined): string {
   if (hr < 24) return `${hr}h`;
   const day = Math.floor(hr / 24);
   if (day < 7) return `${day}d`;
-  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return formatDayMonth(d);
 }
 
 // Soft accent on the avatar, tinted by the actor's role so scanning a long

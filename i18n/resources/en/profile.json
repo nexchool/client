@@ -1,19 +1,10 @@
 {
   "main": {
-    "sections": {
-      "profileInformation": "Profile information",
-      "academic": "Academic",
-      "settings": "Settings"
-    },
     "cards": {
-      "myProfile": "My profile",
-      "myProfileSubtitle": "View school record and profile photo",
       "changePassword": "Change password",
       "changePasswordSubtitle": "Update your password",
       "appSettings": "App settings",
       "appSettingsSubtitle": "Language and push notifications",
-      "notifications": "Notifications",
-      "notificationsSubtitle": "Open your inbox and read school alerts",
       "helpSupport": "Help & support",
       "helpSupportSubtitle": "Get help and contact support",
       "terms": "Terms of service",
@@ -21,12 +12,11 @@
       "privacy": "Privacy policy",
       "privacySubtitle": "How we handle your information"
     },
-    "logout": "Logout"
+    "logout": "Sign out",
+    "logoutSubtitle": "Sign out of Nexchool on this device"
   },
   "myProfile": {
-    "screenTitle": "My profile",
     "defaultDisplayName": "Profile",
-    "heroHint": "Tap the photo to change it here. Your school can also set your photo from the admin panel. Other details are read-only and come from your school records.",
     "sections": {
       "account": "Account",
       "basicInformation": "Basic information",
@@ -133,18 +123,10 @@
     "storageUnavailable": "Storage is not available.",
     "couldNotOpenDocument": "Could not open document"
   },
-  "unsupportedRole": {
-    "title": "Profile not available for your role"
-  },
   "sections": {
     "security": "Security",
     "preferences": "Preferences",
     "about": "About"
-  },
-  "preferences": {
-    "language": "Language",
-    "notifications": "Notifications",
-    "notificationsHint": "Manage in your device settings"
   },
   "about": {
     "version": "App version"
@@ -164,7 +146,9 @@
     "title": "Sign out from all devices",
     "message": "This will sign you out everywhere. You'll need to log in again on each device.",
     "confirm": "Sign out",
-    "row": "Sign out from all devices"
+    "row": "Sign out from all devices",
+    "hint": "Ends every signed-in session, including this one. Use it if you lost a phone.",
+    "failed": "Could not sign out your other devices. You have been signed out here."
   },
   "changePassword": {
     "title": "Change password",

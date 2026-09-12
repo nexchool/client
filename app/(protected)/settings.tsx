@@ -5,7 +5,9 @@ import {
   ScrollView,
   ActivityIndicator,
   Switch,
+  Linking,
 } from "react-native";
+import Constants from "expo-constants";
 import * as Device from "expo-device";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -16,8 +18,6 @@ import { AppIcon } from "@/common/components/AppIcon";
 import { PageHeader } from "@/common/components/PageHeader";
 import { ProfileActionRow } from "@/modules/profile/components/ProfileActionRow";
 import { BiometricUnlockRow } from "@/modules/auth/components/BiometricUnlockRow";
-import { useAuth } from "@/modules/auth/hooks/useAuth";
-import { useDialog } from "@/common/feedback";
 import {
   getPushNotificationsPreference,
   setPushNotificationsPreference,
@@ -27,17 +27,25 @@ import {
   unregisterDevicePushNotifications,
 } from "@/modules/devices/pushRegistration";
 
+const TERMS_URL = "https://nexchool.in/terms";
+const PRIVACY_URL = "https://nexchool.in/privacy";
+
+/**
+ * How the app behaves on this phone, plus the app's own shelf.
+ *
+ * Deliberately holds nothing about the person signed in: no name, no password,
+ * no sign out. Those live on the profile screen, which is where somebody looks
+ * for them, and a second copy here is the reason the two screens used to read
+ * as the same screen twice.
+ */
 export default function SettingsScreen() {
   const router = useRouter();
   const { palette, spacing } = useTheme();
   const { t } = useTranslation(["navigation", "settings", "common", "profile"]);
-  const { confirm } = useDialog();
-  const { logout } = useAuth();
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(true);
   const [pushBusy, setPushBusy] = useState(false);
-
 
   useEffect(() => {
     void getPushNotificationsPreference().then(setPushEnabled);
@@ -70,18 +78,19 @@ export default function SettingsScreen() {
     [pushBusy],
   );
 
-  const handleLogout = useCallback(async () => {
-    const signOut = await confirm({
-      title: t("profile:logoutConfirm.title", { defaultValue: "Sign out" }),
-      description: t("profile:logoutConfirm.message", {
-        defaultValue: "Are you sure you want to sign out?",
-      }),
-      tone: "danger",
-      confirmLabel: t("profile:logoutConfirm.confirm", { defaultValue: "Sign out" }),
-      cancelLabel: t("profile:logoutConfirm.cancel", { defaultValue: "Cancel" }),
-    });
-    if (signOut) void logout();
-  }, [logout, t]);
+  const sectionHeading = (key: string, first = false) => (
+    <Text
+      variant="overline"
+      color="primary"
+      style={{
+        marginTop: first ? 0 : spacing.md,
+        marginBottom: spacing.xs,
+        marginLeft: spacing.xs,
+      }}
+    >
+      {t(key)}
+    </Text>
+  );
 
   return (
     <View style={[styles.container, { backgroundColor: palette.surface }]}>
@@ -95,47 +104,14 @@ export default function SettingsScreen() {
         style={styles.scroll}
         contentContainerStyle={{
           padding: spacing.lg,
-          paddingBottom: spacing.xl,
+          paddingBottom: spacing.scrollBottom,
           gap: spacing.sm,
         }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* ACCOUNT */}
-        <Text
-          variant="overline"
-          color="primary"
-          style={{ marginBottom: spacing.xs, marginLeft: spacing.xs }}
-        >
-          {t("settings:sections.account")}
-        </Text>
-        <ProfileActionRow
-          icon="person-outline"
-          label={t("settings:rows.personalInfo")}
-          hint={t("settings:rows.personalInfoSubtitle")}
-          onPress={() => router.push("/(protected)/profile" as never)}
-        />
-        <ProfileActionRow
-          icon="shield-outline"
-          label={t("settings:rows.security")}
-          hint={t("settings:rows.securitySubtitle")}
-          onPress={() =>
-            router.push("/(protected)/profile/change-password" as never)
-          }
-        />
-
-        {/* PREFERENCES */}
-        <Text
-          variant="overline"
-          color="primary"
-          style={{
-            marginTop: spacing.md,
-            marginBottom: spacing.xs,
-            marginLeft: spacing.xs,
-          }}
-        >
-          {t("settings:sections.preferences")}
-        </Text>
+        {/* PREFERENCES — everything that changes how this phone behaves. */}
+        {sectionHeading("settings:sections.preferences", true)}
         <ProfileActionRow
           icon="notifications-outline"
           label={t("settings:pushSectionTitle")}
@@ -158,47 +134,64 @@ export default function SettingsScreen() {
             )
           }
         />
-        <BiometricUnlockRow />
-        <ProfileActionRow
-          icon="language-outline"
-          label={t("settings:languageSectionTitle")}
-          hint={currentLanguageLabel()}
-          onPress={() => setDropdownOpen(true)}
-          trailing={<AppIcon name="chevron-forward" size="md" color="onSurfaceVariant" />}
-        />
         {!Device.isDevice ? (
           <Text
             variant="labelSm"
             color="onSurfaceVariant"
-            style={{ marginLeft: spacing.xs, marginTop: spacing.xs }}
+            style={{ marginLeft: spacing.xs }}
           >
             {t("settings:pushSimulatorHint")}
           </Text>
         ) : null}
+        <BiometricUnlockRow />
+        <ProfileActionRow
+          icon="language-outline"
+          label={t("settings:languageSectionTitle")}
+          hint={t("settings:languageSectionSubtitle")}
+          onPress={() => setDropdownOpen(true)}
+          trailing={
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: spacing.sm }}
+            >
+              <Text variant="bodyMd" color="onSurfaceVariant">
+                {currentLanguageLabel()}
+              </Text>
+              <AppIcon name="chevron-forward" size="md" color="onSurfaceVariant" />
+            </View>
+          }
+        />
 
-        {/* APP */}
-        <Text
-          variant="overline"
-          color="primary"
-          style={{
-            marginTop: spacing.md,
-            marginBottom: spacing.xs,
-            marginLeft: spacing.xs,
-          }}
-        >
-          {t("settings:sections.app")}
-        </Text>
+        {/* SUPPORT & LEGAL */}
+        {sectionHeading("settings:sections.support")}
         <ProfileActionRow
           icon="help-circle-outline"
-          label={t("settings:rows.helpSupport")}
+          label={t("profile:main.cards.helpSupport")}
+          hint={t("profile:main.cards.helpSupportSubtitle")}
           onPress={() => router.push("/(protected)/help-support" as never)}
         />
         <ProfileActionRow
-          icon="log-out-outline"
-          label={t("profile:main.logout")}
-          destructive
-          trailing={null}
-          onPress={handleLogout}
+          icon="document-text-outline"
+          label={t("profile:main.cards.terms")}
+          hint={t("profile:main.cards.termsSubtitle")}
+          onPress={() => void Linking.openURL(TERMS_URL)}
+        />
+        <ProfileActionRow
+          icon="shield-checkmark-outline"
+          label={t("profile:main.cards.privacy")}
+          hint={t("profile:main.cards.privacySubtitle")}
+          onPress={() => void Linking.openURL(PRIVACY_URL)}
+        />
+
+        {/* ABOUT */}
+        {sectionHeading("settings:sections.about")}
+        <ProfileActionRow
+          icon="information-circle-outline"
+          label={t("profile:about.version")}
+          trailing={
+            <Text variant="bodyMd" color="onSurfaceVariant">
+              {Constants.expoConfig?.version ?? "—"}
+            </Text>
+          }
         />
       </ScrollView>
 

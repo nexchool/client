@@ -15,10 +15,8 @@ import { DashboardKpiCard } from './DashboardKpiCard';
 import { FeeTrendChart } from './FeeTrendChart';
 import { DashboardActionRow } from './DashboardActionRow';
 import { RecordPaymentPicker } from './RecordPaymentPicker';
-
-function formatInr(value: number): string {
-  return `₹${Number(value).toLocaleString('en-IN')}`;
-}
+import { formatCurrencyShort } from '@/common/utils/formatCurrency';
+import { formatDateLong } from '@/common/utils/datetime';
 
 export function AdminHome() {
   const { t } = useTranslation('home');
@@ -26,11 +24,9 @@ export function AdminHome() {
   const { data, isLoading, isRefetching, refetch } = useAdminDashboard();
   const [recordPaymentVisible, setRecordPaymentVisible] = React.useState(false);
 
-  const today = new Date().toLocaleDateString(undefined, {
-    weekday: 'long',
-    month: 'short',
-    day: 'numeric',
-  });
+  // The date *at the school*, not on the phone — between 00:00 and 05:30 IST
+  // a device on UTC would greet the admin with yesterday.
+  const today = formatDateLong(new Date());
 
   const overview = data?.overview;
   const todayOps = data?.today;
@@ -62,8 +58,22 @@ export function AdminHome() {
     !!flags?.fees_management && finance?.enabled !== false && shown(finance);
   const overviewShown = shown(overview);
 
+  // "Today's Collection" used to show `finance.total_collected`, which is the
+  // sum of every fee ever paid this year — the wrong number, and at
+  // ₹1,45,77,190 one that no half-width card can hold. Today's figure is
+  // already in the payload: the last point of the seven-day series the chart
+  // below draws, so the tile and the chart now agree by construction.
+  const series = finance?.last_7_days_collection ?? [];
+  const collectedToday = Number(series[series.length - 1]?.amount ?? 0);
+
+  // `trend_percentage` compares this week's seven days with the seven before,
+  // so the sub-line says that rather than implying a day-over-day change.
   const trendPct = finance?.trend_percentage ?? 0;
   const trendTone: 'up' | 'down' | 'flat' = trendPct > 0 ? 'up' : trendPct < 0 ? 'down' : 'flat';
+  const trendLabel = t('admin.kpi.feesTrend', {
+    defaultValue: '{{pct}} vs last week',
+    pct: `${trendPct > 0 ? '+' : ''}${trendPct}%`,
+  });
 
   const alertRows = alerts
     ? [
@@ -116,11 +126,6 @@ export function AdminHome() {
               iconName="school-outline"
               iconChipBg="primaryContainer"
               iconChipFg="onPrimaryContainer"
-              trend={
-                overview?.academic_year
-                  ? { label: overview.academic_year, tone: 'flat' }
-                  : undefined
-              }
             />
           </View>
           ) : null}
@@ -161,15 +166,12 @@ export function AdminHome() {
             <View style={{ width: '48%' }}>
               <DashboardKpiCard
                 label={t('admin.kpi.fees', { defaultValue: "Today's Collection" })}
-                value={formatInr(finance?.total_collected ?? 0)}
+                value={formatCurrencyShort(collectedToday)}
                 accentColor="success"
                 iconName="wallet-outline"
                 iconChipBg="surfaceContainerHigh"
                 iconChipFg="success"
-                trend={{
-                  label: `${trendPct > 0 ? '+' : ''}${trendPct}%`,
-                  tone: trendTone,
-                }}
+                trend={{ label: trendLabel, tone: trendTone }}
               />
             </View>
           ) : null}
@@ -187,13 +189,11 @@ export function AdminHome() {
             },
           ]}
         >
-          <Text variant="headlineMd" color="onSurface">
-            {t('admin.feeTrend.title', { defaultValue: 'Fee Collection Trend' })}
-          </Text>
-          <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
-            {t('admin.feeTrend.subtitle', { defaultValue: 'Last 7 days' })}
-          </Text>
-          <FeeTrendChart data={finance?.last_7_days_collection ?? []} />
+          <FeeTrendChart
+            data={finance?.last_7_days_collection ?? []}
+            title={t('admin.feeTrend.title', { defaultValue: 'Fee Collection Trend' })}
+            subtitle={t('admin.feeTrend.subtitle', { defaultValue: 'Last 7 days' })}
+          />
         </View>
       ) : null}
 

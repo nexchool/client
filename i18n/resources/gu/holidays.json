@@ -2,25 +2,31 @@
   "screen": {
     "title": "રજાઓ",
     "subtitle": "શાળા કૅલેન્ડર અને સાપ્તાહિક રજા જુઓ",
-    "searchPlaceholder": "શોધો…"
+    "searchPlaceholder": "શોધો…",
+    "clearSearch": "શોધ સાફ કરો"
   },
   "tabs": {
-    "all": "બધી",
     "upcoming": "આગામી",
-    "recurring": "પુનરાવર્તન"
-  },
-  "sections": {
-    "holidays": "રજાઓ",
-    "weeklyOff": "સાપ્તાહિક રજાના દિવસો"
-  },
-  "summary": {
-    "holidays": "રજાઓ",
+    "all": "બધી",
+    "past": "વીતી ગયેલી",
     "weeklyOff": "સાપ્તાહિક રજા"
   },
+  "sections": {
+    "weeklyOff": "સાપ્તાહિક રજાના દિવસો"
+  },
   "empty": {
-    "title": "કોઈ રજા મળી નથી",
-    "hintManage": "રજા અથવા સાપ્તાહિક રજા ઉમેરવા + દબાવો.",
-    "hintReadOnly": "હજી કોઈ રજા નિયોજિત નથી."
+    "title": "હજી કોઈ રજા નથી",
+    "body": "તમારી શાળા કૅલેન્ડરમાં ઉમેરે તે રજાઓ અહીં દેખાશે.",
+    "noMatchTitle": "તમારી શોધ સાથે કોઈ રજા મળી નથી",
+    "noMatchBody": "બીજું નામ અજમાવો, અથવા આખું કૅલેન્ડર જોવા શોધ સાફ કરો.",
+    "noUpcomingTitle": "આગળ કંઈ નથી",
+    "noUpcomingBody": "આ શૈક્ષણિક વર્ષમાં હવે કોઈ રજા બાકી નથી.",
+    "noPastTitle": "હજી કંઈ વીત્યું નથી",
+    "noPastBody": "પૂરી થઈ ગયેલી રજાઓ અહીં દેખાશે.",
+    "noWeeklyOffTitle": "કોઈ સાપ્તાહિક રજા નક્કી નથી",
+    "noWeeklyOffBody": "સાપ્તાહિક રજા દર અઠવાડિયે એ જ દિવસે આવે છે, જેમ કે દર રવિવારે.",
+    "showAll": "બધી રજાઓ બતાવો",
+    "addFirst": "રજા ઉમેરો"
   },
   "alerts": {
     "deleteTitle": "રજા કાઢો",
@@ -28,17 +34,89 @@
     "recurringPart": " (પુનરાવર્તન – દર {{day}})",
     "cancel": "રદ કરો",
     "delete": "કાઢો",
-    "error": "ભૂલ",
     "deleteFailed": "રજા કાઢવામાં નિષ્ફળ",
-    "holidayUpdated": "રજા અપડેટ થઈ",
-    "holidayAdded": "રજા ઉમેરાઈ"
+    "created": "રજા ઉમેરાઈ",
+    "updated": "રજા અપડેટ થઈ",
+    "deleted": "રજા કાઢી"
   },
   "errors": {
-    "loadFailed": "રજાઓ લોડ કરવામાં નિષ્ફળ"
+    "loadFailed": "રજાઓ લોડ કરવામાં નિષ્ફળ",
+    "retry": "ફરી પ્રયાસ કરો"
   },
   "list": {
     "everyPrefix": "દર {{day}}",
     "fallsOnSunday": "રવિવારે પડે છે (સાપ્તાહિક રજા)",
-    "durationDays": "{{count}} દિવસ"
+    "durationDays": "{{count}} દિવસ",
+    "edit": "રજા સંપાદિત કરો",
+    "delete": "રજા કાઢો"
+  },
+  "form": {
+    "titleAdd": "રજા ઉમેરો",
+    "titleEdit": "રજા સંપાદન",
+    "sectionSchedule": "સમયપત્રક",
+    "modeSingle": "એક દિવસ",
+    "modeRange": "તારીખ શ્રેણી",
+    "modeRecurring": "પુનરાવર્તન",
+    "nameLabel": "નામ *",
+    "namePlaceholder": "જેમ કે દિવાળી, ઉનાળાની રજા, રવિવાર રજા",
+    "dateLabel": "તારીખ *",
+    "startDateLabel": "શરૂ તારીખ *",
+    "endDateLabel": "અંત તારીખ *",
+    "datePlaceholder": "YYYY-MM-DD",
+    "repeatsEvery": "દર વખતે *",
+    "recurringInfo": "પુનરાવર્તી રજાઓ (જેમ કે દર રવિવાર) બધા અઠવાડિયામાં લાગુ. તે સાપ્તાહિક રજા તરીકે ગણાય — જો આ દિવસે સાર્વજનિક રજા પડે તો \"રવિવારે પડે છે\" ચેતવણી દેખાશે.",
+    "categoryLabel": "શ્રેણી",
+    "types": {
+      "public": "સાર્વજનિક",
+      "school": "શાળા",
+      "regional": "પ્રાદેશિક",
+      "optional": "વૈકલ્પિક",
+      "weekly_off": "સાપ્તાહિક રજા"
+    },
+    "daysShort": {
+      "0": "સોમ",
+      "1": "મંગળ",
+      "2": "બુધ",
+      "3": "ગુરુ",
+      "4": "શુક્ર",
+      "5": "શનિ",
+      "6": "રવિ"
+    },
+    "academicYear": "શૈક્ષણિક વર્ષ",
+    "allYears": "બધા વર્ષ",
+    "descriptionLabel": "વર્ણન (વૈકલ્પિક)",
+    "descriptionPlaceholder": "આ રજા વિશે વધુ વિગત…",
+    "cancel": "રદ કરો",
+    "saveChanges": "ફેરફાર સાચવો",
+    "addHoliday": "રજા ઉમેરો",
+    "saveFailed": "રજા સાચવવામાં નિષ્ફળ",
+    "validation": {
+      "nameRequired": "નામ જરૂરી છે",
+      "nameMax": "મહત્તમ 120 અક્ષરો",
+      "descriptionMax": "મહત્તમ 500 અક્ષરો",
+      "invalidHolidayType": "માન્ય રજા પ્રકાર પસંદ કરો",
+      "startDateFormat": "શરૂ તારીખ YYYY-MM-DD હોવી જોઈએ",
+      "endDateFormat": "અંત તારીખ YYYY-MM-DD હોવી જોઈએ",
+      "endAfterStart": "અંત તારીખ શરૂ પછી અથવા સમાન હોવી જોઈએ",
+      "dayRequired": "સપ્તાહનો દિવસ જરૂરી છે",
+      "dayRange": "0-6 હોવું જોઈએ"
+    },
+    "days": {
+      "0": "સોમવાર",
+      "1": "મંગળવાર",
+      "2": "બુધવાર",
+      "3": "ગુરુવાર",
+      "4": "શુક્રવાર",
+      "5": "શનિવાર",
+      "6": "રવિવાર"
+    },
+    "dayPlaceholder": "દિવસ પસંદ કરો",
+    "scheduleLabel": "રજાનો પ્રકાર",
+    "sectionDetails": "વિગતો",
+    "discardTitle": "ફેરફાર રદ કરશો?",
+    "discardBody": "અહીં ભરેલી માહિતી ખોવાઈ જશે.",
+    "discardConfirm": "રદ કરો",
+    "discardCancel": "સંપાદન ચાલુ રાખો",
+    "loadFailed": "આ રજા લોડ થઈ શકી નથી"
   }
 }

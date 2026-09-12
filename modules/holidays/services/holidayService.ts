@@ -12,13 +12,6 @@ interface ListHolidaysParams {
   offset?: number;
 }
 
-interface ListHolidaysResponse {
-  data: Holiday[];
-  total: number;
-  limit: number;
-  offset: number;
-}
-
 export const holidayService = {
   getHolidays: async (params: ListHolidaysParams = {}): Promise<Holiday[]> => {
     const qs = new URLSearchParams();

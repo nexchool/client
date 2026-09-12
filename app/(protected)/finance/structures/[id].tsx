@@ -18,7 +18,6 @@ import {
 } from "@/modules/finance/hooks/useFinance";
 import type { FeeStructure } from "@/modules/finance/types";
 import { ClassMultiSelect } from "@/common/components/ClassMultiSelect";
-import { calendarLocaleForLanguage } from "@/i18n";
 import { DatePicker } from '@/common/components/datepicker';
 import { useTheme } from "@/common/theme";
 import { Text } from "@/common/components/Text";
@@ -32,20 +31,13 @@ import { useModalBodyHeight } from '@/common/hooks/useModalBodyHeight';
 import { useDialog, useToast } from "@/common/feedback";
 import { formatCurrency } from "@/common/utils/formatCurrency";
 import { BottomSheet } from "@/common/components/sheet";
+import { formatDate } from "@/common/utils/datetime";
 
-function formatDate(s: string, locale: string) {
-  try {
-    return new Date(s).toLocaleDateString(locale);
-  } catch {
-    return s;
-  }
-}
 
 export default function FeeStructureInfoPage() {
   const toast = useToast();
   const { confirm } = useDialog();
-  const { t, i18n } = useTranslation("finance");
-  const locale = calendarLocaleForLanguage(i18n.language ?? "en");
+  const { t } = useTranslation("finance");
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { palette, spacing, radius, elevation } = useTheme();
@@ -194,7 +186,7 @@ export default function FeeStructureInfoPage() {
           <DetailRow
             icon="time-outline"
             label={t("structureDetail.dueDate")}
-            value={formatDate(structure.due_date, locale)}
+            value={formatDate(structure.due_date)}
           />
           <DetailRow
             icon="people-outline"

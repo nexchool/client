@@ -5,7 +5,6 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useInvoices } from "@/modules/fees/hooks/useFees";
 import type { FeeInvoice } from "@/modules/fees/services/feesService";
-import { calendarLocaleForLanguage } from "@/i18n";
 import { useTheme, type Palette } from "@/common/theme";
 import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
@@ -19,25 +18,17 @@ import { PageHeader } from "@/common/components/PageHeader";
 import { formatCurrency, formatCurrencyCompact } from "@/common/utils/formatCurrency";
 import { Protected } from "@/modules/permissions/components/Protected";
 import * as PERMS from "@/modules/permissions/constants/permissions";
+import { formatDate, schoolTodayIso } from "@/common/utils/datetime";
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
-function formatDate(s: string, locale: string) {
-  try {
-    return new Date(s).toLocaleDateString(locale, {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-  } catch {
-    return s;
-  }
-}
 
 function isOverdue(invoice: FeeInvoice): boolean {
   if (invoice.status === "paid" || invoice.status === "cancelled") return false;
   try {
-    return new Date(invoice.due_date).getTime() < Date.now();
+    // Overdue means the due day has passed at the school — not that the
+    // UTC-midnight instant of the due date is behind the phone's clock.
+    return invoice.due_date.slice(0, 10) < schoolTodayIso();
   } catch {
     return false;
   }
@@ -66,8 +57,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default function InvoicesListPage() {
-  const { t, i18n } = useTranslation("finance");
-  const locale = calendarLocaleForLanguage(i18n.language ?? "en");
+  const { t } = useTranslation("finance");
   const router = useRouter();
   const { palette, spacing, radius, elevation } = useTheme();
   const [filter, setFilter] = useState<"all" | "paid" | "pending" | "overdue">("all");
@@ -98,9 +88,7 @@ export default function InvoicesListPage() {
   // The header's count, from the server rather than the rows in hand.
   const invoiceCount = data?.pages[0]?.total ?? 0;
   const totalOutstanding = summary?.total_outstanding ?? 0;
-  const nextDueDate = summary?.next_due_date
-    ? new Date(summary.next_due_date)
-    : null;
+  const nextDueDate = summary?.next_due_date ?? null;
 
   const renderItem = ({ item }: { item: FeeInvoice }) => {
     const overdue = isOverdue(item);
@@ -110,11 +98,11 @@ export default function InvoicesListPage() {
     const dateLabel = isPaid
       ? t("invoices.paidOnLine", {
           defaultValue: "Paid on {{date}}",
-          date: formatDate(item.updated_at ?? item.issue_date, locale),
+          date: formatDate(item.updated_at ?? item.issue_date),
         })
       : t("invoices.dueOnLine", {
           defaultValue: "Due {{date}}",
-          date: formatDate(item.due_date, locale),
+          date: formatDate(item.due_date),
         });
 
     return (
@@ -226,7 +214,7 @@ export default function InvoicesListPage() {
                   label={t("invoices.nextDueDate", { defaultValue: "Next Due Date" })}
                   value={
                     nextDueDate
-                      ? formatDate(nextDueDate.toISOString(), locale)
+                      ? formatDate(nextDueDate)
                       : t("invoices.noDue", { defaultValue: "—" })
                   }
                   accentColor="secondary"

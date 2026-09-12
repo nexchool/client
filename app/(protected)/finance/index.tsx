@@ -2,7 +2,6 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { View, ScrollView, RefreshControl } from "react-native";
 import { router } from "expo-router";
-import { calendarLocaleForLanguage } from "@/i18n";
 import { useFinanceDashboard } from "@/modules/finance/hooks/useFinance";
 import { useAdminDashboard } from "@/modules/dashboard/hooks/useAdminDashboard";
 import { useTheme } from "@/common/theme";
@@ -17,6 +16,7 @@ import { FeeTrendChart } from "@/modules/home/components/FeeTrendChart";
 import { DashboardActionRow } from "@/modules/home/components/DashboardActionRow";
 import { useStudentAcademicDashboard } from "@/modules/academics/hooks/useAcademicQueries";
 import { formatCurrency, formatCurrencyCompact } from "@/common/utils/formatCurrency";
+import { formatDayMonth } from "@/common/utils/datetime";
 
 export default function FinanceIndex() {
   const { isStudent } = useUiRole();
@@ -25,8 +25,7 @@ export default function FinanceIndex() {
 }
 
 function AdminFinanceDashboard() {
-  const { t, i18n } = useTranslation("finance");
-  const locale = calendarLocaleForLanguage(i18n.language ?? "en");
+  const { t } = useTranslation("finance");
   const { palette, spacing, radius, elevation } = useTheme();
 
   // Summary + recent payments in one call (real shape: total_expected,
@@ -188,13 +187,11 @@ function AdminFinanceDashboard() {
             },
           ]}
         >
-          <Text variant="headlineMd" color="onSurface">
-            {t("dashboard.collectionChartTitle", { defaultValue: "Fee Collection" })}
-          </Text>
-          <Text variant="bodyMd" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
-            {t("dashboard.collectionChartSubtitle", { defaultValue: "Last 7 days" })}
-          </Text>
-          <FeeTrendChart data={collectionSeries} />
+          <FeeTrendChart
+            data={collectionSeries}
+            title={t("dashboard.collectionChartTitle", { defaultValue: "Fee Collection" })}
+            subtitle={t("dashboard.collectionChartSubtitle", { defaultValue: "Last 7 days" })}
+          />
         </View>
       ) : null}
 
@@ -316,10 +313,7 @@ function AdminFinanceDashboard() {
                     {payment.student_name ?? t("common.unknown")}
                   </Text>
                   <Text variant="labelSm" color="onSurfaceVariant">
-                    {new Date(payment.created_at).toLocaleDateString(locale, {
-                      day: "numeric",
-                      month: "short",
-                    })}
+                    {formatDayMonth(payment.created_at)}
                   </Text>
                 </View>
                 <Text variant="labelMd" color="success">

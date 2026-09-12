@@ -1,4 +1,4 @@
-import { apiPost } from '@/common/services/api';
+import { apiDelete, apiPost } from '@/common/services/api';
 import { API_ENDPOINTS } from '@/common/constants/api';
 
 export interface TenantChoice {
@@ -154,6 +154,17 @@ export const forceResetPassword = (data: { new_password: string }) => {
 export interface ChangePasswordResponse {
   revoked_sessions: number;
 }
+
+/**
+ * Sign out everywhere, this device included.
+ *
+ * The local `logout()` only clears this phone; a session revoked on the server
+ * is what actually locks somebody out of a device they no longer have. Call
+ * this first, then `logout()` — if the request fails the caller still signs
+ * out locally, because the person asked to be signed out.
+ */
+export const revokeAllMySessions = () =>
+  apiDelete<{ revoked: number }>(`${API_ENDPOINTS.MY_SESSIONS}?keep_current=false`);
 
 export const changePassword = (data: {
   current_password: string;
