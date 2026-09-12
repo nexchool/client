@@ -69,10 +69,22 @@ export interface CreateClassDTO {
   name?: string;
   section: string;
   academic_year_id: string;
+  /** Legacy edit-mode field — a bare grade number, no campus/programme scoping. */
   grade_level?: number;
   teacher_id?: string;
   start_date?: string;
   end_date?: string;
+  /**
+   * The structured create fields — same shape admin-web's Create Class form
+   * sends (`CreateSectionModal.tsx`), scoping a class to one campus, programme
+   * and grade rather than a bare number. `medium_id` is `null`, not omitted,
+   * when left blank — the server reads that as "no medium", not "unchanged".
+   */
+  academic_cycle_id?: string;
+  school_unit_id?: string;
+  programme_id?: string;
+  grade_id?: string;
+  medium_id?: string | null;
 }
 
 // --- Subject Load ---
