@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   View,
@@ -14,10 +14,16 @@ import { useTheme } from "@/common/theme";
 import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
 import { PressScale } from "@/common/components/PressScale";
+import { SelectSheet } from "@/common/components/SelectSheet";
 import type { CreateClassDTO } from "../types";
 import { DatePicker } from '@/common/components/datepicker';
 import { useAcademicYears } from "@/modules/academics/hooks/useAcademicYears";
 import { useAcademicYearContext } from "@/modules/academics/context/AcademicYearContext";
+import { useSchoolUnits } from "@/modules/academics/hooks/useSchoolUnits";
+import { useProgrammes } from "@/modules/academics/hooks/useProgrammes";
+import { useGrades, useCreateGrade } from "@/modules/academics/hooks/useGrades";
+import { useMediums } from "@/modules/academics/hooks/useMediums";
+import { useAcademicCycles } from "@/modules/academics/hooks/useAcademicCycles";
 import { classService } from "@/modules/classes/services/classService";
 import { Teacher } from "@/modules/teachers/types";
 
@@ -53,8 +59,11 @@ export const CreateClassModal: React.FC<Props> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Edit-mode fields — unchanged from before this change, still the legacy
+  // grade_level shape. Admin web's structured fields (below) are create-only:
+  // an existing class already has a campus/programme/grade and this modal's
+  // edit path has never touched them.
   const [name, setName] = useState("");
-  /** Standard / grade (e.g. 10) — class display name becomes Grade {standard} when creating */
   const [standardNum, setStandardNum] = useState("");
   const [section, setSection] = useState("");
   const [academicYearId, setAcademicYearId] = useState("");
@@ -62,10 +71,38 @@ export const CreateClassModal: React.FC<Props> = ({
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
+  // Create-mode fields — same shape as admin-web's CreateSectionModal.
+  const [campusId, setCampusId] = useState("");
+  const [programmeId, setProgrammeId] = useState("");
+  const [gradeId, setGradeId] = useState("");
+  /** Typing a name not in `grades` creates it on submit — see useCreateGrade. */
+  const [newGradeName, setNewGradeName] = useState("");
+  const [mediumId, setMediumId] = useState("");
+  const [academicCycleId, setAcademicCycleId] = useState("");
+
   const { data: academicYears = [], isLoading: academicYearsLoading } = useAcademicYears(false);
   const { selectedAcademicYearId: contextYearId } = useAcademicYearContext();
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [teachersLoading, setTeachersLoading] = useState(false);
+
+  const { data: campuses = [] } = useSchoolUnits();
+  const { data: programmes = [] } = useProgrammes();
+  const { data: grades = [] } = useGrades();
+  const { data: mediums = [] } = useMediums();
+  const { data: cycles = [] } = useAcademicCycles(academicYearId);
+  const createGrade = useCreateGrade();
+
+  // A school has one cycle per year until it opens a second — the field only
+  // appears when there is a real choice, matching admin-web.
+  const mustChooseCycle = cycles.length > 1;
+  const effectiveCycle = mustChooseCycle ? academicCycleId : (cycles[0]?.id ?? "");
+
+  const sortedGrades = useMemo(
+    () => [...grades].sort((a, b) => a.sequence - b.sequence),
+    [grades],
+  );
+  const existingGrade = sortedGrades.find((g) => g.id === gradeId);
+  const trimmedNewGradeName = newGradeName.trim();
 
   useEffect(() => {
     if (visible) {
@@ -81,17 +118,45 @@ export const CreateClassModal: React.FC<Props> = ({
         setClassTeacherId(initialData.teacher_id || "");
         setStartDate(initialData.start_date || "");
         setEndDate(initialData.end_date || "");
+      } else {
+        setAcademicYearId(contextYearId || "");
+        setCampusId("");
+        setProgrammeId("");
+        setGradeId("");
+        setNewGradeName("");
+        setMediumId("");
+        setAcademicCycleId("");
       }
       setTeachersLoading(true);
       classService
         .getAvailableClassTeachers(classId)
         .then(setTeachers)
         .finally(() => setTeachersLoading(false));
-      if (!initialData) {
-        setAcademicYearId(contextYearId || "");
-      }
     }
   }, [visible, contextYearId, initialData, classId]);
+
+  // Header-context defaults, same intent as admin-web's ActiveUnitContext /
+  // ActiveAcademicYearContext fallback: pick the one obvious answer for a
+  // single-campus or single-programme school instead of asking. Only fires
+  // for Create (never overwrites an edit's real values) and only once the
+  // field is still unset, so it never fights a person's own choice.
+  useEffect(() => {
+    if (visible && !isEditMode && !campusId && campuses.length === 1) {
+      setCampusId(campuses[0].id);
+    }
+  }, [visible, isEditMode, campuses, campusId]);
+
+  useEffect(() => {
+    if (visible && !isEditMode && !programmeId && programmes.length === 1) {
+      setProgrammeId(programmes[0].id);
+    }
+  }, [visible, isEditMode, programmes, programmeId]);
+
+  useEffect(() => {
+    if (visible && !isEditMode && !academicYearId && academicYears.length > 0) {
+      setAcademicYearId(academicYears[0].id);
+    }
+  }, [visible, isEditMode, academicYears, academicYearId]);
 
   const resetForm = () => {
     if (initialData) {
@@ -114,27 +179,41 @@ export const CreateClassModal: React.FC<Props> = ({
       setClassTeacherId("");
       setStartDate("");
       setEndDate("");
+      setCampusId("");
+      setProgrammeId("");
+      setGradeId("");
+      setNewGradeName("");
+      setMediumId("");
+      setAcademicCycleId("");
     }
     setError(null);
   };
 
-  const handleSubmit = async () => {
-    if (!section.trim() || !academicYearId) {
-      setError(t("modal.errSectionYear"));
-      return;
-    }
+  // Same completeness rule as admin-web's `complete` boolean: campus, year,
+  // programme, a grade (picked or typed) and a section are all required;
+  // the cycle joins that list only when there is more than one to choose.
+  const createComplete = Boolean(
+    campusId &&
+      academicYearId &&
+      programmeId &&
+      (gradeId || trimmedNewGradeName) &&
+      section.trim() &&
+      (!mustChooseCycle || academicCycleId),
+  );
 
+  const handleSubmit = async () => {
     if (isEditMode) {
+      if (!section.trim() || !academicYearId) {
+        setError(t("modal.errSectionYear"));
+        return;
+      }
       if (!name.trim()) {
         setError(t("modal.errNameRequired"));
         return;
       }
-    } else {
-      const sn = parseInt(standardNum.trim(), 10);
-      if (!standardNum.trim() || Number.isNaN(sn) || sn < 1 || sn > 20) {
-        setError(t("modal.errStandard"));
-        return;
-      }
+    } else if (!createComplete) {
+      setError(t("modal.errIncomplete"));
+      return;
     }
 
     setLoading(true);
@@ -156,14 +235,33 @@ export const CreateClassModal: React.FC<Props> = ({
         }
         await onSubmit(payload);
       } else {
-        const sn = parseInt(standardNum.trim(), 10);
+        // A grade typed rather than picked is created first — same order as
+        // admin-web, which reads the grade's place in the ladder from the
+        // number in its name at creation time.
+        let finalGradeId = gradeId;
+        if (!finalGradeId && trimmedNewGradeName) {
+          try {
+            const created = await createGrade.mutateAsync(trimmedNewGradeName);
+            finalGradeId = created.id;
+          } catch (err) {
+            setError(
+              err instanceof Error
+                ? err.message
+                : t("modal.errGradeCreateFailed", { name: trimmedNewGradeName }),
+            );
+            setLoading(false);
+            return;
+          }
+        }
         await onSubmit({
-          section: section.trim(),
+          name: "",
+          section: section.trim().toUpperCase(),
           academic_year_id: academicYearId,
-          grade_level: sn,
-          teacher_id: classTeacherId || undefined,
-          start_date: startDate.trim() || undefined,
-          end_date: endDate.trim() || undefined,
+          academic_cycle_id: effectiveCycle || undefined,
+          school_unit_id: campusId,
+          programme_id: programmeId,
+          grade_id: finalGradeId,
+          medium_id: mediumId || null,
         });
       }
       resetForm();
@@ -224,7 +322,7 @@ export const CreateClassModal: React.FC<Props> = ({
           <View style={{ width: 40 }} />
         </View>
 
-        <ScrollView style={[styles.form, { padding: spacing.lg }]} showsVerticalScrollIndicator={false}>
+        <ScrollView style={[styles.form, { padding: spacing.lg }]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           {error && (
             <View
               style={[
@@ -260,99 +358,213 @@ export const CreateClassModal: React.FC<Props> = ({
                   placeholderTextColor={palette.outline}
                 />
               </View>
+
+              <View style={[styles.fieldContainer, { marginBottom: spacing.md }]}>
+                <Text variant="labelMd" color="onSurface" style={{ marginBottom: spacing.xs }}>{t("modal.section")}</Text>
+                <TextInput
+                  style={inputStyle}
+                  value={section}
+                  onChangeText={setSection}
+                  placeholder={t("modal.placeholderSection")}
+                  placeholderTextColor={palette.outline}
+                />
+              </View>
+
+              <View style={[styles.fieldContainer, { marginBottom: spacing.md }]}>
+                <Text variant="labelMd" color="onSurface" style={{ marginBottom: spacing.xs }}>{t("modal.academicYear")}</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.xs }}>
+                  {academicYearsLoading ? (
+                    <Text variant="bodySm" color="onSurfaceVariant" style={{ paddingVertical: spacing.sm }}>{t("modal.loading")}</Text>
+                  ) : academicYears.length === 0 ? (
+                    <Text variant="bodySm" color="onSurfaceVariant" style={{ paddingVertical: spacing.sm }}>{t("modal.noAcademicYears")}</Text>
+                  ) : (
+                    academicYears.map((ay) =>
+                      renderChip(academicYearId === ay.id, ay.name, () => setAcademicYearId(ay.id), ay.id)
+                    )
+                  )}
+                </ScrollView>
+              </View>
+
+              <View style={[styles.fieldContainer, { marginBottom: spacing.md }]}>
+                <Text variant="labelMd" color="onSurface" style={{ marginBottom: spacing.xs }}>{t("modal.classTeacherOptional")}</Text>
+                <Text variant="bodySm" color="onSurfaceVariant" style={{ marginBottom: spacing.sm }}>{t("modal.classTeacherHint")}</Text>
+                {teachersLoading ? (
+                  <ActivityIndicator size="small" color={palette.primary} style={{ marginVertical: spacing.sm }} />
+                ) : (
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.xs }}>
+                    {renderChip(!classTeacherId, t("modal.none"), () => setClassTeacherId(""), "none")}
+                    {teachers.map((teacher) =>
+                      renderChip(
+                        classTeacherId === teacher.user_id,
+                        `${teacher.name} (${teacher.employee_id})`,
+                        () => setClassTeacherId(classTeacherId === teacher.user_id ? "" : teacher.user_id),
+                        teacher.id
+                      )
+                    )}
+                  </ScrollView>
+                )}
+              </View>
+
+              <View style={[styles.fieldContainer, { marginBottom: spacing.md }]}>
+                <DatePicker
+                  label={t("modal.startDate")}
+                  value={startDate}
+                  onChange={setStartDate}
+                  placeholder={t("modal.datePlaceholder")}
+                />
+              </View>
+
+              <View style={[styles.fieldContainer, { marginBottom: spacing.md }]}>
+                <DatePicker
+                  label={t("modal.endDate")}
+                  value={endDate}
+                  onChange={setEndDate}
+                  placeholder={t("modal.datePlaceholder")}
+                />
+              </View>
             </>
           ) : (
-            <View style={[styles.fieldContainer, { marginBottom: spacing.md }]}>
-              <Text variant="labelMd" color="onSurface" style={{ marginBottom: spacing.xs }}>{t("modal.standardGrade")}</Text>
-              <Text variant="bodySm" color="onSurfaceVariant" style={{ marginBottom: spacing.sm }}>{t("modal.standardHintCreate")}</Text>
-              <TextInput
-                style={inputStyle}
-                value={standardNum}
-                onChangeText={setStandardNum}
-                placeholder={t("modal.placeholderStandard")}
-                keyboardType="number-pad"
-                placeholderTextColor={palette.outline}
-              />
-              {standardNum.trim() && !Number.isNaN(parseInt(standardNum, 10)) ? (
-                <Text variant="labelLg" color="primary" style={{ marginTop: spacing.sm }}>
-                  {t("modal.classNamePreview", { grade: parseInt(standardNum, 10) })}
-                </Text>
+            <>
+              {/* A class is one grade, on one programme, at one campus, for one
+                  academic year — same fields, same order as admin-web's
+                  Create Class. */}
+              <View style={{ marginBottom: spacing.md }}>
+                <SelectSheet
+                  label={t("modal.campus")}
+                  value={campusId || null}
+                  onChange={(v) => setCampusId(v || "")}
+                  options={campuses.map((c) => ({ value: c.id, label: c.name }))}
+                  placeholder={t("modal.campusPlaceholder")}
+                />
+              </View>
+
+              <View style={[styles.fieldContainer, { marginBottom: spacing.md }]}>
+                <Text variant="labelMd" color="onSurface" style={{ marginBottom: spacing.xs }}>{t("modal.academicYear")}</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.xs }}>
+                  {academicYearsLoading ? (
+                    <Text variant="bodySm" color="onSurfaceVariant" style={{ paddingVertical: spacing.sm }}>{t("modal.loading")}</Text>
+                  ) : academicYears.length === 0 ? (
+                    <Text variant="bodySm" color="onSurfaceVariant" style={{ paddingVertical: spacing.sm }}>{t("modal.noAcademicYears")}</Text>
+                  ) : (
+                    academicYears.map((ay) =>
+                      renderChip(academicYearId === ay.id, ay.name, () => setAcademicYearId(ay.id), ay.id)
+                    )
+                  )}
+                </ScrollView>
+              </View>
+
+              {mustChooseCycle ? (
+                <View style={[styles.fieldContainer, { marginBottom: spacing.md }]}>
+                  <Text variant="labelMd" color="onSurface" style={{ marginBottom: spacing.xs }}>{t("modal.academicCycle")}</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.xs }}>
+                    {cycles.map((cycle) =>
+                      renderChip(academicCycleId === cycle.id, cycle.name, () => setAcademicCycleId(cycle.id), cycle.id)
+                    )}
+                  </ScrollView>
+                  <Text variant="bodySm" color="onSurfaceVariant">{t("modal.academicCycleHint")}</Text>
+                </View>
               ) : null}
-            </View>
+
+              <View style={{ marginBottom: spacing.md }}>
+                <SelectSheet
+                  label={t("modal.programme")}
+                  value={programmeId || null}
+                  onChange={(v) => setProgrammeId(v || "")}
+                  options={programmes.map((p) => ({ value: p.id, label: p.name }))}
+                  placeholder={t("modal.programmePlaceholder")}
+                />
+                {programmes.length === 0 ? (
+                  <Text variant="bodySm" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
+                    {t("modal.noProgrammes")}
+                  </Text>
+                ) : null}
+              </View>
+
+              <View style={{ marginBottom: spacing.md }}>
+                <SelectSheet
+                  label={t("modal.grade")}
+                  value={gradeId || null}
+                  onChange={(v) => {
+                    setGradeId(v || "");
+                    if (v) setNewGradeName("");
+                  }}
+                  options={sortedGrades.map((g) => ({ value: g.id, label: g.name }))}
+                  placeholder={t("modal.gradePlaceholder")}
+                  disabled={!!trimmedNewGradeName}
+                />
+                <Text variant="labelSm" color="onSurfaceVariant" style={{ marginTop: spacing.sm, marginBottom: spacing.xs }}>
+                  {t("modal.gradeOr")}
+                </Text>
+                <TextInput
+                  style={inputStyle}
+                  value={newGradeName}
+                  onChangeText={(v) => {
+                    setNewGradeName(v);
+                    if (v.trim()) setGradeId("");
+                  }}
+                  placeholder={t("modal.gradeNewPlaceholder")}
+                  placeholderTextColor={palette.outline}
+                  editable={!gradeId}
+                />
+                {trimmedNewGradeName ? (
+                  <Text variant="labelSm" color="onSurfaceVariant" style={{ marginTop: spacing.xs }}>
+                    {t("modal.gradeNewHint", { name: trimmedNewGradeName })}
+                  </Text>
+                ) : null}
+              </View>
+
+              <View style={[styles.fieldContainer, { marginBottom: spacing.md }]}>
+                <Text variant="labelMd" color="onSurface" style={{ marginBottom: spacing.xs }}>{t("modal.section")}</Text>
+                <TextInput
+                  style={inputStyle}
+                  value={section}
+                  onChangeText={setSection}
+                  placeholder={t("modal.placeholderSection")}
+                  placeholderTextColor={palette.outline}
+                  maxLength={8}
+                  autoCapitalize="characters"
+                />
+              </View>
+
+              <View style={{ marginBottom: spacing.md }}>
+                <SelectSheet
+                  label={t("modal.mediumOptional")}
+                  value={mediumId || null}
+                  onChange={(v) => setMediumId(v || "")}
+                  options={mediums.map((m) => ({ value: m.id, label: m.name }))}
+                  placeholder={t("modal.mediumPlaceholder")}
+                  allowEmpty
+                  emptyLabel={t("modal.none")}
+                />
+              </View>
+
+              {createComplete ? (
+                <View
+                  style={{
+                    backgroundColor: palette.surfaceContainerLow,
+                    borderRadius: radius.sm,
+                    padding: spacing.md,
+                    marginBottom: spacing.md,
+                  }}
+                >
+                  <Text variant="bodySm" color="onSurfaceVariant">
+                    {t("modal.previewLabel", {
+                      label: `${existingGrade?.name ?? trimmedNewGradeName} ${section.trim().toUpperCase()}`.trim(),
+                    })}
+                  </Text>
+                </View>
+              ) : null}
+            </>
           )}
-
-          <View style={[styles.fieldContainer, { marginBottom: spacing.md }]}>
-            <Text variant="labelMd" color="onSurface" style={{ marginBottom: spacing.xs }}>{t("modal.section")}</Text>
-            <TextInput
-              style={inputStyle}
-              value={section}
-              onChangeText={setSection}
-              placeholder={t("modal.placeholderSection")}
-              placeholderTextColor={palette.outline}
-            />
-          </View>
-
-          <View style={[styles.fieldContainer, { marginBottom: spacing.md }]}>
-            <Text variant="labelMd" color="onSurface" style={{ marginBottom: spacing.xs }}>{t("modal.academicYear")}</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.xs }}>
-              {academicYearsLoading ? (
-                <Text variant="bodySm" color="onSurfaceVariant" style={{ paddingVertical: spacing.sm }}>{t("modal.loading")}</Text>
-              ) : academicYears.length === 0 ? (
-                <Text variant="bodySm" color="onSurfaceVariant" style={{ paddingVertical: spacing.sm }}>{t("modal.noAcademicYears")}</Text>
-              ) : (
-                academicYears.map((ay) =>
-                  renderChip(academicYearId === ay.id, ay.name, () => setAcademicYearId(ay.id), ay.id)
-                )
-              )}
-            </ScrollView>
-          </View>
-
-          <View style={[styles.fieldContainer, { marginBottom: spacing.md }]}>
-            <Text variant="labelMd" color="onSurface" style={{ marginBottom: spacing.xs }}>{t("modal.classTeacherOptional")}</Text>
-            <Text variant="bodySm" color="onSurfaceVariant" style={{ marginBottom: spacing.sm }}>{t("modal.classTeacherHint")}</Text>
-            {teachersLoading ? (
-              <ActivityIndicator size="small" color={palette.primary} style={{ marginVertical: spacing.sm }} />
-            ) : (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.xs }}>
-                {renderChip(!classTeacherId, t("modal.none"), () => setClassTeacherId(""), "none")}
-                {teachers.map((teacher) =>
-                  renderChip(
-                    classTeacherId === teacher.user_id,
-                    `${teacher.name} (${teacher.employee_id})`,
-                    () => setClassTeacherId(classTeacherId === teacher.user_id ? "" : teacher.user_id),
-                    teacher.id
-                  )
-                )}
-              </ScrollView>
-            )}
-          </View>
-
-          <View style={[styles.fieldContainer, { marginBottom: spacing.md }]}>
-            <DatePicker
-              label={t("modal.startDate")}
-              value={startDate}
-              onChange={setStartDate}
-              placeholder={t("modal.datePlaceholder")}
-            />
-          </View>
-
-          <View style={[styles.fieldContainer, { marginBottom: spacing.md }]}>
-            <DatePicker
-              label={t("modal.endDate")}
-              value={endDate}
-              onChange={setEndDate}
-              placeholder={t("modal.datePlaceholder")}
-            />
-          </View>
 
           <PressScale
             style={[
               styles.submitButton,
               { backgroundColor: palette.primary, padding: spacing.md, borderRadius: radius.md, marginTop: spacing.lg },
-              loading && { opacity: 0.6 },
+              (loading || (!isEditMode && !createComplete)) && { opacity: 0.6 },
             ]}
             onPress={handleSubmit}
-            disabled={loading}
+            disabled={loading || (!isEditMode && !createComplete)}
           >
             {loading ? (
               <ActivityIndicator color={palette.onPrimary} />

@@ -175,7 +175,7 @@ export default function ClassesScreen() {
             onPress={() => setModalVisible(true)}
             style={[
               styles.fab,
-              { backgroundColor: palette.primary, borderRadius: radius.full, ...elevation.card },
+              { backgroundColor: palette.primary, borderRadius: radius.full, ...elevation.floating },
             ]}
           >
             <AppIcon name="add" size="xl" color="onPrimary" />
@@ -218,11 +218,12 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: "absolute",
-    bottom: Spacing.lg,
+    bottom: Spacing.xl,
     right: Spacing.marginMobile,
     width: 56,
     height: 56,
     alignItems: "center",
     justifyContent: "center",
+    zIndex: 10,
   },
 });
