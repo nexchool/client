@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import i18n from '@/i18n/i18nextInstance';
-import { Holiday, CreateHolidayDTO } from '../types';
+import { Holiday } from '../types';
 import { holidayService } from '../services/holidayService';
 
 export function useHolidays() {
@@ -31,29 +31,6 @@ export function useHolidays() {
     }
   }, []);
 
-  const createHoliday = useCallback(async (data: CreateHolidayDTO): Promise<Holiday> => {
-    const created = await holidayService.createHoliday(data);
-    if (data.is_recurring) {
-      setRecurringHolidays((prev) => [...prev, created].sort(
-        (a, b) => (a.recurring_day_of_week ?? 0) - (b.recurring_day_of_week ?? 0)
-      ));
-    } else {
-      setHolidays((prev) =>
-        [...prev, created].sort((a, b) =>
-          (a.start_date ?? '').localeCompare(b.start_date ?? '')
-        )
-      );
-    }
-    return created;
-  }, []);
-
-  const updateHoliday = useCallback(async (id: string, data: Partial<CreateHolidayDTO>): Promise<Holiday> => {
-    const updated = await holidayService.updateHoliday(id, data);
-    setHolidays((prev) => prev.map((h) => (h.id === id ? updated : h)));
-    setRecurringHolidays((prev) => prev.map((h) => (h.id === id ? updated : h)));
-    return updated;
-  }, []);
-
   const deleteHoliday = useCallback(async (id: string, isRecurring: boolean) => {
     await holidayService.deleteHoliday(id);
     if (isRecurring) {
@@ -70,8 +47,6 @@ export function useHolidays() {
     error,
     fetchHolidays,
     fetchRecurring,
-    createHoliday,
-    updateHoliday,
     deleteHoliday,
   };
 }

@@ -69,19 +69,6 @@ export const ALL_TABS: TabConfig[] = [
       PERMS.CLASS_MANAGE,
     ],
   },
-  // {
-  //   name: 'academics',
-  //   title: 'Academics',
-  //   icon: 'book',
-  //   iconOutline: 'book-outline',
-  //   requiredPermissions: [
-  //     PERMS.STUDENT_READ,
-  //     PERMS.GRADE_READ_SELF,
-  //     PERMS.ATTENDANCE_READ_SELF,
-  //     PERMS.ATTENDANCE_MARK,
-  //     PERMS.GRADE_CREATE,
-  //   ],
-  // },
   {
     name: 'finance',
     title: 'Finance',

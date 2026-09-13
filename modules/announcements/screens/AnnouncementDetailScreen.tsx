@@ -21,6 +21,7 @@ import {
 import { MarkdownView } from '../components/MarkdownView';
 import { STATUS_LABEL, statusAccent } from '../constants';
 import { useToast } from '@/common/feedback';
+import { formatDateTimeFull } from '@/common/utils/datetime';
 
 export default function AnnouncementDetailScreen() {
   const { t } = useTranslation('announcements');
@@ -157,9 +158,9 @@ export default function AnnouncementDetailScreen() {
           <Text variant="labelSm" color="onSurfaceVariant">
             {a.author_name ?? 'Admin'}
             {a.published_at
-              ? ` · ${new Date(a.published_at).toLocaleString()}`
+              ? ` · ${formatDateTimeFull(a.published_at)}`
               : a.created_at
-                ? ` · ${new Date(a.created_at).toLocaleString()}`
+                ? ` · ${formatDateTimeFull(a.created_at)}`
                 : ''}
             {a.revision_count > 1
               ? ` · ${t('detail.edited', { defaultValue: 'Edited' })}`
@@ -291,7 +292,7 @@ export default function AnnouncementDetailScreen() {
               >
                 <Text variant="labelSm" color="onSurfaceVariant">
                   v{r.revision_number} · {r.edited_by_name ?? 'Admin'} ·{' '}
-                  {r.edited_at ? new Date(r.edited_at).toLocaleString() : ''}
+                  {r.edited_at ? formatDateTimeFull(r.edited_at) : ''}
                 </Text>
                 <Text variant="labelMd" color="onSurface">
                   {r.title}

@@ -14,15 +14,12 @@ import {
 import { getNotificationEntityHref } from "@/modules/notifications/pushNavigation";
 import { canOpenFinanceDeepLinks } from "@/modules/notifications/financeDeepLinkAccess";
 import { stripHtmlToPlainText } from "@/modules/notifications/formatNotificationBody";
+import { formatDateTimeFull } from "@/common/utils/datetime";
 
 function formatWhen(iso: string | null | undefined, locale: string): string {
   if (!iso) return "";
   try {
-    const d = new Date(iso);
-    return d.toLocaleString(locale, {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
+    return formatDateTimeFull(iso);
   } catch {
     return iso;
   }

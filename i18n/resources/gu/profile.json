@@ -1,19 +1,10 @@
 {
   "main": {
-    "sections": {
-      "profileInformation": "પ્રોફાઇલ માહિતી",
-      "academic": "શૈક્ષણિક",
-      "settings": "સેટિંગ્સ"
-    },
     "cards": {
-      "myProfile": "મારી પ્રોફાઇલ",
-      "myProfileSubtitle": "શાળાનો રેકોર્ડ અને પ્રોફાઇલ ફોટો જુઓ",
       "changePassword": "પાસવર્ડ બદલો",
       "changePasswordSubtitle": "તમારો પાસવર્ડ અપડેટ કરો",
       "appSettings": "એપ સેટિંગ્સ",
       "appSettingsSubtitle": "ભાષા અને પુશ સૂચનાઓ",
-      "notifications": "સૂચનાઓ",
-      "notificationsSubtitle": "ઇનબૉક્સ ખોલો અને શાળાની સૂચનાઓ વાંચો",
       "helpSupport": "મદદ અને સહાય",
       "helpSupportSubtitle": "મદદ મેળવો અને સપોર્ટ સંપર્ક કરો",
       "terms": "સેવાની શરતો",
@@ -21,12 +12,11 @@
       "privacy": "ગોપનીયતા નીતિ",
       "privacySubtitle": "અમે તમારી માહિતી કેવી રીતે સંભાળીએ છીએ"
     },
-    "logout": "લૉગ આઉટ"
+    "logout": "સાઇન આઉટ",
+    "logoutSubtitle": "આ ડિવાઇસ પર Nexchool માંથી સાઇન આઉટ કરો"
   },
   "myProfile": {
-    "screenTitle": "મારી પ્રોફાઇલ",
     "defaultDisplayName": "પ્રોફાઇલ",
-    "heroHint": "ફોટો બદલવા તેને ટૅપ કરો. તમારી શાળા એડમિન પેનલથી પણ ફોટો સેટ કરી શકે છે. બીજી વિગતો ફક્ત વાંચવા માટે છે અને શાળાના રેકોર્ડમાંથી આવે છે.",
     "sections": {
       "account": "ખાતું",
       "basicInformation": "મૂળભૂત માહિતી",
@@ -121,18 +111,10 @@
     "uploadFailedHint": "અપલોડ નિષ્ફળ. લગભગ 5 MB હેઠળ PDF અથવા છબીઓ વાપરો (મોટી છબીઓ આપમેળે દબાય છે).",
     "error": "ભૂલ"
   },
-  "unsupportedRole": {
-    "title": "તમારી ભૂમિકા માટે પ્રોફાઇલ ઉપલબ્ધ નથી"
-  },
   "sections": {
     "security": "સુરક્ષા",
     "preferences": "પસંદગીઓ",
     "about": "વિશે"
-  },
-  "preferences": {
-    "language": "ભાષા",
-    "notifications": "સૂચનાઓ",
-    "notificationsHint": "તમારી ડિવાઇસ સેટિંગ્સમાં મેનેજ કરો"
   },
   "about": {
     "version": "એપ આવૃત્તિ"
@@ -152,7 +134,9 @@
     "title": "બધા ડિવાઇસથી સાઇન આઉટ",
     "message": "આ તમને દરેક જગ્યાએથી સાઇન આઉટ કરશે. દરેક ડિવાઇસ પર ફરી લોગિન કરવું પડશે.",
     "confirm": "સાઇન આઉટ",
-    "row": "બધા ડિવાઇસથી સાઇન આઉટ"
+    "row": "બધા ડિવાઇસથી સાઇન આઉટ",
+    "hint": "આ સત્ર સહિત દરેક સાઇન-ઇન સત્ર સમાપ્ત કરે છે. ફોન ખોવાઈ જાય ત્યારે વાપરો.",
+    "failed": "તમારા અન્ય ડિવાઇસ સાઇન આઉટ થઈ શક્યા નહીં. તમને અહીંથી સાઇન આઉટ કરવામાં આવ્યા છે."
   },
   "changePassword": {
     "title": "પાસવર્ડ બદલો",

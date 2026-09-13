@@ -9,6 +9,7 @@ import { Skeleton } from '@/common/components/Skeleton';
 import { PageHeader } from '@/common/components/PageHeader';
 import { useAnnouncementRecipients } from '../hooks/useAnnouncements';
 import { ReadReceiptCounter } from '../components/ReadReceiptCounter';
+import { formatDateTimeFull } from '@/common/utils/datetime';
 
 export default function AnnouncementRecipientsScreen() {
   const { t } = useTranslation('announcements');
@@ -85,7 +86,7 @@ export default function AnnouncementRecipientsScreen() {
                   {item.read_at
                     ? t('recipients.readAt', { defaultValue: 'Read' }) +
                       ' · ' +
-                      new Date(item.read_at).toLocaleString()
+                      formatDateTimeFull(item.read_at)
                     : t('recipients.unread', { defaultValue: 'Unread' })}
                 </Text>
               </View>

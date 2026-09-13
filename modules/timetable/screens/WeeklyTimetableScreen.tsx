@@ -16,18 +16,10 @@ import {
   useClassWeeklyTimetable,
 } from '../hooks/useTimetable';
 import { WeeklyGrid } from '../components/WeeklyGrid';
-
-function isoMondayOf(d: Date): string {
-  const day = d.getDay() || 7; // Sunday → 7
-  const monday = new Date(d);
-  monday.setDate(d.getDate() - day + 1);
-  return monday.toISOString().slice(0, 10);
-}
+import { schoolTodayIso, addDaysIso, isoMondayOf } from '@/common/utils/datetime';
 
 function shiftWeek(iso: string, deltaWeeks: number): string {
-  const d = new Date(iso);
-  d.setDate(d.getDate() + deltaWeeks * 7);
-  return d.toISOString().slice(0, 10);
+  return addDaysIso(iso, deltaWeeks * 7);
 }
 
 function formatWeekRange(start: string, end: string): string {
@@ -44,7 +36,7 @@ export default function WeeklyTimetableScreen() {
   const params = useLocalSearchParams<{ classId?: string }>();
   const classId = params.classId;
 
-  const [weekStart, setWeekStart] = useState<string>(() => isoMondayOf(new Date()));
+  const [weekStart, setWeekStart] = useState<string>(() => isoMondayOf(schoolTodayIso()));
 
   const isTeacher = !!role.isTeacher && !classId;
   const isStudent = !!role.isStudent && !classId;
@@ -103,7 +95,7 @@ export default function WeeklyTimetableScreen() {
           <Text variant="headlineLg" color="onSurface">
             {t('title', { defaultValue: 'Timetable' })}
           </Text>
-          <Link onPress={() => setWeekStart(isoMondayOf(new Date()))}>
+          <Link onPress={() => setWeekStart(isoMondayOf(schoolTodayIso()))}>
             {t('today', { defaultValue: 'Today →' })}
           </Link>
         </View>

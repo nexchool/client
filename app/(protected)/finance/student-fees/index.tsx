@@ -4,7 +4,6 @@ import { View, RefreshControl, FlatList, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { useStudentFees, useClasses } from "@/modules/finance/hooks/useFinance";
 import { useAcademicYearContext } from "@/modules/academics/context/AcademicYearContext";
-import { calendarLocaleForLanguage } from "@/i18n";
 import { ProfileAvatar } from "@/common/components/ProfileAvatar";
 import { useTheme, type Palette } from "@/common/theme";
 import { Text } from "@/common/components/Text";
@@ -22,14 +21,8 @@ import {
 } from "@/modules/finance/components/StudentFeeFiltersSheet";
 import { formatCurrency } from "@/common/utils/formatCurrency";
 import { useDebounce } from "@/common/hooks/useDebounce";
+import { formatDate } from "@/common/utils/datetime";
 
-function formatDate(s: string, locale: string) {
-  try {
-    return new Date(s).toLocaleDateString(locale);
-  } catch {
-    return s;
-  }
-}
 
 /**
  * Maps a (derived) student-fee status to its accent palette token.
@@ -70,8 +63,7 @@ function getStatusesToDisplay(
 }
 
 export default function StudentFeesPage() {
-  const { t, i18n } = useTranslation("finance");
-  const locale = calendarLocaleForLanguage(i18n.language ?? "en");
+  const { t } = useTranslation("finance");
   const router = useRouter();
   const { palette, spacing, radius, elevation } = useTheme();
   // The year comes from the app-wide switcher in the header and nowhere else.
@@ -195,7 +187,7 @@ export default function StudentFeesPage() {
             >
               {t("studentFeesList.feeDueLine", {
                 structure: sf.fee_structure_name ?? "—",
-                date: formatDate(sf.due_date, locale),
+                date: formatDate(sf.due_date),
               })}
             </Text>
           </View>

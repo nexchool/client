@@ -12,16 +12,9 @@
   "languageSwitcherHint": "ऐप की भाषा चुनें",
   "languageDropdownHint": "उपलब्ध भाषाओं की सूची खोलता है",
   "sections": {
-    "account": "खाता",
     "preferences": "प्राथमिकताएँ",
-    "app": "ऐप"
-  },
-  "rows": {
-    "personalInfo": "व्यक्तिगत जानकारी",
-    "personalInfoSubtitle": "अपना नाम, ईमेल और विवरण देखें",
-    "security": "पासवर्ड और सुरक्षा",
-    "securitySubtitle": "अपना पासवर्ड बदलें",
-    "helpSupport": "सहायता और समर्थन"
+    "support": "सहायता और कानूनी",
+    "about": "ऐप के बारे में"
   },
   "biometrics": {
     "sectionTitle": "बायोमेट्रिक अनलॉक",

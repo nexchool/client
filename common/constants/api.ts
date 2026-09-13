@@ -55,6 +55,12 @@ export const API_ENDPOINTS = {
   PROFILE: '/api/auth/profile',
   /** Ask for a sign-in code. Verifying it goes through LOGIN with method=mobile_otp, not this endpoint. */
   OTP_REQUEST: '/api/auth/otp/request',
+  /**
+   * The caller's own sessions. `DELETE` ends them; `?keep_current=false` ends
+   * this one too, which is what "sign out from all devices" means. The
+   * unauthenticated LOGOUT route deliberately only ever ends one session.
+   */
+  MY_SESSIONS: '/api/auth/sessions',
 } as const;
 
 /**

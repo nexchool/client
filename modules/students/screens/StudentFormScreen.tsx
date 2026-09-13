@@ -45,6 +45,7 @@ import { studentFormSchema, type StudentFormInput } from '../validation/schemas'
 import { useClasses } from '@/modules/finance/hooks/useFinance';
 import type { CreateStudentDTO, UpdateStudentDTO } from '../types';
 import { useDialog, useToast } from '@/common/feedback';
+import { schoolTodayIso } from '@/common/utils/datetime';
 
 const GENDER_OPTIONS: SelectOption[] = [
   { value: 'male', label: 'Male' },
@@ -62,7 +63,7 @@ const RELATIONSHIP_OPTIONS: SelectOption[] = [
 const ALLOWED_GENDERS = ['male', 'female', 'other'] as const;
 const ALLOWED_RELATIONSHIPS = ['father', 'mother', 'guardian', 'other'] as const;
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => schoolTodayIso();
 
 export default function StudentFormScreen() {
   const { t } = useTranslation('students');

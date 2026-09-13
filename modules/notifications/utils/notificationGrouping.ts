@@ -1,5 +1,6 @@
 // client/modules/notifications/utils/notificationGrouping.ts
 import type { AppNotification } from '../types';
+import { addDaysIso, schoolTodayIso, toSchoolDateIso } from '@/common/utils/datetime';
 
 export type NotificationCategory = 'all' | 'announcements' | 'fees' | 'leaves' | 'system';
 
@@ -27,18 +28,25 @@ export interface NotificationSection {
   data: AppNotification[];
 }
 
-/** Bucket notifications into Today / Yesterday / Earlier by created_at. Empty buckets omitted. */
+/**
+ * Bucket notifications into Today / Yesterday / Earlier by created_at. Empty
+ * buckets omitted.
+ *
+ * "Today" is the school's day, so the buckets are decided by comparing
+ * calendar dates in the school's zone rather than by a midnight taken from
+ * the phone's clock — a phone set to another zone drew the line in the wrong
+ * place, and "Yesterday" was whatever that zone thought yesterday was.
+ */
 export function bucketByDate(
   items: AppNotification[],
-  now: Date = new Date(),
+  todayIso: string = schoolTodayIso(),
 ): NotificationSection[] {
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  const startOfYesterday = startOfToday - 86_400_000;
+  const yesterdayIso = addDaysIso(todayIso, -1);
   const buckets: Record<DateBucketKey, AppNotification[]> = { today: [], yesterday: [], earlier: [] };
   for (const n of items) {
-    const ts = n.created_at ? new Date(n.created_at).getTime() : 0;
-    if (ts >= startOfToday) buckets.today.push(n);
-    else if (ts >= startOfYesterday) buckets.yesterday.push(n);
+    const day = toSchoolDateIso(n.created_at) ?? '';
+    if (day === todayIso) buckets.today.push(n);
+    else if (day === yesterdayIso) buckets.yesterday.push(n);
     else buckets.earlier.push(n);
   }
   return (['today', 'yesterday', 'earlier'] as DateBucketKey[])

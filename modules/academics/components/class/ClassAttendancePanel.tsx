@@ -15,6 +15,7 @@ import { AppIcon } from "@/common/components/AppIcon";
 import { PressScale } from "@/common/components/PressScale";
 import { attendanceV2Api } from "../../api/attendanceV2Api";
 import type { AttendanceSessionV2 } from "../../types";
+import { schoolTodayIso } from "@/common/utils/datetime";
 
 type Props = {
   classId: string;
@@ -71,7 +72,7 @@ export function ClassAttendancePanel({ classId, classLabel, canMark, canViewHist
     load();
   }, [classId, canViewHistory]);
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = schoolTodayIso();
 
   const openSession = (date: string) =>
     router.push({

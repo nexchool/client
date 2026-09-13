@@ -19,7 +19,6 @@ import {
 } from "@/modules/finance/hooks/useFinance";
 import { financeService } from "@/modules/finance/services/financeService";
 import type { RecordPaymentInput } from "@/modules/finance/types";
-import { calendarLocaleForLanguage } from "@/i18n";
 import { useTheme, type Palette } from "@/common/theme";
 import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
@@ -32,20 +31,15 @@ import { SummaryRow } from "@/common/components/SummaryRow";
 import { formatCurrency } from "@/common/utils/formatCurrency";
 import { useModalBodyHeight } from '@/common/hooks/useModalBodyHeight';
 import { useDialog, useToast } from "@/common/feedback";
+import { formatDate, schoolTodayIso } from "@/common/utils/datetime";
 
-function formatDate(s: string, locale: string) {
-  try {
-    return new Date(s).toLocaleDateString(locale);
-  } catch {
-    return s;
-  }
-}
 
 function daysUntil(dateStr: string): number | null {
   try {
-    const due = new Date(dateStr).getTime();
-    const now = Date.now();
-    return Math.ceil((due - now) / (1000 * 60 * 60 * 24));
+    // Whole school days between today and the due day, both as calendar dates.
+    const due = new Date(`${dateStr.slice(0, 10)}T00:00:00Z`).getTime();
+    const today = new Date(`${schoolTodayIso()}T00:00:00Z`).getTime();
+    return Math.round((due - today) / (1000 * 60 * 60 * 24));
   } catch {
     return null;
   }
@@ -56,8 +50,7 @@ type AllocationState = Record<string, string>;
 export default function StudentFeeDetailPage() {
   const toast = useToast();
   const { confirm } = useDialog();
-  const { t, i18n } = useTranslation("finance");
-  const locale = calendarLocaleForLanguage(i18n.language ?? "en");
+  const { t } = useTranslation("finance");
   const { id, action } = useLocalSearchParams<{ id: string; action?: string }>();
   const router = useRouter();
   const { palette, spacing, radius, elevation, typography } = useTheme();
@@ -511,7 +504,7 @@ export default function StudentFeeDetailPage() {
           />
           <SummaryRow
             label={t("studentFeeDetail.dueDate", { defaultValue: "Due date" })}
-            value={`${formatDate(data.due_date, locale)}${
+            value={`${formatDate(data.due_date)}${
               dueDays != null && remaining > 0
                 ? dueDays >= 0
                   ? ` · ${t("studentFeeDetail.dueInDays", {
@@ -676,7 +669,7 @@ export default function StudentFeeDetailPage() {
                     color="onSurfaceVariant"
                     style={{ marginTop: 2 }}
                   >
-                    {methodLine} • {formatDate(p.created_at, locale)}
+                    {methodLine} • {formatDate(p.created_at)}
                     {p.reference_number ? ` • ${p.reference_number}` : ""}
                   </Text>
                   {p.status === "success" && (

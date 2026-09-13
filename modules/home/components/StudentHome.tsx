@@ -13,6 +13,7 @@ import { Skeleton } from '@/common/components/Skeleton';
 import { EmptyState } from '@/common/components/EmptyState';
 import { Button } from '@/common/components/Button';
 import { ProgressRing } from './ProgressRing';
+import { schoolNowMinutes } from '@/common/utils/datetime';
 
 // "08:00:00" -> "08:00"; null/empty -> "".
 function hhmm(value: string | null | undefined): string {
@@ -45,7 +46,7 @@ export function StudentHome() {
   // Up Next: from today's schedule, pick the earliest period whose end time is
   // still >= now. Periods without bell-schedule times can't be ranked, so they
   // are skipped here. Falls back to null -> "No more classes today" empty state.
-  const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+  const nowMinutes = schoolNowMinutes();
   const upNext =
     (data?.today_schedule ?? [])
       .filter((p) => {

@@ -23,6 +23,7 @@ import {
 import { AttendanceStatsBanner } from '../components/AttendanceStatsBanner';
 import { StudentDetailSheet } from '../components/StudentDetailSheet';
 import { useDialog, useToast } from '@/common/feedback';
+import { schoolTodayIso, toIsoDate, addDaysIso, weekdayOfIso } from '@/common/utils/datetime';
 
 type LocalRecord = {
   status: string;
@@ -54,7 +55,7 @@ export default function MarkAttendanceScreen() {
   // Invalidate v2 React Query caches so Session/MyClasses refresh after a save.
   const queryClient = useQueryClient();
 
-  const today = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const today = useMemo(() => schoolTodayIso(), []);
   const [selectedDate, setSelectedDate] = useState(today);
   const [localRecords, setLocalRecords] = useState<Record<string, LocalRecord>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -111,11 +112,12 @@ export default function MarkAttendanceScreen() {
       month: string;
       isToday: boolean;
     }[] = [];
-    const todayDate = new Date();
+    // Centre the strip on the school's today; the Date is only for local labels.
+    const todayDate = new Date(`${schoolTodayIso()}T00:00:00`);
     for (let i = 29; i >= 0; i--) {
       const d = new Date(todayDate);
       d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().split('T')[0];
+      const dateStr = toIsoDate(d);
       dates.push({
         dateStr,
         day: d.getDate(),
@@ -145,18 +147,16 @@ export default function MarkAttendanceScreen() {
         const map: Record<string, Holiday> = {};
         for (const h of nonRecurring) {
           if (!h.start_date) continue;
-          const hStart = new Date(h.start_date);
-          const hEnd = new Date(h.end_date || h.start_date);
-          const cur = new Date(hStart);
-          while (cur <= hEnd) {
-            const ds = cur.toISOString().split('T')[0];
+          // Walk the span as ISO strings: `Date` arithmetic here mixed a UTC
+          // midnight with local setDate() and then read it back through
+          // toISOString(), which is one zone conversion too many.
+          const end = h.end_date || h.start_date;
+          for (let ds = h.start_date; ds <= end; ds = addDaysIso(ds, 1)) {
             if (!map[ds]) map[ds] = h;
-            cur.setDate(cur.getDate() + 1);
           }
         }
         for (const item of dateList) {
-          const d = new Date(item.dateStr);
-          const backendWeekday = (d.getDay() + 6) % 7;
+          const backendWeekday = (weekdayOfIso(item.dateStr) + 6) % 7;
           const match = recurring.find((r) => r.recurring_day_of_week === backendWeekday);
           if (match && !map[item.dateStr]) map[item.dateStr] = match;
         }

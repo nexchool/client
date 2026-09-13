@@ -45,7 +45,6 @@
     "todaysSchedule": "आज का कार्यक्रम",
     "markAttendance": "उपस्थिति दर्ज करें",
     "leaveTracker": "अवकाश ट्रैकर",
-    "academics": "शैक्षणिक",
     "myAttendance": "मेरी उपस्थिति",
     "profile": "प्रोफ़ाइल"
   },
@@ -55,19 +54,37 @@
       "recordPayment": "भुगतान दर्ज करें",
       "reports": "रिपोर्ट देखें",
       "sendNotice": "सूचना भेजें",
-      "takeAttendance": "उपस्थिति लें"
+      "takeAttendance": "उपस्थिति लें",
+      "takeAttendanceSub": "आज की कक्षाओं की उपस्थिति दर्ज करें",
+      "addStudentSub": "नया विद्यार्थी दाखिल करें",
+      "recordPaymentSub": "शुल्क संग्रह दर्ज करें",
+      "announcements": "घोषणाएँ",
+      "announcementsSub": "सूचना भेजें"
     },
     "conflicts": "आज के संघर्ष",
     "kpi": {
       "attendance": "आज की उपस्थिति",
       "fees": "आज का संग्रह",
       "students": "कुल विद्यार्थी",
-      "teachers": "कुल शिक्षक"
+      "teachers": "कुल शिक्षक",
+      "feesTrend": "पिछले सप्ताह की तुलना में {{pct}}"
     },
     "noConflicts": "आज कोई संघर्ष नहीं",
     "quickActions": "त्वरित क्रियाएँ",
     "title": "विद्यालय अवलोकन",
-    "subtitle": "आज, {{date}} की वास्तविक-समय जानकारी।"
+    "subtitle": "आज, {{date}} की वास्तविक-समय जानकारी।",
+    "alert": {
+      "studentsNoClass": "{{n}} विद्यार्थी बिना कक्षा के",
+      "overdueFees": "{{n}} विद्यार्थियों का शुल्क बकाया",
+      "timetableConflicts": "{{n}} समय-सारणी टकराव",
+      "classesNoTimetable": "{{n}} कक्षाएँ बिना समय-सारणी के"
+    },
+    "allClear": "आज सब ठीक है",
+    "feeTrend": {
+      "title": "शुल्क संग्रह का रुझान",
+      "subtitle": "पिछले 7 दिन"
+    },
+    "needsAttention": "ध्यान देने योग्य"
   },
   "recordPayment": {
     "title": "भुगतान दर्ज करें",

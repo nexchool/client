@@ -52,7 +52,8 @@ export const ClassListItem: React.FC<Props> = ({
         {
           backgroundColor: palette.primary,
           borderRadius: radius.xl,
-          padding: spacing.lg,
+          paddingHorizontal: spacing.md,
+          paddingVertical: spacing.sm,
           ...elevation.card,
         },
       ]}
@@ -60,7 +61,7 @@ export const ClassListItem: React.FC<Props> = ({
       {/* Header: title + stream pill on the left, student-count badge on the right */}
       <View style={styles.headerRow}>
         <View style={styles.headerText}>
-          <Text variant="headlineLg" color="onPrimary" numberOfLines={1}>
+          <Text variant="titleSm" color="onPrimary" numberOfLines={1}>
             {title}
           </Text>
           {item.stream ? (
@@ -93,7 +94,7 @@ export const ClassListItem: React.FC<Props> = ({
               count: item.student_count ?? 0,
             })}
           >
-            <Text variant="headlineMd" color="primary">
+            <Text variant="labelLg" color="primary">
               {item.student_count}
             </Text>
           </View>
@@ -102,14 +103,14 @@ export const ClassListItem: React.FC<Props> = ({
 
       {/* Meta rows — only the class-teacher row, since room is not a real field. */}
       {teacherName ? (
-        <View style={[styles.metaSection, { marginTop: spacing.lg }]}>
+        <View style={[styles.metaSection, { marginTop: spacing.sm }]}>
           <View style={styles.metaRow}>
-            <AppIcon name="person-outline" size="md" color="onPrimary" />
+            <AppIcon name="person-outline" size="sm" color="onPrimary" />
             <View style={styles.metaText}>
               <Text variant="labelSm" color="onPrimary" style={styles.metaLabel}>
                 {t("list.classTeacherLabel")}
               </Text>
-              <Text variant="bodyMd" color="onPrimary" numberOfLines={1}>
+              <Text variant="bodySm" color="onPrimary" numberOfLines={1}>
                 {teacherName}
               </Text>
             </View>
@@ -118,8 +119,8 @@ export const ClassListItem: React.FC<Props> = ({
       ) : null}
 
       {/* Footer: View Timetable action.
-          With a meta row, divide it off (divider + lg gap). Without one, the card
-          would otherwise be tall and empty — drop the divider and use a tight md gap. */}
+          With a meta row, divide it off (divider + tight gap). Without one, no
+          divider is needed — same tight gap either way keeps the card compact. */}
       <View
         style={[
           styles.footer,
@@ -127,23 +128,24 @@ export const ClassListItem: React.FC<Props> = ({
             ? {
                 borderTopWidth: StyleSheet.hairlineWidth,
                 borderTopColor: palette.primaryContainer,
-                marginTop: spacing.lg,
-                paddingTop: spacing.md,
+                marginTop: spacing.xs,
+                paddingTop: spacing.xs,
               }
-            : { marginTop: spacing.md },
+            : { marginTop: spacing.xs },
         ]}
       >
         <PressScale
           onPress={() => onViewTimetable(item)}
           accessibilityRole="button"
           accessibilityLabel={t("list.viewTimetable")}
+          hitSlop={8}
           style={[
             styles.timetableButton,
             {
               backgroundColor: palette.onPrimary,
               borderRadius: radius.md,
-              paddingHorizontal: spacing.md,
-              paddingVertical: spacing.sm,
+              paddingHorizontal: spacing.sm,
+              paddingVertical: spacing.xs,
             },
           ]}
         >
@@ -159,14 +161,14 @@ export const ClassListItem: React.FC<Props> = ({
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
     overflow: "hidden",
   },
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: Spacing[12],
+    alignItems: "center",
+    gap: Spacing.sm,
   },
   headerText: {
     flex: 1,
@@ -178,18 +180,18 @@ const styles = StyleSheet.create({
     maxWidth: "100%",
   },
   countBadge: {
-    width: 48,
-    height: 48,
+    width: 36,
+    height: 36,
     alignItems: "center",
     justifyContent: "center",
   },
   metaSection: {
-    gap: Spacing[12],
+    gap: Spacing.xs,
   },
   metaRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: Spacing[12],
+    gap: Spacing.sm,
   },
   metaText: {
     flex: 1,

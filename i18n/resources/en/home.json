@@ -45,7 +45,6 @@
     "todaysSchedule": "Today's schedule",
     "markAttendance": "Mark attendance",
     "leaveTracker": "Leave tracker",
-    "academics": "Academics",
     "myAttendance": "My attendance",
     "profile": "Profile"
   },
@@ -55,19 +54,37 @@
       "recordPayment": "Record Payment",
       "reports": "View Reports",
       "sendNotice": "Send Notice",
-      "takeAttendance": "Take Attendance"
+      "takeAttendance": "Take Attendance",
+      "takeAttendanceSub": "Mark today's classes",
+      "addStudentSub": "Enroll a new student",
+      "recordPaymentSub": "Log a fee collection",
+      "announcements": "Announcements",
+      "announcementsSub": "Send a notice"
     },
     "conflicts": "Today's Conflicts",
     "kpi": {
       "attendance": "Attendance Today",
       "fees": "Today's Collection",
       "students": "Total Students",
-      "teachers": "Total Teachers"
+      "teachers": "Total Teachers",
+      "feesTrend": "{{pct}} vs last week"
     },
     "noConflicts": "No conflicts today",
     "quickActions": "Quick Actions",
     "title": "School Overview",
-    "subtitle": "Real-time insights for today, {{date}}."
+    "subtitle": "Real-time insights for today, {{date}}.",
+    "alert": {
+      "studentsNoClass": "{{n}} students without a class",
+      "overdueFees": "{{n}} overdue fee students",
+      "timetableConflicts": "{{n}} timetable conflicts",
+      "classesNoTimetable": "{{n}} classes without a timetable"
+    },
+    "allClear": "All clear today",
+    "feeTrend": {
+      "title": "Fee Collection Trend",
+      "subtitle": "Last 7 days"
+    },
+    "needsAttention": "Needs attention"
   },
   "recordPayment": {
     "title": "Record payment",

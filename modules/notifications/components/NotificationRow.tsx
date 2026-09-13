@@ -8,6 +8,7 @@ import { Text } from '@/common/components/Text';
 import { AppIcon } from '@/common/components/AppIcon';
 import { stripHtmlToPlainText } from '@/modules/notifications/formatNotificationBody';
 import type { AppNotification } from '@/modules/notifications/types';
+import { formatDayMonth } from '@/common/utils/datetime';
 
 function relativeTime(dateStr: string | null | undefined): string {
   if (!dateStr) return '';
@@ -20,7 +21,7 @@ function relativeTime(dateStr: string | null | undefined): string {
   if (hr < 24) return `${hr}h`;
   const day = Math.floor(hr / 24);
   if (day < 7) return `${day}d`;
-  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return formatDayMonth(d);
 }
 
 type Props = {

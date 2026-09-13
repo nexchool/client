@@ -264,7 +264,7 @@ function LeaveRow({ item, onCancel }: { item: TeacherLeave; onCancel?: () => voi
 // Holiday Row
 // ---------------------------------------------------------------------------
 function HolidayRow({ h }: { h: Holiday }) {
-  const { t, i18n } = useTranslation("teacherLeaves");
+  const { t, i18n } = useTranslation(["teacherLeaves", "holidays"]);
   const { palette, spacing, radius } = useTheme();
   const dateLoc = calendarLocaleForLanguage(i18n.language ?? "en");
   const accent = holidayAccent(h.name);
@@ -322,7 +322,9 @@ function HolidayRow({ h }: { h: Holiday }) {
           }}
         >
           <Text variant="labelSm" color="onSurfaceVariant">
-            {t(`holidayForm.types.${h.holiday_type}`)}
+            {/* Holiday vocabulary belongs to the holidays namespace, which is
+                where these labels now live. */}
+            {t(`holidays:form.types.${h.holiday_type}`)}
           </Text>
         </View>
       </View>

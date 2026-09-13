@@ -7,6 +7,7 @@ import { Text } from '@/common/components/Text';
 import { BottomSheet } from '@/common/components/sheet';
 import { useModalBodyHeight } from '@/common/hooks/useModalBodyHeight';
 import type { AuditLogEntry } from '../types';
+import { formatDateTimeFull } from '@/common/utils/datetime';
 
 function metaRows(meta: Record<string, unknown> | null): { key: string; value: string }[] {
   if (!meta) return [];
@@ -33,7 +34,7 @@ export function AuditDetailSheet({ entry, visible, onClose }: Props) {
   if (!entry) return null;
 
   const rows = metaRows(entry.meta);
-  const when = entry.created_at ? new Date(entry.created_at).toLocaleString() : '—';
+  const when = formatDateTimeFull(entry.created_at);
   const resource = entry.resource_id ? `${entry.resource_type} · ${entry.resource_id}` : entry.resource_type;
 
   const labeledRow = (label: string, value: string) => (

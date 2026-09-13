@@ -33,8 +33,9 @@ import {
 import { teacherFormSchema, type TeacherFormInput } from '../validation/schemas';
 import type { CreateTeacherDTO, UpdateTeacherDTO } from '../types';
 import { useDialog, useToast } from '@/common/feedback';
+import { schoolTodayIso } from '@/common/utils/datetime';
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => schoolTodayIso();
 
 export default function TeacherFormScreen() {
   const { t } = useTranslation('teachers');

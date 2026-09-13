@@ -48,11 +48,17 @@ export function ProfileActionRow({
         <AppIcon name={icon} size="lg" color={iconColor} />
       </View>
       <View style={styles.body}>
-        <Text variant="bodyLg" color={labelColor} numberOfLines={1}>
+        {/*
+          Nothing here truncates. A row's whole job is to say what tapping it
+          will do, and "Sign out from all devi…" does not say it — the hint
+          especially, which exists precisely to explain the label. Rows grow to
+          fit their text instead of cutting it.
+        */}
+        <Text variant="bodyLg" color={labelColor}>
           {label}
         </Text>
         {hint ? (
-          <Text variant="labelSm" color="onSurfaceVariant" numberOfLines={1} style={{ marginTop: 2 }}>
+          <Text variant="labelSm" color="onSurfaceVariant" style={{ marginTop: 2 }}>
             {hint}
           </Text>
         ) : null}
@@ -68,6 +74,6 @@ export function ProfileActionRow({
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  chip: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  chip: { width: 44, height: 44, flexShrink: 0, alignItems: 'center', justifyContent: 'center' },
   body: { flex: 1 },
 });

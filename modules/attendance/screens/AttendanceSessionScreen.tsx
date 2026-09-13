@@ -15,6 +15,7 @@ import { ProgressRing } from '@/modules/home/components/ProgressRing';
 import { StudentRosterRow } from '../components/StudentRosterRow';
 import { StudentDetailSheet } from '../components/StudentDetailSheet';
 import type { AttendanceStatus } from '../components/AttendanceStatusSegmented';
+import { schoolTodayIso } from '@/common/utils/datetime';
 
 type FilterStatus = 'all' | 'present' | 'absent' | 'late' | 'unmarked';
 
@@ -28,7 +29,7 @@ export default function AttendanceSessionScreen() {
   const { hasPermission } = usePermissions();
   const params = useLocalSearchParams<{ classId: string; className?: string; date: string }>();
   const classId = params.classId;
-  const date = params.date ?? new Date().toISOString().slice(0, 10);
+  const date = params.date ?? schoolTodayIso();
   const { data, isLoading, isRefetching, refetch } = useClassAttendanceSession(classId, date);
   const [filter, setFilter] = useState<FilterStatus>('all');
   const [selectedStudent, setSelectedStudent] = useState<{

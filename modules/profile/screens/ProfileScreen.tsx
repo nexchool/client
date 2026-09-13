@@ -5,15 +5,12 @@ import {
   ScrollView,
   ActivityIndicator,
   Platform,
-  Linking,
 } from "react-native";
-import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import { useTheme } from "@/common/theme";
 import { Text } from "@/common/components/Text";
-import { LanguageSheet, currentLanguageLabel } from "@/common/components/LanguageSheet";
 
 import { AppIcon } from "@/common/components/AppIcon";
 
@@ -26,6 +23,7 @@ import { teacherService } from "@/modules/teachers/services/teacherService";
 import type { Student } from "@/modules/students/types";
 import type { Teacher } from "@/modules/teachers/types";
 import { uploadProfilePicture } from "@/modules/auth/services/profileService";
+import { revokeAllMySessions } from "@/modules/auth/services/authService";
 import { StudentDocumentsSection } from "@/modules/students/components/StudentDocumentsSection";
 import { ApiException } from "@/common/services/api";
 import { useTranslation } from "react-i18next";
@@ -35,9 +33,6 @@ import { ProfileActionRow } from "@/modules/profile/components/ProfileActionRow"
 import { useDialog, useToast } from "@/common/feedback";
 
 type ProfileKind = "student" | "teacher" | "account";
-
-const TERMS_URL = "https://nexchool.in/terms";
-const PRIVACY_URL = "https://nexchool.in/privacy";
 
 /**
  * After crop/edit, URIs are often content:// or short-lived file:// paths that
@@ -66,20 +61,33 @@ async function prepareImageForUploadUri(
   return { uri: dest, name: safeName, mimeType };
 }
 
-export default function MyProfileScreen() {
+/**
+ * The one profile screen, for every role.
+ *
+ * There used to be two — a staff screen whose only real content was a link to
+ * "My profile", and the profile behind it — plus a Settings screen carrying a
+ * third copy of half the same rows. Three screens, one subject: the person
+ * signed in. This is that screen.
+ *
+ * What belongs here is who you are and how your account is secured. What
+ * belongs in Settings is how the app behaves on this phone — language, push,
+ * biometrics — and the app's own shelf: help, legal, version. The two screens
+ * no longer share a single row.
+ */
+export default function ProfileScreen() {
   const toast = useToast();
   const { confirm } = useDialog();
   const { t } = useTranslation(["profile", "navigation"]);
   const router = useRouter();
   const { palette, spacing, radius } = useTheme();
   const { user, tenantName, updateLocalUser, logout } = useAuth();
-  const { role: userRole } = useUiRole();
+  const { role: userRole, isAdmin } = useUiRole();
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [signingOutEverywhere, setSigningOutEverywhere] = useState(false);
   const [kind, setKind] = useState<ProfileKind>("account");
   const [student, setStudent] = useState<Student | null>(null);
   const [teacher, setTeacher] = useState<Teacher | null>(null);
-  const [languageSheetOpen, setLanguageSheetOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -206,7 +214,7 @@ export default function MyProfileScreen() {
       cancelLabel: t("profile:logoutConfirm.cancel", { defaultValue: "Cancel" }),
     });
     if (signOut) void logout();
-  }, [logout, t]);
+  }, [confirm, logout, t]);
 
   const handleSignOutAllDevices = useCallback(async () => {
     const signOut = await confirm({
@@ -219,10 +227,27 @@ export default function MyProfileScreen() {
       confirmLabel: t("profile:signOutAll.confirm", { defaultValue: "Sign out" }),
       cancelLabel: t("profile:logoutConfirm.cancel", { defaultValue: "Cancel" }),
     });
-    if (signOut) void logout();
-  }, [logout, t]);
+    if (!signOut) return;
 
-  const appVersion = Constants.expoConfig?.version ?? "—";
+    // Revoking server-side is the part that actually reaches the other phone.
+    // If it fails we still sign out here: the person asked to be signed out,
+    // and leaving them signed in on the device in their hand would be the
+    // worse of the two failures. The toast says the rest did not happen.
+    setSigningOutEverywhere(true);
+    try {
+      await revokeAllMySessions();
+    } catch {
+      toast.error(
+        t("profile:signOutAll.failed", {
+          defaultValue:
+            "Could not sign out your other devices. You have been signed out here.",
+        }),
+      );
+    } finally {
+      setSigningOutEverywhere(false);
+      void logout();
+    }
+  }, [confirm, logout, t, toast]);
 
   // Contact rows — read-only, pulled from role-aware data.
   const accountEmail = user?.email ?? undefined;
@@ -249,12 +274,13 @@ export default function MyProfileScreen() {
       contentContainerStyle={{
         paddingHorizontal: spacing.marginMobile,
         paddingTop: spacing.lg,
-        paddingBottom: spacing[40] * 2,
+        paddingBottom: spacing.scrollBottom,
         gap: spacing.lg,
       }}
       showsVerticalScrollIndicator={false}
     >
-      {/* Hero — tap avatar to change photo (real self-edit flow). */}
+      {/* Hero — tap the avatar to change the photo. This is the only place in
+          the app that does it, for every role; it used to be a screen deeper. */}
       <ProfileHeroCard
         avatarUri={avatarUri}
         name={displayName}
@@ -264,43 +290,56 @@ export default function MyProfileScreen() {
       />
 
       {/* Contact Information */}
-      {accountEmail || accountPhone || accountDob || accountClass ? (
-        <DetailCard
-          title={t("profile:myProfile.sections.contact")}
-          accent="secondary"
-        >
-          {accountEmail ? (
-            <DetailRow
-              icon="mail-outline"
-              label={t("profile:fields.email")}
-              value={accountEmail}
-            />
-          ) : null}
-          {accountPhone ? (
-            <DetailRow
-              icon="call-outline"
-              label={t("profile:fields.phone")}
-              value={accountPhone}
-            />
-          ) : null}
-          {accountDob ? (
-            <DetailRow
-              icon="calendar-outline"
-              label={t("profile:fields.dateOfBirth")}
-              value={accountDob}
-            />
-          ) : null}
-          {accountClass ? (
-            <DetailRow
-              icon="school-outline"
-              label={t("profile:fields.currentClass")}
-              value={accountClass}
-            />
-          ) : null}
-        </DetailCard>
-      ) : null}
+      <DetailCard
+        title={t("profile:myProfile.sections.contact")}
+        accent="secondary"
+      >
+        {accountEmail ? (
+          <DetailRow
+            icon="mail-outline"
+            label={t("profile:fields.email")}
+            value={accountEmail}
+          />
+        ) : null}
+        {accountPhone ? (
+          <DetailRow
+            icon="call-outline"
+            label={t("profile:fields.phone")}
+            value={accountPhone}
+          />
+        ) : null}
+        {accountDob ? (
+          <DetailRow
+            icon="calendar-outline"
+            label={t("profile:fields.dateOfBirth")}
+            value={accountDob}
+          />
+        ) : null}
+        {accountClass ? (
+          <DetailRow
+            icon="school-outline"
+            label={t("profile:fields.currentClass")}
+            value={accountClass}
+          />
+        ) : null}
+        {tenantName ? (
+          <DetailRow
+            icon="business-outline"
+            label={t("profile:fields.school", { defaultValue: "School" })}
+            value={tenantName}
+          />
+        ) : null}
+        <DetailRow
+          icon="ribbon-outline"
+          label={t("profile:fields.designation")}
+          value={roleLabel}
+        />
+      </DetailCard>
 
-      {kind === "account" ? (
+      {/* An administrator has no student or teacher record by design, so the
+          notice is not about them — it is for a student or teacher whose login
+          was never linked, which is a real thing for their school to fix. */}
+      {kind === "account" && !isAdmin ? (
         <View
           style={{
             flexDirection: "row",
@@ -467,7 +506,12 @@ export default function MyProfileScreen() {
         </>
       ) : null}
 
-      {/* Security */}
+      {/*
+        Actions, in the order somebody actually needs them: secure the account,
+        then step across to how the app behaves, then the two ways to leave —
+        which are last because a destructive action you can reach by accident
+        on the way to something else is a bug.
+      */}
       <ProfileActionRow
         icon="lock-closed-outline"
         label={t("profile:main.cards.changePassword")}
@@ -476,74 +520,41 @@ export default function MyProfileScreen() {
           router.push("/(protected)/profile/change-password" as never)
         }
       />
+
       <ProfileActionRow
-        icon="log-out-outline"
-        label={t("profile:signOutAll.row", {
-          defaultValue: "Sign out from all devices",
-        })}
-        destructive
-        trailing={null}
-        onPress={handleSignOutAllDevices}
+        icon="settings-outline"
+        label={t("profile:main.cards.appSettings")}
+        hint={t("profile:main.cards.appSettingsSubtitle")}
+        onPress={() => router.push("/(protected)/settings" as never)}
       />
 
-      {/* Preferences */}
-      <ProfileActionRow
-        icon="language-outline"
-        label={t("profile:preferences.language", { defaultValue: "Language" })}
-        trailing={
-          <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.sm }}>
-            <Text variant="bodyMd" color="onSurfaceVariant">
-              {currentLanguageLabel()}
-            </Text>
-            <AppIcon name="chevron-forward" size="md" color="onSurfaceVariant" />
-          </View>
-        }
-        onPress={() => setLanguageSheetOpen(true)}
-      />
-      <ProfileActionRow
-        icon="notifications-outline"
-        label={t("profile:preferences.notifications", { defaultValue: "Notifications" })}
-        hint={t("profile:preferences.notificationsHint", {
-          defaultValue: "Manage in your device settings",
-        })}
-        onPress={() => void Linking.openSettings()}
-      />
-
-      {/* About */}
-      <ProfileActionRow
-        icon="information-circle-outline"
-        label={t("profile:about.version", { defaultValue: "App version" })}
-        trailing={
-          <Text variant="bodyMd" color="onSurfaceVariant">
-            {appVersion}
-          </Text>
-        }
-      />
-      <ProfileActionRow
-        icon="document-text-outline"
-        label={t("profile:main.cards.terms")}
-        trailing={null}
-        onPress={() => void Linking.openURL(TERMS_URL)}
-      />
-      <ProfileActionRow
-        icon="shield-checkmark-outline"
-        label={t("profile:main.cards.privacy")}
-        trailing={null}
-        onPress={() => void Linking.openURL(PRIVACY_URL)}
-      />
-
-      {/* Sign out */}
       <ProfileActionRow
         icon="log-out-outline"
         label={t("profile:main.logout")}
+        hint={t("profile:main.logoutSubtitle", {
+          defaultValue: "Sign out of Nexchool on this device",
+        })}
         trailing={null}
         destructive
         onPress={handleLogout}
       />
 
-      <LanguageSheet
-        visible={languageSheetOpen}
-        onClose={() => setLanguageSheetOpen(false)}
+      <ProfileActionRow
+        icon="phone-portrait-outline"
+        label={t("profile:signOutAll.row", {
+          defaultValue: "Sign out from all devices",
+        })}
+        hint={t("profile:signOutAll.hint", {
+          defaultValue:
+            "Ends every signed-in session, including this one. Use it if you lost a phone.",
+        })}
+        destructive
+        trailing={
+          signingOutEverywhere ? (
+            <ActivityIndicator size="small" color={palette.error} />
+          ) : null
+        }
+        onPress={signingOutEverywhere ? undefined : handleSignOutAllDevices}
       />
     </ScrollView>
   );

@@ -17,6 +17,7 @@ import { Skeleton } from '@/common/components/Skeleton';
 import { Protected } from '@/modules/permissions/components/Protected';
 import { ScheduleOverrideSheet } from '@/modules/schedule/components/ScheduleOverrideSheet';
 import { useToast } from '@/common/feedback';
+import { schoolTodayIso, schoolNowMinutes } from '@/common/utils/datetime';
 
 const DAYS_BACK = 3;
 const DAYS_FORWARD = 3;
@@ -99,7 +100,8 @@ function ScheduleTodayScreen() {
   const toast = useToast();
   const { palette, spacing, radius } = useTheme();
   const role = useUiRole();
-  const today = new Date();
+  // The strip is centred on the school's today; the Date is only for labels.
+  const today = new Date(`${schoolTodayIso()}T00:00:00`);
   const [selectedDayLabel, setSelectedDayLabel] = useState(
     today.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric' })
   );
@@ -265,8 +267,7 @@ function ScheduleTimeline({
     );
   }
 
-  const now = new Date();
-  const nowMins = now.getHours() * 60 + now.getMinutes();
+  const nowMins = schoolNowMinutes();
 
   return (
     <View style={{ gap: spacing.md }}>
