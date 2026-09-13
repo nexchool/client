@@ -106,6 +106,18 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: androidPackage,
+    // Required for Android push. `getExpoPushTokenAsync` asks Firebase for an
+    // FCM token, and Firebase reads the project and sender id from this file —
+    // without it the call throws on a standalone build and the device silently
+    // never registers, which is how production reached zero device tokens.
+    //
+    // Safe to commit: it holds the same public project identifiers already
+    // baked into the admin-web bundle. The *service account* key is the secret
+    // one, and that lives on EAS (`eas credentials`), never in this repo.
+    //
+    // Native config, so it only takes effect in a new binary — an OTA update
+    // cannot deliver it.
+    googleServicesFile: "./google-services.json",
     // No `versionCode` and no `ios.buildNumber` on purpose. eas.json sets
     // `appVersionSource: "remote"` with `autoIncrement` on the preview and
     // production profiles, so EAS keeps the build number per platform and
@@ -117,6 +129,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     //
     // `version` above stays local: that is the number humans read, and it
     // changes when the product does, not once per build.
+    googleServicesFile: "./google-services.json",
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
       backgroundColor: "#ffffff",
