@@ -72,13 +72,16 @@ const androidPackage = process.env.EXPO_PUBLIC_ANDROID_PACKAGE?.trim() || "in.ne
  * `getExpoPushTokenAsync` throws, no token is ever POSTed to
  * `/api/devices/register`, and the device_tokens table stays empty.
  *
- * Deliberately optional: an unset value leaves the key off the config
- * entirely rather than pointing Expo at a file that is not there, which would
- * fail the build instead of merely leaving push unavailable. Release builds
- * get it from the EAS file environment variable of the same name; locally,
- * put the file in this directory and set GOOGLE_SERVICES_JSON=./google-services.json.
+ * The file is committed to this repository. It holds Android client
+ * identifiers — project id, app id, an Android API key — every one of which is
+ * extractable from a published APK. The secret is the *service account* key,
+ * which lives on EAS (`eas credentials`) and never here.
+ *
+ * The environment variable stays as an override, so a build can be pointed at
+ * a different Firebase project without editing this file.
  */
-const googleServicesFile = process.env.GOOGLE_SERVICES_JSON?.trim() || undefined;
+const googleServicesFile =
+  process.env.GOOGLE_SERVICES_JSON?.trim() || "./google-services.json";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
@@ -139,7 +142,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: androidPackage,
-    ...(googleServicesFile ? { googleServicesFile } : {}),
+    // Required for Android push. `getExpoPushTokenAsync` asks Firebase for an
+    // FCM token, and Firebase reads the project and sender id from this file —
+    // without it the call throws on a standalone build and the device silently
+    // never registers, which is how production reached zero device tokens.
+    //
+    // Native config, so it only takes effect in a new binary — an OTA update
+    // cannot deliver it.
+    googleServicesFile,
     // No `versionCode` and no `ios.buildNumber` on purpose. eas.json sets
     // `appVersionSource: "remote"` with `autoIncrement` on the preview and
     // production profiles, so EAS keeps the build number per platform and
