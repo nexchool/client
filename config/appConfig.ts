@@ -2,7 +2,7 @@ import Constants from "expo-constants";
 
 export type AppEnvironment = "development" | "preview" | "production";
 
-export type BakedTenant = { id: string; subdomain: string | null };
+export type BakedTenant = { id: string | null; subdomain: string | null };
 
 type Extra = {
   appName?: string;
@@ -61,11 +61,18 @@ export function getEasProjectId(): string | undefined {
  */
 export function getBakedTenant(): BakedTenant | null {
   const tenant = getExtra().tenant;
-  if (!tenant || typeof tenant.id !== "string" || tenant.id.length === 0) return null;
-  return {
-    id: tenant.id,
-    subdomain: typeof tenant.subdomain === "string" && tenant.subdomain.length > 0
+  if (!tenant) return null;
+
+  const id = typeof tenant.id === "string" && tenant.id.length > 0 ? tenant.id : null;
+  const subdomain =
+    typeof tenant.subdomain === "string" && tenant.subdomain.length > 0
       ? tenant.subdomain
-      : null,
-  };
+      : null;
+
+  // Either identifier identifies the school on its own — the API client sends
+  // whichever one storage ended up with. A build that set neither is the
+  // general app, which is not the same thing as a build whose one identifier
+  // happens to be the subdomain.
+  if (!id && !subdomain) return null;
+  return { id, subdomain };
 }

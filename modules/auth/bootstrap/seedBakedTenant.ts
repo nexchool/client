@@ -1,14 +1,14 @@
 import { getBakedTenant } from '@/config/appConfig';
-import { getTenantId, setTenantId, setTenantSubdomain } from '@/common/utils/storage';
+import { hasKnownTenant, setTenantId, setTenantSubdomain } from '@/common/utils/storage';
 
 /**
  * Write a build's baked-in tenant to storage before anything reads it.
  *
  * A school-specific build knows its tenant at compile time (see
- * `app.config.ts` / `EXPO_PUBLIC_TENANT_ID`), but every runtime read of "the
- * current tenant" — `usePublishedAuthMethods`, `useTenantTheme`, the API
- * client's `X-Tenant-ID` header — goes through SecureStore, not through the
- * build config directly. So the very first thing a baked build must do is
+ * `app.config.ts` / `EXPO_PUBLIC_TENANT_ID` or `EXPO_PUBLIC_TENANT_SUBDOMAIN`),
+ * but every runtime read of "the current tenant" —
+ * `usePublishedAuthMethods`, `useTenantTheme`, the API client's tenant header
+ * — goes through SecureStore, not through the build config directly. So the very first thing a baked build must do is
  * copy its compiled-in tenant into the same storage a normal login would
  * have filled in, before those reads happen. `app/_layout.tsx` awaits this
  * and gates the rest of the tree on it for exactly that reason.
@@ -34,10 +34,16 @@ export async function seedBakedTenant(): Promise<void> {
   const baked = getBakedTenant();
   if (!baked) return; // The general Nexchool app — nothing to seed here.
 
-  const storedTenantId = await getTenantId();
-  if (storedTenantId) return;
+  // `hasKnownTenant`, not `getTenantId`: a build baked with only a subdomain
+  // never stores a tenant id at all until someone signs in, so asking for the
+  // id alone would read "no tenant on record" on every single launch and
+  // re-seed forever — and, worse, would answer "safe to overwrite" in exactly
+  // the live-session case the paragraph above refuses to touch.
+  if (await hasKnownTenant()) return;
 
-  await setTenantId(baked.id);
+  if (baked.id) {
+    await setTenantId(baked.id);
+  }
   if (baked.subdomain) {
     await setTenantSubdomain(baked.subdomain);
   }

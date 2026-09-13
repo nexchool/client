@@ -33,11 +33,14 @@ const appEnv = resolveAppEnv();
  * release pipeline sets it, so an unconfigured build stays byte-for-byte the
  * general app.
  *
- * `tenantId` alone is enough for the running app to identify itself (it goes
- * straight into the `X-Tenant-ID` header — see `seedBakedTenant.ts`);
- * `tenantSubdomain` rides along mainly for readability in build metadata and
- * as a secondary identifier, not because runtime code needs it once the id is
- * known.
+ * Either identifier on its own is enough. `tenantId` goes straight into the
+ * `X-Tenant-ID` header; a build that sets only `tenantSubdomain` sends
+ * `X-Tenant-Subdomain` instead, which the server resolves the same way, one
+ * slug lookup further (`core/tenant.py` `find_tenant`) — see the header
+ * fallback in `common/services/api.ts`. Subdomain-only is the normal case for
+ * a per-school build: a slug is something a human can read off a release
+ * config and check, where a UUID has to be looked up in the database first
+ * and mistyped silently points a whole school's app at another school.
  */
 const bakedTenantId = process.env.EXPO_PUBLIC_TENANT_ID?.trim() || undefined;
 const bakedTenantSubdomain = process.env.EXPO_PUBLIC_TENANT_SUBDOMAIN?.trim() || undefined;
@@ -59,6 +62,27 @@ const appIcon = process.env.EXPO_PUBLIC_APP_ICON?.trim() || "./assets/icon.png";
 const appScheme = process.env.EXPO_PUBLIC_APP_SCHEME?.trim() || "nexchool";
 const androidPackage = process.env.EXPO_PUBLIC_ANDROID_PACKAGE?.trim() || "in.nexchool.app";
 
+/**
+ * Firebase Android config, without which there is no push at all.
+ *
+ * An Android build registers with FCM before Expo will issue a push token, and
+ * it can only do that with the `google-services.json` Firebase generates for
+ * this exact package name. Expo Go carries Expo's own copy, which is why push
+ * worked in development and stopped dead in the first standalone build —
+ * `getExpoPushTokenAsync` throws, no token is ever POSTed to
+ * `/api/devices/register`, and the device_tokens table stays empty.
+ *
+ * The file is committed to this repository. It holds Android client
+ * identifiers — project id, app id, an Android API key — every one of which is
+ * extractable from a published APK. The secret is the *service account* key,
+ * which lives on EAS (`eas credentials`) and never here.
+ *
+ * The environment variable stays as an override, so a build can be pointed at
+ * a different Firebase project without editing this file.
+ */
+const googleServicesFile =
+  process.env.GOOGLE_SERVICES_JSON?.trim() || "./google-services.json";
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: appName,
@@ -71,7 +95,19 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
   runtimeVersion: {
-    policy: "appVersion",
+    // Fingerprint, not appVersion. `appVersion` makes the runtime identity
+    // "1.0.0" — a string that changes when somebody remembers to change it,
+    // which is never — so expo-updates considered a September JS bundle
+    // compatible with a July binary and delivered it. It was not: the July
+    // binary had no expo-local-authentication in it at all. The graceful
+    // degradation in `biometrics/capability.ts` is what kept that from being
+    // a crash, and graceful degradation is not a delivery policy.
+    //
+    // `fingerprint` hashes the native side — dependencies, plugins, config —
+    // so an update reaches only binaries that can actually run it. A native
+    // change now produces a new runtime automatically, and the phones that
+    // cannot run the new JS are simply not offered it.
+    policy: "fingerprint",
   },
   updates: {
     url: EAS_UPDATE_URL,
@@ -111,13 +147,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // without it the call throws on a standalone build and the device silently
     // never registers, which is how production reached zero device tokens.
     //
-    // Safe to commit: it holds the same public project identifiers already
-    // baked into the admin-web bundle. The *service account* key is the secret
-    // one, and that lives on EAS (`eas credentials`), never in this repo.
-    //
     // Native config, so it only takes effect in a new binary — an OTA update
     // cannot deliver it.
-    googleServicesFile: "./google-services.json",
+    googleServicesFile,
     // No `versionCode` and no `ios.buildNumber` on purpose. eas.json sets
     // `appVersionSource: "remote"` with `autoIncrement` on the preview and
     // production profiles, so EAS keeps the build number per platform and
@@ -129,7 +161,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     //
     // `version` above stays local: that is the number humans read, and it
     // changes when the product does, not once per build.
-    googleServicesFile: "./google-services.json",
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
       backgroundColor: "#ffffff",
@@ -219,11 +250,18 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     appName,
     apiBaseUrl,
     environment: appEnv,
-    // Null (not omitted) so a running build can tell "general app, no school
-    // baked in" apart from "extra.tenant hasn't loaded yet" — see
-    // `config/appConfig.ts#getBakedTenant`.
-    tenant: bakedTenantId
-      ? { id: bakedTenantId, subdomain: bakedTenantSubdomain ?? null }
-      : null,
+    // Emitted (not omitted) so a running build can tell "general app, no
+    // school baked in" apart from "extra.tenant hasn't loaded yet". Note that
+    // Expo's manifest serialisation rewrites `null` as `{}` on the way to
+    // `Constants.expoConfig`, so the reader cannot test this field for null —
+    // `config/appConfig.ts#getBakedTenant` decides on whether either
+    // identifier survived, which is true of `{}` and of `{id: {}, ...}` alike.
+    tenant:
+      bakedTenantId || bakedTenantSubdomain
+        ? {
+            id: bakedTenantId ?? null,
+            subdomain: bakedTenantSubdomain ?? null,
+          }
+        : null,
   },
 });

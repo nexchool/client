@@ -1,9 +1,18 @@
 name: OTA Update (EAS)
 
+# Ships JS/asset-only changes straight to phones that already have the app,
+# in about a minute and with no Play review. This is the loop for everyday
+# bug fixes. Anything that changes native code — a new native dependency, an
+# Expo SDK bump, permissions, the package name, the icon — needs a new binary
+# instead: see android-store-release.yml.
+
 on:
   push:
     branches:
       - main
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
   workflow_dispatch:
 
 concurrency:
@@ -13,12 +22,13 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    # A store release ships a new binary. Publishing JS to the production
+    # channel in the same push would hand the binaries people *already* have
+    # JS written against native code they do not yet have — so a
+    # `[store-release]` commit belongs to the other workflow alone.
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'push' && contains(github.event.head_commit.message, '[ota]'))
-    defaults:
-      run:
-        working-directory: .
+      !contains(github.event.head_commit.message, '[store-release]')
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,12 +43,27 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Every push to main reaches real phones within a minute, so this is the
+      # last point at which a broken bundle can be stopped. It is also the
+      # cheapest gate available: the project currently typechecks clean, so a
+      # failure here is genuinely new breakage.
+      - name: Typecheck
+        run: npx tsc --noEmit
+
       - name: Install EAS CLI
         run: npm install -g eas-cli
 
       - name: Publish EAS Update
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        # `--environment production` is what loads the server-side EAS
+        # environment variables (API URL, baked tenant). Without it the update
+        # is bundled against app.config.ts's bare defaults, which would quietly
+        # strip the baked tenant and drop every demo user back on the
+        # school-selection screen.
         run: |
-          MSG=$(git log -1 --pretty=%B)
-          eas update --channel production --message "$MSG" --non-interactive
+          eas update \
+            --channel production \
+            --environment production \
+            --message "$(git log -1 --pretty=%s)" \
+            --non-interactive

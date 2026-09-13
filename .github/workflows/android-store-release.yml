@@ -1,24 +1,38 @@
 name: Android Store Release (EAS)
 
+# Builds a signed AAB and (by default) submits it to the Play internal testing
+# track. Roughly 20 minutes, versus about a minute for an OTA update — so this
+# runs only when asked, either by tagging a commit `[store-release]` or from
+# the Actions tab.
+#
+# Reach for this when the native side changes: a new native dependency, an Expo
+# SDK bump, app permissions, the package name, or the app icon/name. Plain JS
+# fixes should go out over OTA instead (ota-update.yml).
+
 on:
   push:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      submit:
+        description: "Submit to the Play internal track after building"
+        type: boolean
+        default: true
 
 concurrency:
   group: eas-android-store-${{ github.ref }}
-  cancel-in-progress: true
+  # Deliberately not cancel-in-progress: a store build is ~20 minutes of paid
+  # EAS build time and may already have consumed a version code by the time a
+  # second push lands. Let it finish.
+  cancel-in-progress: false
 
 jobs:
   build-and-submit:
     runs-on: ubuntu-latest
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'push' && contains(github.event.head_commit.message, '[store-release]'))
-    defaults:
-      run:
-        working-directory: .
+      contains(github.event.head_commit.message, '[store-release]')
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,11 +47,29 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Typecheck
+        run: npx tsc --noEmit
+
       - name: Install EAS CLI
         run: npm install -g eas-cli
 
-      - name: EAS Build and submit
+      - name: EAS build and submit
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        # The production profile in eas.json names `environment: production`,
+        # which is what pulls the API URL and baked tenant from the EAS
+        # environment variables — there are no hardcoded values here or in
+        # eas.json on purpose, so a build and an OTA update cannot disagree.
+        #
+        # `inputs.submit` is empty on a push event, so pushes always submit;
+        # only an explicit `false` from the Actions tab builds without
+        # submitting. That escape hatch exists because Play Console API access
+        # can lag behind everything else — a build you can download and upload
+        # by hand still beats no build.
         run: |
-          eas build --platform android --profile production --auto-submit --non-interactive
+          if [ "${{ inputs.submit }}" = "false" ]; then
+            echo "Building without submitting (submit=false)."
+            eas build --platform android --profile production --non-interactive
+          else
+            eas build --platform android --profile production --auto-submit --non-interactive
+          fi
