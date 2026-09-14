@@ -52,6 +52,16 @@ export default function ApproveStudentLeavesScreen({
   // this waits only on the ones that actually apply to this person.
   const isLoading = teacherQuery.isLoading || adminQuery.isLoading;
   const isRefetching = teacherQuery.isRefetching || adminQuery.isRefetching;
+
+  // A 403 on one queue means "no work of that kind" and is ignored. Every
+  // queue this person actually has failing is a different thing, and must not
+  // be reported as "All clear" — a principal reading that puts their phone
+  // down with requests still waiting.
+  const myQueues = [
+    isTeacher || isAdmin ? teacherQuery : null,
+    isAdmin ? adminQuery : null,
+  ].filter((q): q is NonNullable<typeof q> => q != null);
+  const everyQueueFailed = myQueues.length > 0 && myQueues.every((q) => q.isError);
   const refetch = () => {
     teacherQuery.refetch();
     adminQuery.refetch();
@@ -170,23 +180,38 @@ export default function ApproveStudentLeavesScreen({
           )}
           ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
           ListEmptyComponent={
-            <EmptyState
-              icon={<AppIcon name="checkmark-done-outline" size="xl" color="onSurfaceVariant" />}
-              title={
-                search.trim()
-                  ? t('queue.noMatch.title', { defaultValue: 'No matching requests' })
-                  : t('queue.empty.title', { defaultValue: 'All clear' })
-              }
-              description={
-                search.trim()
-                  ? t('queue.noMatch.body', {
-                      defaultValue: 'No request matches that name or admission number.',
-                    })
-                  : t('queue.empty.body', {
-                      defaultValue: 'No requests need your attention right now.',
-                    })
-              }
-            />
+            everyQueueFailed ? (
+              <EmptyState
+                icon={<AppIcon name="cloud-offline-outline" size="xl" color="error" />}
+                title={t('queue.failed.title', { defaultValue: 'Could not load requests' })}
+                description={t('queue.failed.body', {
+                  defaultValue:
+                    'There may be requests waiting. Check your connection and try again.',
+                })}
+                action={{
+                  label: t('queue.failed.retry', { defaultValue: 'Try again' }),
+                  onPress: refetch,
+                }}
+              />
+            ) : (
+              <EmptyState
+                icon={<AppIcon name="checkmark-done-outline" size="xl" color="onSurfaceVariant" />}
+                title={
+                  search.trim()
+                    ? t('queue.noMatch.title', { defaultValue: 'No matching requests' })
+                    : t('queue.empty.title', { defaultValue: 'All clear' })
+                }
+                description={
+                  search.trim()
+                    ? t('queue.noMatch.body', {
+                        defaultValue: 'No request matches that name or admission number.',
+                      })
+                    : t('queue.empty.body', {
+                        defaultValue: 'No requests need your attention right now.',
+                      })
+                }
+              />
+            )
           }
           refreshControl={
             <RefreshControl refreshing={isRefetching} onRefresh={refetch} />

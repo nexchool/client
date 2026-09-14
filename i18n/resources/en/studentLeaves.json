@@ -28,6 +28,11 @@
     "noMatch": {
       "title": "No matching requests",
       "body": "No request matches that name or admission number."
+    },
+    "failed": {
+      "title": "Could not load requests",
+      "body": "There may be requests waiting. Check your connection and try again.",
+      "retry": "Try again"
     }
   },
   "detail": {
