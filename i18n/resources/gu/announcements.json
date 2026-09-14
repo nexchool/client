@@ -90,7 +90,8 @@
     "recalled": "પાછી લેવાઈ",
     "attachments": "જોડાણો",
     "viewRecipients": "પ્રાપ્તકર્તાઓ જુઓ",
-    "revisions": "સંશોધનો"
+    "revisions": "સંશોધનો",
+    "unavailable": "આ જાહેરાત હવે ઉપલબ્ધ નથી."
   },
   "attachment": {
     "error": "ફાઇલ ખોલી શકાઈ નથી"

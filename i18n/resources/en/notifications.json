@@ -14,7 +14,8 @@
     "backA11y": "Back",
     "notFound": "This notification is no longer available.",
     "noBody": "No message text.",
-    "openRelated": "Open related"
+    "openRelated": "Open related",
+    "openAnnouncement": "Open announcement"
   },
   "section": { "today": "Today", "yesterday": "Yesterday", "earlier": "Earlier" },
   "category": { "all": "All", "announcements": "Announcements", "fees": "Fees", "leaves": "Leaves", "system": "System" },

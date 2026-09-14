@@ -224,6 +224,8 @@
       "body": "Your unsaved request will be lost.",
       "confirm": "Discard",
       "cancel": "Keep editing"
-    }
+    },
+    "previousYear": "Previous year",
+    "nextYear": "Next year"
   }
 }

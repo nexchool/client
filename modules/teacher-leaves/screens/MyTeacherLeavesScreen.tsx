@@ -65,7 +65,9 @@ export default function MyTeacherLeavesScreen() {
 
   const [topTab, setTopTab] = useState<TopTab>(canApplyLeave ? 'mydata' : 'holidays');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('');
-  const [holYear] = useState(() => Number(schoolTodayIso().slice(0, 4)));
+  // The school's year, not the device's — `new Date().getFullYear()` is the
+  // local year and disagrees with the school around New Year.
+  const [holYear, setHolYear] = useState(() => Number(schoolTodayIso().slice(0, 4)));
 
   React.useEffect(() => {
     if (!canApplyLeave) setTopTab('holidays');
@@ -243,13 +245,34 @@ export default function MyTeacherLeavesScreen() {
       renderItem={({ item }) => <HolidayRow holiday={item} />}
       ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
       ListHeaderComponent={
-        <Text
-          variant="labelMd"
-          color="onSurfaceVariant"
-          style={{ paddingBottom: spacing.sm }}
+        // A teacher planning next term's leave needs next year's calendar,
+        // so the year steps rather than being fixed to today's.
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingBottom: spacing.sm,
+          }}
         >
-          {t('tracker.yearRange', { year: holYear, defaultValue: String(holYear) })}
-        </Text>
+          <AppIcon
+            name="chevron-back"
+            size="lg"
+            color="onSurfaceVariant"
+            onPress={() => setHolYear((y) => y - 1)}
+            accessibilityLabel={t('tracker.previousYear', { defaultValue: 'Previous year' })}
+          />
+          <Text variant="labelMd" color="onSurfaceVariant">
+            {t('tracker.yearRange', { year: holYear, defaultValue: String(holYear) })}
+          </Text>
+          <AppIcon
+            name="chevron-forward"
+            size="lg"
+            color="onSurfaceVariant"
+            onPress={() => setHolYear((y) => y + 1)}
+            accessibilityLabel={t('tracker.nextYear', { defaultValue: 'Next year' })}
+          />
+        </View>
       }
       ListEmptyComponent={
         holidaysLoading ? (
@@ -261,12 +284,24 @@ export default function MyTeacherLeavesScreen() {
         ) : (
           <EmptyState
             icon={<AppIcon name="sunny-outline" size="xl" color="onSurfaceVariant" />}
-            title={t('tracker.emptyHolidaysYear', { defaultValue: 'No holidays listed' })}
+            title={t('tracker.emptyHolidaysYear', {
+              year: holYear,
+              defaultValue: 'No holidays listed',
+            })}
             description={t('tracker.holidaysReadOnlySub', {
               defaultValue: 'The school has not published holidays for this year.',
             })}
           />
         )
+      }
+      refreshControl={
+        <RefreshControl
+          refreshing={holidaysLoading}
+          onRefresh={() => {
+            fetchHolidays({ start_date: `${holYear}-01-01`, end_date: `${holYear}-12-31` });
+            fetchRecurring();
+          }}
+        />
       }
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingBottom: spacing.scrollBottom }}
