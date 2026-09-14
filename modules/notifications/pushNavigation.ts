@@ -19,6 +19,7 @@ function resolveEntityHrefFromData(data: Record<string, string>): string | null 
   const typeUpper = (data.type || "").toUpperCase();
   const studentFeeId = (data.student_fee_id || "").trim();
   const entityId = (data.entity_id || "").trim();
+  const studentLeaveId = (data.leave_id || "").trim();
 
   // Teacher leave notifications
   if (
@@ -35,6 +36,20 @@ function resolveEntityHrefFromData(data: Record<string, string>): string | null 
   ) {
     // Admin viewing teacher leave requests in mobile app
     return "/(protected)/my-leaves";
+  }
+
+  // Student leave. Every student-leave notification carries `leave_id`, and a
+  // tap belongs on the request itself — for the child because that is where
+  // the decision and its reason are, and for a class teacher or principal
+  // because that is where they approve it. Without this the notification that
+  // tells an approver there is work led nowhere, which is most of how an
+  // approver learns there is work at all.
+  //
+  // Placed after the teacher-leave branches: those identify themselves by
+  // `screen`/`type` and carry no `leave_id`, but if one ever did, it should
+  // still go to its own screen.
+  if (studentLeaveId) {
+    return `/(protected)/student-leaves/${studentLeaveId}`;
   }
 
   if (studentFeeId) {
