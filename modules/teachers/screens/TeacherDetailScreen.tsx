@@ -21,6 +21,7 @@ import * as PERMS from '@/modules/permissions/constants/permissions';
 import { TeacherLeave, TeacherAvailability } from '../types';
 import { TeacherDetailHero } from '../components/TeacherDetailHero';
 import { TeacherSubjectsCard } from '../components/TeacherSubjectsCard';
+import { DeleteTeacherModal } from '../components/DeleteTeacherModal';
 import { DetailTabs, type TabItem } from '@/common/components/DetailTabs';
 import { PageHeader } from '@/common/components/PageHeader';
 import { useDialog, useToast } from '@/common/feedback';
@@ -37,6 +38,7 @@ export default function TeacherDetailScreen() {
   const { currentTeacher, loading, fetchTeacher, deleteTeacher } = useTeachers();
   const { hasPermission } = usePermissions();
   const [activeTab, setActiveTab] = useState<TabKey>('info');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const canUpdate = hasPermission(PERMS.TEACHER_UPDATE);
   const canDelete = hasPermission(PERMS.TEACHER_DELETE);
@@ -120,17 +122,14 @@ export default function TeacherDetailScreen() {
       params: { id: id ?? '' },
     } as never);
 
-  const handleDelete = async () => {
-    const remove = await confirm({
-      title: t('detail.deleteConfirmTitle'),
-      description: t('detail.deleteConfirmMessage'),
-      tone: 'danger',
-      confirmLabel: t('detail.delete'),
-      cancelLabel: t('detail.cancel'),
-    });
-    if (!remove || !id) return;
+  const handleDelete = () => setShowDeleteModal(true);
+
+  const confirmDelete = async () => {
+    setShowDeleteModal(false);
+    if (!id) return;
     try {
       await deleteTeacher(id);
+      toast.success(t('detail.deleteSuccess'));
       router.back();
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : t('detail.deleteFailed'));
@@ -676,6 +675,16 @@ export default function TeacherDetailScreen() {
           </ScrollView>
         </SafeAreaView>
       </Modal>
+
+      <DeleteTeacherModal
+        visible={showDeleteModal}
+        title={t('detail.deleteConfirmTitle')}
+        message={t('detail.deleteConfirmMessage')}
+        cancelLabel={t('detail.cancel')}
+        confirmLabel={t('detail.delete')}
+        onCancel={() => setShowDeleteModal(false)}
+        onConfirm={confirmDelete}
+      />
     </View>
   );
 }

@@ -15,6 +15,10 @@ type Props<TForm extends FieldValues> = {
   secureTextEntry?: boolean;
   disabled?: boolean;
   rules?: object;
+  maxLength?: number;
+  /** Applied to every keystroke before it reaches the form value — e.g.
+   *  stripping non-digits for a phone field. Most fields need none. */
+  transform?: (text: string) => string;
 };
 
 export function FormField<TForm extends FieldValues>({
@@ -29,6 +33,8 @@ export function FormField<TForm extends FieldValues>({
   secureTextEntry,
   disabled,
   rules,
+  maxLength,
+  transform,
 }: Props<TForm>) {
   return (
     <Controller
@@ -39,7 +45,7 @@ export function FormField<TForm extends FieldValues>({
         <Input
           label={label}
           value={(value as string) ?? ''}
-          onChangeText={onChange}
+          onChangeText={(text) => onChange(transform ? transform(text) : text)}
           placeholder={placeholder}
           helper={helper}
           error={error?.message}
@@ -48,6 +54,7 @@ export function FormField<TForm extends FieldValues>({
           autoCapitalize={autoCapitalize}
           secureTextEntry={secureTextEntry}
           disabled={disabled}
+          maxLength={maxLength}
         />
       )}
     />

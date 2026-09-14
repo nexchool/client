@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PHONE_NUMBER_REGEX } from "@/common/utils/phone";
 
 /**
  * Student validation schemas (create / update).
@@ -225,7 +226,7 @@ export type UpdateStudentInput = z.infer<typeof updateStudentSchema>;
  * Messages are plain English (form is admin-only for now; i18n can wrap later).
  */
 const formIsoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
-const formPhoneRegex = /^\+?[0-9\s\-()]{7,20}$/;
+const PHONE_MESSAGE = "Enter a valid 10-digit phone number";
 
 export const studentFormSchema = z.object({
   name: z
@@ -255,14 +256,14 @@ export const studentFormSchema = z.object({
   guardian_phone: z
     .string()
     .min(1, "Guardian phone is required")
-    .regex(formPhoneRegex, "Enter a valid phone number"),
+    .regex(PHONE_NUMBER_REGEX, PHONE_MESSAGE),
 
   email: z
     .union([z.literal(""), z.string().email("Enter a valid email")])
     .optional(),
 
   phone: z
-    .union([z.literal(""), z.string().regex(formPhoneRegex, "Enter a valid phone number")])
+    .union([z.literal(""), z.string().regex(PHONE_NUMBER_REGEX, PHONE_MESSAGE)])
     .optional(),
 });
 
