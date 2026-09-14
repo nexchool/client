@@ -14,8 +14,7 @@
     "backA11y": "પાછા",
     "notFound": "આ સૂચના હવે ઉપલબ્ધ નથી.",
     "noBody": "કોઈ સંદેશ ટેક્સ્ટ નથી.",
-    "openRelated": "સંબંધિત ખોલો",
-    "openAnnouncement": "જાહેરાત ખોલો"
+    "openRelated": "સંબંધિત ખોલો"
   },
   "section": { "today": "આજે", "yesterday": "ગઈકાલે", "earlier": "અગાઉના" },
   "category": { "all": "બધું", "announcements": "જાહેરાતો", "fees": "ફી", "leaves": "રજા", "system": "સિસ્ટમ" },

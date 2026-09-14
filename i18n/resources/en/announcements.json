@@ -90,8 +90,7 @@
     "recalled": "Recalled",
     "attachments": "Attachments",
     "viewRecipients": "View recipients",
-    "revisions": "Revisions",
-    "unavailable": "This announcement is no longer available."
+    "revisions": "Revisions"
   },
   "attachment": {
     "error": "Could not open file"
