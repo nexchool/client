@@ -71,7 +71,18 @@
     "requireReason": "Require reason",
     "savePolicy": "Save {{type}} policy",
     "errorTitle": "Error",
-    "saveFailed": "Failed to update policy."
+    "saveFailed": "Failed to update policy.",
+    "totalDays": "Days per year",
+    "carryForward": "Carry forward",
+    "carryForwardUpTo": "Up to {{days}} days",
+    "notAllowed": "Not allowed",
+    "requiresReason": "Reason required",
+    "yes": "Yes",
+    "no": "No",
+    "empty": {
+      "title": "No policy set",
+      "body": "The school has not published a leave policy yet."
+    }
   },
   "alerts": {
     "approveTitle": "Approve Leave",
@@ -131,12 +142,17 @@
       "carriedForward": "+{{days}}d carried forward",
       "available": "Available",
       "pending": "Pending",
-      "used": "Used"
+      "used": "Used",
+      "thisYear": "This year",
+      "noneBody": "The school has not set an allowance for this leave type.",
+      "carriedForwardTitle": "Carried forward",
+      "carriedForwardLabel": "From last year"
     },
     "leaveRow": {
       "leaveSuffix": "{{type}} Leave",
       "day": "Day",
-      "days": "Days"
+      "days": "Days",
+      "cancel": "Cancel request"
     },
     "holidayRow": {
       "weeklyOff": "Weekly Off"
@@ -177,7 +193,13 @@
       "alertInvalidTitle": "Invalid",
       "alertInvalidBody": "End must be on or after start",
       "alertErrorTitle": "Error",
-      "alertErrorSubmit": "Failed to submit"
+      "alertErrorSubmit": "Failed to submit",
+      "unlimited": "No limit on this type",
+      "availableDays": "{{available}} days available",
+      "costsDays_one": "This request uses {{count}} working day",
+      "costsDays_other": "This request uses {{count}} working days",
+      "holidaysExcluded_one": "{{count}} closed day not counted",
+      "holidaysExcluded_other": "{{count}} closed days not counted"
     },
     "alerts": {
       "holidayUpdated": "Holiday Updated",
@@ -194,6 +216,14 @@
       "error": "Error",
       "deleteFailed": "Failed to delete",
       "cancelFailed": "Failed to cancel"
+    },
+    "back": "Back",
+    "cancel": "Cancel",
+    "discard": {
+      "title": "Discard request?",
+      "body": "Your unsaved request will be lost.",
+      "confirm": "Discard",
+      "cancel": "Keep editing"
     }
   }
 }

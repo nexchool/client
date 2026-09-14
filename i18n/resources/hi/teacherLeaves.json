@@ -71,7 +71,18 @@
     "requireReason": "कारण आवश्यक",
     "savePolicy": "{{type}} नीति सहेजें",
     "errorTitle": "त्रुटि",
-    "saveFailed": "नीति अपडेट विफल।"
+    "saveFailed": "नीति अपडेट विफल।",
+    "totalDays": "प्रति वर्ष दिन",
+    "carryForward": "आगे ले जाना",
+    "carryForwardUpTo": "{{days}} दिन तक",
+    "notAllowed": "अनुमति नहीं",
+    "requiresReason": "कारण आवश्यक",
+    "yes": "हाँ",
+    "no": "नहीं",
+    "empty": {
+      "title": "कोई नीति निर्धारित नहीं",
+      "body": "विद्यालय ने अभी अवकाश नीति प्रकाशित नहीं की है।"
+    }
   },
   "alerts": {
     "approveTitle": "अवकाश स्वीकृत करें",
@@ -131,12 +142,17 @@
       "carriedForward": "+{{days}}दि आगे लाया गया",
       "available": "उपलब्ध",
       "pending": "लंबित",
-      "used": "उपयोग"
+      "used": "उपयोग",
+      "thisYear": "इस वर्ष",
+      "noneBody": "विद्यालय ने इस प्रकार के अवकाश के लिए कोई सीमा तय नहीं की है।",
+      "carriedForwardTitle": "आगे लाया गया",
+      "carriedForwardLabel": "पिछले वर्ष से"
     },
     "leaveRow": {
       "leaveSuffix": "{{type}} अवकाश",
       "day": "दिन",
-      "days": "दिन"
+      "days": "दिन",
+      "cancel": "अनुरोध रद्द करें"
     },
     "holidayRow": {
       "weeklyOff": "साप्ताहिक अवकाश"
@@ -177,7 +193,13 @@
       "alertInvalidTitle": "अमान्य",
       "alertInvalidBody": "समाप्ति प्रारंभ के बाद या उसी दिन होनी चाहिए",
       "alertErrorTitle": "त्रुटि",
-      "alertErrorSubmit": "जमा विफल"
+      "alertErrorSubmit": "जमा विफल",
+      "unlimited": "इस प्रकार पर कोई सीमा नहीं",
+      "availableDays": "{{available}} दिन उपलब्ध",
+      "costsDays_one": "इस अनुरोध में {{count}} कार्यदिवस लगेगा",
+      "costsDays_other": "इस अनुरोध में {{count}} कार्यदिवस लगेंगे",
+      "holidaysExcluded_one": "{{count}} अवकाश दिन नहीं गिना गया",
+      "holidaysExcluded_other": "{{count}} अवकाश दिन नहीं गिने गए"
     },
     "alerts": {
       "holidayUpdated": "छुट्टी अपडेट हुई",
@@ -194,6 +216,14 @@
       "error": "त्रुटि",
       "deleteFailed": "हटाने में विफल",
       "cancelFailed": "रद्द करने में विफल"
+    },
+    "back": "वापस",
+    "cancel": "रद्द करें",
+    "discard": {
+      "title": "अनुरोध छोड़ें?",
+      "body": "आपका सहेजा न गया अनुरोध खो जाएगा।",
+      "confirm": "छोड़ें",
+      "cancel": "संपादन जारी रखें"
     }
   }
 }

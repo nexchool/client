@@ -71,7 +71,18 @@
     "requireReason": "કારણ જરૂરી",
     "savePolicy": "{{type}} નીતિ સાચવો",
     "errorTitle": "ભૂલ",
-    "saveFailed": "નીતિ અપડેટ નિષ્ફળ."
+    "saveFailed": "નીતિ અપડેટ નિષ્ફળ.",
+    "totalDays": "વર્ષ દીઠ દિવસ",
+    "carryForward": "આગળ લઈ જવું",
+    "carryForwardUpTo": "{{days}} દિવસ સુધી",
+    "notAllowed": "મંજૂરી નથી",
+    "requiresReason": "કારણ જરૂરી",
+    "yes": "હા",
+    "no": "ના",
+    "empty": {
+      "title": "કોઈ નીતિ નક્કી નથી",
+      "body": "શાળાએ હજી રજા નીતિ પ્રકાશિત કરી નથી."
+    }
   },
   "alerts": {
     "approveTitle": "રજા મંજૂર",
@@ -131,12 +142,17 @@
       "carriedForward": "+{{days}} દિવસ આગળ લાવ્યા",
       "available": "ઉપલબ્ધ",
       "pending": "બાકી",
-      "used": "વપરાયેલ"
+      "used": "વપરાયેલ",
+      "thisYear": "આ વર્ષે",
+      "noneBody": "શાળાએ આ પ્રકારની રજા માટે કોઈ મર્યાદા નક્કી કરી નથી.",
+      "carriedForwardTitle": "આગળ લાવેલી",
+      "carriedForwardLabel": "ગયા વર્ષથી"
     },
     "leaveRow": {
       "leaveSuffix": "{{type}} રજા",
       "day": "દિવસ",
-      "days": "દિવસ"
+      "days": "દિવસ",
+      "cancel": "અરજી રદ કરો"
     },
     "holidayRow": {
       "weeklyOff": "સાપ્તાહિક રજા"
@@ -177,7 +193,13 @@
       "alertInvalidTitle": "અમાન્ય",
       "alertInvalidBody": "અંત શરૂ પછી અથવા સમાન હોવો જોઈએ",
       "alertErrorTitle": "ભૂલ",
-      "alertErrorSubmit": "મોકલવામાં નિષ્ફળ"
+      "alertErrorSubmit": "મોકલવામાં નિષ્ફળ",
+      "unlimited": "આ પ્રકાર પર કોઈ મર્યાદા નથી",
+      "availableDays": "{{available}} દિવસ ઉપલબ્ધ",
+      "costsDays_one": "આ અરજીમાં {{count}} કામકાજનો દિવસ વપરાશે",
+      "costsDays_other": "આ અરજીમાં {{count}} કામકાજના દિવસ વપરાશે",
+      "holidaysExcluded_one": "{{count}} રજાનો દિવસ ગણાયો નથી",
+      "holidaysExcluded_other": "{{count}} રજાના દિવસ ગણાયા નથી"
     },
     "alerts": {
       "holidayUpdated": "રજા અપડેટ થઈ",
@@ -194,6 +216,14 @@
       "error": "ભૂલ",
       "deleteFailed": "કાઢવામાં નિષ્ફળ",
       "cancelFailed": "રદ કરવામાં નિષ્ફળ"
+    },
+    "back": "પાછળ",
+    "cancel": "રદ કરો",
+    "discard": {
+      "title": "અરજી છોડી દેવી?",
+      "body": "તમારી સાચવ્યા વગરની અરજી ખોવાઈ જશે.",
+      "confirm": "છોડી દો",
+      "cancel": "સંપાદન ચાલુ રાખો"
     }
   }
 }
