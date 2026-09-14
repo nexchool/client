@@ -18,6 +18,7 @@ import { useTheme, Spacing } from "@/common/theme";
 import { Text } from "@/common/components/Text";
 import { AppIcon } from "@/common/components/AppIcon";
 import { PageHeader } from "@/common/components/PageHeader";
+import { SelectSheet } from "@/common/components/SelectSheet";
 import { Teacher, TeacherDepartmentOption } from "../types";
 
 function useDebounce<T>(value: T, delay: number): T {
@@ -40,9 +41,9 @@ export default function TeachersScreen() {
   const { q } = useLocalSearchParams<{ q?: string }>();
   const [searchQuery, setSearchQuery] = useState(q ?? "");
   // Real filter: department. Options come from the list-endpoint envelope.
-  // Holding the object (not just the id) means the chip keeps showing the
+  // Holding the object (not just the id) means the field keeps showing the
   // right name even if a later facet refresh drops this department (e.g. it
-  // was deactivated) — see cycleDepartment for how that case resets.
+  // was deactivated) — see selectDepartment for how that case resets.
   const [department, setDepartment] = useState<TeacherDepartmentOption | null>(
     null
   );
@@ -64,24 +65,16 @@ export default function TeachersScreen() {
     router.push(`/teachers/${teacher.id}` as any);
   };
 
-  const cycleDepartment = () => {
-    if (departments.length === 0) return;
-    setDepartment((prev) => {
-      if (prev === null) return departments[0];
-      const idx = departments.findIndex((d) => d.id === prev.id);
-      // -1 covers the stale-selection case: the previously selected
-      // department is no longer in the (possibly refreshed) facet, e.g. it
-      // was deactivated. Rather than get stuck cycling from an id that no
-      // longer resolves to anything, treat it the same as "at the end of
-      // the list" and reset to "All" on the next tap.
-      return idx === -1 || idx === departments.length - 1
-        ? null
-        : departments[idx + 1];
-    });
+  // Resolve the picked id back to the full option, the same defensive lookup
+  // `cycleDepartment` used to do: if the department is no longer in a
+  // refreshed facet (e.g. it was deactivated), fall back to "All" rather
+  // than holding an id that resolves to nothing.
+  const selectDepartment = (id: string | null) => {
+    setDepartment(id ? (departments.find((d) => d.id === id) ?? null) : null);
   };
 
   const departmentActive = department !== null;
-  const departmentLabel = department?.name ?? t("list.filterDepartmentAll");
+  const departmentOptions = departments.map((d) => ({ value: d.id, label: d.name }));
 
   const renderToolbar = () => (
     <View style={styles.toolbar}>
@@ -115,44 +108,15 @@ export default function TeachersScreen() {
       </View>
 
       {departments.length > 0 && (
-        <View style={styles.chipRow}>
-          <Pressable
-            onPress={cycleDepartment}
-            accessibilityRole="button"
-            accessibilityLabel={departmentLabel}
-            style={({ pressed }) => [
-              styles.chip,
-              {
-                borderRadius: radius.full,
-                backgroundColor: departmentActive
-                  ? palette.surfaceContainerLow
-                  : palette.surfaceContainerLowest,
-                borderColor: departmentActive
-                  ? palette.primary
-                  : palette.outlineVariant,
-                opacity: pressed ? 0.85 : 1,
-              },
-            ]}
-          >
-            <AppIcon
-              name="briefcase-outline"
-              size="sm"
-              color={departmentActive ? "primary" : "onSurfaceVariant"}
-            />
-            <Text
-              variant="labelMd"
-              color={departmentActive ? "primary" : "onSurfaceVariant"}
-              numberOfLines={1}
-            >
-              {departmentLabel}
-            </Text>
-            <AppIcon
-              name={departmentActive ? "close" : "chevron-down"}
-              size="sm"
-              color={departmentActive ? "primary" : "onSurfaceVariant"}
-            />
-          </Pressable>
-        </View>
+        <SelectSheet
+          value={department?.id ?? null}
+          onChange={selectDepartment}
+          options={departmentOptions}
+          allowEmpty
+          emptyLabel={t("list.filterDepartmentAll")}
+          placeholder={t("list.filterDepartmentAll")}
+          sheetTitle={t("field.department", { defaultValue: "Department" })}
+        />
       )}
     </View>
   );
@@ -253,20 +217,6 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     padding: 0,
-  },
-  chipRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: Spacing.sm,
-  },
-  chip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.xs,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderWidth: 1,
-    maxWidth: "100%",
   },
   emptyState: {
     alignItems: "center",

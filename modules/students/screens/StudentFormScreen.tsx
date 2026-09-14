@@ -46,6 +46,7 @@ import { useClasses } from '@/modules/finance/hooks/useFinance';
 import type { CreateStudentDTO, UpdateStudentDTO } from '../types';
 import { useDialog, useToast } from '@/common/feedback';
 import { schoolTodayIso } from '@/common/utils/datetime';
+import { PHONE_NUMBER_LENGTH, sanitizePhoneNumberInput } from '@/common/utils/phone';
 
 const GENDER_OPTIONS: SelectOption[] = [
   { value: 'male', label: 'Male' },
@@ -353,8 +354,10 @@ export default function StudentFormScreen() {
             control={control}
             name="guardian_phone"
             label={t('field.guardianPhone', { defaultValue: 'Guardian phone' })}
-            keyboardType="phone-pad"
+            keyboardType="number-pad"
             autoComplete="tel"
+            maxLength={PHONE_NUMBER_LENGTH}
+            transform={sanitizePhoneNumberInput}
           />
         </FormSection>
 
@@ -371,8 +374,10 @@ export default function StudentFormScreen() {
             control={control}
             name="phone"
             label={t('field.phone', { defaultValue: 'Student phone' })}
-            keyboardType="phone-pad"
+            keyboardType="number-pad"
             autoComplete="tel"
+            maxLength={PHONE_NUMBER_LENGTH}
+            transform={sanitizePhoneNumberInput}
           />
         </FormSection>
       </View>

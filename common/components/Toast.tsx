@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/common/theme';
@@ -33,7 +33,13 @@ const TONE: Record<ToastTone, { icon: string; color: 'success' | 'error' | 'onSu
  */
 function Toast({ item, onDismiss }: { item: ToastItem; onDismiss: () => void }) {
   const { palette, spacing, radius, elevation } = useTheme();
+  const { width: screenWidth } = useWindowDimensions();
   const tone = TONE[item.tone];
+  // Bounded by the screen itself, not just the fixed design width below — a
+  // narrow phone (or a resized desktop window) would otherwise let a toast
+  // wider than the viewport run off its left edge, since the host only pins
+  // the right side.
+  const maxWidth = Math.min(340, screenWidth - spacing.marginMobile * 2);
   return (
     <Animated.View
       entering={FadeInDown.duration(180)}
@@ -47,6 +53,7 @@ function Toast({ item, onDismiss }: { item: ToastItem; onDismiss: () => void }) 
           paddingHorizontal: spacing.md,
           paddingVertical: spacing.sm,
           gap: spacing.sm,
+          maxWidth,
         },
       ]}
       accessibilityRole="alert"
@@ -143,5 +150,9 @@ const styles = StyleSheet.create({
     maxWidth: 340,
     minHeight: 48,
   },
-  message: { flex: 1 },
+  // `minWidth: 0` overrides a flex item's default `auto`, which otherwise
+  // refuses to shrink the text below its unwrapped width — the reason a long
+  // message rendered as one long line spilling past the card instead of
+  // wrapping, most visible on web where that default is enforced strictly.
+  message: { flex: 1, minWidth: 0 },
 });

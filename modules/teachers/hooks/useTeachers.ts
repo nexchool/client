@@ -113,6 +113,7 @@ export const teachersKeys = {
   all: ['teachers'] as const,
   list: () => ['teachers', 'list'] as const,
   detail: (id: string) => ['teachers', 'detail', id] as const,
+  departments: () => ['teachers', 'departments'] as const,
 };
 
 // TanStack Query hooks for teacher detail + mutations.
@@ -146,5 +147,22 @@ export function useUpdateTeacher(id: string) {
       qc.invalidateQueries({ queryKey: teachersKeys.list() });
       qc.invalidateQueries({ queryKey: teachersKeys.detail(id) });
     },
+  });
+}
+
+/**
+ * The tenant's department catalogue, for the Create/Edit Teacher form's
+ * picker. Same source `TeachersScreen`'s filter already reads — the list
+ * endpoint's envelope includes every active department regardless of the
+ * page of teachers actually requested — so this adds no new API surface.
+ * Cached briefly: a school's department list changes rarely, and every
+ * screen that opens this query shares one cache entry rather than each
+ * firing its own request.
+ */
+export function useTeacherDepartments() {
+  return useQuery({
+    queryKey: teachersKeys.departments(),
+    queryFn: async () => (await teacherService.getTeachers()).departments,
+    staleTime: 5 * 60 * 1000,
   });
 }

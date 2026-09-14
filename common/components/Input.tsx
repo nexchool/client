@@ -30,6 +30,7 @@ type Props = {
   autoCapitalize?: TextInputProps['autoCapitalize'];
   disabled?: boolean;
   testID?: string;
+  maxLength?: number;
   /**
    * 'outlined' (default) is every existing caller: a hairline border visible
    * at rest, white/`surfaceContainerLowest` fill. 'filled' is the sign-in
@@ -63,6 +64,7 @@ export function Input({
   autoCapitalize,
   disabled,
   testID,
+  maxLength,
   variant = 'outlined',
   cornerRadius,
   labelGap = 8,
@@ -125,6 +127,7 @@ export function Input({
           keyboardType={keyboardType}
           autoComplete={autoComplete}
           autoCapitalize={autoCapitalize}
+          maxLength={maxLength}
           editable={!disabled}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}

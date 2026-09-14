@@ -24,16 +24,18 @@ import { Button } from '@/common/components/Button';
 import { Link } from '@/common/components/Link';
 import { Skeleton } from '@/common/components/Skeleton';
 import { PageHeader } from '@/common/components/PageHeader';
-import { FormField, FormDatePicker, FormSection } from '@/common/forms';
+import { FormField, FormSelectSheet, FormDatePicker, FormSection } from '@/common/forms';
 import {
   useTeacher,
   useCreateTeacher,
   useUpdateTeacher,
+  useTeacherDepartments,
 } from '../hooks/useTeachers';
 import { teacherFormSchema, type TeacherFormInput } from '../validation/schemas';
 import type { CreateTeacherDTO, UpdateTeacherDTO } from '../types';
 import { useDialog, useToast } from '@/common/feedback';
 import { schoolTodayIso } from '@/common/utils/datetime';
+import { PHONE_NUMBER_LENGTH, sanitizePhoneNumberInput } from '@/common/utils/phone';
 
 const today = () => schoolTodayIso();
 
@@ -48,11 +50,28 @@ export default function TeacherFormScreen() {
   const detailQuery = useTeacher(params.id, isEdit);
   const createMutation = useCreateTeacher();
   const updateMutation = useUpdateTeacher(params.id ?? '');
+  const departmentsQuery = useTeacherDepartments();
+  // The field's value is the department's name (free text the server
+  // resolves against the tenant's catalogue — see CreateTeacherDTO), so the
+  // picker's options are keyed by name too, not id, to keep the form value
+  // and API payload exactly as they were with the text input.
+  const departmentOptions = (departmentsQuery.data ?? []).map((d) => ({
+    value: d.name,
+    label: d.name,
+  }));
 
   const {
     control,
     handleSubmit,
-    formState,
+    // Destructured here (not just `formState`) so react-hook-form's proxy
+    // actually subscribes to these two fields. Its formState is Proxy-backed
+    // and only stays live in production for properties read during render —
+    // reading `formState.dirtyFields` solely inside the async `onSubmit`
+    // callback below (never during render) left it stale there, so a real
+    // edit could compute an empty `partial` and silently skip both the
+    // update call and its success toast. Dev builds never showed this: the
+    // optimization is disabled outside production.
+    formState: { isDirty, dirtyFields },
     setError,
     reset,
   } = useForm<TeacherFormInput>({
@@ -84,7 +103,7 @@ export default function TeacherFormScreen() {
   }, [isEdit, detailQuery.data, reset]);
 
   const handleBack = React.useCallback(async () => {
-    if (!formState.isDirty) {
+    if (!isDirty) {
       router.back();
       return;
     }
@@ -98,11 +117,11 @@ export default function TeacherFormScreen() {
       cancelLabel: t('discard.cancel', { defaultValue: 'Keep editing' }),
     });
     if (discard) router.back();
-  }, [formState.isDirty, t, confirm]);
+  }, [isDirty, t, confirm]);
 
   React.useEffect(() => {
     const onBackPress = () => {
-      if (formState.isDirty) {
+      if (isDirty) {
         handleBack();
         return true; // consume — we handle navigation inside the Alert
       }
@@ -110,16 +129,16 @@ export default function TeacherFormScreen() {
     };
     const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
     return () => sub.remove();
-  }, [formState.isDirty, handleBack]);
+  }, [isDirty, handleBack]);
 
   const onSubmit = async (data: TeacherFormInput) => {
     // Build DTO — strip empty optionals so the server treats them as omitted.
     const payload: CreateTeacherDTO = {
       name: data.name,
       email: data.email,
-      phone: data.phone,
       designation: data.designation,
       date_of_joining: data.date_of_joining,
+      ...(data.phone ? { phone: data.phone } : {}),
       ...(data.department ? { department: data.department } : {}),
       ...(data.qualification ? { qualification: data.qualification } : {}),
     };
@@ -127,9 +146,9 @@ export default function TeacherFormScreen() {
     try {
       if (isEdit) {
         // Only send fields the user actually changed; never re-send date_of_joining from this UI.
-        const dirtyFields = formState.dirtyFields as Record<string, boolean>;
+        const dirty = dirtyFields as Record<string, boolean>;
         const partial: UpdateTeacherDTO = {};
-        (Object.keys(dirtyFields) as (keyof TeacherFormInput)[]).forEach((key) => {
+        (Object.keys(dirty) as (keyof TeacherFormInput)[]).forEach((key) => {
           if (key === 'date_of_joining') return;
           const v = (data as Record<string, unknown>)[key];
           if (v !== '' && v !== undefined) {
@@ -143,6 +162,7 @@ export default function TeacherFormScreen() {
           return;
         }
         await updateMutation.mutateAsync(partial);
+        toast.success(t('detail.updated', { defaultValue: 'Teacher updated successfully' }));
         router.back();
       } else {
         const result = await createMutation.mutateAsync(payload);
@@ -175,6 +195,9 @@ export default function TeacherFormScreen() {
           }
           navigateToDetail();
         } else {
+          // No email was given, so there is no account/credentials dialog to
+          // read — the toast is this path's only success acknowledgement.
+          toast.success(t('list.createdSimple', { defaultValue: 'Teacher created successfully' }));
           router.replace({
             pathname: '/(protected)/teachers/[id]',
             params: { id: created.id },
@@ -251,8 +274,10 @@ export default function TeacherFormScreen() {
             control={control}
             name="phone"
             label={t('field.phone', { defaultValue: 'Phone' })}
-            keyboardType="phone-pad"
+            keyboardType="number-pad"
             autoComplete="tel"
+            maxLength={PHONE_NUMBER_LENGTH}
+            transform={sanitizePhoneNumberInput}
           />
         </FormSection>
 
@@ -263,11 +288,15 @@ export default function TeacherFormScreen() {
             label={t('field.designation', { defaultValue: 'Designation' })}
             autoCapitalize="words"
           />
-          <FormField
+          <FormSelectSheet
             control={control}
             name="department"
             label={t('field.department', { defaultValue: 'Department' })}
-            autoCapitalize="words"
+            options={departmentOptions}
+            allowEmpty
+            emptyLabel={t('field.departmentNone', { defaultValue: 'No department' })}
+            placeholder={t('field.departmentNone', { defaultValue: 'No department' })}
+            disabled={departmentsQuery.isLoading}
           />
           <FormField
             control={control}
