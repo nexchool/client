@@ -12,6 +12,7 @@ import { AuthTrustFooter } from '@/modules/auth/components/AuthTrustFooter';
 import { EmailPasswordForm } from '@/modules/auth/components/EmailPasswordForm';
 import { MobilePinForm } from '@/modules/auth/components/MobilePinForm';
 import { MobileOtpForm } from '@/modules/auth/components/MobileOtpForm';
+import { AuthErrorBanner } from '@/modules/auth/components/AuthErrorBanner';
 import { usePublishedAuthMethods } from '@/modules/auth/hooks/usePublishedAuthMethods';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 import { didSessionExpire } from '@/common/services/sessionExpiry';
@@ -41,7 +42,7 @@ export default function LoginScreen() {
   // hides an option rather than enforcing a rule. `loaded` distinguishes
   // "still asking" from "asked and this school offers nothing extra" — see
   // `usePublishedAuthMethods`.
-  const { allows, methods, branding, loaded } = usePublishedAuthMethods();
+  const { allows, methods, branding, loaded, loginRestricted } = usePublishedAuthMethods();
   const [mode, setMode] = useState<Mode>('home');
 
   const { isAuthenticated, mustResetPassword, pendingTenantChoice, loginWithTenant, clearPendingTenantChoice } =
@@ -195,6 +196,21 @@ export default function LoginScreen() {
             }}
           >
             <AuthCard>
+              {/* Shown to every visitor, not just non-admins — this response
+               * is public and asked before anyone has identified themselves,
+               * so the app cannot yet tell an admin from anyone else. The
+               * form underneath stays fully usable: an admin must still be
+               * able to sign in and reach the subscription screen; the
+               * server is the actual gate for everyone else (see
+               * mapLoginApiError's `subscriptionSuspended` branch for what a
+               * blocked submission gets told). */}
+              {loaded && loginRestricted ? (
+                <AuthErrorBanner
+                  message={t('loginRestricted')}
+                  style={{ marginBottom: spacing.md }}
+                />
+              ) : null}
+
               {!loaded ? (
                 // Rendering the email form here (the old behaviour) is what made
                 // an OTP-only school visibly swap forms once its policy landed —

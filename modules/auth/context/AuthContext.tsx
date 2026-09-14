@@ -53,8 +53,13 @@ import {
   registerPasswordResetRequiredHandler,
   resetPasswordResetRequired,
 } from "@/common/services/passwordResetRequired";
+import {
+  registerTenantSuspendedHandler,
+  resetTenantSuspendedNotice,
+} from "@/common/services/tenantSuspended";
 import { API_ENDPOINTS } from "@/common/constants/api";
 import * as PERMS from "@/modules/permissions/constants/permissions";
+import { resolveUiRole, UI_ROLE } from "@/common/constants/uiRoles";
 import {
   logPushRegistrationOutcome,
   registerDeviceForPushNotifications,
@@ -385,6 +390,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     // password-reset signal: this session may be a different account.
     resetSessionExpiry();
     resetPasswordResetRequired();
+    resetTenantSuspendedNotice();
     // This school may be branded differently from the last one signed in on
     // this phone; re-read before the first screen paints.
     notifyThemeRefresh();
@@ -579,6 +585,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     // nothing that changes between renders, and re-registering per render
     // would race the unsubscribe.
   }, []);
+
+  // The tenant middleware refuses a suspended school's traffic for every
+  // role alike (it has no notion of who is asking), but the two roles this
+  // app cares about here get different treatment: an admin is meant to keep
+  // working from the subscription screen (`app/(protected)/_layout.tsx`
+  // redirects them there on its own), so only a non-admin — who has no way
+  // to act on a suspension — is signed out. Re-registered on `permissions`
+  // change so the closure's role check is never answering with a stale
+  // value from before the last profile refresh.
+  useEffect(() => {
+    return registerTenantSuspendedHandler(() => {
+      if (resolveUiRole(permissions) === UI_ROLE.ADMIN) return;
+      void (async () => {
+        await clearSession();
+        router.replace("/(auth)/login");
+      })();
+    });
+    // `clearSession` only touches values stable across renders (state
+    // setters and the query client, same as the expiry handler above), so
+    // `permissions` is the only dependency this closure actually needs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [permissions]);
 
   /**
    * Whether the school runs this module.

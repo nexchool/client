@@ -8,6 +8,7 @@ import { AppIcon } from '@/common/components/AppIcon';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 import { useUiRole } from '@/modules/permissions/hooks/useUiRole';
 import { useUnreadNotificationsBadge } from '@/modules/notifications/hooks/useNotifications';
+import { useSubscriptionLock } from '@/modules/subscription/hooks/useSubscriptionLock';
 
 type Props = {
   onMenuPress: () => void;
@@ -18,7 +19,13 @@ export function AppHeader({ onMenuPress }: Props) {
   const insets = useSafeAreaInsets();
   const { user, isFeatureEnabled, tenantName } = useAuth();
   const { isAdmin, isTeacher } = useUiRole();
-  const showNotifBadge = isFeatureEnabled('notifications');
+  // Suspended: this bar is all a locked-out admin sees of the app chrome, so
+  // its only job is to show which school this is. The menu, search and
+  // notifications icons each lead somewhere the redirect in
+  // `app/(protected)/_layout.tsx` immediately bounces back out of — showing
+  // them would be an affordance with nothing behind it.
+  const locked = useSubscriptionLock();
+  const showNotifBadge = !locked && isFeatureEnabled('notifications');
   const unreadBadge = useUnreadNotificationsBadge(showNotifBadge);
   const unreadCount = unreadBadge.data?.length ?? 0;
 
@@ -28,7 +35,7 @@ export function AppHeader({ onMenuPress }: Props) {
     tenantName ??
     'Nexchool';
 
-  const showSearch = (isAdmin || isTeacher) && isFeatureEnabled('search');
+  const showSearch = !locked && (isAdmin || isTeacher) && isFeatureEnabled('search');
 
   return (
     <>
@@ -54,22 +61,24 @@ export function AppHeader({ onMenuPress }: Props) {
       >
         <View style={[styles.row, { paddingTop: spacing.md }]}>
           <View style={[styles.left, { gap: 12 }]}>
-            <Pressable
-              onPress={onMenuPress}
-              hitSlop={8}
-              style={({ pressed }) => [
-                styles.iconBtn,
-                {
-                  backgroundColor: pressed ? palette.surfaceContainer : 'transparent',
-                  borderRadius: radius.full,
-                  transform: [{ scale: pressed ? 0.95 : 1 }],
-                },
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel="Open menu"
-            >
-              <AppIcon name="menu" size="lg" color="onSurfaceVariant" />
-            </Pressable>
+            {locked ? null : (
+              <Pressable
+                onPress={onMenuPress}
+                hitSlop={8}
+                style={({ pressed }) => [
+                  styles.iconBtn,
+                  {
+                    backgroundColor: pressed ? palette.surfaceContainer : 'transparent',
+                    borderRadius: radius.full,
+                    transform: [{ scale: pressed ? 0.95 : 1 }],
+                  },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel="Open menu"
+              >
+                <AppIcon name="menu" size="lg" color="onSurfaceVariant" />
+              </Pressable>
+            )}
             <Text
               variant="headlineMd"
               color="primary"
@@ -100,33 +109,35 @@ export function AppHeader({ onMenuPress }: Props) {
                 <AppIcon name="search-outline" size="lg" color="onSurfaceVariant" />
               </Pressable>
             ) : null}
-            <Pressable
-              onPress={() => router.push('/(protected)/notifications')}
-              hitSlop={8}
-              style={({ pressed }) => [
-                styles.iconBtn,
-                {
-                  backgroundColor: pressed ? palette.surfaceContainer : 'transparent',
-                  borderRadius: radius.full,
-                  transform: [{ scale: pressed ? 0.95 : 1 }],
-                },
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel="Notifications"
-            >
-              <AppIcon name="notifications-outline" size="lg" color="onSurfaceVariant" />
-              {unreadCount > 0 ? (
-                <View
-                  style={[
-                    styles.dot,
-                    {
-                      backgroundColor: palette.error,
-                      borderColor: palette.surface,
-                    },
-                  ]}
-                />
-              ) : null}
-            </Pressable>
+            {locked ? null : (
+              <Pressable
+                onPress={() => router.push('/(protected)/notifications')}
+                hitSlop={8}
+                style={({ pressed }) => [
+                  styles.iconBtn,
+                  {
+                    backgroundColor: pressed ? palette.surfaceContainer : 'transparent',
+                    borderRadius: radius.full,
+                    transform: [{ scale: pressed ? 0.95 : 1 }],
+                  },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel="Notifications"
+              >
+                <AppIcon name="notifications-outline" size="lg" color="onSurfaceVariant" />
+                {unreadCount > 0 ? (
+                  <View
+                    style={[
+                      styles.dot,
+                      {
+                        backgroundColor: palette.error,
+                        borderColor: palette.surface,
+                      },
+                    ]}
+                  />
+                ) : null}
+              </Pressable>
+            )}
           </View>
         </View>
       </View>

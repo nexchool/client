@@ -21,6 +21,7 @@ import enTransport from "./resources/en/transport.json";
 import enHostel from "./resources/en/hostel.json";
 import enSubjects from "./resources/en/subjects.json";
 import enAudit from "./resources/en/audit.json";
+import enSubscription from "./resources/en/subscription.json";
 import guCommon from "./resources/gu/common.json";
 import guAuth from "./resources/gu/auth.json";
 import guSettings from "./resources/gu/settings.json";
@@ -44,6 +45,7 @@ import guTransport from "./resources/gu/transport.json";
 import guHostel from "./resources/gu/hostel.json";
 import guSubjects from "./resources/gu/subjects.json";
 import guAudit from "./resources/gu/audit.json";
+import guSubscription from "./resources/gu/subscription.json";
 import hiCommon from "./resources/hi/common.json";
 import hiAuth from "./resources/hi/auth.json";
 import hiSettings from "./resources/hi/settings.json";
@@ -67,6 +69,7 @@ import hiTransport from "./resources/hi/transport.json";
 import hiHostel from "./resources/hi/hostel.json";
 import hiSubjects from "./resources/hi/subjects.json";
 import hiAudit from "./resources/hi/audit.json";
+import hiSubscription from "./resources/hi/subscription.json";
 
 export const LANGUAGE_STORAGE_KEY = "@school_erp_app_language";
 
@@ -100,6 +103,7 @@ export const I18N_NAMESPACES = [
   "hostel",
   "subjects",
   "audit",
+  "subscription",
 ] as const;
 export type I18nNamespace = (typeof I18N_NAMESPACES)[number];
 
@@ -128,6 +132,7 @@ export const resources = {
     hostel: enHostel,
     subjects: enSubjects,
     audit: enAudit,
+    subscription: enSubscription,
   },
   gu: {
     common: guCommon,
@@ -153,6 +158,7 @@ export const resources = {
     hostel: guHostel,
     subjects: guSubjects,
     audit: guAudit,
+    subscription: guSubscription,
   },
   hi: {
     common: hiCommon,
@@ -178,5 +184,6 @@ export const resources = {
     hostel: hiHostel,
     subjects: hiSubjects,
     audit: hiAudit,
+    subscription: hiSubscription,
   },
 } as const;
