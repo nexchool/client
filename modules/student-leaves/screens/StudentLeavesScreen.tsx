@@ -13,11 +13,17 @@ import { useMyStudentLeaves } from '../hooks/useStudentLeaves';
 import { StudentLeaveRow } from '../components/StudentLeaveRow';
 import type { LeaveStatus, StudentLeave } from '../types';
 
-type Filter = 'all' | LeaveStatus;
+/**
+ * `pending` is not a stored status — it is the word a school uses for both
+ * waiting stages, and the API expands it. Sending `pending_class_teacher`
+ * here meant a request that had moved on to the principal vanished from the
+ * applicant's own list while it was very much alive.
+ */
+type Filter = 'all' | 'pending' | LeaveStatus;
 
 const FILTERS: { value: Filter; label: string }[] = [
   { value: 'all', label: 'All' },
-  { value: 'pending_class_teacher', label: 'Pending' },
+  { value: 'pending', label: 'Pending' },
   { value: 'approved', label: 'Approved' },
   { value: 'rejected', label: 'Rejected' },
   { value: 'cancelled', label: 'Cancelled' },

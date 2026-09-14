@@ -114,5 +114,8 @@
   },
   "search": {
     "placeholder": "Search by name or admission no."
+  },
+  "filter": {
+    "pending": "Pending"
   }
 }

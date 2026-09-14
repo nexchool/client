@@ -114,5 +114,8 @@
   },
   "search": {
     "placeholder": "નામ કે પ્રવેશ નંબરથી શોધો"
+  },
+  "filter": {
+    "pending": "બાકી"
   }
 }
