@@ -4,9 +4,10 @@ import { FlatList, Pressable, RefreshControl, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
-import { Text } from '@/common/components/Text';
 import { AppIcon } from '@/common/components/AppIcon';
 import { EmptyState } from '@/common/components/EmptyState';
+import { PageHeader } from '@/common/components/PageHeader';
+import { Skeleton } from '@/common/components/Skeleton';
 import { FilterChips } from '@/common/components/FilterChips';
 import { useMyStudentLeaves } from '../hooks/useStudentLeaves';
 import { StudentLeaveRow } from '../components/StudentLeaveRow';
@@ -47,9 +48,11 @@ export default function StudentLeavesScreen() {
 
   return (
     <View style={{ flex: 1, paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg }}>
-      <Text variant="headlineLg" color="onSurface">
-        {t('list.title', { defaultValue: 'My leaves' })}
-      </Text>
+      <PageHeader
+        title={t('list.title', { defaultValue: 'My leaves' })}
+        noHorizontalPadding
+        divider={false}
+      />
 
       <View style={{ marginTop: spacing.md }}>
         <FilterChips
@@ -69,13 +72,25 @@ export default function StudentLeavesScreen() {
         renderItem={({ item }) => <StudentLeaveRow leave={item} onPress={handleRowPress} />}
         ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
         ListEmptyComponent={
-          !isLoading ? (
+          isLoading ? (
+            // Three card-shaped placeholders, so the first load reads as
+            // "loading" rather than as "you have never applied for leave".
+            <View style={{ gap: spacing.sm }}>
+              {[0, 1, 2].map((i) => (
+                <Skeleton key={i} width="100%" height={120} radius={radius.xl} />
+              ))}
+            </View>
+          ) : (
             <EmptyState
               icon={<AppIcon name="calendar-outline" size="xl" color="onSurfaceVariant" />}
               title={t('list.empty.title', { defaultValue: 'No leaves yet' })}
               description={t('list.empty.body', { defaultValue: 'When you apply for a leave, it will show up here.' })}
+              action={{
+                label: t('list.newA11y', { defaultValue: 'Apply for leave' }),
+                onPress: () => router.push('/(protected)/student-leaves/new' as never),
+              }}
             />
-          ) : null
+          )
         }
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
         showsVerticalScrollIndicator={false}

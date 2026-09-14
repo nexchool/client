@@ -8,8 +8,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
 
 import { useTheme } from '@/common/theme';
-import { Text } from '@/common/components/Text';
-import { AppIcon } from '@/common/components/AppIcon';
 import { Button } from '@/common/components/Button';
 import { Link } from '@/common/components/Link';
 import { Skeleton } from '@/common/components/Skeleton';
@@ -71,7 +69,7 @@ export default function StudentLeaveFormScreen() {
     } else {
       router.back();
     }
-  }, [formState.isDirty, t]);
+  }, [formState.isDirty, t, confirm]);
 
   React.useEffect(() => {
     const onBack = () => {

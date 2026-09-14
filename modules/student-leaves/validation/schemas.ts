@@ -25,3 +25,13 @@ export const createStudentLeaveSchema = z
   );
 
 export type CreateStudentLeaveInput = z.infer<typeof createStudentLeaveSchema>;
+
+export const cancelStudentLeaveSchema = z.object({
+  reason: z
+    .string()
+    .trim()
+    .min(1, 'Reason is required')
+    .max(500, 'Reason is too long'),
+});
+
+export type CancelStudentLeaveInput = z.infer<typeof cancelStudentLeaveSchema>;

@@ -37,3 +37,23 @@ export const HALF_DAY_OPTIONS: SelectOption[] = [
   { value: 'am', label: 'Morning' },
   { value: 'pm', label: 'Afternoon' },
 ];
+
+/**
+ * The i18n key naming a status, in the school's own words.
+ *
+ * One place, because the label was written out twice in English — once in the
+ * row and once on the detail screen — so a Gujarati-medium school read
+ * "Pending admin" in the middle of an otherwise translated screen, and the two
+ * copies could drift.
+ *
+ * The wording is what a school says, not what the column stores:
+ * `pending_class_teacher` is "With class teacher", not "Pending".
+ */
+export function statusLabelKey(status: LeaveStatus): string {
+  return `status.${status}`;
+}
+
+/** Why a row is in front of a head — the same vocabulary the server sends. */
+export function queueReasonKey(reason: string): string {
+  return `queueReason.${reason}`;
+}

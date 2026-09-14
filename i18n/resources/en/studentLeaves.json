@@ -1,6 +1,14 @@
 {
   "back": "Back",
-  "cancel": "Cancel",
+  "cancel": {
+    "title": "Request cancellation",
+    "body": "Your class teacher will be asked to approve the cancellation.",
+    "reasonLabel": "Reason for cancellation",
+    "reasonPlaceholder": "Plans changed",
+    "dismiss": "Dismiss",
+    "submit": "Send request",
+    "error": "Could not submit"
+  },
   "list": {
     "title": "My leaves",
     "newA11y": "Apply for leave",
@@ -13,10 +21,13 @@
     "title": "Student leaves",
     "tabNew": "New requests",
     "tabCancel": "Cancellation requests",
-    "adminBanner": "Showing requests where the class teacher is currently on leave.",
     "empty": {
       "title": "All clear",
       "body": "No requests need your attention right now."
+    },
+    "noMatch": {
+      "title": "No matching requests",
+      "body": "No request matches that name or admission number."
     }
   },
   "detail": {
@@ -45,15 +56,6 @@
     "reason": "Reason",
     "reasonPlaceholder": "Describe the reason for leave"
   },
-  "cancel": {
-    "title": "Request cancellation",
-    "body": "Your class teacher will be asked to approve the cancellation.",
-    "reasonLabel": "Reason for cancellation",
-    "reasonPlaceholder": "Plans changed",
-    "dismiss": "Dismiss",
-    "submit": "Send request",
-    "error": "Could not submit"
-  },
   "actions": {
     "approve": "Approve",
     "reject": "Reject",
@@ -80,5 +82,37 @@
       "title": "Could not submit",
       "generic": "Please try again."
     }
+  },
+  "status": {
+    "pending_class_teacher": "With class teacher",
+    "pending_admin": "With principal",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "cancelled": "Cancelled"
+  },
+  "applicant": {
+    "title": "Who applied",
+    "admissionNumber": "Admission no.",
+    "rollNumber": "Roll no.",
+    "class": "Class",
+    "campus": "Campus",
+    "medium": "Medium",
+    "guardian": "Guardian",
+    "call": "Call guardian"
+  },
+  "trail": {
+    "title": "Approvals",
+    "classTeacher": "Class teacher",
+    "principal": "Principal",
+    "awaiting": "Awaiting",
+    "notNeeded": "Not required"
+  },
+  "queueReason": {
+    "awaiting_head": "Needs your approval",
+    "teacher_away": "Class teacher is away",
+    "no_class_teacher": "Section has no class teacher"
+  },
+  "search": {
+    "placeholder": "Search by name or admission no."
   }
 }

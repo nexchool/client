@@ -1,11 +1,14 @@
 // client/modules/student-leaves/components/StudentLeaveRow.tsx
 import React from 'react';
 import { View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/common/theme';
 import { Text } from '@/common/components/Text';
 import { AppIcon } from '@/common/components/AppIcon';
 import { PressScale } from '@/common/components/PressScale';
-import { statusAccent } from '../constants';
+import { StatusPill } from '@/common/components/StatusPill';
+import { formatDate } from '@/common/utils/datetime';
+import { statusAccent, statusLabelKey } from '../constants';
 import type { StudentLeave } from '../types';
 
 type Props = {
@@ -14,17 +17,14 @@ type Props = {
   showStudentName?: boolean;
 };
 
-const STATUS_LABEL: Record<StudentLeave['status'], string> = {
-  pending_class_teacher: 'Pending teacher',
-  pending_admin: 'Pending admin',
-  approved: 'Approved',
-  rejected: 'Rejected',
-  cancelled: 'Cancelled',
-};
-
 export function StudentLeaveRow({ leave, onPress, showStudentName }: Props) {
+  const { t } = useTranslation('studentLeaves');
   const { palette, spacing, radius, elevation } = useTheme();
   const accent = statusAccent(leave.status);
+
+  // Calendar dates go through the school clock. `new Date(iso)` on a
+  // `YYYY-MM-DD` renders the day before for anyone west of the school.
+  const dateRange = `${formatDate(leave.start_date)} – ${formatDate(leave.end_date)}`;
 
   return (
     <PressScale
@@ -45,19 +45,7 @@ export function StudentLeaveRow({ leave, onPress, showStudentName }: Props) {
         <Text variant="labelMd" color="onSurface" style={{ textTransform: 'capitalize' }}>
           {leave.leave_type}
         </Text>
-        <View
-          style={{
-            backgroundColor: palette.surfaceContainer,
-            paddingHorizontal: spacing.sm,
-            paddingVertical: spacing.xs,
-            borderRadius: radius.full,
-            marginLeft: spacing.sm,
-          }}
-        >
-          <Text variant="labelSm" color={accent}>
-            {STATUS_LABEL[leave.status]}
-          </Text>
-        </View>
+        <StatusPill label={t(statusLabelKey(leave.status))} tone={accent} />
       </View>
       {showStudentName && leave.student_name ? (
         <Text variant="bodyMd" color="onSurface">
@@ -65,7 +53,7 @@ export function StudentLeaveRow({ leave, onPress, showStudentName }: Props) {
         </Text>
       ) : null}
       <Text variant="labelSm" color="onSurfaceVariant">
-        {leave.start_date} – {leave.end_date}
+        {dateRange}
         {leave.half_day ? ` (${leave.half_day.toUpperCase()})` : ''}
       </Text>
       <Text variant="bodyMd" color="onSurfaceVariant" numberOfLines={2}>
@@ -75,7 +63,9 @@ export function StudentLeaveRow({ leave, onPress, showStudentName }: Props) {
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
           <AppIcon name="time-outline" size="sm" color="warning" />
           <Text variant="labelSm" color="warning">
-            Cancellation pending
+            {t('detail.cancelPending', {
+              defaultValue: 'Cancellation is awaiting class teacher review.',
+            })}
           </Text>
         </View>
       ) : null}
