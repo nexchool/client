@@ -13,6 +13,7 @@
   "languageDropdownHint": "Opens a list of available languages",
   "sections": {
     "preferences": "Preferences",
+    "account": "Account",
     "support": "Support & legal",
     "about": "About"
   },

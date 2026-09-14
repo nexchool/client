@@ -17,6 +17,7 @@ import { LanguageSheet, currentLanguageLabel } from "@/common/components/Languag
 import { AppIcon } from "@/common/components/AppIcon";
 import { PageHeader } from "@/common/components/PageHeader";
 import { ProfileActionRow } from "@/modules/profile/components/ProfileActionRow";
+import { useUiRole } from "@/modules/permissions/hooks/useUiRole";
 import { BiometricUnlockRow } from "@/modules/auth/components/BiometricUnlockRow";
 import {
   getPushNotificationsPreference,
@@ -41,7 +42,8 @@ const PRIVACY_URL = "https://nexchool.in/privacy";
 export default function SettingsScreen() {
   const router = useRouter();
   const { palette, spacing } = useTheme();
-  const { t } = useTranslation(["navigation", "settings", "common", "profile"]);
+  const { t } = useTranslation(["navigation", "settings", "common", "profile", "subscription"]);
+  const { isAdmin } = useUiRole();
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(true);
@@ -160,6 +162,22 @@ export default function SettingsScreen() {
             </View>
           }
         />
+
+        {/* ACCOUNT — billing, admin only. Everyone else has no subscription
+            to manage: mobile keeps only an admin able to act on one signed
+            in while the school is suspended (see AuthContext's tenant-
+            suspended handler), and this is how they check in voluntarily
+            otherwise. */}
+        {isAdmin ? (
+          <>
+            {sectionHeading("settings:sections.account")}
+            <ProfileActionRow
+              icon="card-outline"
+              label={t("subscription:title")}
+              onPress={() => router.push("/(protected)/subscription" as never)}
+            />
+          </>
+        ) : null}
 
         {/* SUPPORT & LEGAL */}
         {sectionHeading("settings:sections.support")}

@@ -10,6 +10,13 @@ export function mapLoginApiError(err: unknown): string {
     if (err.status === 0) {
       return i18n.t("auth:errors.network");
     }
+    // A suspended school blocking a non-admin's sign-in attempt — the same
+    // message the login screen already shows on load (see `loginRestricted`
+    // there), repeated here for whoever submits anyway without having seen
+    // it, or whose branding response was cached before the suspension.
+    if (err.data?.error === "SubscriptionSuspended") {
+      return i18n.t("auth:errors.subscriptionSuspended");
+    }
     const msg = err.message ?? "";
     if (msg === "Failed to parse response") {
       return i18n.t("auth:errors.parseError");

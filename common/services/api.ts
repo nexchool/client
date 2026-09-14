@@ -6,6 +6,7 @@ import {
   PASSWORD_RESET_REQUIRED_ERROR,
   notifyPasswordResetRequired,
 } from "@/common/services/passwordResetRequired";
+import { notifyTenantSuspended } from "@/common/services/tenantSuspended";
 import {
   getAccessToken,
   getTenantId,
@@ -64,6 +65,24 @@ const noteIfPasswordResetRequired = async (response: Response): Promise<void> =>
   } catch {
     // Not JSON after all, or the body could not be cloned. Nothing to read,
     // and the caller's response is untouched either way.
+  }
+};
+
+/**
+ * Read a 403 body to see whether it is the tenant middleware refusing a
+ * suspended school, the same way `noteIfPasswordResetRequired` reads it for
+ * a forced password change — see `tenantSuspended.ts` for what happens next.
+ */
+const noteIfTenantSuspended = async (response: Response): Promise<void> => {
+  if (!response.headers.get("content-type")?.includes("application/json")) return;
+  try {
+    const body: unknown = await response.clone().json();
+    const error = (body as { error?: unknown } | null)?.error;
+    if (error === "TenantSuspended") {
+      notifyTenantSuspended();
+    }
+  } catch {
+    // Not JSON after all, or the body could not be cloned.
   }
 };
 
@@ -149,6 +168,7 @@ const apiRequest = async (
     // there first; this catches whatever they miss.
     if (response.status === 403) {
       await noteIfPasswordResetRequired(response);
+      await noteIfTenantSuspended(response);
     }
 
     // Every /api/* response says which module set it was answered under. A

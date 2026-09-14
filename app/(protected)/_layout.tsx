@@ -1,11 +1,12 @@
 import { useEffect } from "react";
-import { useRouter } from "expo-router";
+import { useRouter, usePathname } from "expo-router";
 import { useAuth } from "@/modules/auth/hooks/useAuth";
 import MainLayout from "@/common/components/MainLayout";
 import { BiometricUnlockOffer } from "@/modules/auth/components/BiometricUnlockOffer";
 import { AcademicYearProvider } from "@/modules/academics/context/AcademicYearContext";
 import { useNotificationResponseNavigation } from "@/modules/notifications/hooks/useNotificationResponseNavigation";
 import { useNotificationQuerySync } from "@/modules/notifications/hooks/useNotificationQuerySync";
+import { useSubscriptionLock } from "@/modules/subscription/hooks/useSubscriptionLock";
 
 function NotificationResponseBridge() {
   const { isFeatureEnabled } = useAuth();
@@ -16,9 +17,13 @@ function NotificationResponseBridge() {
   return null;
 }
 
+const SUBSCRIPTION_ROUTE = "/(protected)/subscription";
+
 export default function ProtectedLayout() {
   const { isAuthenticated, isLoading, mustResetPassword, tenantKnown } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const suspended = useSubscriptionLock();
 
   useEffect(() => {
     if (isLoading) return;
@@ -42,10 +47,25 @@ export default function ProtectedLayout() {
     // refresh that follows corrects it either way.
     if (mustResetPassword) {
       router.replace("/(auth)/set-password");
+      return;
     }
-  }, [isAuthenticated, isLoading, mustResetPassword, tenantKnown, router]);
 
-  if (isLoading || !isAuthenticated || mustResetPassword) {
+    // A sticky lockout while suspended, the same shape as admin-web's: the
+    // way off this screen is paying (which flips `subscription.status`) or
+    // signing out (see the row on the screen itself), not navigating away.
+    // Checked against `pathname` rather than fired unconditionally, or an
+    // admin already there would be replaced onto themselves on every render.
+    if (suspended && pathname !== "/subscription") {
+      router.replace(SUBSCRIPTION_ROUTE as never);
+    }
+  }, [isAuthenticated, isLoading, mustResetPassword, tenantKnown, suspended, pathname, router]);
+
+  if (
+    isLoading ||
+    !isAuthenticated ||
+    mustResetPassword ||
+    (suspended && pathname !== "/subscription")
+  ) {
     return null;
   }
 

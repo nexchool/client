@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { FontScaleCap, ContentMaxWidth, useTheme } from '@/common/theme';
 import { useUnreadNotificationsBadge } from '@/modules/notifications/hooks/useNotifications';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
+import { useSubscriptionLock } from '@/modules/subscription/hooks/useSubscriptionLock';
 
 type Tab = {
   key: 'home' | 'schedule' | 'notifications' | 'profile';
@@ -59,7 +60,12 @@ export function BottomTabBar() {
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
   const { isFeatureEnabled } = useAuth();
-  const showNotifBadge = isFeatureEnabled('notifications');
+  // Suspended: every tab here leads to a screen the redirect in
+  // `app/(protected)/_layout.tsx` immediately replaces with the subscription
+  // screen, so the bar has nothing left to offer — same reasoning as
+  // `AppHeader` hiding its own icons.
+  const locked = useSubscriptionLock();
+  const showNotifBadge = !locked && isFeatureEnabled('notifications');
   const unreadBadge = useUnreadNotificationsBadge(showNotifBadge);
   const unreadCount = unreadBadge.data?.length ?? 0;
 
@@ -70,6 +76,8 @@ export function BottomTabBar() {
       }
     }, [showNotifBadge, unreadBadge.refetch])
   );
+
+  if (locked) return null;
 
   const handlePress = (tab: Tab) => {
     const active = isTabActive(pathname, tab.route);

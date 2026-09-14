@@ -36,6 +36,7 @@ type AuthMethodsResponse = {
   logo_url?: string | null;
   tagline?: string | null;
   auth?: { methods?: string[] };
+  login_restricted?: boolean;
 };
 
 export type PublishedBranding = {
@@ -48,6 +49,11 @@ export function usePublishedAuthMethods() {
   const [methods, setMethods] = useState<string[]>([]);
   const [branding, setBranding] = useState<PublishedBranding | null>(null);
   const [loaded, setLoaded] = useState(false);
+  // Whether this school is suspended and mobile sign-in is closed to
+  // everyone but its admins — false rather than unknown while still
+  // loading, the same "safe failure" `methods`/`branding` already default
+  // to, so a slow or offline request never itself renders as a restriction.
+  const [loginRestricted, setLoginRestricted] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -67,6 +73,7 @@ export function usePublishedAuthMethods() {
           logoUrl: data?.logo_url?.trim() || null,
           tagline: data?.tagline?.trim() || null,
         });
+        setLoginRestricted(data?.login_restricted === true);
       } catch {
         // Offline, or a school with no policy row. Offering nothing extra —
         // and showing no borrowed identity — is the safe failure.
@@ -84,6 +91,7 @@ export function usePublishedAuthMethods() {
     methods,
     branding,
     loaded,
+    loginRestricted,
     allows: (method: string) => methods.includes(method),
   };
 }

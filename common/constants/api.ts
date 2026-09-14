@@ -61,6 +61,10 @@ export const API_ENDPOINTS = {
    * unauthenticated LOGOUT route deliberately only ever ends one session.
    */
   MY_SESSIONS: '/api/auth/sessions',
+  /** Status, term (dates/standing) and, for a holder of `subscription.read`, billing. Any authenticated role may call this — see server/modules/subscription/routes.py. */
+  SUBSCRIPTION_STATE: '/api/subscription/state',
+  /** This school's payment history. Needs `subscription.read`. */
+  SUBSCRIPTION_PAYMENTS: '/api/subscription/payments',
 } as const;
 
 /**
