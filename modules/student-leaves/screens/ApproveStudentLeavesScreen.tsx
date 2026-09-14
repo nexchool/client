@@ -34,16 +34,37 @@ export default function ApproveStudentLeavesScreen({
   const [tab, setTab] = useState<Tab>('new');
   const [search, setSearch] = useState('');
 
-  const teacherQuery = useTeacherQueue();
-  const adminQuery = useAdminFallbackQueue();
-  // Teacher view takes precedence if user is both a class teacher and an admin.
-  const active = isTeacher ? teacherQuery : adminQuery;
-  const isHeadView = !isTeacher && isAdmin;
+  // A head who also teaches a class has work in both queues, and
+  // `resolveUiRole` is mutually exclusive with Admin winning — so picking one
+  // queue by role hid a principal's own class-teacher requests from them
+  // entirely. Small schools where the principal holds a class are the common
+  // case, not the exception.
+  const teacherQuery = useTeacherQueue(isTeacher || isAdmin);
+  const adminQuery = useAdminFallbackQueue(isAdmin);
+  const isHeadView = isAdmin;
 
-  const queueRows = active.data;
+  const teacherRows = teacherQuery.data;
+  const adminRows = adminQuery.data;
+
+  // Either query may 403 for someone holding only one of the two permissions.
+  // That is not an error worth a screen for — it means "no work of that kind",
+  // which is why neither retries. A disabled query reports isLoading false, so
+  // this waits only on the ones that actually apply to this person.
+  const isLoading = teacherQuery.isLoading || adminQuery.isLoading;
+  const isRefetching = teacherQuery.isRefetching || adminQuery.isRefetching;
+  const refetch = () => {
+    teacherQuery.refetch();
+    adminQuery.refetch();
+  };
 
   const sections = useMemo(() => {
-    const all: StudentLeave[] = queueRows ?? [];
+    // The same leave can sit in both queues — a head standing in for an absent
+    // teacher whose class is also their own. Show it once.
+    const byId = new Map<string, StudentLeave>();
+    for (const leave of [...(teacherRows ?? []), ...(adminRows ?? [])]) {
+      byId.set(leave.id, leave);
+    }
+    const all: StudentLeave[] = [...byId.values()];
     const term = search.trim().toLowerCase();
     const matches = (leave: StudentLeave) => {
       if (!term) return true;
@@ -75,7 +96,7 @@ export default function ApproveStudentLeavesScreen({
       title: t(queueReasonKey(reason)),
       data: visible.filter((leave) => (leave.queue_reason ?? 'teacher_away') === reason),
     })).filter((section) => section.data.length > 0);
-  }, [queueRows, tab, search, isHeadView, t]);
+  }, [teacherRows, adminRows, tab, search, isHeadView, t]);
 
   const handleRowPress = (leave: StudentLeave) => {
     router.push({ pathname: '/(protected)/student-leaves/[id]', params: { id: leave.id } } as never);
@@ -122,7 +143,7 @@ export default function ApproveStudentLeavesScreen({
         />
       </View>
 
-      {active.isLoading ? (
+      {isLoading ? (
         <View style={{ gap: spacing.sm, marginTop: spacing.lg }}>
           {[0, 1, 2].map((i) => (
             <Skeleton key={i} width="100%" height={120} radius={radius.xl} />
@@ -168,7 +189,7 @@ export default function ApproveStudentLeavesScreen({
             />
           }
           refreshControl={
-            <RefreshControl refreshing={active.isRefetching} onRefresh={active.refetch} />
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
           }
           showsVerticalScrollIndicator={false}
           stickySectionHeadersEnabled={false}

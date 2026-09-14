@@ -74,9 +74,12 @@ export default function StudentLeaveDetailScreen() {
         }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Who applied — only somebody deciding the request is shown this, and
-            the server only sends it to them. */}
-        {leave.applicant ? <ApplicantCard applicant={leave.applicant} /> : null}
+        {/* Who applied. Only for somebody deciding the request — a student
+            reading their own leave does not need a card introducing them to
+            themselves. */}
+        {leave.applicant && (isTeacher || isAdmin) ? (
+          <ApplicantCard applicant={leave.applicant} />
+        ) : null}
 
         <DetailCard title={t('detail.cardTitle', { defaultValue: 'Leave details' })} accent={accent}>
           <DetailRow

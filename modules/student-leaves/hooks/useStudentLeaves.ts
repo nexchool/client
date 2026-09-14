@@ -42,17 +42,29 @@ export function useStudentLeave(id: string | undefined, enabled = true) {
   });
 }
 
-export function useTeacherQueue() {
+/**
+ * Requests waiting on the signed-in user as a class teacher.
+ *
+ * `enabled` because the endpoint requires `student.leave.approve.class`: a
+ * head who holds no class would otherwise fetch a 403 on every screen open.
+ */
+export function useTeacherQueue(enabled = true) {
   return useQuery({
     queryKey: studentLeavesKeys.teacherQueue(),
     queryFn: () => studentLeaveService.teacherQueue(),
+    enabled,
+    retry: false,
   });
 }
 
-export function useAdminFallbackQueue() {
+/** Requests waiting on the signed-in user as a head — the school's second
+ *  approval stage, plus cover for absent or missing class teachers. */
+export function useAdminFallbackQueue(enabled = true) {
   return useQuery({
     queryKey: studentLeavesKeys.adminQueue(),
     queryFn: () => studentLeaveService.adminQueue(),
+    enabled,
+    retry: false,
   });
 }
 
