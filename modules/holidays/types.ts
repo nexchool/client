@@ -1,15 +1,4 @@
-import type { Palette } from '@/common/theme';
-
 export type HolidayType = 'public' | 'school' | 'regional' | 'optional' | 'weekly_off';
-
-/** Palette token used to accent each holiday type (left stripe + badge). */
-export const HOLIDAY_TYPE_ACCENTS: Record<HolidayType, keyof Palette> = {
-  public: 'error',
-  school: 'primary',
-  regional: 'warning',
-  optional: 'onSurfaceVariant',
-  weekly_off: 'success',
-};
 
 export interface Holiday {
   id: string;
@@ -30,17 +19,4 @@ export interface Holiday {
   created_at: string;
   updated_at: string;
   warning?: string;
-}
-
-export interface CreateHolidayDTO {
-  name: string;
-  description?: string;
-  holiday_type: HolidayType;
-  // Non-recurring
-  start_date?: string;
-  end_date?: string;
-  // Recurring
-  is_recurring: boolean;
-  recurring_day_of_week?: number;
-  academic_year_id?: string;
 }

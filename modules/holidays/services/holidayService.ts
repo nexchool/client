@@ -1,5 +1,5 @@
-import { apiGet, apiPost, apiPut, apiDelete } from '@/common/services/api';
-import { Holiday, CreateHolidayDTO } from '../types';
+import { apiGet } from '@/common/services/api';
+import { Holiday } from '../types';
 
 interface ListHolidaysParams {
   academic_year_id?: string;
@@ -12,6 +12,10 @@ interface ListHolidaysParams {
   offset?: number;
 }
 
+/**
+ * Reads only. Holidays are created and edited on admin-web; mobile shows
+ * them inside the Academic Calendar, which is read-only.
+ */
 export const holidayService = {
   getHolidays: async (params: ListHolidaysParams = {}): Promise<Holiday[]> => {
     const qs = new URLSearchParams();
@@ -42,15 +46,4 @@ export const holidayService = {
     return apiGet<Holiday>(`/api/holidays/${id}`);
   },
 
-  createHoliday: async (data: CreateHolidayDTO): Promise<Holiday> => {
-    return apiPost<Holiday>('/api/holidays/', data);
-  },
-
-  updateHoliday: async (id: string, data: Partial<CreateHolidayDTO>): Promise<Holiday> => {
-    return apiPut<Holiday>(`/api/holidays/${id}`, data);
-  },
-
-  deleteHoliday: async (id: string): Promise<void> => {
-    await apiDelete(`/api/holidays/${id}`);
-  },
 };

@@ -31,15 +31,6 @@ export function useHolidays() {
     }
   }, []);
 
-  const deleteHoliday = useCallback(async (id: string, isRecurring: boolean) => {
-    await holidayService.deleteHoliday(id);
-    if (isRecurring) {
-      setRecurringHolidays((prev) => prev.filter((h) => h.id !== id));
-    } else {
-      setHolidays((prev) => prev.filter((h) => h.id !== id));
-    }
-  }, []);
-
   return {
     holidays,
     recurringHolidays,
@@ -47,6 +38,5 @@ export function useHolidays() {
     error,
     fetchHolidays,
     fetchRecurring,
-    deleteHoliday,
   };
 }

@@ -1,25 +1,12 @@
-import { useEffect } from 'react';
-import { useRouter } from 'expo-router';
-import { useAuth } from '@/modules/auth/hooks/useAuth';
-import HolidaysScreen from '@/modules/holidays/screens/HolidaysScreen';
+import { Redirect } from 'expo-router';
 
+/**
+ * Holidays folded into the Academic Calendar, which is the one read-only
+ * surface for closures on mobile — editing them is admin-web's job.
+ *
+ * Kept as a redirect rather than deleted: shortcuts, notification deep links
+ * and anyone's muscle memory still point here.
+ */
 export default function Page() {
-  const router = useRouter();
-  const { isFeatureEnabled } = useAuth();
-
-  // Holidays live in the academic calendar, and the API gates them behind it.
-  // A school that keeps its calendar elsewhere had this screen open to anyone
-  // who deep-linked or kept the shortcut — showing an empty list built from
-  // 403s rather than saying the module is off.
-  useEffect(() => {
-    if (!isFeatureEnabled('academic_calendar')) {
-      router.replace('/(protected)/home');
-    }
-  }, [isFeatureEnabled, router]);
-
-  if (!isFeatureEnabled('academic_calendar')) {
-    return null;
-  }
-
-  return <HolidaysScreen />;
+  return <Redirect href="/(protected)/academic-calendar" />;
 }

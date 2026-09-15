@@ -92,7 +92,9 @@ const ITEMS: readonly DrawerItem[] = [
   // student's, or a class the admin picked. A second entry would be the same
   // destination under a second name.
   { key: 'timetable', label: 'Timetable', icon: 'calendar-number-outline', iconActive: 'calendar-number', route: '/(protected)/timetable', roles: ['admin', 'teacher', 'student', 'parent'], flag: 'timetable', section: 'academics' },
-  { key: 'holidays', label: 'Holidays', icon: 'flag-outline', iconActive: 'flag', route: '/(protected)/holidays', roles: ['admin', 'teacher', 'student', 'parent'], flag: 'academic_calendar', section: 'academics' },
+  // Holidays are one layer of this screen, not a destination of their own —
+  // the standalone Holidays entry pointed at a list that has been folded in.
+  { key: 'academic-calendar', label: 'Academic Calendar', icon: 'calendar-outline', iconActive: 'calendar', route: '/(protected)/academic-calendar', roles: ['admin', 'teacher', 'student', 'parent'], flag: 'academic_calendar', section: 'academics' },
 
   // Operations
   { key: 'finance', label: 'Finance', icon: 'wallet-outline', iconActive: 'wallet', route: '/(protected)/finance', roles: ['admin', 'student'], flag: 'fees_management', section: 'operations' },
