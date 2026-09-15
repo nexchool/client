@@ -12,6 +12,7 @@ import enAttendance from "./resources/en/attendance.json";
 import enAnnouncements from "./resources/en/announcements.json";
 import enTeacherLeaves from "./resources/en/teacherLeaves.json";
 import enFinance from "./resources/en/finance.json";
+import enAcademicCalendar from "./resources/en/academicCalendar.json";
 import enHolidays from "./resources/en/holidays.json";
 import enNotifications from "./resources/en/notifications.json";
 import enSchedule from "./resources/en/schedule.json";
@@ -36,6 +37,7 @@ import guAttendance from "./resources/gu/attendance.json";
 import guAnnouncements from "./resources/gu/announcements.json";
 import guTeacherLeaves from "./resources/gu/teacherLeaves.json";
 import guFinance from "./resources/gu/finance.json";
+import guAcademicCalendar from "./resources/gu/academicCalendar.json";
 import guHolidays from "./resources/gu/holidays.json";
 import guNotifications from "./resources/gu/notifications.json";
 import guSchedule from "./resources/gu/schedule.json";
@@ -60,6 +62,7 @@ import hiAttendance from "./resources/hi/attendance.json";
 import hiAnnouncements from "./resources/hi/announcements.json";
 import hiTeacherLeaves from "./resources/hi/teacherLeaves.json";
 import hiFinance from "./resources/hi/finance.json";
+import hiAcademicCalendar from "./resources/hi/academicCalendar.json";
 import hiHolidays from "./resources/hi/holidays.json";
 import hiNotifications from "./resources/hi/notifications.json";
 import hiSchedule from "./resources/hi/schedule.json";
@@ -94,6 +97,7 @@ export const I18N_NAMESPACES = [
   "announcements",
   "teacherLeaves",
   "finance",
+  "academicCalendar",
   "holidays",
   "notifications",
   "schedule",
@@ -123,6 +127,7 @@ export const resources = {
     announcements: enAnnouncements,
     teacherLeaves: enTeacherLeaves,
     finance: enFinance,
+    academicCalendar: enAcademicCalendar,
     holidays: enHolidays,
     notifications: enNotifications,
     schedule: enSchedule,
@@ -149,6 +154,7 @@ export const resources = {
     announcements: guAnnouncements,
     teacherLeaves: guTeacherLeaves,
     finance: guFinance,
+    academicCalendar: guAcademicCalendar,
     holidays: guHolidays,
     notifications: guNotifications,
     schedule: guSchedule,
@@ -175,6 +181,7 @@ export const resources = {
     announcements: hiAnnouncements,
     teacherLeaves: hiTeacherLeaves,
     finance: hiFinance,
+    academicCalendar: hiAcademicCalendar,
     holidays: hiHolidays,
     notifications: hiNotifications,
     schedule: hiSchedule,

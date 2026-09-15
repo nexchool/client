@@ -1,0 +1,58 @@
+{
+  "screen": {
+    "title": "शैक्षणिक कैलेंडर"
+  },
+  "weeklyOff": "साप्ताहिक अवकाश",
+  "noEntries": "इस दिन कुछ निर्धारित नहीं है।",
+  "termStarts": "{{name}} शुरू होता है",
+  "termEnds": "{{name}} समाप्त होता है",
+  "grid": {
+    "previousMonth": "पिछला महीना",
+    "nextMonth": "अगला महीना"
+  },
+  "stats": {
+    "workingDays": "कार्यदिवस",
+    "holidays": "छुट्टियाँ",
+    "totalDays": "कुल दिन"
+  },
+  "legend": {
+    "holiday": "छुट्टी",
+    "vacation": "अवकाश",
+    "weeklyOff": "साप्ताहिक अवकाश",
+    "exam": "परीक्षा",
+    "event": "कार्यक्रम"
+  },
+  "holidayTypes": {
+    "public": "सार्वजनिक छुट्टी",
+    "national": "राष्ट्रीय छुट्टी",
+    "school": "स्कूल की छुट्टी",
+    "regional": "क्षेत्रीय छुट्टी",
+    "optional": "वैकल्पिक छुट्टी",
+    "vacation": "अवकाश",
+    "weekly_off": "साप्ताहिक अवकाश"
+  },
+  "examTypes": {
+    "unit_test": "इकाई परीक्षा",
+    "mid_term": "अर्धवार्षिक परीक्षा",
+    "final": "वार्षिक परीक्षा",
+    "pre_board": "प्री-बोर्ड",
+    "board": "बोर्ड परीक्षा",
+    "other": "परीक्षा"
+  },
+  "eventTypes": {
+    "activity": "गतिविधि",
+    "event": "कार्यक्रम",
+    "meeting": "बैठक",
+    "celebration": "उत्सव",
+    "training": "प्रशिक्षण",
+    "other": "कार्यक्रम"
+  },
+  "empty": {
+    "title": "अभी कोई कैलेंडर प्रकाशित नहीं",
+    "description": "आपके स्कूल ने इस वर्ष का शैक्षणिक कैलेंडर अभी प्रकाशित नहीं किया है।"
+  },
+  "errors": {
+    "loadFailed": "कैलेंडर लोड नहीं हो सका",
+    "retry": "फिर से प्रयास करें"
+  }
+}

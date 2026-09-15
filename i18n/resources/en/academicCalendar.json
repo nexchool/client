@@ -1,0 +1,58 @@
+{
+  "screen": {
+    "title": "Academic Calendar"
+  },
+  "weeklyOff": "Weekly off",
+  "noEntries": "Nothing scheduled on this day.",
+  "termStarts": "{{name}} begins",
+  "termEnds": "{{name}} ends",
+  "grid": {
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month"
+  },
+  "stats": {
+    "workingDays": "Working days",
+    "holidays": "Holidays",
+    "totalDays": "Total days"
+  },
+  "legend": {
+    "holiday": "Holiday",
+    "vacation": "Vacation",
+    "weeklyOff": "Weekly off",
+    "exam": "Exams",
+    "event": "Event"
+  },
+  "holidayTypes": {
+    "public": "Public holiday",
+    "national": "National holiday",
+    "school": "School holiday",
+    "regional": "Regional holiday",
+    "optional": "Optional holiday",
+    "vacation": "Vacation",
+    "weekly_off": "Weekly off"
+  },
+  "examTypes": {
+    "unit_test": "Unit test",
+    "mid_term": "Mid term",
+    "final": "Final",
+    "pre_board": "Pre-board",
+    "board": "Board",
+    "other": "Examination"
+  },
+  "eventTypes": {
+    "activity": "Activity",
+    "event": "Event",
+    "meeting": "Meeting",
+    "celebration": "Celebration",
+    "training": "Training",
+    "other": "Event"
+  },
+  "empty": {
+    "title": "No calendar published yet",
+    "description": "Your school has not published its academic calendar for this year."
+  },
+  "errors": {
+    "loadFailed": "Could not load the calendar",
+    "retry": "Try again"
+  }
+}

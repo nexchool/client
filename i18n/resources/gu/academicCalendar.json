@@ -1,0 +1,58 @@
+{
+  "screen": {
+    "title": "શૈક્ષણિક કેલેન્ડર"
+  },
+  "weeklyOff": "સાપ્તાહિક રજા",
+  "noEntries": "આ દિવસે કંઈ નિર્ધારિત નથી.",
+  "termStarts": "{{name}} શરૂ થાય છે",
+  "termEnds": "{{name}} પૂર્ણ થાય છે",
+  "grid": {
+    "previousMonth": "પાછલો મહિનો",
+    "nextMonth": "આગલો મહિનો"
+  },
+  "stats": {
+    "workingDays": "કાર્યદિવસો",
+    "holidays": "રજાઓ",
+    "totalDays": "કુલ દિવસો"
+  },
+  "legend": {
+    "holiday": "રજા",
+    "vacation": "વેકેશન",
+    "weeklyOff": "સાપ્તાહિક રજા",
+    "exam": "પરીક્ષા",
+    "event": "કાર્યક્રમ"
+  },
+  "holidayTypes": {
+    "public": "સાર્વજનિક રજા",
+    "national": "રાષ્ટ્રીય રજા",
+    "school": "શાળા રજા",
+    "regional": "પ્રાદેશિક રજા",
+    "optional": "વૈકલ્પિક રજા",
+    "vacation": "વેકેશન",
+    "weekly_off": "સાપ્તાહિક રજા"
+  },
+  "examTypes": {
+    "unit_test": "એકમ કસોટી",
+    "mid_term": "સત્રાંત પરીક્ષા",
+    "final": "વાર્ષિક પરીક્ષા",
+    "pre_board": "પ્રિ-બોર્ડ",
+    "board": "બોર્ડ પરીક્ષા",
+    "other": "પરીક્ષા"
+  },
+  "eventTypes": {
+    "activity": "પ્રવૃત્તિ",
+    "event": "કાર્યક્રમ",
+    "meeting": "બેઠક",
+    "celebration": "ઉજવણી",
+    "training": "તાલીમ",
+    "other": "કાર્યક્રમ"
+  },
+  "empty": {
+    "title": "હજુ કોઈ કેલેન્ડર પ્રકાશિત નથી",
+    "description": "તમારી શાળાએ આ વર્ષનું શૈક્ષણિક કેલેન્ડર હજુ પ્રકાશિત કર્યું નથી."
+  },
+  "errors": {
+    "loadFailed": "કેલેન્ડર લોડ થઈ શક્યું નથી",
+    "retry": "ફરી પ્રયાસ કરો"
+  }
+}
