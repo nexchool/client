@@ -1,4 +1,4 @@
-import { apiPost, ApiException } from "@/common/services/api";
+import { gql } from "@/common/services/graphql";
 
 /**
  * Campus / programme / grade / medium / academic-cycle reads — the same data
@@ -44,24 +44,6 @@ export interface AcademicCycle {
   startDate: string;
   endDate: string;
   cycleKind: string;
-}
-
-type GraphQLError = { message: string };
-type GraphQLReply<T> = { data?: T | null; errors?: GraphQLError[] };
-
-async function gql<T>(query: string, variables?: Record<string, unknown>): Promise<T> {
-  const reply = await apiPost<GraphQLReply<T>>("/api/graphql", {
-    query,
-    variables: variables ?? {},
-  });
-  const failure = reply.errors?.[0];
-  if (failure) {
-    throw new ApiException(failure.message || "Request failed");
-  }
-  if (reply.data === undefined || reply.data === null) {
-    throw new ApiException("The server returned no data.");
-  }
-  return reply.data;
 }
 
 const CAMPUSES = `query Campuses { campuses { id name code } }`;
