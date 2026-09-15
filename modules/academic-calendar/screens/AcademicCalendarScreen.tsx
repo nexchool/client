@@ -117,8 +117,8 @@ export default function AcademicCalendarScreen() {
     useCurrentCalendar();
 
   const today = schoolTodayIso();
-  const [selectedIso, setSelectedIso] = useState<string>(today);
-  const [month, setMonth] = useState<Date>(() => monthOf(today));
+  const [selectedIso, setSelectedIso] = useState<string | null>(null);
+  const [month, setMonth] = useState<Date | null>(null);
 
   const daysByIso = useMemo(() => {
     const map = new Map<string, CalendarDay>();
@@ -126,10 +126,24 @@ export default function AcademicCalendarScreen() {
     return map;
   }, [calendar]);
 
+  // Today, unless the year has not started or has ended — a school opening the
+  // app in May for a June year would otherwise land on an empty grid with
+  // every cell greyed out and no hint that the calendar is elsewhere.
+  const openingIso = useMemo(() => {
+    if (!calendar || calendar.days.length === 0) return today;
+    if (daysByIso.has(today)) return today;
+    const first = calendar.days[0].date;
+    const last = calendar.days[calendar.days.length - 1].date;
+    return today < first ? first : last;
+  }, [calendar, daysByIso, today]);
+
+  const activeIso = selectedIso ?? openingIso;
+  const activeMonth = month ?? monthOf(openingIso);
+
   const entries = useMemo(
     () =>
-      calendar ? entriesFor(selectedIso, daysByIso.get(selectedIso), calendar, t) : [],
-    [calendar, daysByIso, selectedIso, t]
+      calendar ? entriesFor(activeIso, daysByIso.get(activeIso), calendar, t) : [],
+    [calendar, daysByIso, activeIso, t]
   );
 
   const contentInset = {
@@ -183,7 +197,7 @@ export default function AcademicCalendarScreen() {
   const monthLabel = new Intl.DateTimeFormat(locale, {
     month: 'long',
     year: 'numeric',
-  }).format(month);
+  }).format(activeMonth);
   // Weekday initials taken from a known Sunday so the row starts where the
   // grid's leading blanks do (`Date.getDay()`, Sunday = 0).
   const weekdayFormat = new Intl.DateTimeFormat(locale, { weekday: 'narrow' });
@@ -194,7 +208,7 @@ export default function AcademicCalendarScreen() {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
-  }).format(new Date(`${selectedIso}T00:00:00`));
+  }).format(new Date(`${activeIso}T00:00:00`));
 
   const stats = [
     { value: calendar.summary?.workingDays ?? 0, label: t('stats.workingDays') },
@@ -226,10 +240,10 @@ export default function AcademicCalendarScreen() {
         </View>
 
         <CalendarMonthGrid
-          month={month}
+          month={activeMonth}
           onMonthChange={setMonth}
           daysByIso={daysByIso}
-          selectedIso={selectedIso}
+          selectedIso={activeIso}
           onSelectDay={setSelectedIso}
           monthLabel={monthLabel}
           weekdayLabels={weekdayLabels}
